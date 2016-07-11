@@ -334,9 +334,7 @@ class VariationalLDA(object):
 			print "Object created with {} documents".format(self.n_docs)
 			self.n_words = len(self.word_index)
 
-			self.make_doc_word_matrix()
-			print "Document - word matrix created"
-			print self.word_matrix
+			self.make_doc_index()
 		
 		self.K = K
 		self.alpha = alpha
@@ -419,9 +417,7 @@ class VariationalLDA(object):
 		self.n_words = len(self.word_index)
 
 		# I don't think this does anything - I will check
-		self.make_doc_word_matrix()
-		print "Document - word matrix created"
-		print self.word_matrix
+		self.make_doc_index()
 
 	# Run the VB inference. Verbose = True means it gives output each iteration
 	# initialise = True initialises (i.e. restarts the algorithm)
@@ -518,14 +514,10 @@ class VariationalLDA(object):
 		return word_index
 
 	# Pretty sure this matrix is never used
-	def make_doc_word_matrix(self):
-		self.word_matrix = np.zeros((self.n_docs,self.n_words),np.int)
+	def make_doc_index(self):
 		self.doc_index = {}
 		doc_pos = 0
 		for doc in self.corpus:
-			for word in self.corpus[doc]:
-				word_pos = self.word_index[word]
-				self.word_matrix[doc_pos,word_pos] = int(self.corpus[doc][word])
 			self.doc_index[doc] = doc_pos
 			doc_pos += 1
 
@@ -542,7 +534,10 @@ class VariationalLDA(object):
 			for word in self.corpus[doc]:
 				self.phi_matrix[doc][word] = np.zeros(self.K)
 			d = self.doc_index[doc]
-			self.gamma_matrix[d,:] = self.alpha + 1.0*sum(self.word_matrix[d,:])/self.K
+			doc_total = 0.0
+			for word in self.corpus[doc]:
+				doc_total += self.corpus[doc][word]
+			self.gamma_matrix[d,:] = self.alpha + 1.0*doc_total/self.K
 		# # Normalise this to sum to 1
 		# self.phi_matrix /= self.phi_matrix.sum(axis=2)[:,:,None]
 
