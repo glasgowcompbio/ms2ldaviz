@@ -3,8 +3,6 @@ import numpy as np
 from scipy.special import psi as psi
 from scipy.special import polygamma as pg
 
-import plotly as plotly
-from plotly.graph_objs import *
 
 # This is a Gibbs sampler LDA object. Don't use it. I'll probably delete it when I have time
 class LDA(object):
@@ -165,152 +163,6 @@ class LDA(object):
 
 		return sorted(top,key = lambda x: x[1], reverse=True)
 
-
-# This is code for parsing an mzml file, only used by the DESI imagining work.
-# Will probably remove and put in a different repo at some point
-class LDA_Feature_Extractor(object):
-	def __init__(self,filename,use_scans = 'even',tol = 50, min_intense = 500, min_occurance = 5, max_occurance = 200,min_mass = 50.0,max_mass = 300.0,min_doc_word_instances = 5,max_doc_word_instances = 200):
-		self.tol = tol
-		self.min_intense = min_intense
-		self.min_occurance = min_occurance
-		self.max_occurance = max_occurance
-		self.filename = filename
-		self.min_mass = min_mass
-		self.max_mass = max_mass
-		self.use_scans = use_scans
-		self.min_doc_word_instances = min_doc_word_instances
-		self.max_doc_word_instances = max_doc_word_instances
-
-
-	def make_corpus(self):
-		import pymzml
-		total_peaks = 0
-		self.word_masses = []
-		self.word_names = []
-		self.instances = []
-		self.total_m = []
-		run = pymzml.run.Reader(self.filename,MS1_Precision = 5e-6)
-		self.corpus = {}
-		spec_pos = 0
-		for spectrum in run:
-			if self.use_scans == 'even' and spec_pos % 2 == 1:
-				spec_pos += 1
-				continue
-			if self.use_scans == 'odd' and spec_pos % 2 == 0:
-				spec_pos += 1
-				continue
-			new_doc = {}
-			max_i = 3000.0 
-			min_i = 1e10
-			for m,i in spectrum.peaks:
-				if i >= self.min_intense and m >= self.min_mass and m <= self.max_mass:
-					word = None
-					if len(self.word_masses) == 0:
-						self.word_masses.append(m)
-						self.word_names.append(str(m))
-						self.instances.append(1)
-						self.total_m.append(m)
-						word = str(m)
-					else:
-						idx = np.abs(m - np.array(self.word_masses)).argmin()
-						if not self.hit(m,self.word_masses[idx],self.tol):
-							self.word_masses.append(m)
-							self.word_names.append(str(m))
-							self.instances.append(1)
-							self.total_m.append(m)
-							word = str(m)
-						else:
-							self.total_m[idx] += m
-							self.instances[idx] += 1
-							# self.word_masses[idx] = self.total_m[idx]/self.instances[idx]
-							# self.word_names[idx] = str(self.word_masses[idx])
-							word = self.word_names[idx]
-					if word in new_doc:
-						new_doc[word] += i
-					else:
-						new_doc[word] = i
-					if i < min_i:
-						min_i = i
-
-			# to_remove = []
-			# for word in new_doc:
-			# 	if new_doc[word] > max_i:
-			# 		new_doc[word] = max_i
-			# 	new_doc[word] -= min_i
-			# 	new_doc[word] /= (max_i - min_i)
-			# 	new_doc[word] *= 100.0
-			# 	new_doc[word] = int(new_doc[word])
-			# 	if new_doc[word] == 0:
-			# 		to_remove.append(word)
-
-			# for word in to_remove:
-			# 	del new_doc[word]
-
-			self.corpus[str(spec_pos)] = new_doc
-			spec_pos += 1
-			if spec_pos % 100 == 0:
-				print "Spectrum {} ({} words)".format(spec_pos,len(self.word_names))
-
-
-		print "Found {} documents".format(len(self.corpus))
-
-		word_counts = {}
-		for doc in self.corpus:
-			for word in self.corpus[doc]:
-				if word in word_counts:
-					word_counts[word] += 1
-				else:
-					word_counts[word] = 1
-
-
-
-		to_remove = []
-		for word in word_counts:
-			if word_counts[word] < self.min_doc_word_instances:
-				to_remove.append(word)
-			if word_counts[word] > self.max_doc_word_instances:
-				to_remove.append(word)
-
-
-		print "Removing {} words".format(len(to_remove))
-
-		for doc in self.corpus:
-			for word in to_remove:
-				if word in self.corpus[doc]:
-					del self.corpus[doc][word]
-
-
-	def make_nominal_corpus(self):
-		import pymzml
-		self.word_names = []
-		self.word_masses = []
-		self.word_names = []
-		run = pymzml.run.Reader(self.filename,MS1_Precision = 5e-6)
-		self.corpus = {}
-		spec_pos = 0
-		for spectrum in run:
-			doc = str(spec_pos)
-			self.corpus[doc] = {}
-			for m,i in spectrum.peaks:
-				if m >= self.min_mass and m <= self.max_mass and i >= self.min_intense:
-					word = str(np.floor(m))
-					if not word in self.word_names:
-						self.word_names.append(word)
-						self.word_masses.append(float(word))
-
-					if word in self.corpus[doc]:
-						self.corpus[doc][word] += i
-					else:
-						self.corpus[doc][word] = i
-			spec_pos += 1
-
-
-
-	def hit(self,m1,m2,tol):
-	    if 1e6*abs(m1-m2)/m1 < tol:
-	        return True
-	    else:
-	        return False
 
 
 # This is the LDA implementation to use
@@ -494,13 +346,6 @@ class VariationalLDA(object):
 			self.gamma_matrix[d,:] = temp_gamma
 		return temp_beta
 
-	# I don't think this function is ever used....
-	def m_step(self):
-		for k in range(self.K):
-			self.beta_matrix[k,:] = self.eta + (self.word_matrix * self.phi_matrix[:,:,k]).sum(axis=0)
-		self.beta_matrix /= self.beta_matrix.sum(axis=1)[:,None]
-
-
 	# Function to find the unique words in the corpus and assign them to indices
 	def find_unique_words(self):
 		word_index = {}
@@ -588,33 +433,7 @@ class MS1(object):
     def __str__(self):
         return self.name
 
-# Some useful plotting code (uses plotly)
-# Should put this into a separate file
-class VariationalLDAPlotter(object):
-	def __init__(self,v_lda):
-		plotly.offline.init_notebook_mode()
-		self.v_lda = v_lda
 
-	def bar_alpha(self):
-		K = len(self.v_lda.alpha)
-		data = []
-		data.append(
-			Bar(
-				x = range(K),
-				y = self.v_lda.alpha,
-				)
-			)
-		plotly.offline.iplot({'data':data})
-	def mean_gamma(self):
-		K = len(self.v_lda.alpha)
-		data = []
-		data.append(
-			Bar(
-				x = range(K),
-				y = self.v_lda.gamma_matrix.mean(axis=0),
-				)
-			)
-		plotly.offline.iplot({'data':data})
 
 
 # TODO: comment this class!
@@ -645,6 +464,7 @@ class MultiFileVariationalLDA(object):
 				temp_beta += l.e_step()
 				if l.update_alpha:
 					l.alpha = l.alpha_nr()
+			temp_beta += self.eta
 			temp_beta /= temp_beta.sum(axis=1)[:,None]
 			total_difference = (np.abs(temp_beta - self.individual_lda[0].beta_matrix)).sum()
 			for l in self.individual_lda:
@@ -652,54 +472,3 @@ class MultiFileVariationalLDA(object):
 			print total_difference
 
 
-class VariationalLDAPlotter(object):
-	def __init__(self,v_lda):
-		plotly.offline.init_notebook_mode()
-		self.v_lda = v_lda
-
-	def bar_alpha(self):
-		K = len(self.v_lda.alpha)
-		data = []
-		data.append(
-			Bar(
-				x = range(K),
-				y = self.v_lda.alpha,
-				)
-			)
-		plotly.offline.iplot({'data':data})
-	def mean_gamma(self):
-		K = len(self.v_lda.alpha)
-		data = []
-		data.append(
-			Bar(
-				x = range(K),
-				y = self.v_lda.gamma_matrix.mean(axis=0),
-				)
-			)
-		plotly.offline.iplot({'data':data})
-
-class MultiFileVariationalLDAPlotter(object):
-	def __init__(self,m_lda):
-		plotly.offline.init_notebook_mode()
-		self.m_lda = m_lda
-
-	def multi_alpha(self,normalise=False,names=None):
-		data = []
-		K = self.m_lda.individual_lda[0].K
-		for i,l in enumerate(self.m_lda.individual_lda):
-			if normalise:
-				a = l.alpha / l.alpha.sum()
-			else:
-				a = l.alpha
-			if not names == None:
-				name = names[i]
-			else:
-				name = 'trace {}'.format(i)
-			data.append(
-				Bar(
-					x = range(K),
-					y = a,
-					name = name
-					)
-				)
-		plotly.offline.iplot({'data':data})
