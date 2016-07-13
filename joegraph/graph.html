@@ -103,13 +103,13 @@ var optArray = [];
 
 var toggle = 0;
 
-d3.json('mf_force.json', function(error, graph) {
+d3.json('gnps_graph.json', function(error, graph) {
 
     if (error) throw error;
 
     var force = d3.layout.force()
         .size([width, height])
-        .charge(-8000)
+        .charge(-10000)
         // .linkDistance(function(d) {
         //     return d.weight*100;
         // })
@@ -136,13 +136,14 @@ d3.json('mf_force.json', function(error, graph) {
         .html(function(d) {
             name = d.name;
             tokens = name.split('_');
-            if (tokens.length == 2) { // it's a topic, e.g. 'motif_123'
-                tooltip_label = 'motif ' + tokens[1];
-            } else if (tokens.length == 3) { // it's an MS1 peak, e.g. 'doc_123.5225_30.12'
-                tooltip_label = 'MS1 m/z=' + tokens[1] + ' RT=' + tokens[2];
-            } else {
-                tooltip_label = d.name;
-            }
+            // if (tokens.length == 2) { // it's a topic, e.g. 'motif_123'
+            //     tooltip_label = 'motif ' + tokens[1];
+            // } else if (tokens.length == 3) { // it's an MS1 peak, e.g. 'doc_123.5225_30.12'
+            //     tooltip_label = 'MS1 m/z=' + tokens[1] + ' RT=' + tokens[2];
+            // } else {
+            //     tooltip_label = d.name;
+            // }
+            tooltip_label = d.name;
             return '<strong>' + tooltip_label + "</strong>";
         })
     svg.call(tip);
