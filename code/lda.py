@@ -2,6 +2,8 @@
 import numpy as np
 from scipy.special import psi as psi
 from scipy.special import polygamma as pg
+import time
+import pickle
 
 
 # This is a Gibbs sampler LDA object. Don't use it. I'll probably delete it when I have time
@@ -175,9 +177,10 @@ class LDA(object):
  # word_index is only used in multi-file as it's important that features are always in the same order.
  # In single file it is created internally
 class VariationalLDA(object):
-	def __init__(self,corpus=None,K = 20,eta=0.1,alpha=1,update_alpha=True,word_index=None):
+	def __init__(self,corpus=None,K = 20,eta=0.1,alpha=1,update_alpha=True,word_index=None,normalise = -1):
 		self.corpus = corpus
 		self.word_index = word_index
+		self.normalise = normalise
 		#  If the corpus exists, make the word index and the (unused?) word doc matrix
 		if not self.corpus == None:
 			self.n_docs = len(self.corpus)
@@ -185,8 +188,10 @@ class VariationalLDA(object):
 				self.word_index = self.find_unique_words()
 			print "Object created with {} documents".format(self.n_docs)
 			self.n_words = len(self.word_index)
-
 			self.make_doc_index()
+			if self.normalise > -1:
+				print "Normalising intensities"
+				self.normalise_intensities()
 		
 		self.K = K
 		self.alpha = alpha
@@ -195,6 +200,18 @@ class VariationalLDA(object):
 			self.alpha = self.alpha*np.ones(self.K)
 		self.eta = eta # Smoothing parameter for beta
 		self.update_alpha = update_alpha
+		self.doc_metadata = None
+
+
+
+	def normalise_intensities(self):
+		for doc in self.corpus:
+			max_i = 0.0
+			for word in self.corpus[doc]:
+				if self.corpus[doc][word] > max_i:
+					max_i = self.corpus[doc][word]
+			for word in self.corpus[doc]:
+				self.corpus[doc][word] = self.normalise*self.corpus[doc][word]/max_i
 
     # Load the features from a Joe .csv file. Pass the file name up until the _ms1.csv or _ms2.csv
     # these are added here
@@ -202,6 +219,7 @@ class VariationalLDA(object):
 	def load_features_from_csv(self,prefix,scale_factor=100.0):
 		# Load the MS1 peaks (MS1 object defined below)
 		self.ms1peaks = []
+		self.doc_metadata = {}
 		ms1file = prefix + '_ms1.csv'
 		with open(ms1file,'r') as f:
 		    heads = f.readline()
@@ -213,9 +231,14 @@ class VariationalLDA(object):
 		        name = split_line[5] + '_' + split_line[4]
 		        intensity = float(split_line[6])
 		        new_ms1 = MS1(ms1_id,mz,rt,intensity,name)
-		        self.ms1peaks.append(new_ms1)
+		        self.ms1peaks.append(name)
+		        self.doc_metadata[name] = {}
+		        self.doc_metadata[name]['parentmass'] = mz
+		        self.doc_metadata[name]['rt'] = rt
+		        self.doc_metadata[name]['intensity'] = intensity
+		        self.doc_metadata[name]['id'] = ms1_id
 		print "Loaded {} MS1 peaks".format(len(self.ms1peaks))
-		parent_id_list = [i.ms1_id for i in self.ms1peaks]
+		parent_id_list = [self.doc_metadata[name]['id'] for name in self.ms1peaks]
 
 
 		# Load the ms2 objects
@@ -270,6 +293,9 @@ class VariationalLDA(object):
 
 		# I don't think this does anything - I will check
 		self.make_doc_index()
+		if self.normalise > -1:
+			print "Normalising intensities"
+			self.normalise_intensities()
 
 	# Run the VB inference. Verbose = True means it gives output each iteration
 	# initialise = True initialises (i.e. restarts the algorithm)
@@ -281,9 +307,13 @@ class VariationalLDA(object):
 			self.init_vb()
 		print "Starting iterations"
 		for it in range(n_its):
+			start_time = time.clock()
 			diff = self.vb_step()
+			end_time = time.clock()
+			self.its_performed += 1
+			estimated_finish = ((end_time - start_time)*(n_its - it)/60.0)
 			if verbose:
-				print "Iteration {} (change = {})".format(it,diff)
+				print "Iteration {} (change = {}) ({} seconds, I think I'll finish in {} minutes)".format(it,diff,end_time - start_time,estimated_finish)
 
 
 	# D a VB step
@@ -372,6 +402,7 @@ class VariationalLDA(object):
 	def init_vb(self):
 		# self.gamma_matrix = np.zeros((self.n_docs,self.K),np.float) + 1.0
 		# self.phi_matrix = np.zeros((self.n_docs,self.n_words,self.K))
+		self.its_performed = 0
 		self.phi_matrix = {}
 		self.gamma_matrix = np.zeros((self.n_docs,self.K))
 		for doc in self.corpus:
@@ -421,6 +452,85 @@ class VariationalLDA(object):
 
 	def get_beta(self):
 		return self.beta_matrix.copy()
+
+	def make_dictionary(self,metadata=None,min_prob_to_keep_beta = 1e-3,
+		min_prob_to_keep_phi = 1e-2,min_prob_to_keep_theta = 1e-2,
+		filename = None):
+
+		if metadata == None:
+			if self.doc_metadata == None:
+				metadata = {}
+				for doc in self.corpus:
+					metadata[doc] = {}
+			else:
+				metadata = self.doc_metadata
+
+		lda_dict = {}
+		lda_dict['corpus'] = self.corpus
+		lda_dict['word_index'] = self.word_index
+		lda_dict['doc_index'] = self.doc_index
+		lda_dict['K'] = self.K
+		lda_dict['alpha'] = list(self.alpha)
+		lda_dict['beta'] = {}
+		lda_dict['doc_metadata'] = metadata
+
+		# Create the inverse indexes
+		wi = []
+		for i in self.word_index:
+		    wi.append((i,self.word_index[i]))
+		wi = sorted(wi,key = lambda x: x[1])
+
+		di = []
+		for i in self.doc_index:
+		    di.append((i,self.doc_index[i]))
+		di = sorted(di,key=lambda x: x[1])
+
+		ri,i = zip(*wi)
+		ri = list(ri)
+		di,i = zip(*di)
+		di = list(di)
+
+		for k in range(self.K):
+		    pos = np.where(self.beta_matrix[k,:]>min_prob_to_keep_beta)[0]
+		    motif_name = 'motif_{}'.format(k)
+		    lda_dict['beta'][motif_name] = {}
+		    for p in pos:
+		        word_name = ri[p]
+		        lda_dict['beta'][motif_name][word_name] = self.beta_matrix[k,p]
+
+
+		eth = self.get_expect_theta()
+		lda_dict['theta'] = {}
+		for i,t in enumerate(eth):
+		    doc = di[i]
+		    lda_dict['theta'][doc] = {}
+		    pos = np.where(t > min_prob_to_keep_theta)[0]
+		    for p in pos:
+		        motif_name = 'motif_{}'.format(p)
+		        lda_dict['theta'][doc][motif_name] = t[p]
+
+		lda_dict['phi'] = {}
+		ndocs = 0
+		for doc in self.corpus:
+		    ndocs += 1
+		    lda_dict['phi'][doc] = {}
+		    for word in self.corpus[doc]:
+		        lda_dict['phi'][doc][word] = {}
+		        pos = np.where(self.phi_matrix[doc][word] >= min_prob_to_keep_phi)[0]
+		        for p in pos:
+		            lda_dict['phi'][doc][word]['motif_{}'.format(p)] = self.phi_matrix[doc][word][p]
+		    if ndocs % 500 == 0:
+		        print "Done {}".format(ndocs)
+
+		if not filename == None:
+			with open(filename,'w') as f:
+				pickle.dump(lda_dict,f)
+
+		return lda_dict
+        
+    
+
+    
 
 # MS1 object used by Variational Bayes LDA
 class MS1(object):

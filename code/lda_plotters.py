@@ -2,6 +2,11 @@
 
 import plotly as plotly
 from plotly.graph_objs import *
+import networkx as nx
+import json
+from networkx.readwrite import json_graph
+
+
 
 
 # Some useful plotting code (uses plotly)
@@ -34,8 +39,111 @@ class VariationalLDAPlotter(object):
 
 
 
+
+  def plot_document_colour_one_topic(self,doc,topic,precursor_mass = None,intensity_thresh = 0,show_losses = False,title = None,xlim = None):
+    eth = self.v_lda.get_expect_theta()
+    pos = self.v_lda.doc_index[doc]
+
+    topic_colour = ('rgb(255,0,0)')
+    background_colour = ('rgba(50,50,50,0.3)') 
+    precursor_colour = ('rgb(0,0,255)')
+
+    data = []
+
+
+    max_mass = 0.0
+    max_intensity = 0.0
+    for word in self.v_lda.corpus[doc]:
+        word_type = word.split('_')[0]
+        intensity = self.v_lda.corpus[doc][word]
+        if intensity > max_intensity:
+            max_intensity = intensity
+        topic_contribution = self.v_lda.phi_matrix[doc][word][topic]
+        if word_type == 'fragment':
+            mass = float(word.split('_')[1])
+            if mass > max_mass:
+                max_mass = mass
+            data.append(
+                Scatter(
+                    x = [mass,mass],
+                    y = [0,topic_contribution*intensity],
+                    mode = 'lines',
+                    line = dict(
+                        color = topic_colour,
+                        ),
+                    showlegend = False,
+                )
+            )
+            data.append(
+                Scatter(
+                    x = [mass,mass],
+                    y = [topic_contribution*intensity,intensity],
+                    mode = 'lines',
+                    line = dict(
+                        color = background_colour,
+                        ),
+                    showlegend = False,
+                )
+            )
+        else:
+            if not precursor_mass == None and show_losses:
+                # This is a fragment
+                yval = 0.9*intensity
+                mass = float(word.split('_')[1])
+                xvals = [precursor_mass - mass,precursor_mass - mass + topic_contribution*mass]
+                data.append(
+                    Scatter(
+                        x = xvals,
+                        y = [yval,yval],
+                        mode = 'lines',
+                        line = dict(
+                            color = topic_colour,
+                            ),
+                        showlegend = False,
+                        text = word,
+                        )
+                    )
+                xvals = [precursor_mass - mass + topic_contribution*mass,precursor_mass]
+                data.append(
+                    Scatter(
+                        x = xvals,
+                        y = [yval,yval],
+                        mode = 'lines',
+                        line = dict(
+                            color = background_colour,
+                            ),
+                        showlegend = False,
+                        )
+                    )
+                data.append(
+                    Scatter(
+                        x = [precursor_mass,precursor_mass],
+                        y = [0,max_intensity],
+                        mode = 'lines',
+                        line = dict(
+                            color = precursor_colour,
+                            ),
+                        showlegend = False,
+                        )
+                    )
+
+    if precursor_mass == None:
+        precursor_mass = max_mass
+    if title == None:
+        title = str(doc)
+    if xlim == None:
+        xlim = [0,precursor_mass+10]
+    layout = Layout(
+        title = title,
+        xaxis = dict(
+            range = xlim,
+            )
+        )
+    plotly.offline.iplot({'data':data,'layout':layout})
+
+
   # Colour by the top N topics in the document
-  def plot_document_topic_colour(self,doc,precursor_mass = None,topn = 4,intensity_thresh = 5000,show_losses = False,title = None):
+  def plot_document_topic_colour(self,doc,precursor_mass = None,topn = 4,intensity_thresh = 0,show_losses = False,title = None,xlim=None):
     eth = self.v_lda.get_expect_theta()
     pos = self.v_lda.doc_index[doc]
     tp = []
@@ -73,18 +181,19 @@ class VariationalLDAPlotter(object):
                 cum = 0.0
                 for t in topics_to_plot:
                     height = intensity*self.v_lda.phi_matrix[doc][word][t]
+                    name = "motif_{}".format(t)
                     if t in topics_plotted:
                       s = Scatter(
                           x = [m,m],
                           y = [cum,cum+height],
                           mode = 'lines',
+                          name = name,
                           marker = dict(
                               color = top_colours[t]
                           ),
                           showlegend=False,
                       )
                     else:
-                      name = "motif_{}".format(t)
                       s = Scatter(
                           x = [m,m],
                           y = [cum,cum+height],
@@ -101,6 +210,7 @@ class VariationalLDAPlotter(object):
                     x = [m,m],
                     y = [cum,intensity],
                     mode = 'lines',
+                    name = 'other topics',
                     marker = dict(
                         color = ('rgb(200,200,200)')
                     ),
@@ -114,11 +224,13 @@ class VariationalLDAPlotter(object):
                 y = 0.9*self.v_lda.corpus[doc][word]
                 for t in topics_to_plot:
                     width = loss_mass*self.v_lda.phi_matrix[doc][word][t]
+                    name = "motif_{}".format(t)
                     if t in topics_plotted:
                         s = Scatter(
                             x = [pos,pos+width],
                             y = [y,y],
                             mode = 'lines',
+                            name = name,
                             marker = dict(
                                 color = loss_colours[t]
                             ),
@@ -128,7 +240,6 @@ class VariationalLDAPlotter(object):
                             showlegend=False,
                         )
                     else:
-                        name = "motif_{}".format(t)
                         s = Scatter(
                             x = [pos,pos+width],
                             y = [y,y],
@@ -172,17 +283,30 @@ class VariationalLDAPlotter(object):
     if title == None:
         title = str(doc)
 
+    if xlim == None:
+        layout = Layout (
+            showlegend=True,
+            xaxis = dict(
+                title = 'm/z',
+            ),
+            yaxis = dict(
+                title = 'Intensity',
+            ),
+            title = title
+        )
+    else:
+        layout = Layout (
+            showlegend=True,
+            xaxis = dict(
+                title = 'm/z',
+                range = xlim,
+            ),
+            yaxis = dict(
+                title = 'Intensity',
+            ),
+            title = title,
+        )
 
-    layout = Layout (
-        showlegend=True,
-        xaxis = dict(
-            title = 'm/z',
-        ),
-        yaxis = dict(
-            title = 'Intensity',
-        ),
-        title = title
-    )
     plotly.offline.iplot({'data':data,'layout':layout})
 
 
@@ -212,3 +336,358 @@ class MultiFileVariationalLDAPlotter(object):
           )
         )
     plotly.offline.iplot({'data':data})
+
+
+
+
+
+class VariationalLDAPlotter_dict(object):
+  def __init__(self,lda_dict):
+    plotly.offline.init_notebook_mode()
+    self.lda_dict = lda_dict
+
+  def bar_alpha(self):
+    K = len(self.lda_dict['alpha'])
+    data = []
+    data.append(
+      Bar(
+        x = range(K),
+        y = self.lda_dict['alpha'],
+        )
+      )
+    plotly.offline.iplot({'data':data})
+
+
+
+
+  def plot_document_colour_one_topic(self,doc,topic,precursor_mass = None,intensity_thresh = 0,show_losses = False,title = None,xlim = None):
+
+    topic_colour = ('rgb(255,0,0)')
+    background_colour = ('rgba(50,50,50,0.3)') 
+    precursor_colour = ('rgb(0,0,255)')
+
+    data = []
+
+
+    max_mass = 0.0
+    max_intensity = 0.0
+    for word in self.lda_dict['corpus'][doc]:
+        word_type = word.split('_')[0]
+        intensity = self.lda_dict['corpus'][doc][word]
+        if intensity > max_intensity:
+            max_intensity = intensity
+        topic_contribution = self.lda_dict['phi'][doc][word].get(topic,0.0)
+
+
+        if word_type == 'fragment':
+            mass = float(word.split('_')[1])
+            if mass > max_mass:
+                max_mass = mass
+            data.append(
+                Scatter(
+                    x = [mass,mass],
+                    y = [0,topic_contribution*intensity],
+                    mode = 'lines',
+                    line = dict(
+                        color = topic_colour,
+                        ),
+                    showlegend = False,
+                )
+            )
+            data.append(
+                Scatter(
+                    x = [mass,mass],
+                    y = [topic_contribution*intensity,intensity],
+                    mode = 'lines',
+                    line = dict(
+                        color = background_colour,
+                        ),
+                    showlegend = False,
+                )
+            )
+        else:
+            if not precursor_mass == None and show_losses:
+                # This is a fragment
+                yval = 0.9*intensity
+                mass = float(word.split('_')[1])
+                xvals = [precursor_mass - mass,precursor_mass - mass + topic_contribution*mass]
+                data.append(
+                    Scatter(
+                        x = xvals,
+                        y = [yval,yval],
+                        mode = 'lines',
+                        line = dict(
+                            color = topic_colour,
+                            ),
+                        showlegend = False,
+                        text = word,
+                        )
+                    )
+                xvals = [precursor_mass - mass + topic_contribution*mass,precursor_mass]
+                data.append(
+                    Scatter(
+                        x = xvals,
+                        y = [yval,yval],
+                        mode = 'lines',
+                        line = dict(
+                            color = background_colour,
+                            ),
+                        showlegend = False,
+                        )
+                    )
+    if not precursor_mass == None:
+        data.append(
+            Scatter(
+                x = [precursor_mass,precursor_mass],
+                y = [0,max_intensity],
+                mode = 'lines',
+                line = dict(
+                    color = precursor_colour,
+                    ),
+                showlegend = False,
+                )
+            )
+
+    if precursor_mass == None:
+        precursor_mass = max_mass
+    if title == None:
+        title = str(doc)
+    if xlim == None:
+        xlim = [0,precursor_mass+10]
+    layout = Layout(
+        title = title,
+        xaxis = dict(
+            range = xlim,
+            )
+        )
+    plotly.offline.iplot({'data':data,'layout':layout})
+
+
+  # Colour by the top N topics in the document
+  def plot_document_topic_colour(self,doc,precursor_mass = None,topn = 4,intensity_thresh = 0,show_losses = False,title = None,xlim=None):
+    tp = []
+    # Find the highest probability topics
+    for t in self.lda_dict['theta'][doc]:
+        tp.append((t,self.lda_dict['theta'][doc][t]))
+    
+    tp = sorted(tp,key=lambda x:x[1],reverse=True)
+    topics_to_plot = []
+    for i in range(min(topn,len(self.lda_dict['theta'][doc]))):
+        topics_to_plot.append(tp[i][0])
+
+    
+    colours = [[255,0,0],[0,255,0],[0,0,255],[0,255,255]]
+    data = []
+    loss_opacity = 1.0
+    top_colours = {}
+    loss_colours = {}
+    for i,t in enumerate(topics_to_plot):
+        r = colours[i][0]
+        g = colours[i][1]
+        b = colours[i][2]
+        top_colours[t] = ('rgb({},{},{})'.format(r,g,b))
+        loss_colours[t] = ('rgba({},{},{},{})'.format(r,g,b,loss_opacity))    
+    
+    
+    topics_plotted = [] # This will be appended to as we plot the first thing from each topic, for the legend
+    max_intensity = 0.0
+    for word in self.lda_dict['corpus'][doc]:
+        if self.lda_dict['corpus'][doc][word] >= intensity_thresh:
+            if word.startswith('fragment'):
+                m = float(word.split('_')[1])
+                intensity = self.lda_dict['corpus'][doc][word]
+                if intensity >= max_intensity:
+                    max_intensity = intensity
+                cum = 0.0
+                for t in topics_to_plot:
+                    height = intensity*self.lda_dict['phi'][doc][word].get(t,0.0)
+                    name = t
+                    if t in topics_plotted:
+                      s = Scatter(
+                          x = [m,m],
+                          y = [cum,cum+height],
+                          mode = 'lines',
+                          name = name + "(" + str(height) + ")",
+                          marker = dict(
+                              color = top_colours[t]
+                          ),
+                          showlegend=False,
+                      )
+                    else:
+                      s = Scatter(
+                          x = [m,m],
+                          y = [cum,cum+height],
+                          mode = 'lines',
+                          name = name,
+                          marker = dict(
+                              color = top_colours[t]
+                          )
+                      )
+                      topics_plotted.append(t)
+                    cum += height
+                    data.append(s)
+                s = Scatter(
+                    x = [m,m],
+                    y = [cum,intensity],
+                    mode = 'lines',
+                    name = 'other topics',
+                    marker = dict(
+                        color = ('rgb(200,200,200)')
+                    ),
+                    showlegend=False,
+                )
+                data.append(s)
+            if word.startswith('loss') and show_losses and not precursor_mass == None:
+                loss_mass = float(word.split('_')[1])
+                start = precursor_mass - loss_mass
+                pos = start
+                y = 0.9*self.v_lda.corpus[doc][word]
+                for t in topics_to_plot:
+                    width = loss_mass*self.v_lda.phi_matrix[doc][word][t]
+                    name = "motif_{}".format(t)
+                    if t in topics_plotted:
+                        s = Scatter(
+                            x = [pos,pos+width],
+                            y = [y,y],
+                            mode = 'lines',
+                            name = name,
+                            marker = dict(
+                                color = loss_colours[t]
+                            ),
+                            line = dict(
+                                dash = 'dash'
+                            ),
+                            showlegend=False,
+                        )
+                    else:
+                        s = Scatter(
+                            x = [pos,pos+width],
+                            y = [y,y],
+                            mode = 'lines',
+                            marker = dict(
+                                color = loss_colours[t]
+                            ),
+                            line = dict(
+                                dash = 'dash'
+                            ),
+                            showlegend=True,
+                            name = name,
+                        )
+                        topics_plotted.append(t)
+                    pos += width
+                    data.append(s)
+                s = Scatter(
+                    x = [pos,precursor_mass],
+                    y = [y,y],
+                    mode = 'lines',
+                    marker = dict(
+                        color = ('rgba(200,200,200,{})'.format(loss_opacity))
+                    ),
+                    showlegend = False
+                )
+                data.append(s)
+            
+    if not precursor_mass == None:
+      s = Scatter(
+          x = [precursor_mass,precursor_mass],
+          y = [0,max_intensity],
+          mode = 'lines',
+          marker = dict(
+              color = ('rgb(255,0,0)')
+          ),
+          showlegend = False,
+      )
+      data.append(s)
+
+
+    if title == None:
+        title = str(doc)
+
+    if xlim == None:
+        layout = Layout (
+            showlegend=True,
+            xaxis = dict(
+                title = 'm/z',
+            ),
+            yaxis = dict(
+                title = 'Intensity',
+            ),
+            title = title
+        )
+    else:
+        layout = Layout (
+            showlegend=True,
+            xaxis = dict(
+                title = 'm/z',
+                range = xlim,
+            ),
+            yaxis = dict(
+                title = 'Intensity',
+            ),
+            title = title,
+        )
+
+    plotly.offline.iplot({'data':data,'layout':layout})
+
+  def make_graph_object(self,edge_thresh = 0.05,min_degree = 10,topic_scale_factor = 5,edge_scale_factor=5,filename = None):
+    
+    # Loop over the docs to find the degree of the topics
+    topics = {}
+    for doc in self.lda_dict['corpus']:
+        for topic in self.lda_dict['theta'][doc]:
+            if self.lda_dict['theta'][doc][topic] > edge_thresh:
+                if topic in topics:
+                    topics[topic] += 1
+                else:
+                    topics[topic] = 1
+    to_remove = []
+    for topic in topics:
+        if topics[topic] < min_degree:
+            to_remove.append(topic)
+    for topic in to_remove:
+        del topics[topic]
+
+    print "Found {} topics".format(len(topics))
+
+    # Add the topics to the graph
+    G = nx.Graph()
+    for topic in topics:
+        G.add_node(topic,group=2,name=topic,
+            size=topic_scale_factor * topics[topic],
+            special = False, in_degree = topics[topic],
+            score = 1)
+
+    # Add the nodes to the graph
+    for doc in self.lda_dict['theta']:
+        # Get the compound as the name if it exists
+        name = self.lda_dict['doc_metadata'][doc].get('compound',doc)
+        G.add_node(doc,group=1,name = name,size=20,
+            type='square',peakid = name,special=False,
+            in_degree=0,score=0)
+        for topic in self.lda_dict['theta'][doc]:
+            G.add_edge(topic,doc,weight = edge_scale_factor*self.lda_dict['theta'][doc][topic])
+
+    if not filename == None:
+        d = json_graph.node_link_data(G) 
+        json.dump(d, open(filename,'w'),indent=2)
+    return G
+
+  def write_topic_file(self,filename):
+    with open(filename,'w') as f:
+        for topic in self.lda_dict['beta']:
+            topic_no = int(topic.split('_')[1])
+            alp = self.lda_dict['alpha'][topic_no]
+            f.write(topic + ' alpha = {}'.format(alp) +  '\n')
+            wp = []
+            for word in self.lda_dict['beta'][topic]:
+                wp.append((word,self.lda_dict['beta'][topic][word]))
+            wp = sorted(wp,key = lambda x: x[1], reverse=True)
+            for w,p in wp:
+                line = '\t{}, {:.3f}\n'.format(w,p)
+                f.write(line)
+            f.write('\n\n')
+
+
+
+
+
