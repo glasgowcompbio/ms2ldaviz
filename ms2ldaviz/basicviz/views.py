@@ -40,7 +40,7 @@ def start_viz(request,experiment_id):
 
 	G = make_graph(experiment)
 	d = json_graph.node_link_data(G) 
-
+	print d
 	context_dict = {'graph':d}
 	return render(request,'basicviz/show_viz.html',context_dict)
 
@@ -65,20 +65,21 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 10,topic_scale_factor 
 
     # Add the topics to the graph
     G = nx.Graph()
+    print topics
     for topic in topics:
         G.add_node(topic.name,group=2,name=topic.name,
             size=topic_scale_factor * topics[topic],
             special = False, in_degree = topics[topic],
             score = 1)
 
- #    # Add the nodes to the graph
- #    for doc in self.lda_dict['theta']:
- #        # Get the compound as the name if it exists
+    documents = Document.objects.filter(experiment = experiment)
+    for document in documents:
  #        name = self.lda_dict['doc_metadata'][doc].get('compound',doc)
- #        G.add_node(doc,group=1,name = name,size=20,
- #            type='square',peakid = name,special=False,
- #            in_degree=0,score=0)
- #        for topic in self.lda_dict['theta'][doc]:
- #            G.add_edge(topic,doc,weight = edge_scale_factor*self.lda_dict['theta'][doc][topic])
- 	return G
+        G.add_node(document,group=1,name = document.name,size=20,
+            type='square',peakid = document.name,special=False,
+            in_degree=0,score=0)
+        for docm2m in DocumentMass2Motif.objects.filter(document=document):
+        	if docm2m.mass2motif in topics and docm2m.probability > edge_thresh:
+	            G.add_edge(docm2m.mass2motif,document,weight = edge_scale_factor*docm2m.probability)
+    return G
 	# pass
