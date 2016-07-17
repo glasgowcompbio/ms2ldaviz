@@ -1,0 +1,31 @@
+<html>
+	{% if document %}
+		<h3>Document {{document.name}}</h3>
+	{% endif %}
+
+	{% if mass2motifs %}
+		<ul>
+			{% for mass2motif in mass2motifs %}
+			<li>{{mass2motif.mass2motif.name}}, {{mass2motif.probability}}</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+
+	{% if features %}
+		<table border=1>
+		<tr><th>Name</th><th>Intensity</th><th>Topics</th></tr>
+		{% for feature,m2minstances in fm2m.items %}
+			<tr><td>{{feature.feature.name}}</td><td>{{feature.intensity}}</td>
+			<td>
+				{% for m2minstance in m2minstances %}
+					({{m2minstance.mass2motif}},{{m2minstance.probability}})
+				{% endfor %}
+			</td>
+			</tr>
+		{% endfor %}
+		</table>
+	{% endif %}
+
+	<a href="/basicviz/show_docs/{{experiment.id}}">return</a>
+
+</html>
