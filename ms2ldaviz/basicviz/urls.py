@@ -5,4 +5,5 @@ urlpatterns = patterns('',
         url(r'^$', views.index, name='index'),
 		url(r'^show_docs/(?P<experiment_id>\w+)/$',views.show_docs,name='show_docs'),
 		url(r'^show_doc/(?P<doc_id>\w+)/$',views.show_doc,name='show_doc'),
+		url(r'^start_viz/(?P<experiment_id>\w+)/$',views.start_viz,name='start_viz'),
         )
