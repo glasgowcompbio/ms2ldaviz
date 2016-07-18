@@ -32,10 +32,9 @@ def show_doc(request,doc_id):
     context_dict['mass2motifs'] = mass2motif_instances
     feature_mass2motif_instances = {}
     for feature in features:
-        feature_mass2motif_instances[feature] = FeatureMass2MotifInstance.objects.filter(document = document,featureinstance=feature)
+        feature_mass2motif_instances[feature] = FeatureMass2MotifInstance.objects.filter(featureinstance=feature)
     context_dict['fm2m'] = feature_mass2motif_instances
 
-    a = FeatureMass2MotifInstance.objects.filter(document=document)[0]
     return render(request,'basicviz/show_doc.html',context_dict)
 
 def start_viz(request,experiment_id):
