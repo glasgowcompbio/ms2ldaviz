@@ -33,9 +33,120 @@ def show_doc(request,doc_id):
     feature_mass2motif_instances = {}
     for feature in features:
         feature_mass2motif_instances[feature] = FeatureMass2MotifInstance.objects.filter(featureinstance=feature)
-    context_dict['fm2m'] = feature_mass2motif_instances
 
+
+    plot_fragments = []
+    if len(features) > 0:
+        for feature_instance in features:
+            if feature_instance.feature.name.startswith('fragment'):
+                mass = float(feature_instance.feature.name.split('_')[1])
+                plot_fragments.append((mass,feature_instance.intensity))
+
+    parent_peak = []
+    metadata = jsonpickle.decode(document.metadata)
+    if 'parentmass' in metadata:
+        print metadata['parentmass']
+        parent_peak.append((float(metadata['parentmass']),100))
+    print parent_peak
+    context_dict['fm2m'] = feature_mass2motif_instances
+    context_dict['plot_fragments'] = plot_fragments
+    context_dict['plot_parent'] = [parent_peak]
     return render(request,'basicviz/show_doc.html',context_dict)
+
+def get_doc(request,doc_id):
+    document = Document.objects.get(id=doc_id)
+    features = FeatureInstance.objects.filter(document = document)
+    plot_fragments = []
+    metadata = jsonpickle.decode(document.metadata)
+    parent_mass = float(metadata['parentmass'])
+    parent_data = (parent_mass,100.0)
+
+    plot_fragments.append(parent_data)
+    child_data = []
+    max_intensity = 0.0
+    if len(features) > 0:
+        for feature_instance in features:
+            if feature_instance.feature.name.startswith('fragment'):
+                mass = float(feature_instance.feature.name.split('_')[1])
+                if feature_instance.intensity > max_intensity:
+                    max_intensity = feature_instance.intensity
+                child_data.append((mass,mass,0,feature_instance.intensity,1,'red'))
+            else:
+                mass = float(feature_instance.feature.name.split('_')[1])
+                if feature_instance.intensity > max_intensity:
+                    max_intensity = feature_instance.intensity
+                child_data.append((parent_mass-mass,parent_mass,feature_instance.intensity,feature_instance.intensity,0,'red'))
+    child_data = [(m1,m2,i1*100.0/max_intensity,i2*100.0/max_intensity,t,c) for m1,m2,i1,i2,t,c in child_data]
+    plot_fragments.append(child_data)
+
+    return HttpResponse(json.dumps(plot_fragments),content_type='application/json')
+
+def get_doc_topics(request,doc_id):
+    colours = ['red','green','blue','black','yellow']
+    document = Document.objects.get(id=doc_id)
+    features = FeatureInstance.objects.filter(document = document)
+    plot_fragments = []
+    metadata = jsonpickle.decode(document.metadata)
+    parent_mass = float(metadata['parentmass'])
+    parent_data = (parent_mass,100.0)
+
+    plot_fragments.append(parent_data)
+    child_data = []
+    loss_data = []
+
+    # Only colours the first five
+    topics = sorted(DocumentMass2Motif.objects.filter(document=document),key=lambda x:x.probability,reverse=True)
+    topics_to_plot = []
+    for i in range(5):
+        if i == len(topics):
+            break
+        topics_to_plot.append(topics[i].mass2motif)
+    
+    print topics_to_plot
+
+    max_intensity = 0.0
+    topic_colours = {}
+    colour_pos = 0
+    for feature_instance in features:
+        if feature_instance.intensity > max_intensity:
+            max_intensity = feature_instance.intensity
+    if len(features) > 0:
+        for feature_instance in features:
+            phi_values = FeatureMass2MotifInstance.objects.filter(featureinstance = feature_instance)
+            if feature_instance.feature.name.startswith('fragment'):
+                mass = float(feature_instance.feature.name.split('_')[1])
+                cum_pos = 0.0
+                this_intensity = feature_instance.intensity*100.0/max_intensity
+                for phi_value in phi_values:
+                    if phi_value.mass2motif in topics_to_plot:
+                        proportion = phi_value.probability*this_intensity
+                        if phi_value.mass2motif in topic_colours:
+                            colour = topic_colours[phi_value.mass2motif]
+                        else:
+                            topic_colours[phi_value.mass2motif] = colours[colour_pos]
+                            colour_pos += 1
+                            colour = topic_colours[phi_value.mass2motif]
+                        child_data.append((mass,mass,cum_pos,cum_pos + proportion,1,colour))
+                        cum_pos += proportion
+            else:
+                mass = float(feature_instance.feature.name.split('_')[1])
+                cum_pos = parent_mass - mass
+                this_intensity = feature_instance.intensity*100.0/max_intensity
+                for phi_value in phi_values:
+                    if phi_value.mass2motif in topics_to_plot:
+                        proportion = mass * phi_value.probability
+                        if phi_value.mass2motif in topic_colours:
+                            colour = topic_colours[phi_value.mass2motif]
+                        else:
+                            topic_colours[phi_value.mass2motif] = colours[colour_pos]
+                            colour_pos += 1
+                            colour = topic_colours[phi_value.mass2motif]
+                        child_data.append((cum_pos,cum_pos+proportion,this_intensity,this_intensity,0,colour))
+                        cum_pos += proportion
+    plot_fragments.append(child_data)
+    return HttpResponse(json.dumps(plot_fragments),content_type='application/json')
+
+
 
 def start_viz(request,experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)

@@ -1,3 +1,7 @@
+<!DOCTYPE html>
+
+{% load static %}
+
 <html>
 	{% if document %}
 		<h3>Document {{document.name}}</h3>
@@ -28,4 +32,326 @@
 
 	<a href="/basicviz/show_docs/{{experiment.id}}">return</a>
 
+
+<div border="20" padding="20">
+	<svg width="700" height="300"></svg>
+</div>
+
+
+<script type='text/javascript' src="{% static "js/jquery-2.2.2.min.js" %}"></script>
+<script type='text/javascript' src="{% static "js/jquery-ui.min.js" %}"> </script>
+<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
+<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
+
+
+<script type="text/javascript">
+
+d3.json('/basicviz/get_doc_topics/{{document.id}}',function(error,total_dataset) {
+	if (error) throw error;
+	var parent_mass = total_dataset[0][0]
+	var parent_intensity = total_dataset[0][1]
+	var dataset = total_dataset[1]
+	var max_mass = d3.max(dataset,function(d) {return d[0]+50})
+	if(max_mass < parent_mass) {
+		max_mass = parent_mass + 50;
+	}
+	var width=700
+	var height=300
+	var ver_margin = 30
+	var hor_margin = 50
+
+	var svg = d3.select("svg")
+
+	// Create the line objects
+	lines = svg.selectAll("line")
+	        .data(dataset)
+	        .enter()
+	        .append("line")
+	        .on("click",function(d) {
+	        	console.log(d);
+	        })
+
+	
+
+
+	// Axis scale objects
+	var xScale = d3.scale.linear()
+	xScale.domain([0, max_mass])
+	xScale.range([ hor_margin,width-hor_margin])
+	var yScale = d3.scale.linear()
+	yScale.domain([0,d3.max(dataset,function(d) {return d[2];})])
+	yScale.range([height-ver_margin,ver_margin])
+
+		// Set the line attributes
+	lines.attr("x1",function(d) {return xScale(d[0])})
+	      .attr("x2",function(d) {return xScale(d[1])})
+	      .attr("y1",function(d) {return yScale(d[2])})
+	      .attr("y2",function(d) {return yScale(d[3])})
+	      .attr("stroke",function(d) {return d[5]})
+	      .attr("stroke-width",2)
+   		.attr("stroke-dasharray",function(d) {if(d[4]==1) {return "0.0";} else {return "5.5";}})
+
+	      .on("mouseover",function(d) {
+	      	d3.select(this)
+	      		// .attr("stroke","green")
+	      		.attr("stroke-width",4);
+	            	var xPos = parseFloat(d3.select(this).attr("x1"))
+	      	var yPos = parseFloat(d3.select(this).attr("y2"))
+	      	// svg.append("line")
+	      	// 	.attr("id","lossline")
+	      	// 	.attr("x1",xPos)
+	      	// 	.attr("x2",xScale(parent_mass))
+	      	// 	.attr("y1",yPos+5)
+	      	// 	.attr("y2",yPos+5)
+	      	// 	.attr("stroke","green")
+	      	// 	.attr("stroke-width",2)
+	      	// 	.attr("stroke-dasharray","5,5")
+
+	      	// svg.append("text")
+	      	// 	.attr("id","losstext")
+	      	// 	.text("Loss mass: " + ((parent_mass-d[0]).toFixed(4)))
+	      	// 	.attr("y",yPos+15)
+	      	// 	.attr("x",xScale(d[0] + 0.5*(parent_mass-d[0]))-20)
+	      	// 	.attr("font-family","sans-serif")
+	      	// 	.attr("font-size","10px")
+	      	// 	.attr("fill","green")
+
+	      	svg.append("text")
+	      		.attr("id","tooltip")
+	      		.attr("x",xPos-50)
+	      		.attr("y",yPos-5)
+	      		.attr("font-family","sans-serif")
+	      		.attr("font-size","12px")
+	      		.attr("font-weight","bold")
+	      		.text((d[0].toFixed(4)) + ", intensity: " + (d[3].toFixed(0)) + "%")
+
+	      	
+	      })
+
+	            .on("mouseout",function() {
+	      	d3.select(this)
+	      		.transition()
+	      		.duration(250)
+	      		// .attr("stroke",d[5])
+	      		.attr("stroke-width",2);
+	      	d3.select("#tooltip").remove()
+	      	// d3.select("#lossline").remove()
+	      	// d3.select("#losstext").remove()
+	      });
+
+	
+	  
+
+
+	         // Axes
+	var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient("bottom");
+	svg.append("g")
+	    .attr("class", "axis")
+	    .attr("transform", "translate(0," + (height-ver_margin) + ")")
+	    .call(xAxis);
+
+	var yAxis = d3.svg.axis()
+	    .scale(yScale)
+	    .orient("left")
+	svg.append("g")
+		.attr("class","axis")
+		.attr("transform","translate(" + hor_margin + ",0)")
+	  	.call(yAxis)
+
+	// Axes labels
+	svg.append("text")
+	    .text("Mass")
+	    .attr("x",width/2)
+	    .attr("y",height)
+	    .attr("class","axis-label")
+
+	svg.append("text")
+	    .text("Relative Intensity")
+	    .attr("x",0)
+	    .attr("y",0)
+	    .attr("class","axis-label")
+	    .attr("transform","translate(10," + (30+height/2) + ")rotate(-90)");
+
+	svg.append("line")
+		.attr("x1",xScale(parent_mass))
+		.attr("x2",xScale(parent_mass))
+		.attr("y1",height-ver_margin)
+		.attr("y2",yScale(parent_intensity))
+		.attr("stroke","blue")
+		.attr("stroke-width",3)
+
+	svg.append("text")
+		.text("Parent Ion (" + parent_mass.toFixed(4) + ")")
+		.attr("class","axis-label")
+		.attr("transform","translate("+ (xScale(parent_mass)-5) + "," + (50+height/2) + ")rotate(-90)")
+
+
+
+});
+
+	// var dataset = [[123,25],[356,5],[55,4]]
+	// // var dataset = {{plot_fragments}}
+	// var parentData = {{plot_parent}}
+
+
+	// max_mass = d3.max(dataset,function(d) {return d[0]+50})
+	// if (max_mass < parentData[0][0]+50) {
+	// 	max_mass = parentData[0][0] + 50;
+	// }
+	// // Width and height should correspond to svg element
+	// // ver and hor are the margins
+	// var width=700
+	// var height=300
+	// var ver_margin = 30
+	// var hor_margin = 50
+
+	// var svg = d3.select("svg")
+
+	// // Create the line objects
+	// lines = svg.selectAll("line")
+	//         .data(dataset)
+	//         .enter()
+	//         .append("line")
+	//         .on("click",function(d) {
+	//         	console.log(d);
+	//         })
+
+
+	// // Axis scale objects
+	// var xScale = d3.scale.linear()
+	// xScale.domain([0, max_mass])
+	// xScale.range([ hor_margin,width-hor_margin])
+	// var yScale = d3.scale.linear()
+	// yScale.domain([0,d3.max(dataset,function(d) {return d[1];})])
+	// yScale.range([height-ver_margin,ver_margin])
+
+	// // Set the line attributes
+	// lines.attr("x1",function(d) {return xScale(d[0]);})
+	//       .attr("x2",function(d) {return xScale(d[0]);})
+	//       .attr("y1",height-ver_margin)
+	//       .attr("y2",function(d) {return yScale(d[1]);})
+	//       .attr("stroke","red")
+	//       .attr("stroke-width",2)
+	//       .on("mouseover",function(d) {
+	//       	d3.select(this)
+	//       		.attr("stroke","green")
+	//       		.attr("stroke-width",4);
+
+	//       	var xPos = parseFloat(d3.select(this).attr("x1"))
+	//       	var yPos = parseFloat(d3.select(this).attr("y2"))
+	//       	svg.append("line")
+	//       		.attr("id","lossline")
+	//       		.attr("x1",xPos)
+	//       		.attr("x2",xScale(parentData[0][0]))
+	//       		.attr("y1",yPos+5)
+	//       		.attr("y2",yPos+5)
+	//       		.attr("stroke","green")
+	//       		.attr("stroke-width",2)
+	//       		.attr("stroke-dasharray","5,5")
+
+	//       	svg.append("text")
+	//       		.attr("id","losstext")
+	//       		.text("Loss mass: " + ((parentData[0][0]-d[0]).toFixed(4)))
+	//       		.attr("y",yPos+15)
+	//       		.attr("x",xScale(d[0] + 0.5*(parentData[0][0]-d[0]))-20)
+	//       		.attr("font-family","sans-serif")
+	//       		.attr("font-size","10px")
+	//       		.attr("fill","green")
+
+	//       	svg.append("text")
+	//       		.attr("id","tooltip")
+	//       		.attr("x",xPos-50)
+	//       		.attr("y",yPos-5)
+	//       		.attr("font-family","sans-serif")
+	//       		.attr("font-size","12px")
+	//       		.attr("font-weight","bold")
+	//       		.text("Mass:" + (d[0].toFixed(4)) + ", intensity: " + (d[1].toFixed(0)) + "%");
+
+	      	
+	//       })
+	//       .on("mouseout",function() {
+	//       	d3.select(this)
+	//       		.transition()
+	//       		.duration(250)
+	//       		.attr("stroke","red")
+	//       		.attr("stroke-width",2);
+	//       	d3.select("#tooltip").remove()
+	//       	d3.select("#lossline").remove()
+	//       	d3.select("#losstext").remove()
+	//       })
+	//       // .append("title")
+	//       // .text(function(d) {
+	//       // 	return "Mass: " + d[0] + ", Intensity: " + d[1]
+	//       // })
+
+ //    // Axes
+	// var xAxis = d3.svg.axis()
+ //        .scale(xScale)
+ //        .orient("bottom");
+	// svg.append("g")
+	//     .attr("class", "axis")
+	//     .attr("transform", "translate(0," + (height-ver_margin) + ")")
+	//     .call(xAxis);
+
+	// var yAxis = d3.svg.axis()
+	//     .scale(yScale)
+	//     .orient("left")
+	// svg.append("g")
+	// 	.attr("class","axis")
+	// 	.attr("transform","translate(" + hor_margin + ",0)")
+	//   	.call(yAxis)
+
+	// // Axes labels
+	// svg.append("text")
+	//     .text("Mass")
+	//     .attr("x",width/2)
+	//     .attr("y",height)
+	//     .attr("class","axis-label")
+
+	// svg.append("text")
+	//     .text("Relative Intensity")
+	//     .attr("x",0)
+	//     .attr("y",0)
+	//     .attr("class","axis-label")
+	//     .attr("transform","translate(10," + (30+height/2) + ")rotate(-90)");
+
+	// svg.append("line")
+	// 	.attr("x1",xScale(parentData[0][0]))
+	// 	.attr("x2",xScale(parentData[0][0]))
+	// 	.attr("y1",height-ver_margin)
+	// 	.attr("y2",yScale(parentData[0][1]))
+	// 	.attr("stroke","blue")
+	// 	.attr("stroke-width",3)
+
+	// svg.append("text")
+	// 	.text("Parent Ion (" + parentData[0][0].toFixed(4) + ")")
+	// 	.attr("class","axis-label")
+	// 	.attr("transform","translate("+ (xScale(parentData[0][0])-5) + "," + (50+height/2) + ")rotate(-90)")
+
+
+</script>
+
+<style>
+.axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+.axis-label {
+  font-family: sans-serif;
+  font-size: 14px;
+}
+</style>
+
+
+
 </html>
+
+
