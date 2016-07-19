@@ -5,7 +5,7 @@ from networkx.readwrite import json_graph
 import json
 import jsonpickle
 
-from basicviz.models import Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif
+from basicviz.models import Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance
 
 def index(request):
     experiments = Experiment.objects.all()
@@ -40,6 +40,8 @@ def show_doc(request,doc_id):
 def view_parents(request,motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     context_dict = {'mass2motif':motif}
+    motif_features = Mass2MotifInstance.objects.filter(mass2motif = motif).order_by('-probability')
+    context_dict['motif_features'] = motif_features
     return render(request,'basicviz/view_parents.html',context_dict)
 
 def get_parents(request,motif_id):
