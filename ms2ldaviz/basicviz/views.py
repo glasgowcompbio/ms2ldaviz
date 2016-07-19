@@ -130,7 +130,7 @@ def get_doc_for_plot(doc_id,motif_id = None):
 
 
 def get_doc_topics(request,doc_id):
-    plot_fragments = get_doc_for_plot(doc_id,motif_id=153)
+    plot_fragments = get_doc_for_plot(doc_id)
     return HttpResponse(json.dumps(plot_fragments),content_type='application/json')
 
 
@@ -138,6 +138,8 @@ def get_doc_topics(request,doc_id):
 def start_viz(request,experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     context_dict = {'experiment':experiment}
+    initial_motif = Mass2Motif.objects.filter(experiment = experiment)[0]
+    context_dict['initial_motif'] = initial_motif
 
     # G = make_graph(experiment)
     # d = json_graph.node_link_data(G) 
@@ -176,7 +178,7 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 10,topic_scale_factor 
         G.add_node(topic.name,group=2,name=topic.name,
             size=topic_scale_factor * topics[topic],
             special = False, in_degree = topics[topic],
-            score = 1)
+            score = 1,node_id = topic.id,is_topic = True)
 
     documents = Document.objects.filter(experiment = experiment)
     for document in documents:
@@ -189,7 +191,7 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 10,topic_scale_factor 
           name = document.name
         G.add_node(name,group=1,name = name,size=20,
             type='square',peakid = document.name,special=False,
-            in_degree=0,score=0)
+            in_degree=0,score=0,is_topic = False)
         for docm2m in DocumentMass2Motif.objects.filter(document=document):
             if docm2m.mass2motif in topics and docm2m.probability > edge_thresh:
                 G.add_edge(docm2m.mass2motif.name,document.name,weight = edge_scale_factor*docm2m.probability)

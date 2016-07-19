@@ -63,7 +63,14 @@
 <script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
 <script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
 
+<div>
+    <svg width=700 height=1000></svg>
+</div>
+
+
 <script>
+
+
 
 // see:
 // - http://bl.ocks.org/mbostock/3750558
@@ -104,10 +111,239 @@ var optArray = [];
 
 var toggle = 0;
 
-// d3.json('{% static "graph.json" %}', function(error, graph) {
-// JSON.parse("{{ graph|safe }}", function(error,graph) {
-// graph = json.parse("{{graph}}");
-// var graph = "{{graph | safe}}";
+plot_graph();
+
+current_pos = 0;
+
+motif_name = '{{initial_motif.name}}'
+motif_id = {{initial_motif.id}}
+load_parents(motif_id,motif_name); // Hopefully there is such a motif!
+
+
+
+function load_parents(mass2motif_id,motif_name) {
+    current_pos = 0
+    d3.select('#frag_graph_svg').remove()
+    d3.json('/basicviz/get_parents/' + mass2motif_id + '/',function(error,total_dataset) {
+    if (error) throw error;
+    plot_parent(total_dataset,motif_name)
+});
+}
+function plot_parent(total_dataset,motif_name) {
+    if(current_pos < 0) {
+        current_pos = 0
+    }
+    if(current_pos > total_dataset.length-1) {
+        current_pos = total_dataset.length-1
+    }
+    var parent_mass = total_dataset[current_pos][0][0]
+    var parent_intensity = total_dataset[current_pos][0][1]
+    var parent_name = total_dataset[current_pos][0][2]
+    var dataset = total_dataset[current_pos][1]
+    var max_mass = d3.max(dataset,function(d) {return d[0]+50})
+    if(max_mass < parent_mass) {
+        max_mass = parent_mass + 50;
+    }
+    var total_width=900
+    var total_height=700
+    var plot_width = 700
+    var plot_height = 300
+    var ver_margin = 30
+    var hor_margin = 50
+    var head_height = 50
+
+    var n_parents = total_dataset.length
+    n_parents -= 1
+    d3.select('#load_text').remove()
+    d3.select("#frag_graph_titlebar_svg").remove(); 
+    d3.select("#frag_graph_svg").remove();
+    
+       //clear the existing svg (if it exists)
+    var frag_graph_titlebar_svg = d3.select("svg")
+       .append("svg")
+            .attr("width",plot_width)
+            .attr("height",head_height)
+            .attr("id","frag_graph_titlebar_svg")
+    frag_graph_titlebar_svg.append("rect")
+        .attr("width","98%")
+        .attr("height","98%")
+        .attr("x","10")
+        .attr("stroke","black")
+        .attr("fill","#F2F2F2");
+
+
+
+    var nextbut = frag_graph_titlebar_svg.append("g")
+        .attr("cursor","pointer")
+        .on("click",function () {current_pos += 1;plot_parent(total_dataset,motif_name)})
+
+    nextbut.append("rect")
+                .attr("height",30)
+                .attr("width",70)
+                .attr("x",plot_width-100)
+                .attr("y",9)
+                .attr("stroke","black")
+                .attr("fill","#CCAAAA")
+    nextbut.append("text")
+                .attr("x",plot_width-90)
+                .attr("y",30)
+                .text("Next")
+                .attr("font-family","sans-serif")
+                .attr("font-size","14px")
+
+    var prevbut = frag_graph_titlebar_svg.append("g")
+        .attr("cursor","pointer")
+        .on("click",function () {current_pos -= 1;plot_parent(total_dataset,motif_name)})
+
+    prevbut.append("rect")
+                .attr("height",30)
+                .attr("width",70)
+                .attr("x",30)
+                .attr("y",9)
+                .attr("stroke","black")
+                .attr("fill","#CCAAAA")
+    prevbut.append("text")
+                .attr("x",40)
+                .attr("y",30)
+                .text("Previous")
+                .attr("font-family","sans-serif")
+                .attr("font-size","14px")
+              
+    frag_graph_titlebar_svg.append("text")
+                .attr("x",plot_width-500)
+                .attr("y",40)
+                .attr("font-family","sans-serif")
+                .attr("font-size","14px")
+                .text("Parent: " + parent_name + "  (" + current_pos + "/" + n_parents + ")") 
+    frag_graph_titlebar_svg.append("text")
+                .attr("x",plot_width-500)
+                .attr("y",20)
+                .text(motif_name)
+
+    
+    var frag_graph_svg = d3.select("svg")
+               .append("svg")
+                    .attr("width",plot_width)
+                    .attr("height",plot_height)
+                    .attr("y",head_height)
+                    .attr("id","frag_graph_svg")
+   
+
+    // Create the line objects
+    lines = frag_graph_svg.selectAll("line")
+            .data(dataset)
+            .enter()
+            .append("line")
+            .on("click",function(d) {
+                console.log(d);
+            })
+
+    
+
+
+    // Axis scale objects
+    var xScale = d3.scale.linear()
+    xScale.domain([0, max_mass])
+    xScale.range([ hor_margin,plot_width-hor_margin])
+    var yScale = d3.scale.linear()
+    yScale.domain([0,d3.max(dataset,function(d) {return d[3];})])
+    yScale.range([plot_height-ver_margin,ver_margin])
+
+        // Set the line attributes
+    lines.attr("x1",function(d) {return xScale(d[0])})
+          .attr("x2",function(d) {return xScale(d[1])})
+          .attr("y1",function(d) {return yScale(d[2])})
+          .attr("y2",function(d) {return yScale(d[3])})
+          .attr("stroke",function(d) {return d[5]})
+          .attr("stroke-width",2)
+        .attr("stroke-dasharray",function(d) {if(d[4]==1) {return "0.0";} else {return "5.5";}})
+
+          .on("mouseover",function(d) {
+            d3.select(this)
+                // .attr("stroke","green")
+                .attr("stroke-width",4);
+                    var xPos = parseFloat(d3.select(this).attr("x1"))
+            var yPos = parseFloat(d3.select(this).attr("y2"))
+
+
+            frag_graph_svg.append("text")
+                .attr("id","tooltip")
+                .attr("x",xPos-50)
+                .attr("y",yPos-5)
+                .attr("font-family","sans-serif")
+                .attr("font-size","12px")
+                .attr("font-weight","bold")
+                .text(d[6])
+
+            
+          })
+
+                .on("mouseout",function() {
+            d3.select(this)
+                .transition()
+                .duration(250)
+                // .attr("stroke",d[5])
+                .attr("stroke-width",2);
+            d3.select("#tooltip").remove()
+            // d3.select("#lossline").remove()
+            // d3.select("#losstext").remove()
+          });
+
+    
+      
+
+
+             // Axes
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient("bottom");
+    frag_graph_svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(0," + (plot_height-ver_margin) + ")")
+        .call(xAxis);
+
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient("left")
+    frag_graph_svg.append("g")
+        .attr("class","axis")
+        .attr("transform","translate(" + hor_margin + ",0)")
+        .call(yAxis)
+
+    // Axes labels
+    frag_graph_svg.append("text")
+        .text("Mass")
+        .attr("x",plot_width/2)
+        .attr("y",plot_height)
+        .attr("class","axis-label")
+
+    frag_graph_svg.append("text")
+        .text("Relative Intensity")
+        .attr("x",0)
+        .attr("y",0)
+        .attr("class","axis-label")
+        .attr("transform","translate(10," + (30+plot_height/2) + ")rotate(-90)");
+
+    frag_graph_svg.append("line")
+        .attr("x1",xScale(parent_mass))
+        .attr("x2",xScale(parent_mass))
+        .attr("y1",plot_height-ver_margin)
+        .attr("y2",yScale(parent_intensity))
+        .attr("stroke","blue")
+        .attr("stroke-width",3)
+
+    frag_graph_svg.append("text")
+        .text("Parent Ion (" + parent_mass.toFixed(4) + ")")
+        .attr("class","axis-label")
+        .attr("transform","translate("+ (xScale(parent_mass)-5) + "," + (50+plot_height/2) + ")rotate(-90)")
+
+
+
+};
+
+
+function plot_graph() {
+
 d3.json('/basicviz/get_graph/{{ experiment.id}}', function(error, graph) {
 
     if (error) throw error;
@@ -126,13 +362,17 @@ d3.json('/basicviz/get_graph/{{ experiment.id}}', function(error, graph) {
 
     // the initial zoom and transform on the svg should be set to the same value
     var zoom = d3.behavior.zoom().translate([300,300]).scale(.1,.1);
-    svg = d3.select('body').append('svg')
+    svg = d3.select('svg').append('svg')
+        .attr('y',500)
         .attr('width', width)
         .attr('height', height)
         .call(zoom.on('zoom', zoomed))
         .on('dblclick.zoom', null)
         .append('g')
         .attr('transform', 'translate(300,300)scale(.1,.1)');
+
+
+
 
     //Set up tooltip
     var tip = d3.tip()
@@ -310,7 +550,8 @@ d3.json('/basicviz/get_graph/{{ experiment.id}}', function(error, graph) {
             .call(drag)
             .on('dblclick', selectNode)
             .on('mouseover', tip.show)
-            .on('mouseout', tip.hide);
+            .on('mouseout', tip.hide)
+            .on('click',function(d) { if(d.is_topic) {load_parents(d.node_id,d.name);}});
 
     var circle = node.append('path')
         .attr('class', 'node-shape')
@@ -457,6 +698,7 @@ d3.json('/basicviz/get_graph/{{ experiment.id}}', function(error, graph) {
     }, 5000);
 
 });
+}
 
 // *****************************************************************************
 // Search node
