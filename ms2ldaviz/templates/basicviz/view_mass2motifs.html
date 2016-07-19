@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+
+<html>
+
+<h2>Experiment: {{experiment.name}}</h2>
+
+<ul>
+{% for mass2motif in mass2motifs %}
+	<li>{{mass2motif.name}}&nbsp;<a href="/basicviz/view_parents/{{mass2motif.id}}">view parents</a></li>
+	<!-- &nbsp;<a href="/basicviz/show_docs/{{experiment.id}}">show parents</a>&nbsp;<a href="/basicviz/start_viz/{{experiment.id}}">start viz</a>&nbsp;<a href="/basicviz/view_mass2motifs/{{experiment.id}}">show mass2motifs</a></li> -->
+{% endfor %}
+</ul>
+
+</html>
