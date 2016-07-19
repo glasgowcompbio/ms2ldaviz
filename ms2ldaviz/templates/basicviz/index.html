@@ -6,7 +6,7 @@
 
 <ul>
 {% for experiment in experiments %}
-	<li>{{experiment.name}}&nbsp;<a href="/basicviz/show_docs/{{experiment.id}}">show parents</a>&nbsp;<a href="/basicviz/start_viz/{{experiment.id}}">start viz</a></li>
+	<li>{{experiment.name}}&nbsp;<a href="/basicviz/show_docs/{{experiment.id}}">show parents</a>&nbsp;<a href="/basicviz/start_viz/{{experiment.id}}">start viz</a>&nbsp;<a href="/basicviz/view_mass2motifs/{{experiment.id}}">show mass2motifs</a></li>
 {% endfor %}
 </ul>
 
