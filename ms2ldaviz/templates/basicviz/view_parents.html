@@ -5,12 +5,24 @@
 <html>
 	<h3>Mass2Motif: {{mass2motif.name}} ({{mass2motif.experiment.name}})</h3>
 
+	
+
 
 	<a href="/basicviz/view_mass2motifs/{{mass2motif.experiment.id}}">return to mass2motif list for {{mass2motif.experiment.name}}</a>
  <hr />
 
 <div border="20" padding="20">
-	<svg width="900" height="700"></svg>
+	<svg width="900" height="350"></svg>
+</div>
+
+<div>
+<h3>Mass2Motif details</h3>
+	<table border=1>
+		<tr><th>Name</th><th>Probability</th></tr>
+		{% for motif_feature in motif_features %}
+			<tr><td>{{motif_feature.feature.name}}</td><td>{{motif_feature.probability}}</td></tr>
+		{% endfor %}
+	</table>
 </div>
 
 <hr />
