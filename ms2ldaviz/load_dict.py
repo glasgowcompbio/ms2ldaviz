@@ -11,7 +11,7 @@ import jsonpickle
 from basicviz.models import Experiment,Document,Feature,FeatureInstance,Mass2Motif,Mass2MotifInstance,DocumentMass2Motif,FeatureMass2MotifInstance
 
 if __name__ == '__main__':
-	filename = '/Users/simon/git/lda/notebooks/beer3.dict'
+	filename = '/home/beer3.dict'
 	with open(filename,'r') as f:
 		lda_dict = pickle.load(f)
 	experiment = Experiment.objects.get_or_create(name='beer3')[0]
