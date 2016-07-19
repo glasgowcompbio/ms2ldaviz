@@ -83,7 +83,6 @@ def get_doc_for_plot(doc_id,motif_id = None):
                 break
             topics_to_plot.append(topics[i].mass2motif)
             topic_colours[topics[i].mass2motif] = colours[i]
-            print topics[i].mass2motif.id
     else:
         topic = Mass2Motif.objects.get(id = motif_id)
         topics_to_plot = [topic]
@@ -170,11 +169,9 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 10,topic_scale_factor 
     for topic in to_remove:
         del topics[topic]
 
-    print "Found {} topics".format(len(topics))
 
     # Add the topics to the graph
     G = nx.Graph()
-    print topics
     for topic in topics:
         G.add_node(topic.name,group=2,name=topic.name,
             size=topic_scale_factor * topics[topic],
