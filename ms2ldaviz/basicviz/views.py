@@ -155,7 +155,7 @@ def get_graph(request,experiment_id):
     return HttpResponse(json.dumps(d),content_type='application/json')
 
 
-def make_graph(experiment,edge_thresh = 0.05,min_degree = 10,topic_scale_factor = 5,edge_scale_factor=5):
+def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,topic_scale_factor = 5,edge_scale_factor=5):
     mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
     # Find the degrees
     topics = {}
@@ -176,10 +176,17 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 10,topic_scale_factor 
     # Add the topics to the graph
     G = nx.Graph()
     for topic in topics:
-        G.add_node(topic.name,group=2,name=topic.name,
-            size=topic_scale_factor * topics[topic],
-            special = False, in_degree = topics[topic],
-            score = 1,node_id = topic.id,is_topic = True)
+        metadata = jsonpickle.decode(topic.metadata)
+        if 'annotation' in metadata:
+            G.add_node(topic.name,group=2,name=metadata['annotation'],
+                size=topic_scale_factor * topics[topic],
+                special = True, in_degree = topics[topic],
+                score = 1,node_id = topic.id,is_topic = True)
+        else:
+            G.add_node(topic.name,group=2,name=topic.name,
+                size=topic_scale_factor * topics[topic],
+                special = False, in_degree = topics[topic],
+                score = 1,node_id = topic.id,is_topic = True)
 
     documents = Document.objects.filter(experiment = experiment)
     for document in documents:
