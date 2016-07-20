@@ -211,7 +211,7 @@ class VariationalLDA(object):
 				if self.corpus[doc][word] > max_i:
 					max_i = self.corpus[doc][word]
 			for word in self.corpus[doc]:
-				self.corpus[doc][word] = self.normalise*self.corpus[doc][word]/max_i
+				self.corpus[doc][word] = int(self.normalise*self.corpus[doc][word]/max_i)
 
     # Load the features from a Joe .csv file. Pass the file name up until the _ms1.csv or _ms2.csv
     # these are added here
@@ -257,7 +257,7 @@ class VariationalLDA(object):
 		        loss_name = split_line[11]
 		        if not loss_name == 'NA':
 		            loss_name = loss_name[1:-1]
-		            loss_id = 'loss_' + loss_name
+		        loss_id = 'loss_' + loss_name
 		        
 		        if not frag_id == "fragment_NA":
 		            if not frag_id in features:
@@ -274,6 +274,11 @@ class VariationalLDA(object):
 		        parent_id = split_line[2]
 		        # Find the parent
 		        parent = self.ms1peaks[parent_id_list.index(parent_id)]
+
+		        if parent == '156.076766819657_621.074':
+		        	print loss_id
+		        	print frag_id
+		        	print line
 
 		        # If we've not seen this parent before, create it as an empty dict
 		        if not parent in self.corpus:
