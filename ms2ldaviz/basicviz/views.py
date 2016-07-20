@@ -49,8 +49,10 @@ def get_parents(request,motif_id):
     docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif)
     documents = [d.document for d in docm2m]
     parent_data = []
-    for document in documents:
-        parent_data.append(get_doc_for_plot(document.id,motif_id))
+    for dm in docm2m:
+        if dm.probability > 0.05:
+            document = dm.document
+            parent_data.append(get_doc_for_plot(document.id,motif_id))
     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
 def view_mass2motifs(request,experiment_id):
@@ -140,7 +142,6 @@ def start_viz(request,experiment_id):
     context_dict = {'experiment':experiment}
     initial_motif = Mass2Motif.objects.filter(experiment = experiment)[0]
     context_dict['initial_motif'] = initial_motif
-
     # G = make_graph(experiment)
     # d = json_graph.node_link_data(G) 
     # context_dict = {'graph':d}
