@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+<html>
+
+{% block title %}Select an experiment{% endblock %}
+
+{% block body_block %}
+<h3>Select an experiment to view</h3>
+<ul>
+{% for experiment in experiments %}
+	<li><b>{{experiment.name}}</b>
+	<a href="/basicviz/show_docs/{{experiment.id}}" class="btn btn-xs btn-default" role="button">Show parents</a>
+    <a href="/basicviz/start_viz/{{experiment.id}}" class="btn btn-xs btn-primary" role="button">Start interactive vizualisation</a>
+    <a href="/basicviz/view_mass2motifs/{{experiment.id}}" class="btn btn-xs btn-success" role="button">Show Mass2Motifs</a>
+{% endfor %}
+</ul>
+{% endblock %}

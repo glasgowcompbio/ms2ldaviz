@@ -1,8 +1,7 @@
-<!DOCTYPE html>
-
+{% extends 'base.html' %}
 {% load static %}
 
-<html>
+{% block body_block %}
 	{% if document %}
 		<h3>Document {{document.name}}</h3>
 	{% endif %}
@@ -16,7 +15,7 @@
 	{% endif %}
 
 	{% if features %}
-		<table border=1>
+		<table class="table">
 		<tr><th>Name</th><th>Intensity</th><th>Topics</th></tr>
 		{% for feature,m2minstances in fm2m.items %}
 			<tr><td>{{feature.feature.name}}</td><td>{{feature.intensity}}</td>
@@ -30,7 +29,7 @@
 		</table>
 	{% endif %}
 
-	<a href="/basicviz/show_docs/{{experiment.id}}">return</a>
+	<a href="/basicviz/show_docs/{{experiment.id}}">return to parent list for {{experiment.name}}</a>
 
 
 <div border="20" padding="20">
@@ -352,6 +351,6 @@ d3.json('/basicviz/get_doc_topics/{{document.id}}',function(error,total_dataset)
 
 
 
-</html>
+{% endblock %}
 
 

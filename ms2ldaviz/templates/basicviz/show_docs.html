@@ -1,15 +1,16 @@
-<html>
+{% extends 'base.html' %}
+{% block body_block %}
 	{% if experiment %}
 		<h3>Experiment {{ experiment.name }}</h3>
 	{% endif %}
-
+	<a href="/basicviz">return to visualisation menu</a>
 	{% if documents %}
 		<h3>Documents</h3>
-		<table border=1>
+		<table class="table">
 		<tr><th>Name</th><th>Metadata</th></tr>
 		{% for doc in documents %}
 			<tr><td><a href="/basicviz/show_doc/{{doc.id}}">{{doc.name}}</a></td><td>{{doc.metadata}}</td></tr>
 		{% endfor %}
 		</table>
 	{% endif %}
-</html>
+{% endblock %}

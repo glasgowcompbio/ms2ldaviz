@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+{% extends 'base.html' %}
 
 {% load static %}
 
-<html>
+{% block body_block %}
 	<h3>Mass2Motif: {{mass2motif.name}} ({{mass2motif.experiment.name}})</h3>
 
 	
@@ -17,7 +17,7 @@
 
 <div>
 <h3>Mass2Motif details</h3>
-	<table border=1>
+	<table class='table'>
 		<tr><th>Name</th><th>Probability</th></tr>
 		{% for motif_feature in motif_features %}
 			<tr><td>{{motif_feature.feature.name}}</td><td>{{motif_feature.probability}}</td></tr>
@@ -273,6 +273,6 @@ function plot_parent(total_dataset) {
 
 
 
-</html>
+{% endblock %}
 
 

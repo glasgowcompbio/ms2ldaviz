@@ -10,7 +10,7 @@ from basicviz.models import Experiment,Document,FeatureInstance,DocumentMass2Mot
 def index(request):
     experiments = Experiment.objects.all()
     context_dict = {'experiments':experiments}
-    return render(request,'basicviz/index.html',context_dict)
+    return render(request,'basicviz/basicviz.html',context_dict)
 
 
 def show_docs(request,experiment_id):
