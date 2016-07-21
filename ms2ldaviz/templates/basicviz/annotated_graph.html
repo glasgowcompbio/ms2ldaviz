@@ -126,7 +126,7 @@ load_parents(motif_id,motif_name); // Hopefully there is such a motif!
 function load_parents(mass2motif_id,motif_name) {
     current_pos = 0
     d3.select('#frag_graph_svg').remove()
-    d3.json('/basicviz/get_parents/' + mass2motif_id + '/',function(error,total_dataset) {
+    d3.json('/basicviz/get_annotated_parents/' + mass2motif_id + '/',function(error,total_dataset) {
     if (error) throw error;
     plot_parent(total_dataset,motif_name)
 });
@@ -347,7 +347,7 @@ function plot_parent(total_dataset,motif_name) {
 
 function plot_graph() {
 
-d3.json('/basicviz/get_graph/{{ experiment.id}}', function(error, graph) {
+d3.json('/basicviz/get_annotated_graph/{{ experiment.id}}', function(error, graph) {
 
     if (error) throw error;
 
