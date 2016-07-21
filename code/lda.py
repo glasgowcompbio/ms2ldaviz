@@ -201,6 +201,65 @@ class VariationalLDA(object):
 		self.eta = eta # Smoothing parameter for beta
 		self.update_alpha = update_alpha
 		self.doc_metadata = None
+		self.n_fixed_topics = 0
+
+		self.topic_index = {}
+		self.topic_metadata = {}
+		for topic_pos in range(self.K):
+			topic_name = 'motif_{}'.format(topic_pos)
+			self.topic_index[topic_name] = topic_pos
+			self.topic_metadata[topic_name] = {'name':topic_name,'type':'learnt'}
+
+
+	def add_fixed_topics(self,topics,topic_metadata = None,mass_tol = 5,prob_thresh = 0.5):
+		print "Matching topics"
+		ti = [(topic,self.topic_index[topic]) for topic in self.topic_index]
+		ti = sorted(ti,key = lambda x:x[1])
+		topic_reverse,_ = zip(*ti)
+		self.beta_matrix = np.zeros((self.K,len(self.word_index)),np.float)
+		self.n_fixed_topics = 0
+		fragment_masses = np.array([float(f.split('_')[1]) for f in self.word_index if f.startswith('fragment')])
+		fragment_names = [f for f in self.word_index if f.startswith('fragment')]
+		loss_masses = np.array([float(f.split('_')[1]) for f in self.word_index if f.startswith('loss')])
+		loss_names = [f for f in self.word_index if f.startswith('loss')]
+
+		for i,topic in enumerate(topics):
+			print "Mass2Motif: {}".format(topic)
+			topic_name_here = topic_reverse[i]
+			self.topic_metadata[topic_name_here]['type'] = 'fixed'
+			self.n_fixed_topics = len(topics)
+
+			# todo -- only put in fixed topics if we can find words that explain at least p_thresh of their probability
+
+			# copy the metadata. If there is a name field in the incoming topic, save it as old_name
+			if topic_metadata:
+				for metadata_item in topic_metadata[topic]:
+					if metadata_item == 'name':
+						self.topic_metadata[topic_name_here]['old_name'] = topic_metadata[topic][metadata_item]
+					else:
+						self.topic_metadata[topic_name_here][metadata_item] = topic_metadata[topic][metadata_item]
+			for word in topics[topic]:
+				word_mass = float(word.split('_')[1])
+				if word.startswith('fragment'):
+					mass_err = 1e6*np.abs(fragment_masses - word_mass)/fragment_masses
+					min_err = mass_err.min()
+					if min_err < mass_tol:
+						matched_word = fragment_names[mass_err.argmin()]
+						self.beta_matrix[self.n_fixed_topics,self.word_index[matched_word]] = topics[topic][word]
+						print "\t Matched: {} with {}".format(word,matched_word)
+					else:
+						print "\t Couldn't match {}".format(word)
+				else:
+					mass_err = 1e6*np.abs(loss_masses - word_mass)/loss_masses
+					min_err = mass_err.min()
+					if min_err < 2*mass_tol:
+						matched_word = loss_names[mass_err.argmin()]
+						self.beta_matrix[i,self.word_index[matched_word]] = topics[topic][word]
+						print "\t Matched: {} with {}".format(word,matched_word)
+					else:
+						print "\t Couldn't match {}".format(word)
+		self.beta_matrix[:self.n_fixed_topics,:] /= self.beta_matrix[:self.n_fixed_topics,:].sum(axis=1)[:,None]
+
 
 
 
@@ -327,6 +386,8 @@ class VariationalLDA(object):
 		temp_beta = self.e_step()
 		temp_beta += self.eta
 		# Do the normalisation in the m step
+		if self.n_fixed_topics > 0:
+			temp_beta[:self.n_fixed_topics,:] = self.beta_matrix[:self.n_fixed_topics,:]
 		temp_beta /= temp_beta.sum(axis=1)[:,None]
 		# Compute how much the word probabilities have changed
 		total_difference = (np.abs(temp_beta - self.beta_matrix)).sum()
@@ -423,7 +484,10 @@ class VariationalLDA(object):
 		# self.phi_matrix /= self.phi_matrix.sum(axis=2)[:,:,None]
 
 		# Initialise the betas
-		self.beta_matrix = np.random.rand(self.K,self.n_words)
+		if self.n_fixed_topics == 0:
+			self.beta_matrix = np.random.rand(self.K,self.n_words)	
+		else:
+			self.beta_matrix[self.n_fixed_topics:,] = np.random.rand(self.K - self.n_fixed_topics,self.n_words)
 		self.beta_matrix /= self.beta_matrix.sum(axis=1)[:,None]
 
 	# Function to return a dictionary with keys equal to documents and values equal to the probability
@@ -478,6 +542,9 @@ class VariationalLDA(object):
 		lda_dict['alpha'] = list(self.alpha)
 		lda_dict['beta'] = {}
 		lda_dict['doc_metadata'] = metadata
+		lda_dict['topic_index'] = self.topic_index
+		lda_dict['topic_metadata'] = self.topic_metadata
+
 
 		# Create the inverse indexes
 		wi = []
