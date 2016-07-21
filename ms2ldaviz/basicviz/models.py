@@ -9,7 +9,7 @@ class Experiment(models.Model):
 		return self.name
 
 class Document(models.Model):
-	name = models.CharField(max_length=32,unique=True)
+	name = models.CharField(max_length=32)
 	experiment = models.ForeignKey(Experiment)
 	metadata = models.CharField(max_length=1024,null=True)
 
