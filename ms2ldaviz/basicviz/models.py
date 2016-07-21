@@ -13,6 +13,15 @@ class Document(models.Model):
 	experiment = models.ForeignKey(Experiment)
 	metadata = models.CharField(max_length=1024,null=True)
 
+	def get_annotation(self):
+		md = jsonpickle.decode(self.metadata)
+		if 'annotation' in md:
+			return md['annotation']
+		else:
+			return ""
+
+	annotation = property(get_annotation)
+
 	def __unicode__(self):
 		return self.name
 

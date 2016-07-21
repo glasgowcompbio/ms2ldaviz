@@ -55,6 +55,19 @@ def get_parents(request,motif_id):
             parent_data.append(get_doc_for_plot(document.id,motif_id))
     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
+def get_annotated_parents(request,motif_id):
+    motif = Mass2Motif.objects.get(id=motif_id)
+    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif)
+    documents = [d.document for d in docm2m]
+    parent_data = []
+    for dm in docm2m:
+        if dm.probability > 0.05:
+            document = dm.document
+            if len(document.annotation) > 0:
+                parent_data.append(get_doc_for_plot(document.id,motif_id))
+    return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
+
+
 def view_mass2motifs(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
     mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
@@ -71,7 +84,7 @@ def get_doc_for_plot(doc_id,motif_id = None):
     # Get the parent info
     metadata = jsonpickle.decode(document.metadata)
     parent_mass = float(metadata['parentmass'])
-    parent_data = (parent_mass,100.0,document.name)
+    parent_data = (parent_mass,100.0,document.name,document.annotation)
     plot_fragments.append(parent_data)
     child_data = []
 
@@ -148,14 +161,82 @@ def start_viz(request,experiment_id):
     # json.dump(d, open('/Users/simon/git/ms2ldaviz/ms2ldaviz/static/graph.json','w'),indent=2)
     return render(request,'basicviz/graph.html',context_dict)
 
+def start_annotated_viz(request,experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    context_dict = {'experiment':experiment}
+    # This is a bit of a hack to make sure that the initial motif is one in the graph
+    documents = Document.objects.filter(experiment = experiment)
+    for document in documents:
+        if len(document.annotation) > 0:
+            for docm2m in DocumentMass2Motif.objects.filter(document = document):
+                if docm2m.probability > 0.05:
+                    context_dict['initial_motif'] = docm2m.mass2motif
+                    break
+    # initial_motif = Mass2Motif.objects.filter(experiment = experiment)[0]
+    # context_dict['initial_motif'] = initial_motif
+    # G = make_graph(experiment)
+    # d = json_graph.node_link_data(G) 
+    # context_dict = {'graph':d}
+    # json.dump(d, open('/Users/simon/git/ms2ldaviz/ms2ldaviz/static/graph.json','w'),indent=2)
+    return render(request,'basicviz/annotated_graph.html',context_dict)
+
+
 def get_graph(request,experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     G = make_graph(experiment)
+    # G = make_annotated_graph(experiment)
+    d = json_graph.node_link_data(G)
+    return HttpResponse(json.dumps(d),content_type='application/json')
+
+def get_annotated_graph(request,experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    # G = make_graph(experiment)
+    G = make_annotated_graph(experiment)
     d = json_graph.node_link_data(G)
     return HttpResponse(json.dumps(d),content_type='application/json')
 
 
-def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,topic_scale_factor = 5,edge_scale_factor=5):
+
+def make_annotated_graph(experiment,edge_thresh = 0.05,min_degree = 1,
+    topic_scale_factor = 20,edge_scale_factor = 5):
+    # makes the graph with just the documents that are annotated
+    documents = Document.objects.filter(experiment = experiment)
+    annotated_documents = []
+    topic_degrees = {}
+    G = nx.Graph()
+    for document in documents:
+        metadata = jsonpickle.decode(document.metadata)
+        if 'annotation' in metadata:
+            annotated_documents.append(document)
+            G.add_node(document.name,group=1,name = metadata['annotation'],size=20,
+                type='square',peakid = document.name,special=False,
+                in_degree=0,score=0,is_topic = False)
+            for docm2m in DocumentMass2Motif.objects.filter(document=document):
+                if docm2m.probability > edge_thresh:
+                    if docm2m.mass2motif in topic_degrees:
+                        topic_degrees[docm2m.mass2motif] += 1
+                    else:
+                        topic_degrees[docm2m.mass2motif] = 1
+    for topic in topic_degrees:
+        if topic_degrees[topic] >= min_degree:
+            metadata = jsonpickle.decode(topic.metadata)
+            if 'annotation' in metadata:
+                name = metadata['annotation']
+                special = True
+            else:
+                name = topic.name
+                special = False
+            G.add_node(topic.name,group=2,name=name,size=topic_scale_factor * topic_degrees[topic],
+                special = special, in_degree = topic_degrees[topic],
+                score = 1,node_id = topic.id,is_topic = True)
+            for docm2m in DocumentMass2Motif.objects.filter(mass2motif = topic):
+                if docm2m.probability > edge_thresh and docm2m.document in annotated_documents:
+                    G.add_edge(topic.name,docm2m.document.name,weight = edge_scale_factor*docm2m.probability)
+    return G
+
+
+def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
+    topic_scale_factor = 5,edge_scale_factor=5):
     mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
     # Find the degrees
     topics = {}
