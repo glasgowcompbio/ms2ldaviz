@@ -6,15 +6,16 @@
 
 {% block body_block %}
 <h3>Select an experiment to view</h3>
-<ul>
+<table class="table">
+<tr><th>Name</th><th>Description</th><th>Actions</th></tr>
 {% for experiment in experiments %}
-	<li><b>{{experiment.name}}</b>
+	<tr><td>{{experiment.name}}</td>
+	<td>{{experiment.description}}</td>
+	<td>
 	<a href="/basicviz/show_docs/{{experiment.id}}" class="btn btn-xs btn-default" role="button">Show parents</a>
     <a href="/basicviz/start_viz/{{experiment.id}}" class="btn btn-xs btn-primary" role="button">Start interactive vizualisation</a>
     <a href="/basicviz/view_mass2motifs/{{experiment.id}}" class="btn btn-xs btn-success" role="button">Show Mass2Motifs</a>
-    {% if experiment.description %}
-    	<p>{{experiment.description}}</p>
-    {% endif %}
+    </td></tr>
 {% endfor %}
 </ul>
 {% endblock %}

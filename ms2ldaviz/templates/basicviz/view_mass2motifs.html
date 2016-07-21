@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block body_block %}
 <h2>Experiment: {{experiment.name}}</h2>
-
+<a href="/basicviz">return to experiment list</a>
 <table class="table">
 <tr><th>Name</th><th>Annotation</th><th>Actions</th></tr>
 {% for mass2motif in mass2motifs %}
