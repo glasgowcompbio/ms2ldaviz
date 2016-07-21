@@ -1,4 +1,5 @@
 from django.db import models
+import jsonpickle
 
 # Create your models here.
 class Experiment(models.Model):
@@ -34,6 +35,15 @@ class Mass2Motif(models.Model):
 	name = models.CharField(max_length=32)
 	experiment = models.ForeignKey(Experiment)
 	metadata = models.CharField(max_length=1024,null=True)
+
+	def get_annotation(self):
+		md = jsonpickle.decode(self.metadata)
+		if 'annotation' in md:
+			return md['annotation']
+		else:
+			return ""
+
+	annotation = property(get_annotation)
 
 	def __unicode__(self):
 		return self.name
