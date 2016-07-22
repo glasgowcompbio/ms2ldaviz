@@ -235,8 +235,9 @@ class FeatureExtractor(object):
                 key = (row['MSnParentPeakID'], f)
                 col_pos = self.ms1_pos[key]
                 doc_id = self.all_doc_labels[f][col_pos]
+                intensity = row['intensity']
 
                 if w in lda_dict[doc_id]:
-                    lda_dict[doc_id][w] += 1
+                    lda_dict[doc_id][w] += intensity
                 else:
-                    lda_dict[doc_id].update({w : 1})
+                    lda_dict[doc_id].update({w : intensity})
