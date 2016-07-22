@@ -148,7 +148,8 @@ def get_doc_topics(request,doc_id):
     plot_fragments = get_doc_for_plot(doc_id)
     return HttpResponse(json.dumps(plot_fragments),content_type='application/json')
 
-
+def anotherfunction():
+    pass
 
 def start_viz(request,experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
