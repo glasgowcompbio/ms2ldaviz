@@ -223,21 +223,16 @@ class VariationalLDA(object):
 		loss_masses = np.array([float(f.split('_')[1]) for f in self.word_index if f.startswith('loss')])
 		loss_names = [f for f in self.word_index if f.startswith('loss')]
 
-		for i,topic in enumerate(topics):
+
+		for topic in topics:
 			print "Mass2Motif: {}".format(topic)
-			topic_name_here = topic_reverse[i]
-			self.topic_metadata[topic_name_here]['type'] = 'fixed'
-			self.n_fixed_topics = len(topics)
+			topic_name_here = topic_reverse[self.n_fixed_topics]
+			
+			# self.n_fixed_topics = len(topics)
 
-			# todo -- only put in fixed topics if we can find words that explain at least p_thresh of their probability
-
-			# copy the metadata. If there is a name field in the incoming topic, save it as old_name
-			if topic_metadata:
-				for metadata_item in topic_metadata[topic]:
-					if metadata_item == 'name':
-						self.topic_metadata[topic_name_here]['old_name'] = topic_metadata[topic][metadata_item]
-					else:
-						self.topic_metadata[topic_name_here][metadata_item] = topic_metadata[topic][metadata_item]
+			temp_beta = np.zeros(len(self.word_index),np.float)
+			probability_matched = 0.0
+			
 			for word in topics[topic]:
 				word_mass = float(word.split('_')[1])
 				if word.startswith('fragment'):
@@ -245,21 +240,39 @@ class VariationalLDA(object):
 					min_err = mass_err.min()
 					if min_err < mass_tol:
 						matched_word = fragment_names[mass_err.argmin()]
-						self.beta_matrix[self.n_fixed_topics,self.word_index[matched_word]] = topics[topic][word]
-						print "\t Matched: {} with {}".format(word,matched_word)
+						temp_beta[self.word_index[matched_word]] = topics[topic][word]
+						probability_matched += topics[topic][word]
+						# print "\t Matched: {} with {}".format(word,matched_word)
 					else:
-						print "\t Couldn't match {}".format(word)
+						# print "\t Couldn't match {}".format(word)
+						pass
 				else:
 					mass_err = 1e6*np.abs(loss_masses - word_mass)/loss_masses
 					min_err = mass_err.min()
 					if min_err < 2*mass_tol:
 						matched_word = loss_names[mass_err.argmin()]
-						self.beta_matrix[i,self.word_index[matched_word]] = topics[topic][word]
-						print "\t Matched: {} with {}".format(word,matched_word)
+						temp_beta[self.word_index[matched_word]] = topics[topic][word]
+						probability_matched += topics[topic][word]
+						# print "\t Matched: {} with {}".format(word,matched_word)
 					else:
-						print "\t Couldn't match {}".format(word)
-		self.beta_matrix[:self.n_fixed_topics,:] /= self.beta_matrix[:self.n_fixed_topics,:].sum(axis=1)[:,None]
+						# print "\t Couldn't match {}".format(word)
+						pass
+			print "\t matched {} of the probability".format(probability_matched)
+			if probability_matched > prob_thresh:
+				self.topic_metadata[topic_name_here]['type'] = 'fixed'
+				self.beta_matrix[self.n_fixed_topics,:] = temp_beta
+				# copy the metadata. If there is a name field in the incoming topic, save it as old_name
+				if topic_metadata:
+					for metadata_item in topic_metadata[topic]:
+						if metadata_item == 'name':
+							self.topic_metadata[topic_name_here]['old_name'] = topic_metadata[topic][metadata_item]
+						else:
+							self.topic_metadata[topic_name_here][metadata_item] = topic_metadata[topic][metadata_item]
+				self.n_fixed_topics += 1
 
+		# Normalise
+		self.beta_matrix[:self.n_fixed_topics,:] /= self.beta_matrix[:self.n_fixed_topics,:].sum(axis=1)[:,None]
+		print "Matched {}/{} topics at prob_thresh={}".format(self.n_fixed_topics,len(topics),prob_thresh)
 
 
 
