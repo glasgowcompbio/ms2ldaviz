@@ -633,37 +633,60 @@ class MS1(object):
 
 # TODO: comment this class!
 class MultiFileVariationalLDA(object):
-	def __init__(self,corpus_list,word_index,K = 20,alpha=1,eta = 0.1):
+	def __init__(self,corpus_dictionary,word_index,K = 20,alpha=1,eta = 0.1):
 		self.word_index = word_index # this needs to be consistent across the instances
-		self.corpus_list = corpus_list
+		self.corpus_dictionary = corpus_dictionary
 		self.K = K
 		self.alpha = alpha
+		self.n_words = len(self.word_index)
 		if type(self.alpha) == int:
 			self.alpha = self.alpha*np.ones(self.K)
 		self.eta = eta # Smoothing parameter for beta
-		self.individual_lda = []
-		for corpus in self.corpus_list:
-			new_lda = VariationalLDA(corpus=corpus,K=K,alpha=alpha,eta=eta,word_index=word_index)
-			self.individual_lda.append(new_lda)
+		self.individual_lda = {}
+		for corpus_name in self.corpus_dictionary:
+			new_lda = VariationalLDA(corpus=self.corpus_dictionary[corpus_name],K=K,alpha=alpha,eta=eta,word_index=word_index)
+			self.individual_lda[corpus_name] = new_lda
 
 
 	def run_vb(self,n_its = 10,initialise=True):
 		if initialise:
-			for l in self.individual_lda:
-				l.init_vb()
+			for lda_name in self.individual_lda:
+				self.individual_lda[lda_name].init_vb()
+		first_lda = self.individual_lda[self.individual_lda.keys()[0]]
 		for it in range(n_its):
 			print "Iteration: {}".format(it)
-			temp_beta = np.zeros((self.individual_lda[0].K,self.individual_lda[0].n_words),np.float)
+			temp_beta = np.zeros((self.K,self.n_words),np.float)
 			total_difference = []
-			for l in self.individual_lda:
-				temp_beta += l.e_step()
-				if l.update_alpha:
-					l.alpha = l.alpha_nr()
+			for lda_name in self.individual_lda:
+				temp_beta += self.individual_lda[lda_name].e_step()
+				if self.individual_lda[lda_name].update_alpha:
+					self.individual_lda[lda_name].alpha = self.individual_lda[lda_name].alpha_nr()
 			temp_beta += self.eta
 			temp_beta /= temp_beta.sum(axis=1)[:,None]
 			total_difference = (np.abs(temp_beta - self.individual_lda[0].beta_matrix)).sum()
-			for l in self.individual_lda:
-				l.beta_matrix = temp_beta
+			for lda_name in self.individual_lda:
+				self.individual_lda[lda_name].beta_matrix = temp_beta
 			print total_difference
+
+	def make_dictionary(self,min_prob_to_keep_beta = 1e-3,
+						min_prob_to_keep_phi = 1e-2,min_prob_to_keep_theta = 1e-2,
+						filename = None):
+		multifile_dict = {}
+		multifile_dict['individual_lda'] = {}
+		for lda_name in self.individual_lda:
+			multifile_dict['individual_lda'][lda_name] = self.individual_lda[lda_name].make_dictionary(
+																	min_prob_to_keep_theta = min_prob_to_keep_theta,
+																	min_prob_to_keep_phi = min_prob_to_keep_phi,
+																	min_prob_to_keep_beta = min_prob_to_keep_beta)
+		multifile_dict['word_index'] = self.word_index
+		multifile_dict['K'] = self.K
+
+		if filename:
+			with open(filename,'w') as f:
+				pickle.dump(multifile_dict,f)
+
+		return multifile_dict
+
+
 
 
