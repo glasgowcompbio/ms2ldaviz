@@ -177,7 +177,9 @@ class LDA(object):
  # word_index is only used in multi-file as it's important that features are always in the same order.
  # In single file it is created internally
 class VariationalLDA(object):
-	def __init__(self,corpus=None,K = 20,eta=0.1,alpha=1,update_alpha=True,word_index=None,normalise = -1):
+	def __init__(self,corpus=None,K = 20,eta=0.1,
+		alpha=1,update_alpha=True,word_index=None,normalise = -1,
+		topic_index = None,topic_metadata = None):
 		self.corpus = corpus
 		self.word_index = word_index
 		self.normalise = normalise
@@ -203,12 +205,17 @@ class VariationalLDA(object):
 		self.doc_metadata = None
 		self.n_fixed_topics = 0
 
-		self.topic_index = {}
-		self.topic_metadata = {}
-		for topic_pos in range(self.K):
-			topic_name = 'motif_{}'.format(topic_pos)
-			self.topic_index[topic_name] = topic_pos
-			self.topic_metadata[topic_name] = {'name':topic_name,'type':'learnt'}
+		self.topic_index = topic_index
+		self.topic_metadata = topic_metadata
+		if self.topic_index == None:
+			self.topic_index = {}
+			for topic_pos in range(self.K):
+				topic_name = 'motif_{}'.format(topic_pos)
+				self.topic_index[topic_name] = topic_pos
+		if self.topic_metadata == None:
+			self.topic_metadata = {}
+			for topic in self.topic_index:
+				self.topic_metadata[topic] = {'name':topic,'type':'learnt'}
 
 
 	def add_fixed_topics(self,topics,topic_metadata = None,mass_tol = 5,prob_thresh = 0.5):
@@ -633,7 +640,7 @@ class MS1(object):
 
 # TODO: comment this class!
 class MultiFileVariationalLDA(object):
-	def __init__(self,corpus_dictionary,word_index,K = 20,alpha=1,eta = 0.1):
+	def __init__(self,corpus_dictionary,word_index,topic_index = None,topic_metadata = None,K = 20,alpha=1,eta = 0.1):
 		self.word_index = word_index # this needs to be consistent across the instances
 		self.corpus_dictionary = corpus_dictionary
 		self.K = K
@@ -643,8 +650,22 @@ class MultiFileVariationalLDA(object):
 			self.alpha = self.alpha*np.ones(self.K)
 		self.eta = eta # Smoothing parameter for beta
 		self.individual_lda = {}
+
+		self.topic_index = topic_index
+		if topic_index == None:
+			self.topic_index = {}
+			for topic_pos in range(self.K):
+				self.topic_index['mass2motif_{}'.format(topic_pos)] = topic_pos
+		self.topic_metadata = topic_metadata
+		if self.topic_metadata == None:
+			self.topic_metadata = {}
+			for topic in self.topic_index:
+				self.topic_metadata[topic] = {'name':topic,'type'='learnt'}
+
 		for corpus_name in self.corpus_dictionary:
-			new_lda = VariationalLDA(corpus=self.corpus_dictionary[corpus_name],K=K,alpha=alpha,eta=eta,word_index=word_index)
+			new_lda = VariationalLDA(corpus=self.corpus_dictionary[corpus_name],K=K,
+				alpha=alpha,eta=eta,word_index=word_index,
+				topic_index = self.topic_index,topic_metadata = self.topic_metadata)
 			self.individual_lda[corpus_name] = new_lda
 
 
@@ -686,6 +707,7 @@ class MultiFileVariationalLDA(object):
 				pickle.dump(multifile_dict,f)
 
 		return multifile_dict
+
 
 
 

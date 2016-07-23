@@ -4,6 +4,8 @@ import plotly as plotly
 from plotly.graph_objs import *
 import networkx as nx
 import json
+import pickle
+import numpy as np
 from networkx.readwrite import json_graph
 
 
@@ -336,6 +338,8 @@ class MultiFileVariationalLDAPlotter(object):
           )
         )
     plotly.offline.iplot({'data':data})
+
+
 
 
 
@@ -690,4 +694,92 @@ class VariationalLDAPlotter_dict(object):
 
 
 
+class MultiFileVariationalLDAPlotter_dict(object):
+    def __init__(self,m_lda = None,m_lda_file = None):
+        plotly.offline.init_notebook_mode()
+        if m_lda == None:
+            if m_lda_file == None:
+                print "You must specify a file or a dictionary"
+            else:
+                with open(m_lda_file,'r') as f:
+                    self.m_lda = pickle.load(f)
+        else:
+            self.m_lda = m_lda
+        self.K = self.m_lda['K']
+        self.n_files = len(self.m_lda['individual_lda'])
+
+    def make_alpha_matrix(self,normalise = False):
+        all_alpha = np.zeros((self.n_files,self.K),np.float)
+        self.file_index = {}
+        file_pos = 0
+        for file in self.m_lda['individual_lda']:
+            self.file_index[file] = file_pos
+            all_alpha[file_pos,:] = np.array(self.m_lda['individual_lda'][file]['alpha']).copy()
+            file_pos += 1
+        if normalise:
+            all_alpha /= all_alpha.sum(axis=1)[:,None]
+        return all_alpha
+
+    def alpha_bars(self,normalise = False):
+        all_alpha = self.make_alpha_matrix(normalise = normalise)
+
+        data = []
+        for file in self.file_index:
+            print file
+            data.append(
+                Bar(
+                    x = range(self.K),
+                    y = all_alpha[self.file_index[file],:],
+                    name = file,
+                    )
+                )
+
+        plotly.offline.iplot({'data':data})
+
+    def alpha_pca(self,weight_thresh = 0.05,line_fact = 3):
+        from sklearn.decomposition import PCA
+        all_alpha = self.make_alpha_matrix(normalise = False)
+        pca = PCA(n_components = 2,whiten = True)
+        pca.fit(all_alpha)
+        X = pca.transform(all_alpha)
+
+        ap = [(f,self.file_index[f]) for f in self.file_index]
+        ap = sorted(ap,key = lambda x: x[1])
+        reverse,_ = zip(*ap)
+
+        data = []
+        data.append(
+            Scatter(
+                x = X[:,0],
+                y = X[:,1],
+                mode = 'markers',
+                marker = dict(
+                    size = 20,
+                    ),
+                text = reverse, 
+                showlegend = False,
+                )
+            )
+
+        # TODO need proper topic names here
+        for k in range(self.K):
+            if np.abs(pca.components_[:,k]).sum() > weight_thresh:
+                data.append(
+                    Scatter(
+                        x = [0,line_fact*pca.components_[0,k]],
+                        y = [0,line_fact*pca.components_[1,k]],
+                        name = 'Motif_{}'.format(k),
+                        mode = 'lines',
+                        line = dict(
+                            color = ('rgba(255,0,0,0.3)'),
+                            ),
+                        showlegend = False,
+                        )
+                    )
+        plotly.offline.iplot({'data':data})
+
+        return pca
+
+    def get_dict(self):
+        return self.m_lda
 
