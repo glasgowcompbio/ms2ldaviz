@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 import networkx as nx
 from networkx.readwrite import json_graph
-from sklearn.decomposition import PCA
+# from sklearn.decomposition import PCA
 import json
 import jsonpickle
 
@@ -314,15 +314,16 @@ def get_pca_data(request,experiment_id):
             new_theta[m2mpos] = dm2m.probability
         theta_data.append(new_theta)
 
-    pca = PCA(n_components = 2,whiten = True)
-    pca.fit(theta_data)
+    # pca = PCA(n_components = 2,whiten = True)
+    # pca.fit(theta_data)
     
-    pca_data = []
-    X = pca.transform(theta_data)
+    # pca_data = []
+    # X = pca.transform(theta_data)
     for i in range(len(documents)):
         new_value = (float(X[i,0]),float(X[i,1]),documents[i].name,'#ff3333')
         pca_data.append(new_value)
 
+    pca_data = []
     return HttpResponse(json.dumps(pca_data),content_type = 'application/json')
 
 
