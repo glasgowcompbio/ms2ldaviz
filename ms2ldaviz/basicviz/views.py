@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 import networkx as nx
 from networkx.readwrite import json_graph
+from sklearn.decomposition import PCA
 import json
 import jsonpickle
 
@@ -149,7 +150,6 @@ def get_doc_topics(request,doc_id):
     return HttpResponse(json.dumps(plot_fragments),content_type='application/json')
 
 
-
 def start_viz(request,experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     context_dict = {'experiment':experiment}
@@ -285,4 +285,46 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
             if docm2m.mass2motif in topics and docm2m.probability > edge_thresh:
                 G.add_edge(docm2m.mass2motif.name,document.name,weight = edge_scale_factor*docm2m.probability)
     return G
-    # pass
+    
+def document_pca(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    context_dict = {}
+    context_dict['experiment'] = experiment
+
+    return render(request,'basicviz/document_pca.html',context_dict)
+
+def get_pca_data(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    theta_data = []
+    documents = Document.objects.filter(experiment = experiment)
+    mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
+    n_mass2motifs = len(mass2motifs)
+    m2mindex = {}
+    msmpos = 0
+    for document in documents:
+        new_theta = [0 for i in range(n_mass2motifs)]
+        dm2ms = DocumentMass2Motif.objects.filter(document = document)
+        for dm2m in dm2ms:
+            if dm2m.mass2motif.name in m2mindex:
+                m2mpos = m2mindex[dm2m.mass2motif.name]
+            else:
+                m2mpos = msmpos
+                m2mindex[dm2m.mass2motif.name] = m2mpos
+                msmpos += 1
+            new_theta[m2mpos] = dm2m.probability
+        theta_data.append(new_theta)
+
+    pca = PCA(n_components = 2,whiten = True)
+    pca.fit(theta_data)
+    
+    pca_data = []
+    X = pca.transform(theta_data)
+    for i in range(len(documents)):
+        new_value = (float(X[i,0]),float(X[i,1]),documents[i].name,'#ff3333')
+        pca_data.append(new_value)
+
+    return HttpResponse(json.dumps(pca_data),content_type = 'application/json')
+
+
+
+
