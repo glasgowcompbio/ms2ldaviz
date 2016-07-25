@@ -14,6 +14,9 @@ from basicviz.models import Experiment,Document
 if __name__ == '__main__':
 	experiment_name = sys.argv[1]
 	dict_file = sys.argv[2]
+	merge = False
+	if 'merge' in sys.argv:
+		merge = True
 	# Add some things to the document metadata for the beer3 experiment
 	experiment = Experiment.objects.get(name = experiment_name)
 
@@ -26,11 +29,15 @@ if __name__ == '__main__':
 		if document.name in lda_dict['doc_metadata']:
 			current_metadata = jsonpickle.decode(document.metadata)
 			for field in lda_dict['doc_metadata'][document.name]:
-				if not field in current_metadata:
-					print "Adding {} ({}) to {}".format(field,lda_dict['doc_metadata'][document.name][field],document.name)
-					current_metadata[field] = lda_dict['doc_metadata'][document.name][field]
-				if field == 'standard_mol':
-					current_metadata['annotation'] = lda_dict['doc_metadata'][document.name][field]
+				if merge:
+					if not field in current_metadata:
+						print "Adding {} ({}) to {}".format(field,lda_dict['doc_metadata'][document.name][field],document.name)
+						current_metadata[field] = lda_dict['doc_metadata'][document.name][field]
+				else:
+						print "Adding {} ({}) to {}".format(field,lda_dict['doc_metadata'][document.name][field],document.name)
+						current_metadata[field] = lda_dict['doc_metadata'][document.name][field]					
+				# if field == 'standard_mol':
+				# 	current_metadata['annotation'] = lda_dict['doc_metadata'][document.name][field]
 			document.metadata = jsonpickle.encode(current_metadata)
 			document.save()
 
