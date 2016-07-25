@@ -3,7 +3,7 @@
 // - https://github.com/mbostock/d3/wiki/Force-Layout
 // - http://www.coppelia.io/2014/07/an-a-to-z-of-extra-features-for-the-d3-force-layout/
 
-function plot_graph(experiment_id) {
+function plot_graph(experiment_id,annotated) {
 
     Math.seedrandom('hello');
 
@@ -30,7 +30,11 @@ function plot_graph(experiment_id) {
     var simulationTimeout = 1;
     var optArray = [];
     var toggle = 0;
-    var url = '/basicviz/get_graph/' + experiment_id
+    if(annotated == 1) {
+        var url = '/basicviz/get_annotated_graph/' + experiment_id
+    }else {
+        var url = '/basicviz/get_graph/' + experiment_id
+    }
     d3.json(url, function(error, graph) {
 
         if (error) throw error;

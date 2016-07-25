@@ -1,4 +1,4 @@
-function load_parents(mass2motif_id,motif_name) {
+function load_parents(mass2motif_id,motif_name,annotated) {
 
     current_pos = 0
 
@@ -7,8 +7,12 @@ function load_parents(mass2motif_id,motif_name) {
     d3.select("#frag_graph_titlebar_svg").remove();
     d3.select("#frag_graph_svg").remove();
     d3.select('#frag_graph_svg').remove()
-
-    d3.json('/basicviz/get_parents/' + mass2motif_id + '/',function(error,total_dataset) {
+    if(annotated == 1) {
+        var url = '/basicviz/get_annotated_parents/' + mass2motif_id + '/';
+    }else {
+        var url = '/basicviz/get_parents/' + mass2motif_id + '/';
+    }
+    d3.json(url,function(error,total_dataset) {
         if (error) throw error;
         plot_parent(total_dataset,motif_name)
         $('#message').fadeOut('fast');

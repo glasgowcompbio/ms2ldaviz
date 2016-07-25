@@ -13,18 +13,18 @@
 <script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
 <script type='text/javascript' src="{% static "js/basicviz-network.js" %}"> </script>
 <script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"> </script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.0/seedrandom.min.js">
+<script type='text/javascript' src="{% static "js/seedrandom.min.js" %}"> </script>
 </script>
 
 <script>
-
+var annotated = 0
 var experiment_id = '{{ experiment.id}}'
-plot_graph(experiment_id);
+plot_graph(experiment_id,annotated);
 
 var current_pos = 0;
 var motif_name = '{{initial_motif.name}}'
 var motif_id = {{initial_motif.id}}
-load_parents(motif_id, motif_name); // Hopefully there is such a motif!
+load_parents(motif_id, motif_name,annotated); // Hopefully there is such a motif!
 
 </script>
 <div class="ui-widget" style="padding-top: 10px; padding-bottom: 10px">
