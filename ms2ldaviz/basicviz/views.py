@@ -320,7 +320,13 @@ def get_pca_data(request,experiment_id):
     pca_data = []
     X = pca.transform(theta_data)
     for i in range(len(documents)):
-        new_value = (float(X[i,0]),float(X[i,1]),documents[i].name,'#ff3333')
+        name = documents[i].name
+        md = jsonpickle.decode(documents[i].metadata)
+        color = '#ff3333'
+        if 'annotation' in md:
+            name = md['annotation']
+            color = '#BE84CF'
+        new_value = (float(X[i,0]),float(X[i,1]),name,color)
         pca_data.append(new_value)
 
     # pca_data = []

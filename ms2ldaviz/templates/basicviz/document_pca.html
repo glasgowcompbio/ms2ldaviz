@@ -48,12 +48,28 @@
     });
 
 	function pca_plot(pca_data) {
+		var def_circ_radius = 4;
+		var circ_size = def_circ_radius;
+		var def_tip_font_size = 48;
+		var tip_font_size = def_tip_font_size;
+		var tip_offset_x = 10;
+		var tip_offset_y = 10;
 	// var pca_data = [[1,-1,'urine1','#aabbcc'],[3,4,'beer1','#aa0000'],[-3,6,'urine2','#aabbcc']]
 		var pca_plot_svg = d3.select("#pca_div")
 	               .append("svg")
 	                    .attr("width",plot_width)
 	                    .attr("height",plot_height)
 	                    .attr("id","pca_plot_svg")
+                    .append("g")
+	                	.call(d3.behavior.zoom().on("zoom",zoom)) 
+	                .append("g");
+
+	    pca_plot_svg.append("rect")
+    		.attr("class", "overlay")
+    		.attr("fill",'#cccccc')
+		    .attr("width", plot_width)
+		    .attr("height", plot_height);  
+
 	    var circles = pca_plot_svg.selectAll("circle")
 	            .data(pca_data)
 	            .enter()
@@ -95,10 +111,43 @@
 
 	    circles.attr("cx",function(d) {return xScale(d[0])})
 	    		.attr("cy",function (d) {return yScale(d[1])})
-	    		.attr("r",2)
-	    		.attr('fill',function(d) {return d[3]});
+	    		.attr("r",def_circ_radius)
+	    		.attr('fill',function(d) {return d[3]})
+	    		.on("mouseover",function(d) {
+	    			var xPos = parseFloat(d3.select(this).attr("cx")) - tip_offset_x
+		            var yPos = parseFloat(d3.select(this).attr("cy")) - tip_offset_y
+		            d3.select(this)
+	                	.transition()
+	                	.duration(250)
+	                	.attr("r",2*circ_size)
+	                	.attr("fill",'#aaaaff');
+	                pca_plot_svg.append("text")
+	                	.attr("id","tooltip")
+	                	.attr('x',xPos)
+	                	.attr('y',yPos)
+	                	.attr("font-family","sans-serif")
+	                	.attr("font-weight","bold")
+		                .attr("font-size",""+ tip_font_size + "px")
+	                	.text(d[2]);
+	            })
+	            .on("mouseout",function(d) {
+	            	d3.select(this)
+		            	.transition()
+		                .duration(250)
+	            		.attr("r",circ_size)
+	            		.attr('fill',d[3]);
+	            	d3.select('#tooltip').remove()
+	            });
 
-	    
+	    function zoom() {
+	    	pca_plot_svg.attr("transform","translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+	    	pca_plot_svg.selectAll('circle')
+	    		.attr('r',def_circ_radius/d3.event.scale);
+	    	circ_size = def_circ_radius/d3.event.scale;
+	    	tip_font_size = def_tip_font_size/d3.max([10.0,d3.event.scale]);
+	    	tip_offset_x = 20.0/d3.max([10.0,d3.event.scale]);
+	    	tip_offset_y = 20.0/d3.max([10.0,d3.event.scale]);
+	    }
     }
 
 	</script>
