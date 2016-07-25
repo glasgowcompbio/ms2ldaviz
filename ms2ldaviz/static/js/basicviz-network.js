@@ -5,6 +5,8 @@
 
 function plot_graph(experiment_id) {
 
+    Math.seedrandom('hello');
+
     var width = window.innerWidth;
     var height = window.innerHeight;
     var topicName = 'motif';
