@@ -121,7 +121,7 @@ function plot_graph(experiment_id,annotated) {
                 if(d.is_topic) {
                     $('#message').text('Loading ' + d.name)
                     $('#message').fadeIn('fast');
-                    load_parents(d.node_id,d.name);
+                    load_parents(d.node_id,d.name,annotated);
                 }
 
                 // reduce the opacity of all but the neighbouring nodes
