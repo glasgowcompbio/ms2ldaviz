@@ -736,7 +736,7 @@ class MultiFileVariationalLDAPlotter_dict(object):
 
         plotly.offline.iplot({'data':data})
 
-    def alpha_pca(self,weight_thresh = 0.05,line_fact = 3):
+    def alpha_pca(self,weight_thresh = 0.05,line_fact = 3,groups = None):
         from sklearn.decomposition import PCA
         all_alpha = self.make_alpha_matrix(normalise = False)
         pca = PCA(n_components = 2,whiten = True)
@@ -746,20 +746,36 @@ class MultiFileVariationalLDAPlotter_dict(object):
         ap = [(f,self.file_index[f]) for f in self.file_index]
         ap = sorted(ap,key = lambda x: x[1])
         reverse,_ = zip(*ap)
-
+        reverse = list(reverse)
         data = []
-        data.append(
-            Scatter(
-                x = X[:,0],
-                y = X[:,1],
-                mode = 'markers',
-                marker = dict(
-                    size = 20,
-                    ),
-                text = reverse, 
-                showlegend = False,
+        if groups == None:
+            data.append(
+                Scatter(
+                    x = X[:,0],
+                    y = X[:,1],
+                    mode = 'markers',
+                    marker = dict(
+                        size = 20,
+                        ),
+                    text = reverse, 
+                    showlegend = False,
+                    )
                 )
-            )
+        else:
+            for group_name in groups:
+                group_pos = [i for i in range(len(reverse)) if reverse[i].startswith(group_name)]
+                data.append(
+                    Scatter(
+                        x = X[group_pos,0],
+                        y = X[group_pos,1],
+                        mode = 'markers',
+                        marker = dict(
+                            size = 20,
+                            ),
+                        text = [r for r in reverse if r.startswith(group_name)],
+                        name = group_name,
+                    )
+                )
 
         # TODO need proper topic names here
         for k in range(self.K):
