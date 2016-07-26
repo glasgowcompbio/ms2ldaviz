@@ -20,6 +20,30 @@ class Document(models.Model):
 		else:
 			return ""
 
+	def get_inchi(self):
+		md = jsonpickle.decode(self.metadata)
+		if 'InChIKey' in md:
+			return md['InChIKey']
+		else:
+			return None
+
+	def get_csid(self):
+		md = jsonpickle.decode(self.metadata)
+		if 'csid' in md:
+			return md['csid']
+		else:
+			return None
+
+	def get_mass(self):
+		md = jsonpickle.decode(self.metadata)
+		if 'parentmass' in md:
+			return md['parentmass']
+		else:
+			return None
+
+	mass = property(get_mass)
+	csid = property(get_csid)
+	inchikey = property(get_inchi)
 	annotation = property(get_annotation)
 
 	def __unicode__(self):

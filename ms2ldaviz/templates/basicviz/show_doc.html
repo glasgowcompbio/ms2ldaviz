@@ -3,15 +3,20 @@
 
 {% block body_block %}
 	{% if document %}
-		<h3>Document {{document.name}}</h3>
+		<h3>Document {{document.name}} {% if document.annotation %}({{document.annotation}}) {% else %} (no annotation) {% endif %}</h3>
 	{% endif %}
 
 	{% if mass2motifs %}
 		<ul>
 			{% for mass2motif in mass2motifs %}
-			<li>{{mass2motif.mass2motif.name}}, {{mass2motif.probability}}</li>
+			<li>{{mass2motif.mass2motif.name}}, {{mass2motif.probability}}, {{mass2motif.mass2motif.annotation}}</li>
 			{% endfor %}
 		</ul>
+	{% endif %}
+
+	{% if image_url %}
+		<img src="{{image_url}}">
+		<a href="http://www.chemspider.com/Chemical-Structure.{{csid}}.html" target=new>View on ChemSpider</a>
 	{% endif %}
 
 	{% if features %}
@@ -29,7 +34,11 @@
 		</table>
 	{% endif %}
 
+
+	
 	<a href="/basicviz/show_docs/{{experiment.id}}">return to parent list for {{experiment.name}}</a>
+	
+	
 
 
 <div border="20" padding="20">
