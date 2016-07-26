@@ -8,7 +8,7 @@
 <h2>Validation for {{experiment.name}}</h2>
 
 {% for m2m,count in annotated_mass2motifs %}
-	<h3>{{m2m.name}}: {{m2m.annotation}}</h3>
+	<h3>{{m2m.name}}: {{m2m.annotation}} <a href="/basicviz/view_parents/{{m2m.id}}" target=new>Show in ms2ldaviz</a></h3>
 	<h4>{{count.1}} validated out of {{count.0}}</h4>
 	<button data-toggle="collapse" data-target="#{{m2m.id}}">Show</button>
 
