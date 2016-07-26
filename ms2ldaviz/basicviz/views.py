@@ -31,9 +31,12 @@ def show_doc(request,doc_id):
     context_dict['experiment'] = experiment
     mass2motif_instances = DocumentMass2Motif.objects.filter(document = document).order_by('-probability')
     context_dict['mass2motifs'] = mass2motif_instances
-    feature_mass2motif_instances = {}
+    feature_mass2motif_instances = []
     for feature in features:
-        feature_mass2motif_instances[feature] = FeatureMass2MotifInstance.objects.filter(featureinstance=feature)
+        if feature.intensity > 0:
+            feature_mass2motif_instances.append((feature,FeatureMass2MotifInstance.objects.filter(featureinstance=feature)))
+
+    feature_mass2motif_instances = sorted(feature_mass2motif_instances,key = lambda x:x[0].intensity,reverse=True)
 
     if document.csid:
         context_dict['image_url'] = 'http://www.chemspider.com/ImagesHandler.ashx?id=' + str(document.csid)

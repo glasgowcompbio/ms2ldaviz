@@ -22,7 +22,7 @@
 	{% if features %}
 		<table class="table">
 		<tr><th>Name</th><th>Intensity</th><th>Topics</th></tr>
-		{% for feature,m2minstances in fm2m.items %}
+		{% for feature,m2minstances in fm2m %}
 			<tr><td>{{feature.feature.name}}</td><td>{{feature.intensity}}</td>
 			<td>
 				{% for m2minstance in m2minstances %}
