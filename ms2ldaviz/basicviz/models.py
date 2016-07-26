@@ -74,7 +74,7 @@ class Mass2Motif(models.Model):
 		if 'annotation' in md:
 			return md['annotation']
 		else:
-			return ""
+			return None
 
 	annotation = property(get_annotation)
 
@@ -93,6 +93,7 @@ class DocumentMass2Motif(models.Model):
 	document = models.ForeignKey(Document)
 	mass2motif = models.ForeignKey(Mass2Motif)
 	probability = models.FloatField()
+	validated = models.NullBooleanField()
 
 	def __unicode__(self):
 		return str(self.probability)

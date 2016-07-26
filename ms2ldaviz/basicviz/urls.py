@@ -17,4 +17,6 @@ urlpatterns = patterns('',
 		url(r'^view_mass2motifs/(?P<experiment_id>\w+)/$',views.view_mass2motifs,name='view_mass2motifs'),
 		url(r'^document_pca/(?P<experiment_id>\w+)/$',views.document_pca,name='document_pca'),
 		url(r'^get_pca_data/(?P<experiment_id>\w+)/$',views.get_pca_data,name='get_pca_data'),
+		url(r'^validation/(?P<experiment_id>\w+)/$',views.validation,name='validation'),
+		url(r'^toggle_dm2m/(?P<experiment_id>\w+)/(?P<dm2m_id>\w+)/$',views.toggle_dm2m,name='toggle_dm2m'),
         )

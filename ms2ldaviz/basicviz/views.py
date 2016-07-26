@@ -343,6 +343,33 @@ def get_pca_data(request,experiment_id):
     # pca_data = []
     return HttpResponse(json.dumps(pca_data),content_type = 'application/json')
 
+def validation(request,experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
+    annotated_mass2motifs = []
+    counts = []
+    for mass2motif in mass2motifs:
+        if mass2motif.annotation:
+            annotated_mass2motifs.append(mass2motif)
+            dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.1)
+            tot = 0
+            val = 0
+            for d in dm2ms:
+                tot += 1
+                if d.validated:
+                    val += 1
+            counts.append((tot,val))
+    annotated_mass2motifs = zip(annotated_mass2motifs,counts)
+    context_dict = {'experiment':experiment}
+    context_dict['annotated_mass2motifs'] = annotated_mass2motifs
+    context_dict['counts'] = counts
+    return render(request,'basicviz/validation.html',context_dict)
 
-
-
+def toggle_dm2m(request,experiment_id,dm2m_id):
+    dm2m = DocumentMass2Motif.objects.get(id = dm2m_id)
+    if dm2m.validated:
+        dm2m.validated = False
+    else:
+        dm2m.validated = True
+    dm2m.save()
+    return validation(request,experiment_id)

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+<html>
+
+{% block title %}Experiment: {{experiment.name}}{% endblock %}
+
+{% block body_block %}
+<h2>Validation for {{experiment.name}}</h2>
+
+{% for m2m,count in annotated_mass2motifs %}
+	<h3>{{m2m.name}}: {{m2m.annotation}}</h3>
+	<h4>{{count.1}} validated out of {{count.0}}</h4>
+	<button data-toggle="collapse" data-target="#{{m2m.id}}">Show</button>
+
+	<div id="{{m2m.id}}" class="collapse">
+		<table class="table">
+		<tr><th>Name</th><th>Probability</th><th width=200px>Annotation</th><th>Image</th><th>link</th><th>Validated?</th></tr>
+			{% for doc in m2m.documentmass2motif_set.all %}
+				{% if doc.probability > 0.1 %}
+				<tr><td>{{doc.document.name}}</td><td>{{doc.probability}}</td><td>{{doc.document.annotation}}</td>
+				<td><img src="http://www.chemspider.com/ImagesHandler.ashx?id={{doc.document.csid}}"></td>
+				<td><a href="http://www.chemspider.com/Chemical-Structure.{{doc.document.csid}}.html" target=new>ChemSpider</a></td>
+				<td>{% if doc.validated %}<b>Yes</b>{% else %}No{% endif %}&nbsp;<a href="/basicviz/toggle_dm2m/{{experiment.id}}/{{doc.id}}" class="btn btn-xs btn-default" role="button">toggle</a></td>
+				</tr>
+				{% endif %}
+		{% endfor %}
+		</table>
+	</div>
+	<p>&nbsp;</p>
+{% endfor %}
+
+{% endblock %}
