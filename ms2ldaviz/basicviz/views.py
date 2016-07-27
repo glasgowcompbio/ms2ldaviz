@@ -355,7 +355,7 @@ def validation(request,experiment_id):
     for mass2motif in mass2motifs:
         if mass2motif.annotation:
             annotated_mass2motifs.append(mass2motif)
-            dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.1)
+            dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.05)
             tot = 0
             val = 0
             for d in dm2ms:
@@ -398,7 +398,7 @@ def dump_validations(request,experiment_id):
     writer = csv.writer(response)
     writer.writerow(['msm_id','m2m_annotation','doc_id','doc_annotation','valid'])
     for mass2motif in annotated_mass2motifs:
-        dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.1)
+        dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.05)
         for dm2m in dm2ms:
             # outstring +='{},{},{},"{}",{}\n'.format(mass2motif.id,mass2motif.annotation,dm2m.document.id,dm2m.document.annotation.encode('utf8'),dm2m.validated)
             writer.writerow([mass2motif.id,mass2motif.annotation,dm2m.document.id,dm2m.document.annotation.encode('utf8'),dm2m.validated])
