@@ -12,12 +12,14 @@
 	<tr><td>{{experiment.name}}</td>
 	<td>{{experiment.description}}</td>
 	<td>
-	<a href="/basicviz/show_docs/{{experiment.id}}" class="btn btn-xs btn-default" role="button">Show parents</a>
-    <a href="/basicviz/start_viz/{{experiment.id}}" class="btn btn-xs btn-primary" role="button">Start interactive vizualisation</a>
+	<a href="/basicviz/show_docs/{{experiment.id}}" class="btn btn-xs btn-success" role="button">Show parents</a>
     <a href="/basicviz/view_mass2motifs/{{experiment.id}}" class="btn btn-xs btn-success" role="button">Show Mass2Motifs</a>
-    <a href="/basicviz/start_annotated_viz/{{experiment.id}}" class = "btn btn-xs btn-warning" role="button">Start visualisation with just annotated molecules</a>
-    <a href="/basicviz/document_pca/{{experiment.id}}" class = "btn btn-xs btn-success" role="button">Document PCA</a>
-    <a href="/basicviz/validation/{{experiment.id}}" class="btn btn-xs btn-primary" role="button">Validate (for Justin)</a>
+	<a href="/basicviz/document_pca/{{experiment.id}}" class = "btn btn-xs btn-success" role="button">Document PCA</a>
+	<br/><br/>
+	<a href="/basicviz/start_viz/{{experiment.id}}" class="btn btn-xs btn-primary" role="button">Start vis.</a>
+    <a href="/basicviz/start_annotated_viz/{{experiment.id}}" class = "btn btn-xs btn-primary" role="button">Start vis. with annotated molecules</a>
+	<br/><br/>
+    <a href="/basicviz/validation/{{experiment.id}}" class="btn btn-xs btn-warning" role="button">Validate (for Justin)</a>
     </td></tr>
 {% endfor %}
 </ul>
