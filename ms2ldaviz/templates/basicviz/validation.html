@@ -7,6 +7,8 @@
 {% block body_block %}
 <h2>Validation for {{experiment.name}}</h2>
 
+<a href="/basicviz/dump_validations/{{experiment.id}}">Dump current validations to a .csv file</a>
+
 {% for m2m,count in annotated_mass2motifs %}
 	<h3>{{m2m.name}}: {{m2m.annotation}} <a href="/basicviz/view_parents/{{m2m.id}}" target=new>Show in ms2ldaviz</a></h3>
 	<h4><span id='c{{m2m.id}}'>{{count.1}}</span> validated out of {{count.0}}</h4>

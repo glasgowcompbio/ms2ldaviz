@@ -5,6 +5,7 @@ from networkx.readwrite import json_graph
 from sklearn.decomposition import PCA
 import json
 import jsonpickle
+import csv
 
 from basicviz.models import Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance
 
@@ -382,3 +383,25 @@ def toggle_dm2m(request,experiment_id,dm2m_id):
 
     return HttpResponse(json.dumps(jd),content_type = 'application/json')
     # return validation(request,experiment_id)
+
+def dump_validations(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
+    annotated_mass2motifs = []
+    for mass2motif in mass2motifs:
+        if mass2motif.annotation:
+            annotated_mass2motifs.append(mass2motif)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="valid_dump_{}.csv"'.format(experiment_id)
+    outstring = "msm_id,m2m_annotation,doc_id,doc_annotation,valid\n"
+    writer = csv.writer(response)
+    writer.writerow(['msm_id','m2m_annotation','doc_id','doc_annotation','valid'])
+    for mass2motif in annotated_mass2motifs:
+        dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.1)
+        for dm2m in dm2ms:
+            # outstring +='{},{},{},"{}",{}\n'.format(mass2motif.id,mass2motif.annotation,dm2m.document.id,dm2m.document.annotation.encode('utf8'),dm2m.validated)
+            writer.writerow([mass2motif.id,mass2motif.annotation,dm2m.document.id,dm2m.document.annotation.encode('utf8'),dm2m.validated])
+
+    # return HttpResponse(outstring,content_type='text')
+    return response
