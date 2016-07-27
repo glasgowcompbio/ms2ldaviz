@@ -98,10 +98,10 @@ def get_features(request, motif_id):
                 if ft.feature.name == values[0]:
                     ftm2mins = FeatureMass2MotifInstance.objects.filter(featureinstance = ft)
                     print ftm2mins
-                    for blah in ftm2mins:
-                        thing = blah.probability * ft.intensity
-                        print(thing)
-                        values[1] += thing
+                    for ins in ftm2mins:
+                        ft_value = ins.probability * ft.intensity
+                        print(ft_value)
+                        values[1] += ft_value
                     print("count {}".format(values[1]))
                 
 
