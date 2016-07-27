@@ -17,4 +17,5 @@ urlpatterns = patterns('',
 		url(r'^view_mass2motifs/(?P<experiment_id>\w+)/$',views.view_mass2motifs,name='view_mass2motifs'),
 		url(r'^document_pca/(?P<experiment_id>\w+)/$',views.document_pca,name='document_pca'),
 		url(r'^get_pca_data/(?P<experiment_id>\w+)/$',views.get_pca_data,name='get_pca_data'),
+		url(r'^get_features/(?P<motif_id>\w+)/$',views.get_features,name='get_features'),
         )

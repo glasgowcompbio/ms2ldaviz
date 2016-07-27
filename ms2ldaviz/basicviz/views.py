@@ -68,6 +68,45 @@ def get_annotated_parents(request,motif_id):
                 parent_data.append(get_doc_for_plot(document.id,motif_id))
     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
+# // For a particular m2m:
+# //      Find all features in that m2m (Mass2MotifInstance) (possibly include probability threshold)
+# //      set all feature counts to zero
+# // Find all documents that use that m2m (DocumentMass2Motif)
+# // For each document:
+# //      Find all feature instances in the document (FeatureInstance)
+# //      For each feature instance:
+# //      If the feature is in the m2m (see list made earlier) 
+# //          then extract FeatureMass2MotifInstance from FeatureMass2MotifInstance
+# //          multiply the featuremass2motifinstance.probability by the featureinstance intensity 
+# //          increase feature count for this feature by the result
+def get_features(request, motif_id):
+    motif = Mass2Motif.objects.get(id=motif_id)
+    m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif)
+    m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
+    features_data = []
+    documents_data = []
+    for feat in m2mIns:
+        if feat.probability >0.005:
+            ft = feat.feature.name
+            print ft
+            features_data.append([ft, 0])
+    
+    for doc in m2mdocs:
+        feature_instances = FeatureInstance.objects.filter(document = doc)
+        for ft in feature_instances:
+            for values in features_data:
+                if ft.feature.name == values[0]:
+                    ftm2mins = FeatureMass2MotifInstance.objects.filter(featureinstance = ft)
+                    print ftm2mins
+                    for blah in ftm2mins:
+                        thing = blah.probability * ft.intensity
+                        print(thing)
+                        values[1] += thing
+                    print("count {}".format(values[1]))
+                
+
+    return HttpResponse(json.dumps(features_data), content_type = 'application/json')             
+
 
 def view_mass2motifs(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
