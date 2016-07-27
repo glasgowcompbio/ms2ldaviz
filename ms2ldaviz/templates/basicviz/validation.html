@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load static %}
 <html>
 
 {% block title %}Experiment: {{experiment.name}}{% endblock %}
@@ -9,7 +9,7 @@
 
 {% for m2m,count in annotated_mass2motifs %}
 	<h3>{{m2m.name}}: {{m2m.annotation}} <a href="/basicviz/view_parents/{{m2m.id}}" target=new>Show in ms2ldaviz</a></h3>
-	<h4>{{count.1}} validated out of {{count.0}}</h4>
+	<h4><span id='c{{m2m.id}}'>{{count.1}}</span> validated out of {{count.0}}</h4>
 	<button data-toggle="collapse" data-target="#{{m2m.id}}">Show</button>
 
 	<div id="{{m2m.id}}" class="collapse">
@@ -20,7 +20,9 @@
 				<tr><td>{{doc.document.name}}</td><td>{{doc.probability}}</td><td>{{doc.document.annotation}}</td>
 				<td><img src="http://www.chemspider.com/ImagesHandler.ashx?id={{doc.document.csid}}"></td>
 				<td><a href="http://www.chemspider.com/Chemical-Structure.{{doc.document.csid}}.html" target=new>ChemSpider</a></td>
-				<td>{% if doc.validated %}<b>Yes</b>{% else %}No{% endif %}&nbsp;<a href="/basicviz/toggle_dm2m/{{experiment.id}}/{{doc.id}}" class="btn btn-xs btn-default" role="button">toggle</a></td>
+				<td><div id='t{{doc.id}}'>{% if doc.validated %}Yes{% else %}No{% endif %}</div>&nbsp;
+				<!-- <a href="/basicviz/toggle_dm2m/{{experiment.id}}/{{doc.id}}" class="btn btn-xs btn-default" role="button">toggle</a></td> -->
+				<button type="button" onclick="toggle_validation({{doc.id}},{{m2m.id}})">Toggle</button></td>
 				<td><a href="/basicviz/show_doc/{{doc.document.id}}" target=new>Show doc</a></td>
 				</tr>
 				{% endif %}
@@ -29,5 +31,33 @@
 	</div>
 	<p>&nbsp;</p>
 {% endfor %}
+<script type='text/javascript' src="{% static "js/jquery-2.2.2.min.js" %}"></script>
+<script type='text/javascript' src="{% static "js/jquery-ui.min.js" %}"> </script>
+<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
+
+
+<script>
+function toggle_validation(docm2m_id,m2m_id) {
+	var url = '/basicviz/toggle_dm2m/{{experiment.id}}/' + docm2m_id
+	var d = document.getElementById("t" + docm2m_id);
+	var c = document.getElementById("c" + m2m_id);
+	var count = parseInt(c.innerHTML);
+	if(d.innerHTML == 'Yes') {
+		count --;
+		c.innerHTML = "" + count;
+	}
+	d.innerHTML = 'Pending....';
+	d3.json(url,function(error,jd) {
+		if (error) throw error;
+		new_html = jd[0];
+		d.innerHTML = new_html;
+		if(jd[0] == 'Yes') {
+			count ++;
+			c.innerHTML = "" + count;
+		}
+	});
+}
+
+</script>
 
 {% endblock %}

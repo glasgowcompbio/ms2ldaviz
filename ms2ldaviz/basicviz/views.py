@@ -368,11 +368,17 @@ def validation(request,experiment_id):
     context_dict['counts'] = counts
     return render(request,'basicviz/validation.html',context_dict)
 
+
 def toggle_dm2m(request,experiment_id,dm2m_id):
     dm2m = DocumentMass2Motif.objects.get(id = dm2m_id)
+    jd = []
     if dm2m.validated:
         dm2m.validated = False
+        jd.append('No')
     else:
         dm2m.validated = True
+        jd.append('Yes')
     dm2m.save()
-    return validation(request,experiment_id)
+
+    return HttpResponse(json.dumps(jd),content_type = 'application/json')
+    # return validation(request,experiment_id)
