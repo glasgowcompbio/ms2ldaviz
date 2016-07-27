@@ -550,7 +550,7 @@ class VariationalLDA(object):
 			if self.doc_metadata == None:
 				metadata = {}
 				for doc in self.corpus:
-					metadata[doc] = {}
+					metadata[doc] = {'name': doc,'parentmass': float(doc.split('_')[0])}
 			else:
 				metadata = self.doc_metadata
 
@@ -660,7 +660,7 @@ class MultiFileVariationalLDA(object):
 		if self.topic_metadata == None:
 			self.topic_metadata = {}
 			for topic in self.topic_index:
-				self.topic_metadata[topic] = {'name':topic,'type'='learnt'}
+				self.topic_metadata[topic] = {'name':topic,'type':'learnt'}
 
 		for corpus_name in self.corpus_dictionary:
 			new_lda = VariationalLDA(corpus=self.corpus_dictionary[corpus_name],K=K,
