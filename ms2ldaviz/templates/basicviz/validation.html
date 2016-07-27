@@ -22,9 +22,18 @@
 				<tr><td>{{doc.document.name}}</td><td>{{doc.probability}}</td><td>{{doc.document.annotation}}</td>
 				<td><img src="http://www.chemspider.com/ImagesHandler.ashx?id={{doc.document.csid}}"></td>
 				<td><a href="http://www.chemspider.com/Chemical-Structure.{{doc.document.csid}}.html" target=new>ChemSpider</a></td>
-				<td><div id='t{{doc.id}}'>{% if doc.validated %}Yes{% else %}No{% endif %}</div>&nbsp;
-				<!-- <a href="/basicviz/toggle_dm2m/{{experiment.id}}/{{doc.id}}" class="btn btn-xs btn-default" role="button">toggle</a></td> -->
-				<button type="button" onclick="toggle_validation({{doc.id}},{{m2m.id}})">Toggle</button></td>
+				<td>
+					<div>
+						{% if doc.validated %}
+							<div style="float:left; font-weight:bold" id='t{{doc.id}}'>Yes</div>
+						{% else %}
+							<div style="float:left; font-weight:normal" id='t{{doc.id}}'>No</div>
+						{% endif %}
+						<div style="float:right">
+							<button type="button" onclick="toggle_validation({{doc.id}},{{m2m.id}})">Toggle</button>
+						</div>
+					</div>
+				</td>
 				<td><a href="/basicviz/show_doc/{{doc.document.id}}" target=new>Show doc</a></td>
 				</tr>
 				{% endif %}
@@ -56,6 +65,9 @@ function toggle_validation(docm2m_id,m2m_id) {
 		if(jd[0] == 'Yes') {
 			count ++;
 			c.innerHTML = "" + count;
+			d.style.fontWeight = 'bold';
+		} else {
+			d.style.fontWeight = 'normal';
 		}
 	});
 }
