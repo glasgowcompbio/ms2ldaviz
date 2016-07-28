@@ -44,7 +44,7 @@ def show_doc(request,doc_id):
         context_dict['csid'] = document.csid
     elif document.inchikey:
         from chemspipy import ChemSpider
-        cs = ChemSpider('b07b7eb2-0ba7-40db-abc3-2a77a7544a3d') 
+        cs = ChemSpider('b07b7eb2-0ba7-40db-abc3-2a77a7544a3d')
         results = cs.search(document.inchikey)
         if results:
             context_dict['image_url'] = results[0].image_url
@@ -86,7 +86,7 @@ def get_annotated_parents(request,motif_id):
 
 def view_mass2motifs(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
-    mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
+    mass2motifs = Mass2Motif.objects.filter(experiment = experiment).order_by('name')
     context_dict = {'mass2motifs':mass2motifs}
     context_dict['experiment'] = experiment
     return render(request,'basicviz/view_mass2motifs.html',context_dict)
@@ -171,7 +171,7 @@ def start_viz(request,experiment_id):
     initial_motif = Mass2Motif.objects.filter(experiment = experiment)[0]
     context_dict['initial_motif'] = initial_motif
     # G = make_graph(experiment)
-    # d = json_graph.node_link_data(G) 
+    # d = json_graph.node_link_data(G)
     # context_dict = {'graph':d}
     # json.dump(d, open('/Users/simon/git/ms2ldaviz/ms2ldaviz/static/graph.json','w'),indent=2)
     return render(request,'basicviz/graph.html',context_dict)
@@ -190,7 +190,7 @@ def start_annotated_viz(request,experiment_id):
     # initial_motif = Mass2Motif.objects.filter(experiment = experiment)[0]
     # context_dict['initial_motif'] = initial_motif
     # G = make_graph(experiment)
-    # d = json_graph.node_link_data(G) 
+    # d = json_graph.node_link_data(G)
     # context_dict = {'graph':d}
     # json.dump(d, open('/Users/simon/git/ms2ldaviz/ms2ldaviz/static/graph.json','w'),indent=2)
     return render(request,'basicviz/annotated_graph.html',context_dict)
@@ -300,7 +300,7 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
             if docm2m.mass2motif in topics and docm2m.probability > edge_thresh:
                 G.add_edge(docm2m.mass2motif.name,document.name,weight = edge_scale_factor*docm2m.probability)
     return G
-    
+
 def document_pca(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
     context_dict = {}
@@ -331,7 +331,7 @@ def get_pca_data(request,experiment_id):
 
     pca = PCA(n_components = 2,whiten = True)
     pca.fit(theta_data)
-    
+
     pca_data = []
     X = pca.transform(theta_data)
     for i in range(len(documents)):
