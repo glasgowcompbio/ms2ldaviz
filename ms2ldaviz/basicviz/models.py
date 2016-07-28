@@ -11,7 +11,7 @@ class Experiment(models.Model):
 class Document(models.Model):
 	name = models.CharField(max_length=32)
 	experiment = models.ForeignKey(Experiment)
-	metadata = models.CharField(max_length=1024,null=True)
+	metadata = models.CharField(max_length=2048,null=True)
 
 	def get_annotation(self):
 		md = jsonpickle.decode(self.metadata)

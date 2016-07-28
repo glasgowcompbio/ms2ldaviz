@@ -20,4 +20,5 @@ urlpatterns = patterns('',
 		url(r'^validation/(?P<experiment_id>\w+)/$',views.validation,name='validation'),
 		url(r'^toggle_dm2m/(?P<experiment_id>\w+)/(?P<dm2m_id>\w+)/$',views.toggle_dm2m,name='toggle_dm2m'),
 		url(r'^dump_validations/(?P<experiment_id>\w+)/$',views.dump_validations,name='dump_validations'),
+		url(r'^mass2motif_feature/(?P<fm2m_id>\w+)/$',views.mass2motif_feature,name ='mass2motif_feature'),
         )

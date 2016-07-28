@@ -60,6 +60,11 @@ def view_parents(request,motif_id):
     context_dict['motif_features'] = motif_features
     return render(request,'basicviz/view_parents.html',context_dict)
 
+def mass2motif_feature(request,fm2m_id):
+    feature_mass2motif = Mass2MotifInstance.objects.get(id = fm2m_id)
+    context_dict['feature_mass2motif'] = feature_mass2motif
+    return render(request,'basicviz/mass2motif_feature.html',context_dict)
+
 def get_parents(request,motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif)
