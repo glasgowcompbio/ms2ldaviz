@@ -83,29 +83,24 @@ def get_features(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif)
     m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
-    features_data = []
+    features_data = {}
     documents_data = []
     for feat in m2mIns:
-        if feat.probability >0.005:
-            ft = feat.feature.name
-            print ft
-            features_data.append([ft, 0])
+        if feat.probability >0.005:                        
+            features_data[feat.feature] = 0
     
     for doc in m2mdocs:
         feature_instances = FeatureInstance.objects.filter(document = doc)
         for ft in feature_instances:
-            for values in features_data:
-                if ft.feature.name == values[0]:
-                    ftm2mins = FeatureMass2MotifInstance.objects.filter(featureinstance = ft)
-                    print ftm2mins
-                    for ins in ftm2mins:
-                        ft_value = ins.probability * ft.intensity
-                        print(ft_value)
-                        values[1] += ft_value
-                    print("count {}".format(values[1]))
-                
+            if ft.feature in features_data:
+                features_data[ft.feature] += 1
 
-    return HttpResponse(json.dumps(features_data), content_type = 'application/json')             
+    data_for_json = [] 
+    for feature in features_data:
+        data_for_json.append((feature.name,features_data[feature])) # Could even sort this object by count (descending): 
+    data_for_json = sorted(data_for_json,key =lambda x: x[1],reverse = True)                
+
+    return HttpResponse(json.dumps(data_for_json), content_type = 'application/json')             
 
 
 def view_mass2motifs(request,experiment_id):
