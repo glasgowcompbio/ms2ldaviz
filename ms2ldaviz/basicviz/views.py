@@ -68,25 +68,14 @@ def get_annotated_parents(request,motif_id):
                 parent_data.append(get_doc_for_plot(document.id,motif_id))
     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
-# // For a particular m2m:
-# //      Find all features in that m2m (Mass2MotifInstance) (possibly include probability threshold)
-# //      set all feature counts to zero
-# // Find all documents that use that m2m (DocumentMass2Motif)
-# // For each document:
-# //      Find all feature instances in the document (FeatureInstance)
-# //      For each feature instance:
-# //      If the feature is in the m2m (see list made earlier) 
-# //          then extract FeatureMass2MotifInstance from FeatureMass2MotifInstance
-# //          multiply the featuremass2motifinstance.probability by the featureinstance intensity 
-# //          increase feature count for this feature by the result
-def get_features(request, motif_id):
+def get_word_count(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif)
     m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
     features_data = {}
     documents_data = []
     for feat in m2mIns:
-        if feat.probability >0.005:                        
+        if feat.probability >0.001:                        
             features_data[feat.feature] = 0
     
     for doc in m2mdocs:
@@ -102,6 +91,45 @@ def get_features(request, motif_id):
 
     return HttpResponse(json.dumps(data_for_json), content_type = 'application/json')             
 
+
+# // For a particular m2m:
+# //      Find all features in that m2m (Mass2MotifInstance) (possibly include probability threshold)
+# //      set all feature counts to zero
+# // Find all documents that use that m2m (DocumentMass2Motif)
+# // For each document:
+# //      Find all feature instances in the document (FeatureInstance)
+# //      For each feature instance:
+# //      If the feature is in the m2m (see list made earlier) 
+# //          then extract FeatureMass2MotifInstance from FeatureMass2MotifInstance
+# //          multiply the featuremass2motifinstance.probability by the featureinstance intensity 
+# //          increase feature count for this feature by the result
+def get_intensity(request, motif_id):
+    motif = Mass2Motif.objects.get(id=motif_id)
+    features = Mass2MotifInstance.objects.filter(mass2motif = motif)
+    total_intensity = {}
+    mass2motif_intensity = {}
+
+    #getting the total intensities of each feature
+    for feature in features:
+        total_intensity[feature] = 0.0
+        feature_instances = FeatureInstance.objects.filter(feature = feature)
+        mass2motif_intensity[feature] = 0.0
+        for instance in feature_instances:
+            total_intensity[feature] += instance.intensity
+            fm2m = FeatureMass2MotifInstance.objects.filter(featureinstance = instance, mass2motif = motif)
+            if len(fm2m) > 0:
+                mass2motif_intensity[feature] += instance.intensity * fm2m[0].probability
+                print fm2m
+
+
+    data_for_json = [] 
+    for feature in features:
+        if mass2motif_intensity[feature] > 0:
+            data_for_json.append((feature.feature.name,total_intensity[feature], mass2motif_intensity[feature])) 
+    data_for_json = sorted(data_for_json,key =lambda x: x[2],reverse = True) 
+
+
+    return HttpResponse(json.dumps(data_for_json), content_type = 'application/json')
 
 def view_mass2motifs(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
