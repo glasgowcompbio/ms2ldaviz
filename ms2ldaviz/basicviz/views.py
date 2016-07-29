@@ -68,7 +68,7 @@ def get_annotated_parents(request,motif_id):
                 parent_data.append(get_doc_for_plot(document.id,motif_id))
     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
-def get_word_count(request, motif_id):
+def get_word_graph(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif)
     m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
@@ -91,6 +91,12 @@ def get_word_count(request, motif_id):
 
     return HttpResponse(json.dumps(data_for_json), content_type = 'application/json')             
 
+def view_word_graph(request, motif_id):
+    motif = Mass2Motif.objects.get(id=motif_id)
+    context_dict = {'mass2motif':motif}
+    motif_features = Mass2MotifInstance.objects.filter(mass2motif = motif).order_by('-probability')
+    context_dict['motif_features'] = motif_features
+    return render(request,'basicviz/view_word_graph.html',context_dict)
 
 # // For a particular m2m:
 # //      Find all features in that m2m (Mass2MotifInstance) (possibly include probability threshold)
@@ -118,9 +124,7 @@ def get_intensity(request, motif_id):
             total_intensity[feature] += instance.intensity
             fm2m = FeatureMass2MotifInstance.objects.filter(featureinstance = instance, mass2motif = motif)
             if len(fm2m) > 0:
-                mass2motif_intensity[feature] += instance.intensity * fm2m[0].probability
-                print fm2m
-
+                mass2motif_intensity[feature] += instance.intensity * fm2m[0].probability                
 
     data_for_json = [] 
     for feature in features:
@@ -130,6 +134,14 @@ def get_intensity(request, motif_id):
 
 
     return HttpResponse(json.dumps(data_for_json), content_type = 'application/json')
+
+def view_intensity(request, motif_id):
+    motif = Mass2Motif.objects.get(id=motif_id)
+    context_dict = {'mass2motif':motif}
+    motif_features = Mass2MotifInstance.objects.filter(mass2motif = motif).order_by('-probability')
+    context_dict['motif_features'] = motif_features
+    return render(request,'basicviz/view_intensity.html',context_dict)
+
 
 def view_mass2motifs(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
