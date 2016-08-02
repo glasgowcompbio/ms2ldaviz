@@ -60,7 +60,7 @@ if __name__ == '__main__':
 		experiment_name = filename.split('/')[-1].split('.')[0]
 	experiment = Experiment.objects.get_or_create(name=experiment_name)[0]
 	experiment.status = 'loading'
-	expeirment.save()
+	experiment.save()
 	print "Loading corpus"
 	n_done = 0
 	to_do = len(lda_dict['corpus'])
