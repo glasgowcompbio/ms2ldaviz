@@ -19,7 +19,7 @@
 		<tr><th>Name</th><th>Probability</th><th width=200px>Annotation</th><th>Image</th><th>link</th><th>Validated?</th><th>View in ms2ldaviz</th></tr>
 			{% for doc in m2m.documentmass2motif_set.all %}
 				{% if doc.probability > 0.05 %}
-				<tr><td>{{doc.document.name}}</td><td>{{doc.probability}}</td><td>{{doc.document.annotation}}</td>
+				<tr><td>{{doc.document.name}}</td><td>{{doc.probability}}</td><td>{{doc.document.display_name}}</td>
 				<td><img src="http://www.chemspider.com/ImagesHandler.ashx?id={{doc.document.csid}}"></td>
 				<td><a href="http://www.chemspider.com/Chemical-Structure.{{doc.document.csid}}.html" target=new>ChemSpider</a></td>
 				<td>
