@@ -54,7 +54,7 @@ class Document(models.Model):
 	csid = property(get_csid)
 	inchikey = property(get_inchi)
 	annotation = property(get_annotation)
-	display_name = property(get_display_time)
+	display_name = property(get_display_name)
 
 	def __unicode__(self):
 		return self.name
