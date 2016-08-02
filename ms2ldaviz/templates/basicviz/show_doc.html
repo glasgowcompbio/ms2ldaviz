@@ -3,7 +3,7 @@
 
 {% block body_block %}
 	{% if document %}
-		<h3>Document {{document.name}} {% if document.annotation %}({{document.annotation}}) {% else %} (no annotation) {% endif %}</h3>
+		<h3>Document {{document.name}} -- {{document.display_name}}</h3>
 	{% endif %}
 
 	{% if mass2motifs %}
