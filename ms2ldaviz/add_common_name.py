@@ -16,6 +16,7 @@ if __name__ == '__main__':
 	documents = Document.objects.filter(experiment = experiment)
 
 	for document in documents:
+		print document
 		md = jsonpickle.decode(document.metadata)
 		csid = md.get('csid',-1)
 		if csid > -1:
@@ -23,4 +24,5 @@ if __name__ == '__main__':
 			md['common_name'] = c.common_name
 			document.metadata = jsonpickle.encode(md)
 			document.save()
+			print c.common_name
 
