@@ -63,23 +63,23 @@ WSGI_APPLICATION = 'ms2ldaviz.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.7/ref/settings/#databases
 
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#    }
-#}
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'django',
-        'USER': 'django',
-        'PASSWORD': 'j7z3rL40w9',
-        'HOST': 'localhost',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#        'NAME': 'django',
+#        'USER': 'django',
+#        'PASSWORD': 'j7z3rL40w9',
+#        'HOST': '178.62.45.115',
+#        'PORT': '',
+#    }
+#}
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
 
