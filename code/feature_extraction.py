@@ -1,6 +1,11 @@
 # Simon's attempts to make a single feature selection pipeline
 from Queue import PriorityQueue
 import numpy as np
+import sys
+sys.path.append('/Users/simon/git/efcompute')
+from ef_assigner import ef_assigner
+from formula import Formula
+from ef_constants import ATOM_MASSES, PROTON_MASS, ATOM_NAME_LIST
 
 class MS1(object):
 	def __init__(self,id,mz,rt,intensity,file_name):
@@ -17,7 +22,9 @@ class MS1(object):
 class CorpusMaker(object):
 	def __init__(self,input_type,input_set,min_loss = 10.0,
 		max_loss = 200.0,fragment_tol = 7.0,loss_tol = 14.0,
-		seed_words = [],min_intensity = 0.0):
+		seed_words = [],min_intensity = 0.0,algorithm = 'kde',
+		replace = 'max',formulas = None):
+		self.replace = replace
 		self.input_type = input_type
 		self.input_set = input_set
 		self.min_loss = min_loss
@@ -26,6 +33,7 @@ class CorpusMaker(object):
 		self.loss_tol = loss_tol
 		self.seed_words = seed_words
 		self.min_intensity = min_intensity
+		self.formulas = formulas
 
 		if self.input_type == 'csv':
 			self.load_csv()
@@ -33,10 +41,273 @@ class CorpusMaker(object):
 			self.load_gnps()
 
 		self.make_queues()
-		self.make_corpus_from_queue()
-		self.remove_zero_words()
+			
+		if algorithm == 'queue':	
+			self.make_corpus_from_queue()
+			self.remove_zero_words()
+		elif algorithm == 'kde':
+			self.make_kde_corpus()
 
 
+	def make_kde_corpus(self,loss_ppm = 10.0,frag_ppm = 5.0):
+		# Process the losses
+		loss_masses = []
+		self.loss_meta = []
+		while not self.loss_queue.empty():
+			newitem = self.loss_queue.get()
+			self.loss_meta.append(newitem)
+			loss_masses.append(newitem[0])
+
+		self.loss_array = np.array(loss_masses)
+
+
+		frag_masses = []
+		self.frag_meta = []
+		while not self.fragment_queue.empty():
+			newitem = self.fragment_queue.get()
+			self.frag_meta.append(newitem)
+			frag_masses.append(newitem[0])
+
+		self.frag_array = np.array(frag_masses)
+
+		# Set the kde paramaters
+		stop_thresh = 5
+		
+		self.corpus = {}
+		for file_name in self.files:
+			self.corpus[file_name] = {}
+		self.n_words = 0
+		self.word_counts = {}
+		self.loss_kde = self.make_kde(self.loss_array,loss_ppm,stop_thresh)
+		self.loss_groups,self.loss_group_list = self.process_kde(self.loss_kde,self.loss_array,loss_ppm,ef_polarity = 'none',formulas = self.formulas)
+		self.update_corpus(self.loss_array,self.loss_kde,self.loss_meta,self.loss_groups,self.loss_group_list,'loss')
+
+
+		print "Finished losses, total words now: {}".format(len(self.word_counts))
+
+		self.frag_kde = self.make_kde(self.frag_array,frag_ppm,stop_thresh)
+		self.frag_groups,self.frag_group_list = self.process_kde(self.frag_kde,self.frag_array,frag_ppm,ef_polarity = 'pos',formulas = self.formulas)
+		self.update_corpus(self.frag_array,self.frag_kde,self.frag_meta,self.frag_groups,self.frag_group_list,'fragment')
+
+
+
+		print "Finished fragments, total words now: {}".format(len(self.word_counts))
+
+
+	# THERE IS A PROBLEM WITH FEATURE NAMES..check the group making
+	def update_corpus(self,masses,kde,meta,groups,group_list,prefix):
+		# Loop over the groups
+		for group in group_list:
+			group_id = group[0]
+			group_mz = group[1]
+			group_formula = group[2]
+			pos = np.where(groups == group_id)[0]
+			if len(pos) > 0:
+				feature_name = str(group_mz)
+				feature_name = prefix + '_' + feature_name
+				if group_formula:
+					feature_name += '_' + group_formula
+
+				# (mass,0.0,intensity,parent,'gnps',float(ms2_id))
+
+				for p in pos:
+					this_meta = meta[p]
+					intensity = this_meta[2]
+					doc_name = this_meta[3].name
+					this_file = this_meta[4]
+					if not doc_name in self.corpus[this_file]:
+						self.corpus[this_file][doc_name] = {}
+					if not feature_name in self.corpus[this_file][doc_name]:
+						self.corpus[this_file][doc_name][feature_name] = 0.0
+					if self.replace == 'sum':
+						self.corpus[this_file][doc_name][feature_name] += intensity
+					else:
+						current = self.corpus[this_file][doc_name][feature_name]
+						newval = max(current,intensity)
+						self.corpus[this_file][doc_name][feature_name] = newval
+
+				self.word_counts[feature_name] = len(pos)
+				
+
+	def process_kde(self,kde,masses,ppm,ef_polarity,formulas = None,formula_ppm = 20):
+
+		if formulas:
+			from formula import Formula
+			# User has supplied a list of formulas to match
+			formula_objs = []
+			formula_masses = []
+			for formula in formulas:
+				formula_objs.append(Formula(formula))
+				formula_masses.append(formula_objs[-1].compute_exact_mass())
+			formula_masses = np.array(formula_masses)
+
+
+		atom_list = ['H','C','N','O']
+		atom_list2 = ['H','C','N','O','P']
+		print "Performing kernel density estimation"
+		ef7 = ef_assigner(do_7_rules = True,verbose = False,atom_list = atom_list)
+		ef72 = ef_assigner(do_7_rules = True,verbose = False,atom_list = atom_list2)
+		ef3 = ef_assigner(do_7_rules = False,verbose = False,atom_list = atom_list2)
+
+		kde_copy = kde.copy()
+		groups = np.zeros_like(kde) - 1
+
+		max_width = 50 # ppm
+		group_list = []
+		current_group = 0
+		# group_formulas = []
+		# group_mz = []
+		verbose = False
+		while True:
+			biggest_pos = kde_copy.argmax()
+			if biggest_pos == 1298:
+				verbose = True
+			else:
+				verbose = False
+			peak_values = [biggest_pos]
+			this_mass = masses[biggest_pos]
+			ss = ((ppm*(this_mass/1e6))/3.0)**2
+			min_val = 1.0/(np.sqrt(2*np.pi*ss))
+
+			pos = biggest_pos
+			intensity = kde_copy[biggest_pos]
+			if intensity < 0.8*min_val:
+			    break # finished
+			finished = False
+			lowest_intensity = intensity
+			lowest_index = biggest_pos
+
+			if intensity > min_val:
+				# Checks that it's not a singleton
+				if pos > 0:
+					# Check that it's not the last one
+				    while not finished:
+				        pos -= 1
+				    	# Decide if this one should be part of the peak or not
+				    	if kde[pos] > lowest_intensity + 0.01*intensity or kde[pos] <= 1.001*min_val:
+				    		# It shouldn't
+				    		finished = True
+				        elif groups[pos] > -1:
+				        	# We've hit another group!
+				        	finished = True
+				        elif 1e6*abs(masses[pos] - this_mass)/this_mass > max_width:
+				        	# Gone too far
+				        	finished = True
+				    	else:
+				    		# it should
+				    		peak_values.append(pos)
+				    	# If it's the last one, we're finished
+				        if pos == 0:
+				            finished = True
+
+				        # If it's the lowest we've seen so far remember that
+				        if kde[pos] < lowest_intensity:
+				            lowest_intensity = kde[pos]
+				            lowest_index = pos
+
+
+				pos = biggest_pos
+				finished = False
+				lowest_intensity = intensity
+				lowest_index = biggest_pos
+				if pos < len(kde)-1:
+				    while not finished:
+				    	# Move to the right
+				        pos += 1
+				        if verbose:
+				        	print pos
+				        # check if this one should be in the peak
+				        if kde[pos] > lowest_intensity + 0.01*intensity or kde[pos] <= 1.001*min_val:
+				        	# it shouldn't
+				        	finished = True
+				        elif groups[pos] > -1:
+				        	# We've hit another group!
+				        	finished = True
+				        elif 1e6*abs(masses[pos] - this_mass)/this_mass > max_width:
+				        	# Gone too far
+				        	finished = True
+				        else:
+				        	peak_values.append(pos)
+
+				        # If it's the last value, we're finished
+				        if pos == len(kde)-1:
+				        	finished = True
+
+				        # If it's the lowest we've seen, remember that
+				        if kde[pos] < lowest_intensity:
+				            lowest_intensity = kde[pos]
+				            lowest_index = pos
+
+			else:
+				# Singleton peak
+				peak_values = [biggest_pos]
+				
+			if len(peak_values) > 0:
+				kde_copy[peak_values] = 0.0
+				groups[peak_values] = current_group
+				group_id = current_group
+				current_group += 1
+				group_mz = masses[biggest_pos]
+
+				# Find formulas
+				hit_string = None
+				if formulas:
+					errs = 1e6*np.abs(group_mz - formula_masses)/group_mz
+					if errs.min() < formula_ppm:
+						hit_string = str(formula_objs[errs.argmin()])
+				else:
+					form,hit_string,mass = ef7.find_formulas([masses[biggest_pos]],ppm=formula_ppm,polarisation=ef_polarity)
+					hit_string = hit_string[0]
+					if hit_string == None:
+						form,hit_string,mass = ef72.find_formulas([masses[biggest_pos]],ppm=formula_ppm,polarisation=ef_polarity)
+						hit_string = hit_string[0]
+						if hit_string == None:
+							form,hit_string,mass = ef3.find_formulas([masses[biggest_pos]],ppm=formula_ppm,polarisation=ef_polarity)
+							hit_string = hit_string[0]
+
+					if not hit_string == None:
+						hit_string = '?' + hit_string
+
+				new_group = (group_id,group_mz,hit_string,biggest_pos)
+
+				group_list.append(new_group)
+				if current_group % 100 == 0:
+					print "Found {} groups".format(current_group)
+
+		return groups,group_list
+
+
+  
+	def make_kde(self,mass_array,ppm,stop_thresh):
+		kde = np.zeros_like(mass_array)
+		n_losses = len(mass_array)
+		for i in range(n_losses):
+		    if i % 1000 == 0:
+		        print "Done kde for {} of {}".format(i,n_losses)
+		    this_mass = mass_array[i]
+		    ss = ((ppm*(this_mass/1e6))/3.0)**2
+		    finished = False
+		    pos = i-1
+		    while (not finished) and (pos >= 0):
+		        de = self.gauss_pdf(mass_array[pos],this_mass,ss)
+		        kde[pos] += de
+		        if this_mass - mass_array[pos] > stop_thresh*np.sqrt(ss):
+		            finished = True
+		        pos -= 1
+		    finished = False
+		    pos = i
+		    while (not finished) and (pos < len(mass_array)):
+		        de = self.gauss_pdf(mass_array[pos],this_mass,ss)
+		        kde[pos] += de
+		        if mass_array[pos] - this_mass > stop_thresh*np.sqrt(ss):
+		            finished = True
+		        pos += 1
+		print "Made kde"
+		return kde
+
+
+	def gauss_pdf(self,x,m,ss):
+	    return (1.0/np.sqrt(2*np.pi*ss))*np.exp(-0.5*((x-m)**2)/ss)
 
 	def make_queues(self):
 		self.fragment_queue = PriorityQueue()
@@ -115,7 +386,7 @@ class CorpusMaker(object):
 				if len(seeds) == 0:
 					mean_mass = tot_mass / (1.0*len(sub_list))
 					word_name = prefix + "_{}".format(mean_mass)
-					self.word_counts[word_name] = len(sub_list)
+					# self.word_counts[word_name] = len(sub_list)
 					self.n_words += 1
 				else:
 					seed_names = []
@@ -146,6 +417,9 @@ class CorpusMaker(object):
 						if word_name in self.corpus[file_name][doc_name]:
 							self.corpus[file_name][doc_name][word_name] += item[2]
 						else:
+							if not word_name in self.word_counts:
+								self.word_counts[word_name] = 0
+							self.word_counts[word_name] += 1
 							self.corpus[file_name][doc_name][word_name] = item[2]
 
 
@@ -194,7 +468,7 @@ class CorpusMaker(object):
 					else:
 						self.corpus[file_name][doc_name][word_name] = item[2]
 
-	def load_gnps(self):
+	def load_gnps(self,merge_energies = True,merge_ppm = 2):
 		self.files = ['gnps']
 		self.ms1 = []
 		self.ms1_index = {}
@@ -205,6 +479,8 @@ class CorpusMaker(object):
 		self.metadata = {}
 		for file in self.input_set:
 			with open(file,'r') as f:
+				temp_mass = []
+				temp_intensity = []
 				doc_name = file.split('/')[-1]
 				self.metadata[doc_name] = {}
 				new_ms1 = MS1(str(n_processed),None,None,None,'gnps')
@@ -230,15 +506,33 @@ class CorpusMaker(object):
 							sr = rline.split(' ')
 							mass = float(sr[0])
 							intensity = float(sr[1])
-							parent = self.ms1[-1]
 							if intensity > self.min_intensity:
-								new_ms2 = (mass,0.0,intensity,parent,'gnps',float(ms2_id))
-								self.ms2.append(new_ms2)
-								ms2_id += 1
+								if merge_energies and len(temp_mass)>0:
+									errs = 1e6*np.abs(mass-np.array(temp_mass))/mass
+									if errs.min() < merge_ppm:
+										# Don't add, but merge the intensity
+										min_pos = errs.argmin()
+										if self.replace == 'max':
+											temp_intensity[min_pos] = max(intensity,temp_intensity[min_pos])
+										else:
+											temp_intensity[min_pos] += intensity
+									else:
+										temp_mass.append(mass)
+										temp_intensity.append(intensity)
+								else:
+									temp_mass.append(mass)
+									temp_intensity.append(intensity)
+
+				parent = self.ms1[-1]
+				for mass,intensity in zip(temp_mass,temp_intensity):
+					new_ms2 = (mass,0.0,intensity,parent,'gnps',float(ms2_id))
+					self.ms2.append(new_ms2)
+					ms2_id += 1
+
 				n_processed += 1
 			if n_processed % 100 == 0:
 				print "Processed {} spectra".format(n_processed)
-
+			
 
 
 	def load_csv(self):

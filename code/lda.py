@@ -582,13 +582,22 @@ class VariationalLDA(object):
 		di,i = zip(*di)
 		di = list(di)
 
+		# make a reverse index for topics
+		tp = [(topic,self.topic_index[topic]) for topic in self.topic_index]
+		tp = sorted(tp,key = lambda x: x[1])
+		reverse,_ = zip(*tp)
+
+
 		for k in range(self.K):
 		    pos = np.where(self.beta_matrix[k,:]>min_prob_to_keep_beta)[0]
-		    motif_name = 'motif_{}'.format(k)
+		    motif_name = reverse[k]
+		    # motif_name = 'motif_{}'.format(k)
 		    lda_dict['beta'][motif_name] = {}
 		    for p in pos:
 		        word_name = ri[p]
 		        lda_dict['beta'][motif_name][word_name] = self.beta_matrix[k,p]
+
+
 
 
 		eth = self.get_expect_theta()
@@ -598,7 +607,8 @@ class VariationalLDA(object):
 		    lda_dict['theta'][doc] = {}
 		    pos = np.where(t > min_prob_to_keep_theta)[0]
 		    for p in pos:
-		        motif_name = 'motif_{}'.format(p)
+		    	motif_name = reverse[p]
+		        # motif_name = 'motif_{}'.format(p)
 		        lda_dict['theta'][doc][motif_name] = t[p]
 
 		lda_dict['phi'] = {}
@@ -610,7 +620,8 @@ class VariationalLDA(object):
 		        lda_dict['phi'][doc][word] = {}
 		        pos = np.where(self.phi_matrix[doc][word] >= min_prob_to_keep_phi)[0]
 		        for p in pos:
-		            lda_dict['phi'][doc][word]['motif_{}'.format(p)] = self.phi_matrix[doc][word][p]
+		            motif_name = reverse[p]
+		            lda_dict['phi'][doc][word][motif_name] = self.phi_matrix[doc][word][p]
 		    if ndocs % 500 == 0:
 		        print "Done {}".format(ndocs)
 
