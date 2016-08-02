@@ -60,9 +60,33 @@ def view_parents(request,motif_id):
     context_dict['motif_features'] = motif_features
     return render(request,'basicviz/view_parents.html',context_dict)
 
+
 def mass2motif_feature(request,fm2m_id):
-    feature_mass2motif = Mass2MotifInstance.objects.get(id = fm2m_id)
-    context_dict['feature_mass2motif'] = feature_mass2motif
+    mass2motif_feature = Mass2MotifInstance.objects.get(id = fm2m_id)
+    context_dict = {}
+    context_dict['mass2motif_feature'] = mass2motif_feature
+
+    total_intensity = 0.0
+    topic_intensity = 0.0
+    n_docs = 0
+    feature_instances = FeatureInstance.objects.filter(feature = mass2motif_feature.feature)
+    docs = []
+    for instance in feature_instances:
+        total_intensity += instance.intensity
+        fi_m2m = FeatureMass2MotifInstance.objects.filter(featureinstance = instance,mass2motif = mass2motif_feature.mass2motif)
+        print len(fi_m2m)
+        if len(fi_m2m) > 0:
+            topic_intensity += fi_m2m[0].probability * instance.intensity
+            if fi_m2m[0].probability >= 0.75:
+                n_docs += 1
+                docs.append(instance.document)
+
+    context_dict['total_intensity'] = total_intensity
+    context_dict['topic_intensity'] = topic_intensity
+    context_dict['intensity_perc'] = 100.0*topic_intensity / total_intensity
+    context_dict['n_docs'] = n_docs
+    context_dict['docs'] = docs
+
     return render(request,'basicviz/mass2motif_feature.html',context_dict)
 
 def get_parents(request,motif_id):
