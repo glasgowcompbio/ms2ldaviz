@@ -41,10 +41,20 @@ class Document(models.Model):
 		else:
 			return None
 
+	def get_display_name(self):
+		display_name = self.name
+		md = jsonpickle.decode(self.metadata)
+		if 'common_name' in md:
+			display_name = md['common_name']
+		elif 'annotation' in md:
+			display_name = md['annotation']
+		return display_name
+
 	mass = property(get_mass)
 	csid = property(get_csid)
 	inchikey = property(get_inchi)
 	annotation = property(get_annotation)
+	display_name = property(get_display_time)
 
 	def __unicode__(self):
 		return self.name
