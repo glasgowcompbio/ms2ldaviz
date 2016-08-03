@@ -67,7 +67,10 @@ def view_parents(request,motif_id):
         if form.is_valid():
             new_annotation = form.cleaned_data['metadata']
             md = jsonpickle.decode(motif.metadata)
-            md['annotation'] = new_annotation
+            if len(new_annotation) > 0:
+                md['annotation'] = new_annotation
+            elif 'annotation' in md:
+                del md['annotation']
             motif.metadata = jsonpickle.encode(md)
             motif.save()
             context_dict['status'] = 'Metadata saved...'
