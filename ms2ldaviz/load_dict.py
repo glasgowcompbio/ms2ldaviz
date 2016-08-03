@@ -68,6 +68,8 @@ if __name__ == '__main__':
 		n_done += 1
 		if n_done % 100 == 0:
 			print "Done {}/{}".format(n_done,to_do)
+			experiment.status = "Done {}/{} docs".format(n_done,to_do)
+			experiment.save()
 		metdat = jsonpickle.encode(lda_dict['doc_metadata'][doc])
 		d = add_document(doc,experiment,metdat)
 		# d = Document.objects.get_or_create(name=doc,experiment=experiment,metadata=metdat)[0]
@@ -86,9 +88,11 @@ if __name__ == '__main__':
 		n_done += 1
 		if n_done % 100 == 0:
 			print "Done {}/{}".format(n_done,to_do)
+			experiment.status = "Done {}/{} topics".format(n_done,to_do)
+			experiment.save()
 		metadata = {}
 		metadata = lda_dict['topic_metadata'].get(topic,{})
-		add_topic(topic,experiment,jsonpickle.encode(metadata),lda_data)
+		add_topic(topic,experiment,jsonpickle.encode(metadata),lda_dict)
 
 		# m2m = Mass2Motif.objects.get_or_create(name = topic,experiment = experiment,metadata = jsonpickle.encode(metadata))[0]
 		# for word in lda_dict['beta'][topic]:
@@ -101,7 +105,9 @@ if __name__ == '__main__':
 	for doc in lda_dict['theta']:
 		n_done += 1
 		if n_done % 100 == 0:
-			print "Done {}/{}".format(n_done,to_do)		
+			print "Done {}/{}".format(n_done,to_do)	
+			experiment.status = "Done {}/{} theta".format(n_done,to_do)		
+			experiment.save()
 		add_theta(doc,experiment,lda_dict)
 
 
@@ -117,6 +123,8 @@ if __name__ == '__main__':
 		n_done += 1
 		if n_done % 100 == 0:
 			print "Done {}/{}".format(n_done,to_do)
+			experiment.status = "Done {}/{} phi".format(n_done,to_do)
+			experiment.save()
 		load_phi(doc,experiment,lda_dict)
 		# document = Document.objects.get(name = doc,experiment=experiment)
 		# for word in lda_dict['phi'][doc]:
