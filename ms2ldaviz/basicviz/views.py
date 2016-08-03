@@ -6,6 +6,7 @@ from sklearn.decomposition import PCA
 import json
 import jsonpickle
 import csv
+from basicviz.forms import Mass2MotifMetadataForm
 
 from basicviz.models import Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance
 
@@ -58,6 +59,25 @@ def view_parents(request,motif_id):
     context_dict = {'mass2motif':motif}
     motif_features = Mass2MotifInstance.objects.filter(mass2motif = motif).order_by('-probability')
     context_dict['motif_features'] = motif_features
+
+
+    context_dict['status'] = 'Edit metadata...'
+    if request.method == 'POST':
+        form = Mass2MotifMetadataForm(request.POST)
+        if form.is_valid():
+            new_annotation = form.cleaned_data['metadata']
+            md = jsonpickle.decode(motif.metadata)
+            md['annotation'] = new_annotation
+            motif.metadata = jsonpickle.encode(md)
+            motif.save()
+            context_dict['status'] = 'Metadata saved...'
+
+
+
+    metadata_form = Mass2MotifMetadataForm(initial={'metadata':motif.annotation})
+    context_dict['metadata_form'] = metadata_form
+
+
     return render(request,'basicviz/view_parents.html',context_dict)
 
 
