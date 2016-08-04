@@ -217,6 +217,60 @@ class VariationalLDA(object):
 			for topic in self.topic_index:
 				self.topic_metadata[topic] = {'name':topic,'type':'learnt'}
 
+	def add_fixed_topics_formulas(self,topics,prob_thresh = 0.5):
+		# Adds fixed topics by matching on chemical formulas
+		from formula import Formula
+		print "Matching topics based on formulas"
+		ti = [(topic,self.topic_index[topic]) for topic in self.topic_index]
+		ti = sorted(ti,key = lambda x:x[1])
+		topic_reverse,_ = zip(*ti)
+		self.beta_matrix = np.zeros((self.K,len(self.word_index)),np.float)
+		self.n_fixed_topics = 0
+
+		frag_formulas = {}
+		loss_formulas = {}
+
+		for word in self.word_index:
+			split_word = word.split('_')
+			if len(split_word) == 3:
+				formula = Formula(split_word[2])
+				if word.startswith('loss'):
+					loss_formulas[str(formula)] = word
+				else:
+					frag_formulas[str(formula)] = word
+
+
+		for topic in topics['beta']:
+			matched_probability = 0.0
+			matches = {}
+			for word,probability in topics['beta'][topic].items():
+				split_word = word.split('_')
+				if len(split_word) == 3: # it has a formula
+					formula_string = str(Formula(split_word[2]))
+					matched_word = None
+					if word.startswith('loss') and formula_string in loss_formulas:
+						matched_word = loss_formulas[formula_string]
+					elif word.startswith('fragment') and formula_string in frag_formulas:
+						matched_word = frag_formulas[formula_string]
+					if not matched_word == None:
+						matches[word] = matched_word
+						matched_probability += probability
+
+			print "Topic: {}, {} probability matched ({})".format(topic,matched_probability,
+				topics['topic_metadata'][topic].get('annotation',""))
+			if matched_probability > prob_thresh:
+				# We have a match
+				for word in matches:
+					self.beta_matrix[self.n_fixed_topics,self.word_index[matches[word]]] = topics['beta'][topic][word]
+				# Normalise
+				self.beta_matrix[self.n_fixed_topics,:] /= self.beta_matrix[self.n_fixed_topics,:].sum()
+				topic_here = topic_reverse[self.n_fixed_topics]
+				print "Match accepted, storing as {}".format(topic_here)
+				self.topic_metadata[topic_here]['type'] = 'fixed'
+				for key,val in topics['topic_metadata'][topic].items():
+					self.topic_metadata[topic_here][key] = val
+				self.n_fixed_topics += 1
+
 
 	def add_fixed_topics(self,topics,topic_metadata = None,mass_tol = 5,prob_thresh = 0.5):
 		print "Matching topics"

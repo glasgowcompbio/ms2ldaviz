@@ -49,7 +49,7 @@ class CorpusMaker(object):
 			self.make_kde_corpus()
 
 
-	def make_kde_corpus(self,loss_ppm = 10.0,frag_ppm = 5.0):
+	def make_kde_corpus(self,loss_ppm = 15.0,frag_ppm = 7.0):
 		# Process the losses
 		loss_masses = []
 		self.loss_meta = []
@@ -129,7 +129,7 @@ class CorpusMaker(object):
 				self.word_counts[feature_name] = len(pos)
 				
 
-	def process_kde(self,kde,masses,ppm,ef_polarity,formulas = None,formula_ppm = 20):
+	def process_kde(self,kde,masses,ppm,ef_polarity,formulas = None,formula_ppm = 10):
 
 		if formulas:
 			from formula import Formula
