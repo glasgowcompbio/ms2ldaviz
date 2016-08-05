@@ -4,9 +4,6 @@
 
 {% block body_block %}
 
-
-
-
 <script type='text/javascript' src="{% static "js/jquery-2.2.2.min.js" %}"></script>
 <script type='text/javascript' src="{% static "js/jquery-ui.min.js" %}"> </script>
 <script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
@@ -18,8 +15,9 @@
 	// var current_pos = 0
 	var motif_name = '{{mass2motif.name}}'
 	var motif_id = '{{mass2motif.id}}'
-	var url = '/basicviz/get_word_graph/' + motif_id + '/';
-	plot_word_graph(url,motif_id, motif_name);
+
+  var url = '/basicviz/get_intensity/' + motif_id + '/'
+	plot_word_graph(url, motif_id, motif_name);
 
 </script>
 </body>

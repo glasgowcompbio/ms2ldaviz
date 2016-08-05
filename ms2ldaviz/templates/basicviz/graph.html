@@ -14,6 +14,7 @@
 <script type='text/javascript' src="{% static "js/basicviz-network.js" %}"> </script>
 <script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"> </script>
 <script type='text/javascript' src="{% static "js/seedrandom.min.js" %}"> </script>
+<script type='text/javascript' src="{% static "js/word-graph.js" %}"> </script>
 </script>
 
 <script>
@@ -25,6 +26,8 @@ var current_pos = 0;
 var motif_name = '{{initial_motif.name}}'
 var motif_id = {{initial_motif.id}}
 load_parents(motif_id, motif_name,annotated); // Hopefully there is such a motif!
+var url = '/basicviz/get_word_graph/' + motif_id + '/';
+plot_word_graph(url,motif_id, motif_name);
 
 </script>
 <div class="ui-widget" style="padding-top: 10px; padding-bottom: 10px">
@@ -38,5 +41,6 @@ load_parents(motif_id, motif_name,annotated); // Hopefully there is such a motif
 <div>
     <svg width=700 height=1000></svg>
 </div>
+<div id="graphs"></div>
 
 {% endblock %}

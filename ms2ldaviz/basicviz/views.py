@@ -72,6 +72,7 @@ def get_word_graph(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif)
     m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
+    colours = '#0000b4'
     features_data = {}
     documents_data = []
     for feat in m2mIns:
@@ -86,7 +87,7 @@ def get_word_graph(request, motif_id):
 
     data_for_json = [] 
     for feature in features_data:
-        data_for_json.append((feature.name,features_data[feature])) # Could even sort this object by count (descending): 
+        data_for_json.append((feature.name,features_data[feature], colours)) # Could even sort this object by count (descending): 
     data_for_json = sorted(data_for_json,key =lambda x: x[1],reverse = True)                
 
     return HttpResponse(json.dumps(data_for_json), content_type = 'application/json')             
@@ -111,25 +112,31 @@ def view_word_graph(request, motif_id):
 # //          increase feature count for this feature by the result
 def get_intensity(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
-    features = Mass2MotifInstance.objects.filter(mass2motif = motif)
+    features_m2m = Mass2MotifInstance.objects.filter(mass2motif = motif)
+    features = [f.feature for f in features_m2m]
+    colours = ['#0000b4', '#00001a']
     total_intensity = {}
     mass2motif_intensity = {}
 
     #getting the total intensities of each feature
     for feature in features:
-        total_intensity[feature] = 0.0
         feature_instances = FeatureInstance.objects.filter(feature = feature)
+        total_intensity[feature] = 0.0
         mass2motif_intensity[feature] = 0.0
         for instance in feature_instances:
             total_intensity[feature] += instance.intensity
             fm2m = FeatureMass2MotifInstance.objects.filter(featureinstance = instance, mass2motif = motif)
             if len(fm2m) > 0:
-                mass2motif_intensity[feature] += instance.intensity * fm2m[0].probability                
+                mass2motif_intensity[feature] += fm2m[0].probability * instance.intensity
+        #feature_instances = FeatureInstance.objects.filter(feature = feature)
+        
+                       
+    print [(f.name, total_intensity[f]) for f in total_intensity]
 
     data_for_json = [] 
     for feature in features:
         if mass2motif_intensity[feature] > 0:
-            data_for_json.append((feature.feature.name,total_intensity[feature], mass2motif_intensity[feature])) 
+            data_for_json.append((feature.name,total_intensity[feature], colours[0], mass2motif_intensity[feature], colours[1])) 
     data_for_json = sorted(data_for_json,key =lambda x: x[2],reverse = True) 
 
 
