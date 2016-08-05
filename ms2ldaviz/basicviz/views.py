@@ -352,13 +352,20 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
             if docm2m.mass2motif in topics and docm2m.probability > edge_thresh:
                 G.add_edge(docm2m.mass2motif.name,document.name,weight = edge_scale_factor*docm2m.probability)
     return G
+def topic_pca(request,experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    context_dict = {'experiment': experiment}
+    url = './basicviz/get_topic_pca_data/' + str(experiment.id)
+    context_dict['url'] = url
+    return render(requets,'basicviz/pca.html',context_dict)
 
 def document_pca(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
     context_dict = {}
     context_dict['experiment'] = experiment
-
-    return render(request,'basicviz/document_pca.html',context_dict)
+    url = './basicviz/get_pca_data/' + str(experiment.id)
+    context_dict['url'] = url
+    return render(request,'basicviz/pca.html',context_dict)
 
 def get_pca_data(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)

@@ -1,11 +1,11 @@
-function pca_plot(experiment_id) {
+function pca_plot(url) {
 		var plot_width=800
 	var plot_height=500
 	var hor_margin = 50
 	var ver_margin = 50
 
 	
-	d3.json("/basicviz/get_pca_data/"+ experiment_id + "/",function(error,dataset) {
+	d3.json(url,function(error,dataset) {
         if (error) throw error;
         pca_plot(dataset)
         $('#message').fadeOut('fast');
