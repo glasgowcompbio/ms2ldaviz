@@ -8,7 +8,7 @@ import jsonpickle
 import csv
 from basicviz.forms import Mass2MotifMetadataForm
 
-from basicviz.models import Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance
+from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance
 
 def index(request):
     experiments = Experiment.objects.all()
@@ -355,17 +355,90 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
 def topic_pca(request,experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     context_dict = {'experiment': experiment}
-    url = './basicviz/get_topic_pca_data/' + str(experiment.id)
+    url = '/basicviz/get_topic_pca_data/' + str(experiment.id)
     context_dict['url'] = url
-    return render(requets,'basicviz/pca.html',context_dict)
+    return render(request,'basicviz/pca.html',context_dict)
 
 def document_pca(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
     context_dict = {}
     context_dict['experiment'] = experiment
-    url = './basicviz/get_pca_data/' + str(experiment.id)
+    url = '/basicviz/get_pca_data/' + str(experiment.id)
     context_dict['url'] = url
     return render(request,'basicviz/pca.html',context_dict)
+
+def get_topic_pca_data(request,experiment_id):
+
+
+    import numpy as np
+
+    experiment = Experiment.objects.get(id = experiment_id)
+    motifs = Mass2Motif.objects.filter(experiment = experiment)
+    features = Feature.objects.filter(experiment = experiment)
+
+    n_motifs = len(motifs)
+    n_features = len(features)
+
+
+    mat = []
+    motif_index = {}
+    motif_pos = 0
+
+
+    for motif in motifs:
+        motif_index[motif] = motif_pos
+        motif_pos += 1
+
+
+    feature_pos = 0
+    feature_index = {}
+
+    for feature in features:
+        instances = Mass2MotifInstance.objects.filter(feature = feature)
+        if len(instances) > 2: # minimum to include
+            feature_index[feature] = feature_pos
+            new_row = [0.0 for i in range(n_motifs)]
+            for instance in instances:
+                motif_pos = motif_index[instance.mass2motif]
+                new_row[motif_pos] = instance.probability
+            feature_pos += 1
+            mat.append(new_row)
+
+
+    mat = np.array(mat).T
+
+    pca = PCA(n_components = 2,whiten = True)
+    pca.fit(mat)
+
+    X = pca.transform(mat)
+    pca_points = []
+    for motif in motif_index:
+        motif_pos = motif_index[motif]
+        new_element = (X[motif_pos,0],X[motif_pos,1],motif.name,'#FF66CC')
+        pca_points.append(new_element)
+
+
+    max_x = np.abs(X[:,0]).max()
+    max_y = np.abs(X[:,1]).max()
+
+    factors = pca.components_
+    max_factor_x = np.abs(factors[0,:]).max()
+    factors[0,:] *= max_x/max_factor_x
+    max_factor_y = np.abs(factors[1,:]).max()
+    factors[1,:] *= max_y/max_factor_y
+
+    pca_lines = []
+    factor_colour = 'rgba(0,0,128,0.5)'
+    for feature in feature_index:
+        xval = factors[0,feature_index[feature]]
+        yval = factors[1,feature_index[feature]]
+        if abs(xval) > 0.01*max_x or abs(yval) > 0.01*max_y:
+            pca_lines.append((xval,yval,feature.name,factor_colour))
+    # add the weightings
+    pca_data = (pca_points,pca_lines)
+
+    return HttpResponse(json.dumps(pca_data),content_type = 'application/json')
+
 
 def get_pca_data(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
