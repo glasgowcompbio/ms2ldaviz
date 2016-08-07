@@ -6,7 +6,7 @@ from sklearn.decomposition import PCA
 import json
 import jsonpickle
 import csv
-from basicviz.forms import Mass2MotifMetadataForm
+from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm
 
 from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance
 
@@ -537,3 +537,49 @@ def dump_validations(request,experiment_id):
 
     # return HttpResponse(outstring,content_type='text')
     return response
+
+
+def extract_docs(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    context_dict = {}
+    if request.method == 'POST':
+        # form has come, get the documents
+        form = DocFilterForm(request.POST)
+        if form.is_valid():
+            all_docs = Document.objects.filter(experiment = experiment)
+            selected_docs = {}
+            all_m2m = Mass2Motif.objects.filter(experiment = experiment)
+            annotated_m2m = []
+            for m2m in all_m2m:
+                if m2m.annotation:
+                    annotated_m2m.append(m2m)
+            for doc in all_docs:
+                if form.cleaned_data['annotated_only'] and not doc.display_name:
+                    # don't keep
+                    continue
+                else:
+                    dm2m = DocumentMass2Motif.objects.filter(document = doc)
+                    m2ms = [d.mass2motif for d in dm2m if d.probability > form.cleaned_data['topic_threshold']]
+                    if len(list((set(m2ms) & set(annotated_m2m)))) < form.cleaned_data['min_annotated_topics']:
+                        # don't keep
+                        continue
+                    else:
+                        selected_docs[doc] = []
+                        for d in dm2m:
+                            if d.probability > form.cleaned_data['topic_threshold']:
+                                if not form.cleaned_data['only_show_annotated']:
+                                    selected_docs[doc].append(d)
+                                else:
+                                    if d.mass2motif.annotation:
+                                        selected_docs[doc].append(d)
+
+                        selected_docs[doc] = sorted(selected_docs[doc],key = lambda x:x.probability,reverse=True)
+                context_dict['n_docs'] = len(selected_docs)
+            context_dict['docs'] = selected_docs
+        else:
+            context_dict['doc_form'] = form
+    else:
+        doc_form = DocFilterForm()
+        context_dict['doc_form'] = doc_form
+    context_dict['experiment'] = experiment
+    return render(request,'basicviz/extract_docs.html',context_dict)
