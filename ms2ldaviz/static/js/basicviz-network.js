@@ -3,7 +3,7 @@
 // - https://github.com/mbostock/d3/wiki/Force-Layout
 // - http://www.coppelia.io/2014/07/an-a-to-z-of-extra-features-for-the-d3-force-layout/
 
-function plot_graph(experiment_id,annotated) {
+function plot_graph(vo_id) {
 
     Math.seedrandom('hello');
 
@@ -30,11 +30,7 @@ function plot_graph(experiment_id,annotated) {
     var simulationTimeout = 1;
     var optArray = [];
     var toggle = 0;
-    if(annotated == 1) {
-        var url = '/basicviz/get_annotated_graph/' + experiment_id
-    }else {
-        var url = '/basicviz/get_graph/' + experiment_id
-    }
+    var url = '/basicviz/get_graph/' + vo_id
     d3.json(url, function(error, graph) {
 
         if (error) throw error;
@@ -121,7 +117,7 @@ function plot_graph(experiment_id,annotated) {
                 if(d.is_topic) {
                     $('#message').text('Loading ' + d.name)
                     $('#message').fadeIn('fast');
-                    load_parents(d.node_id,d.name,annotated);
+                    load_parents(d.node_id,d.name,vo_id);
                 }
 
                 // reduce the opacity of all but the neighbouring nodes
