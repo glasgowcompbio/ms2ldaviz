@@ -55,9 +55,12 @@ def add_document_words(document,doc_name,experiment,lda_dict):
 if __name__ == '__main__':
 
 	filename = sys.argv[1]
+	verbose = False
+	if 'verbose' in sys.argv:
+		verbose = True
 	with open(filename,'r') as f:
 		lda_dict = pickle.load(f)
-		experiment_name = filename.split('/')[-1].split('.')[0]
+	experiment_name = filename.split('/')[-1].split('.')[0]
 	experiment = Experiment.objects.get_or_create(name=experiment_name)[0]
 	experiment.status = 'loading'
 	experiment.save()
@@ -71,6 +74,8 @@ if __name__ == '__main__':
 			experiment.status = "Done {}/{} docs".format(n_done,to_do)
 			experiment.save()
 		metdat = jsonpickle.encode(lda_dict['doc_metadata'][doc])
+		if verbose:
+			print doc,experiment,metdat
 		d = add_document(doc,experiment,metdat)
 		# d = Document.objects.get_or_create(name=doc,experiment=experiment,metadata=metdat)[0]
 		add_document_words(d,doc,experiment,lda_dict)
