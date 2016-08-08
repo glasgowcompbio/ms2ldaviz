@@ -508,11 +508,10 @@ def validation(request,experiment_id):
         else:
             context_dict['validation_form'] = form
     else:
-        print "Lkjslkjaslkdjaslkd"
+
         form = ValidationForm()
         context_dict['validation_form'] = form
     context_dict['experiment'] = experiment
-    print context_dict
     return render(request,'basicviz/validation.html',context_dict)
 
 
