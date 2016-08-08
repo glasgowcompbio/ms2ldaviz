@@ -150,7 +150,7 @@ def view_mass2motifs(request,experiment_id):
     context_dict['experiment'] = experiment
     return render(request,'basicviz/view_mass2motifs.html',context_dict)
 
-def get_doc_for_plot(doc_id,motif_id = None):
+def get_doc_for_plot(doc_id,motif_id = None,get_key = False):
     colours = ['red','green','black','yellow']
     document = Document.objects.get(id=doc_id)
     features = FeatureInstance.objects.filter(document = document)
@@ -216,11 +216,18 @@ def get_doc_for_plot(doc_id,motif_id = None):
                         other_topics += proportion
                 child_data.append((parent_mass - other_topics,parent_mass,this_intensity,this_intensity,0,'gray',feature_name))
     plot_fragments.append(child_data)
-    return plot_fragments
+
+    if get_key:
+        key = []
+        for topic in topic_colours:
+            key.append((topic.name,topic_colours[topic]))
+        return [plot_fragments],key
+
+    return plot_fragments,key
 
 
 def get_doc_topics(request,doc_id):
-    plot_fragments = get_doc_for_plot(doc_id)
+    plot_fragments = [get_doc_for_plot(doc_id,get_key = True)]
     return HttpResponse(json.dumps(plot_fragments),content_type='application/json')
 
 
