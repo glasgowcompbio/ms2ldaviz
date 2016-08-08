@@ -223,7 +223,7 @@ def get_doc_for_plot(doc_id,motif_id = None,get_key = False):
             key.append((topic.name,topic_colours[topic]))
         return [plot_fragments],key
 
-    return plot_fragments,key
+    return plot_fragments
 
 
 def get_doc_topics(request,doc_id):
