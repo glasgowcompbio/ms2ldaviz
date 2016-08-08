@@ -6,7 +6,7 @@ from sklearn.decomposition import PCA
 import json
 import jsonpickle
 import csv
-from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm
+from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm
 
 from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance
 
@@ -481,24 +481,38 @@ def get_pca_data(request,experiment_id):
 
 def validation(request,experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
-    mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
-    annotated_mass2motifs = []
-    counts = []
-    for mass2motif in mass2motifs:
-        if mass2motif.annotation:
-            annotated_mass2motifs.append(mass2motif)
-            dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.05)
-            tot = 0
-            val = 0
-            for d in dm2ms:
-                tot += 1
-                if d.validated:
-                    val += 1
-            counts.append((tot,val))
-    annotated_mass2motifs = zip(annotated_mass2motifs,counts)
-    context_dict = {'experiment':experiment}
-    context_dict['annotated_mass2motifs'] = annotated_mass2motifs
-    context_dict['counts'] = counts
+    context_dict = {}
+    if request.method == 'POST':
+        form = ValidationForm(request.POST)
+        if form.is_valid():
+            p_thresh = form.cleaned_data['p_thresh']
+            mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
+            annotated_mass2motifs = []
+            counts = []
+            for mass2motif in mass2motifs:
+                if mass2motif.annotation:
+                    annotated_mass2motifs.append(mass2motif)
+                    dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = p_thresh)
+                    tot = 0
+                    val = 0
+                    for d in dm2ms:
+                        tot += 1
+                        if d.validated:
+                            val += 1
+                    counts.append((tot,val))
+            annotated_mass2motifs = zip(annotated_mass2motifs,counts)
+            context_dict['annotated_mass2motifs'] = annotated_mass2motifs
+            context_dict['counts'] = counts
+            context_dict['p_thresh'] = p_thresh
+
+        else:
+            context_dict['validation_form'] = form
+    else:
+        print "Lkjslkjaslkdjaslkd"
+        form = ValidationForm()
+        context_dict['validation_form'] = form
+    context_dict['experiment'] = experiment
+    print context_dict
     return render(request,'basicviz/validation.html',context_dict)
 
 
