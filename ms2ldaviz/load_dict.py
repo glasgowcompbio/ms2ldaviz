@@ -20,7 +20,11 @@ def add_feature(name,experiment):
 	return f
 
 def add_feature_instance(document,feature,intensity):
-	fi = FeatureInstance.objects.get_or_create(document=document,feature=feature,intensity=intensity)[0]
+	try:
+		fi = FeatureInstance.objects.get_or_create(document=document,feature=feature,intensity=intensity)[0]
+	except:
+		print document,feature,intensity
+		sys.exit(0)
 
 
 def add_topic(topic,experiment,metadata,lda_dict):
@@ -79,6 +83,7 @@ if __name__ == '__main__':
 		d = add_document(doc,experiment,metdat)
 		# d = Document.objects.get_or_create(name=doc,experiment=experiment,metadata=metdat)[0]
 		add_document_words(d,doc,experiment,lda_dict)
+
 
 
 		# for word in lda_dict['corpus'][doc]:
