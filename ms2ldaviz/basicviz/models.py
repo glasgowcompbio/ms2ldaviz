@@ -61,7 +61,7 @@ class Document(models.Model):
 		return self.name
 
 class Feature(models.Model):
-	name = models.CharField(max_length=32)
+	name = models.CharField(max_length=64)
 	experiment = models.ForeignKey(Experiment)
 
 	def __unicode__(self):

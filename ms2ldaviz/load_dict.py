@@ -16,7 +16,11 @@ def add_document(name,experiment,metadata):
 	return d
 
 def add_feature(name,experiment):
-	f = Feature.objects.get_or_create(name = name,experiment = experiment)[0]
+	try:
+		f = Feature.objects.get_or_create(name = name,experiment = experiment)[0]
+	except:
+		print name,experiment
+		sys.exit(0)
 	return f
 
 def add_feature_instance(document,feature,intensity):
