@@ -6,7 +6,6 @@
 <link rel="stylesheet" type="text/css" href="{% static "css/jquery-ui.css" %}">
 <link rel="stylesheet" type="text/css" href="{% static "css/basicviz.css" %}">
 <body>
-
 <script type='text/javascript' src="{% static "js/jquery-2.2.2.min.js" %}"></script>
 <script type='text/javascript' src="{% static "js/jquery-ui.min.js" %}"> </script>
 <script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
@@ -18,13 +17,16 @@
 
 <script>
 var annotated = 0
-var experiment_id = '{{ experiment.id}}'
-plot_graph(experiment_id,annotated);
+// var experiment_id = '{{ experiment.id}}'
+// var min_degree = '{{vo.min_degree}}'
+// var edge_thresh = '{{vo.edge_thresh}}'
+var viz_options = '{{viz_options.id}}'
+plot_graph(viz_options);
 
 var current_pos = 0;
 var motif_name = '{{initial_motif.name}}'
 var motif_id = {{initial_motif.id}}
-load_parents(motif_id, motif_name,annotated); // Hopefully there is such a motif!
+load_parents(motif_id, motif_name,viz_options); // Hopefully there is such a motif!
 
 </script>
 <div class="ui-widget" style="padding-top: 10px; padding-bottom: 10px">

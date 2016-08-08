@@ -19,7 +19,7 @@ class Document(models.Model):
 		if 'annotation' in md:
 			return md['annotation']
 		else:
-			return ""
+			return None
 
 	def get_inchi(self):
 		md = jsonpickle.decode(self.metadata)
@@ -116,3 +116,9 @@ class FeatureMass2MotifInstance(models.Model):
 
 	def __unicode__(self):
 		return str(self.probability)
+
+class VizOptions(models.Model):
+	experiment = models.ForeignKey(Experiment)
+	edge_thresh = models.FloatField(null = False)
+	min_degree = models.IntegerField(null = False)
+	just_annotated_docs = models.BooleanField(null = False)
