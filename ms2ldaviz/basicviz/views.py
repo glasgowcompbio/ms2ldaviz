@@ -532,7 +532,7 @@ def toggle_dm2m(request,experiment_id,dm2m_id):
     return HttpResponse(json.dumps(jd),content_type = 'application/json')
     # return validation(request,experiment_id)
 
-def dump_validations(request,experiment_id,prob_thresh):
+def dump_validations(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
     mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
     annotated_mass2motifs = []
