@@ -27,7 +27,7 @@ if __name__ == '__main__':
         writer.writerow(['msm_id','m2m_annotation','doc_id','doc_annotation','valid','probability','score'])
         for mass2motif in annotated_mass2motifs:
             print mass2motif
-            dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.2)
+            dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = p_thresh)
             for dm2m in dm2ms:
                 score = 0.0
                 document = dm2m.document
