@@ -544,7 +544,7 @@ def dump_validations(request,experiment_id):
     response['Content-Disposition'] = 'attachment; filename="valid_dump_{}.csv"'.format(experiment_id)
     outstring = "msm_id,m2m_annotation,doc_id,doc_annotation,valid\n"
     writer = csv.writer(response)
-    writer.writerow(['msm_id','m2m_annotation','doc_id','doc_annotation','valid'])
+    writer.writerow(['msm_id','m2m_annotation','doc_id','doc_annotation','valid','probability'])
     for mass2motif in annotated_mass2motifs:
         dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.05)
         for dm2m in dm2ms:
