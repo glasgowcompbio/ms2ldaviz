@@ -550,6 +550,12 @@ def dump_validations(request,experiment_id):
         for dm2m in dm2ms:
             score = 0.0
             document = dm2m.document
+            feature_instances = FeatureInstance.objects.filter(document = document)
+            for instance in feature_instances:
+                fm2m = FeatureMass2MotifInstance.objects.filter(featureinstance = instance,mass2motif = mass2motif)
+                if fm2m:
+                    score += instance.intensity * fm2m[0].probability
+
             # outstring +='{},{},{},"{}",{}\n'.format(mass2motif.id,mass2motif.annotation,dm2m.document.id,dm2m.document.annotation.encode('utf8'),dm2m.validated)
             doc_name = '"' + dm2m.document.display_name + '"'
             annotation = '"' + mass2motif.annotation + '"'
