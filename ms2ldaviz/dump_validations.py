@@ -32,8 +32,9 @@ if __name__ == '__main__':
             for instance in m2minstances:
                 m2mfeatures[instance.feature] = instance.probability
             dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.02)
-            score = 0.0
+            
             for dm2m in dm2ms:
+                score = 0.0
                 document = dm2m.document
                 feature_instances = FeatureInstance.objects.filter(document = document)
                 for instance in feature_instances:
