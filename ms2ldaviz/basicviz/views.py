@@ -550,7 +550,8 @@ def dump_validations(request,experiment_id):
         for dm2m in dm2ms:
             # outstring +='{},{},{},"{}",{}\n'.format(mass2motif.id,mass2motif.annotation,dm2m.document.id,dm2m.document.annotation.encode('utf8'),dm2m.validated)
             doc_name = dm2m.document.display_name
-            writer.writerow([mass2motif.id,mass2motif.annotation,dm2m.document.id,doc_name.encode('utf8'),dm2m.validated])
+            annotation = mass2motif.annotation
+            writer.writerow([mass2motif.id,mass2motif.annotation.encode('utf8'),dm2m.document.id,doc_name.encode('utf8'),dm2m.validated])
 
     # return HttpResponse(outstring,content_type='text')
     return response
