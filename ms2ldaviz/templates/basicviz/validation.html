@@ -37,11 +37,11 @@
 					{% if doc.probability > p_thresh %}
 					<tr><td>{{doc.document.name}}</td><td>{{doc.probability}}</td><td>{{doc.document.display_name}}</td>
 					<td>
-						{% if doc.csid %}
+						{% if doc.document.csid %}
 							<img src="http://www.chemspider.com/ImagesHandler.ashx?id={{doc.document.csid}}"></td>
 						{% endif %}
 					<td>
-						{% if doc.csid %}
+						{% if doc.document.csid %}
 							<a href="http://www.chemspider.com/Chemical-Structure.{{doc.document.csid}}.html" target=new>ChemSpider</a></td>
 						{% endif %}
 					<td>
