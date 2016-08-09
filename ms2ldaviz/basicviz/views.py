@@ -114,9 +114,7 @@ def mass2motif_feature(request,fm2m_id):
 
 def get_parents(request,motif_id,vo_id):
     motif = Mass2Motif.objects.get(id=motif_id)
-    print vo_id
     vo = VizOptions.objects.all()
-    print [v.id for v in vo]
     viz_options  = VizOptions.objects.get(id = vo_id)
     docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif)
     documents = [d.document for d in docm2m]
@@ -129,6 +127,19 @@ def get_parents(request,motif_id,vo_id):
             elif not viz_options.just_annotated_docs:
                 parent_data.append(get_doc_for_plot(document.id,motif_id))
     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
+
+
+def get_parents_no_vo(request,motif_id):
+    motif = Mass2Motif.objects.get(id=motif_id)
+    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif)
+    documents = [d.document for d in docm2m]
+    parent_data = []
+    for dm in docm2m:
+        if dm.probability > 0.05:
+            document = dm.document
+            parent_data.append(get_doc_for_plot(document.id,motif_id))
+    return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
+
 
 def get_annotated_parents(request,motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
