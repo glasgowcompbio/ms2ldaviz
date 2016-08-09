@@ -8,7 +8,7 @@ import django
 
 django.setup()
 
-from basicviz.models import Experiment,Document,Mass2Motif,DocumentMass2Motif,FeatureInstance,FeatureMass2MotifInstance
+from basicviz.models import Experiment,Document,Mass2Motif,DocumentMass2Motif,FeatureInstance,FeatureMass2MotifInstance,Mass2MotifInstance
 
 if __name__ == '__main__':
     experiment_name = sys.argv[1]
