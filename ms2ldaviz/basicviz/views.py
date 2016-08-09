@@ -549,8 +549,8 @@ def dump_validations(request,experiment_id):
         dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.05)
         for dm2m in dm2ms:
             # outstring +='{},{},{},"{}",{}\n'.format(mass2motif.id,mass2motif.annotation,dm2m.document.id,dm2m.document.annotation.encode('utf8'),dm2m.validated)
-            doc_name = dm2m.document.display_name
-            annotation = mass2motif.annotation
+            doc_name = '"' + dm2m.document.display_name + '"'
+            annotation = '"' + mass2motif.annotation + '"'
             writer.writerow([mass2motif.id,mass2motif.annotation.encode('utf8'),dm2m.document.id,doc_name.encode('utf8'),dm2m.validated,dm2m.probability])
 
     # return HttpResponse(outstring,content_type='text')
