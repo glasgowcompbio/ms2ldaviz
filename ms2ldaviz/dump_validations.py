@@ -24,7 +24,7 @@ if __name__ == '__main__':
     
     with open(out_file,'w') as f:
         writer = csv.writer(f)
-        writer.writerow(['msm_id','m2m_annotation','doc_id','doc_annotation','valid','probability','score'])
+        writer.writerow(['m2m_id','m2m_name','m2m_annotation','doc_id','doc_annotation','valid','probability','score'])
         for mass2motif in annotated_mass2motifs:
             print mass2motif
             m2minstances = Mass2MotifInstance.objects.filter(mass2motif = mass2motif)
