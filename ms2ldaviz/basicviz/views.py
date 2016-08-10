@@ -170,7 +170,7 @@ def get_doc_for_plot(doc_id,motif_id = None,get_key = False):
     # Get the parent info
     metadata = jsonpickle.decode(document.metadata)
     parent_mass = float(metadata['parentmass'])
-    parent_data = (parent_mass,100.0,document.name,document.annotation)
+    parent_data = (parent_mass,100.0,document.display_name,document.annotation)
     plot_fragments.append(parent_data)
     child_data = []
 
