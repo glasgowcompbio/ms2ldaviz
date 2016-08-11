@@ -71,7 +71,7 @@ function plot_parent(total_dataset,motif_name) {
     d3.select("#frag_graph_titlebar_svg").remove();
     d3.select("#frag_graph_svg").remove();
 
-    var frag_graph_titlebar_svg = d3.select("svg")
+    var frag_graph_titlebar_svg = d3.select("#spectra")
        .append("svg")
             .attr("width",plot_width)
             .attr("height",head_height)
@@ -85,7 +85,7 @@ function plot_parent(total_dataset,motif_name) {
 
 
     if (key != null) {
-        var keybox = d3.select("svg")
+        var keybox = d3.select("#spectra")
             .append("svg")
                 .attr("width",plot_width)
                 .attr("height",140)
@@ -163,7 +163,7 @@ function plot_parent(total_dataset,motif_name) {
                 .attr("y",20)
                 .text(motif_name)
 
-    var frag_graph_svg = d3.select("svg")
+    var frag_graph_svg = d3.select("#spectra")
                .append("svg")
                     .attr("width",plot_width)
                     .attr("height",plot_height)
