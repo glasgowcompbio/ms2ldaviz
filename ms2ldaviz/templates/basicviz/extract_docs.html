@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+<html>
+
+{% block title %}Extract document{% endblock %}
+
+{% block body_block %}
+<h3>Experiment {{experiment.name}}</h3>
+
+{% if doc_form %}
+<p>Extract (annotated) molecules that have at least a certain number of annotated M2Ms where a document is considered to include the M2M if its probability exceeds the thresholds</p>
+<form id="doc_form" method="post" action="/basicviz/extract_docs/{{experiment.id}}/">
+ 	{% csrf_token %}
+	{% for hidden in doc_form.hidden_fields %}
+	 	{{ hidden }}
+	{% endfor %}
+
+	{% for field in doc_form.visible_fields %}
+		<p>{{ field.errors }}</p>
+		<p>{{ field }}
+		{{ field.label }}</p>
+	{% endfor %}
+	<input type="submit" name="submit" value="Extract documents" />
+ </form>
+{% endif %}
+
+
+{% if docs %}
+	<p>Returned {{n_docs}} documents</p>
+	<table class="table">
+		<thead>
+			<tr><th>Doc</th><th width=200px>Annotation</th><th>Motifs</th><th>Picture</th></tr>
+		</thead>
+		<tbody>
+		{% for doc,topics in docs.items %}
+			<tr>
+				<td><a href="/basicviz/show_doc/{{doc.id}}">{{doc.name}}</a></td><td>{{doc.annotation}}</td>
+				<td>
+					{% for motif in topics %}
+						<a href="/basicviz/view_parents/{{motif.mass2motif.id}}">{{motif.mass2motif.name}}</a> : {{motif.mass2motif.annotation}} : {{motif.probability}}<br />
+					{% endfor %}
+				</td>
+				<td>
+					{% if doc.csid %}
+						<img src="http://www.chemspider.com/ImagesHandler.ashx?id={{doc.csid}}">
+					{% endif %}
+				</td>
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+{% endif %}
+{% endblock %}

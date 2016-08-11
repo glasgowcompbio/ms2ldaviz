@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+<html>
+
+{% block title %}Experiment: {{experiment.name}}{% endblock %}
+
+{% block body_block %}
+<h2>Validation for {{experiment.name}}</h2>
+
+{% if validation_form %}
+	<p>Enter the probability threshold for document to mass2motif membership</p>
+	<form id="doc_form" method="post" action="/basicviz/validation/{{experiment.id}}/">
+	 	{% csrf_token %}
+		{% for hidden in validation_form.hidden_fields %}
+		 	{{ hidden }}
+		{% endfor %}
+
+		{% for field in validation_form.visible_fields %}
+			<p>{{ field.errors }}</p>
+			<p>{{ field }}
+			{{ field.label }}</p>
+		{% endfor %}
+		<input type="submit" name="submit" value="Do validation" />
+ 	</form>
+{% else %}
+	<a href="/basicviz/dump_validations/{{experiment.id}}">Dump current validations to a .csv file</a>
+
+	{% for m2m,count in annotated_mass2motifs %}
+		<h3>{{m2m.name}}: {{m2m.annotation}} <a href="/basicviz/view_parents/{{m2m.id}}" target=new>Show in ms2ldaviz</a></h3>
+		<h4><span id='c{{m2m.id}}'>{{count.1}}</span> validated out of {{count.0}}</h4>
+		<button data-toggle="collapse" data-target="#{{m2m.id}}">Show</button>
+
+		<div id="{{m2m.id}}" class="collapse">
+			<table class="table">
+			<tr><th>Name</th><th>Probability</th><th width=200px>Annotation</th><th>Image</th><th>link</th><th>Validated?</th><th>View in ms2ldaviz</th></tr>
+				{% for doc in m2m.documentmass2motif_set.all %}
+					{% if doc.probability > p_thresh %}
+					<tr><td>{{doc.document.name}}</td><td>{{doc.probability}}</td><td>{{doc.document.display_name}}</td>
+					<td>
+						{% if doc.document.csid %}
+							<img src="http://www.chemspider.com/ImagesHandler.ashx?id={{doc.document.csid}}"></td>
+						{% endif %}
+					<td>
+						{% if doc.document.csid %}
+							<a href="http://www.chemspider.com/Chemical-Structure.{{doc.document.csid}}.html" target=new>ChemSpider</a></td>
+						{% endif %}
+					<td>
+						<div>
+							{% if doc.validated %}
+								<div style="float:left; font-weight:bold" id='t{{doc.id}}'>Yes</div>
+							{% else %}
+								<div style="float:left; font-weight:normal" id='t{{doc.id}}'>No</div>
+							{% endif %}
+							<div style="float:right">
+								<button type="button" onclick="toggle_validation({{doc.id}},{{m2m.id}})">Toggle</button>
+							</div>
+						</div>
+					</td>
+					<td><a href="/basicviz/show_doc/{{doc.document.id}}" target=new>Show doc</a></td>
+					</tr>
+					{% endif %}
+			{% endfor %}
+			</table>
+		</div>
+		<p>&nbsp;</p>
+	{% endfor %}
+{% endif %}
+<script type='text/javascript' src="{% static "js/jquery-2.2.2.min.js" %}"></script>
+<script type='text/javascript' src="{% static "js/jquery-ui.min.js" %}"> </script>
+<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
+
+
+<script>
+function toggle_validation(docm2m_id,m2m_id) {
+	var url = '/basicviz/toggle_dm2m/{{experiment.id}}/' + docm2m_id
+	var d = document.getElementById("t" + docm2m_id);
+	var c = document.getElementById("c" + m2m_id);
+	var count = parseInt(c.innerHTML);
+	if(d.innerHTML == 'Yes') {
+		count --;
+		c.innerHTML = "" + count;
+	}
+	d.innerHTML = 'Pending....';
+	d3.json(url,function(error,jd) {
+		if (error) throw error;
+		new_html = jd[0];
+		d.innerHTML = new_html;
+		if(jd[0] == 'Yes') {
+			count ++;
+			c.innerHTML = "" + count;
+			d.style.fontWeight = 'bold';
+		} else {
+			d.style.fontWeight = 'normal';
+		}
+	});
+}
+
+</script>
+
+{% endblock %}

@@ -1,4 +1,4 @@
-function load_parents(mass2motif_id,motif_name,annotated) {
+function load_parents(mass2motif_id,motif_name,vo_id) {
 
     current_pos = 0
 
@@ -7,15 +7,30 @@ function load_parents(mass2motif_id,motif_name,annotated) {
     d3.select("#frag_graph_titlebar_svg").remove();
     d3.select("#frag_graph_svg").remove();
     d3.select('#frag_graph_svg').remove()
-    if(annotated == 1) {
-        var url = '/basicviz/get_annotated_parents/' + mass2motif_id + '/';
+
+    if(vo_id > -1) {
+        var url = '/basicviz/get_parents/' + mass2motif_id + '/' + vo_id + '/';
     }else {
         var url = '/basicviz/get_parents/' + mass2motif_id + '/';
     }
+
     d3.json(url,function(error,total_dataset) {
         if (error) throw error;
+        key = null
         plot_parent(total_dataset,motif_name)
         $('#message').fadeOut('fast');
+    });
+
+}
+
+function load_parent(url) {
+    current_pos = 0
+    d3.json(url,function(error,total_dataset) {
+    if (error) throw error;
+    key = total_dataset[0][1]
+    console.log(key)
+    plot_parent(total_dataset[0][0],"")
+    $('#message').fadeOut('fast');
     });
 
 }
@@ -68,6 +83,39 @@ function plot_parent(total_dataset,motif_name) {
         .attr("stroke","black")
         .attr("fill","#F2F2F2");
 
+
+    if (key != null) {
+        var keybox = d3.select("svg")
+            .append("svg")
+                .attr("width",plot_width)
+                .attr("height",140)
+                .attr("id","key_box_svg")
+                .attr("x",0)
+                .attr("y",360)
+        keybox.append("rect")
+            .attr("width","98%")
+            .attr("height","98%")
+            .attr("x","10")
+            .attr("stroke","black")
+            .attr("fill","#F2F2F2");
+        keylines = keybox.selectAll("lines")
+                    .data(key)
+                    .enter()
+                    .append("line");
+        keylines.attr("x1",50)
+                 .attr("x2",300)
+                 .attr("y1",function(d,i) {return 20 + 20*i;})
+                 .attr("y2",function(d,i) {return 20 + 20*i;})
+                 .attr("stroke",function(d) {return d[1];})
+                 .attr("stroke-width",5);
+        keytext = keybox.selectAll("text")
+            .data(key)
+            .enter()
+            .append("text");
+        keytext.attr("x",310)
+                 .attr("y",function(d,i) {return 20 + 20*i;})
+                .text(function(d) {return d[0];});
+    };
     var nextbut = frag_graph_titlebar_svg.append("g")
         .attr("cursor","pointer")
         .on("click",function () {current_pos += 1;plot_parent(total_dataset,motif_name)})

@@ -7,9 +7,16 @@
 	{% if documents %}
 		<h3>Documents</h3>
 		<table class="table">
-		<tr><th>Name</th><th>Metadata</th></tr>
+		<tr><th>Name</th><th>Mass</th><th>link</th><th>Annotation</th></tr>
 		{% for doc in documents %}
-			<tr><td><a href="/basicviz/show_doc/{{doc.id}}">{{doc.name}}</a></td><td>{{doc.metadata}}</td></tr>
+			<tr><td><a href="/basicviz/show_doc/{{doc.id}}">{{doc.name}}</a></td>
+				<td>{{doc.mass}}</td>
+				<td>{% if doc.csid %}
+					<a href="http://www.chemspider.com/Chemical-Structure.{{doc.csid}}.html" target=new>View on ChemSpider</a>
+					{% endif %}
+				</td>
+				<td>{{doc.display_name}}</td>
+			</tr>
 		{% endfor %}
 		</table>
 	{% endif %}

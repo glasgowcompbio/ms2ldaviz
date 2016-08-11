@@ -6,10 +6,24 @@
 	<h3>Mass2Motif: {{mass2motif.name}} ({{mass2motif.experiment.name}})</h3>
 	<h4>{{mass2motif.annotation}}</h4>
 
-	
-
-
 	<a href="/basicviz/view_mass2motifs/{{mass2motif.experiment.id}}">return to mass2motif list for {{mass2motif.experiment.name}}</a>
+ <hr />
+
+ <div>
+ <p>{{ status }}</p>
+ <form id="mass2motifmetadata_form" method="post" action="/basicviz/view_parents/{{mass2motif.id}}/">
+ 	{% csrf_token %}
+	{% for hidden in metadata_form.hidden_fields %}
+	 	{{ hidden }}
+	{% endfor %}
+
+	{% for field in metadata_form.visible_fields %}
+		{{ field.errors }}
+		{{ field }}
+	{% endfor %}
+	<input type="submit" name="submit" value="Modify metadata" />
+ </form>
+ </div>
  <hr />
 
 <div border="20" padding="20">
@@ -19,9 +33,10 @@
 <div>
 <h3>Mass2Motif details</h3>
 	<table class='table'>
-		<tr><th>Name</th><th>Probability</th></tr>
+		<tr><th>Name</th><th>Probability</th><th>link</th></tr>
 		{% for motif_feature in motif_features %}
-			<tr><td>{{motif_feature.feature.name}}</td><td>{{motif_feature.probability}}</td></tr>
+			<tr><td>{{motif_feature.feature.name}}</td><td>{{motif_feature.probability}}</td>
+			<td><a href="/basicviz/mass2motif_feature/{{motif_feature.id}}">details</td></tr>
 		{% endfor %}
 	</table>
 </div>
@@ -39,7 +54,7 @@
 	var current_pos = 0
 	var motif_name = '{{mass2motif.name}}'
 	var motif_id = {{mass2motif.id}}
-	load_parents(motif_id, motif_name);
+	load_parents(motif_id, motif_name,-1);
 
 
 
