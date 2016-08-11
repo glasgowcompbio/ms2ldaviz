@@ -49,7 +49,7 @@ function plot_graph(vo_id) {
 
         // the initial zoom and transform on the svg should be set to the same value
         var zoom = d3.behavior.zoom().translate([300,300]).scale(.1,.1);
-        var svg = d3.select("#network").append("svg")
+        svg = d3.select('svg').append('svg')
             .attr('y',500)
             .attr('width', width)
             .attr('height', height)
