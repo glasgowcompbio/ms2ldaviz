@@ -5,7 +5,7 @@ function plot_word_graph(url, mass2motif_id, motif_name){
     d3.select('#canvas').remove()
  
     
-    d3.json(url,function(error,total_dataset) {    	
+    d3.json(url,function(error,total_dataset) {
         if (error) throw error;
         plot(mass2motif_id, total_dataset);
     });
@@ -13,22 +13,18 @@ function plot_word_graph(url, mass2motif_id, motif_name){
 function plot(mass2motif_id, total_dataset){
 	var height = 350;
 	var width = 600;
-	var margin = {top: 30, right: 10, bottom: 30, left: 200}
-	
+	var margin = {top: 30, right: 10, bottom: 30, left: 200}	
 
 	//data
 	var names = []
 	var values = []
-	var docCount = 0
-	for (i=0; i < total_dataset.length; i++) {
-		if (total_dataset[i][1] > 0){
-			names.push(total_dataset[i][0]);
-			values.push(total_dataset[i][1]);
-		}
-		docCount = i;
+	
+	for (i=0; i < total_dataset[1].length; i++) {		
+		names.push(total_dataset[1][i][0]);
+		values.push(total_dataset[1][i][1]);		
 	}
-	if (docCount < total_dataset[0][1])	
-		docCount = total_dataset[0][1];
+
+	var docCount = total_dataset[0]
 
 	//x and y scales
 	var xscale = d3.scale.linear()
@@ -39,16 +35,11 @@ function plot(mass2motif_id, total_dataset){
 					.domain([0, names.length]) //sets y values to amount of categs
 					.range([margin.top, height+margin.top]); //length of y axis
 
-
-	d3.select('#canvas').remove()
-	//new svg element 900x550
-	var canvas = d3.select("body")
-					.append("graphs")
+	var canvas = d3.select("#graphs")					
 					.append("svg")
+					.attr('id', 'canvas')
 					.attr({'width':width+margin.left+margin.right,'height':height+margin.bottom+margin.top});
-					
-
-
+	
 	//x axis added to svg, oriented bottom and added to scale 
 	var	xAxis = d3.svg.axis();
 	xAxis
@@ -59,6 +50,7 @@ function plot(mass2motif_id, total_dataset){
 		yAxis
 			.orient('left')
 			.scale(yscale)
+			.ticks(names.length)
 			.tickFormat(function(d,i){ return names[i]; });
 			
 
@@ -82,26 +74,28 @@ function plot(mass2motif_id, total_dataset){
 						.append('rect')
 						.attr('height', barHeight)
 						.attr({'x':xscale(0),'y':function(d,i){ return yscale(i); }}) //bar pos
-						.style('fill', function(d, i) {
-							var color = total_dataset[i][2];							
-							return color;})
-						.attr('width', 0)
-						.attr('stroke', '#ffffff');
+						.style('fill', function(d, i) {	return total_dataset[1][i][2]; })
+						.attr('width', function(d, i) {return xscale(total_dataset[1][i][1])-margin.left})
+						.attr('stroke', '#ffffff')
+						.on('mouseover', function(){ return tooltip.style('visibility', 'visible')})						
+						.on('mouseout', function(){ return tooltip.style('visibility', 'hidden')});
+	
+	// var animation = d3.select("#bars")
+	// 					.data(values)
+	// 					.enter()
+	// 				    .transition()
+	// 				    .duration(700) 
+	// 				    .attr('width', function(d, i) {return xscale(total_dataset[i][1])-margin.left});
 
-	animation
-	var animation = d3.select("svg").selectAll("rect")
-					    .data(values)
-					    .transition()
-					    .duration(700) 
-					    .attr('width', function(d, i) {return xscale(total_dataset[i][1])-margin.left});
-
-	var textonbars = d3.select('#bars')
+	//appear on hover
+	var tooltip = d3.select('#bars')
 						.selectAll('text')
 						.data(values)
 						.enter()
 						.append('text')
 						.attr({'x':function(d) {return xscale(d)-15; },'y':function(d,i){ return yscale(i)+18; }})
 						.text(function(d){ return d; })
-						.style({'fill':'#fff','font-size':'14px'});
+						.style({'fill':'#fff','font-size':'14px'})
+						.style('visibility','hidden');
 
 }

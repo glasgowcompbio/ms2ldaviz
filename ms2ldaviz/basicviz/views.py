@@ -155,26 +155,33 @@ def get_annotated_parents(request,motif_id):
 
 def get_word_graph(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
-    m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif)
+    m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
     m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
     colours = '#0000b4'
     features_data = {}
-    documents_data = []
-    for feat in m2mIns:
-        if feat.probability >0.001:                        
-            features_data[feat.feature] = 0
+    for feat in m2mIns:                        
+        features_data[feat.feature] = 0
     
     for doc in m2mdocs:
-        feature_instances = FeatureInstance.objects.filter(document = doc)
+        feature_instances = FeatureInstance.objects.filter(document = doc.document)
         for ft in feature_instances:
             if ft.feature in features_data:
                 features_data[ft.feature] += 1
 
     data_for_json = [] 
-    for feature in features_data:
-        data_for_json.append((feature.name,features_data[feature], colours)) 
-    data_for_json = sorted(data_for_json,key =lambda x: x[1],reverse = True)                
+    data_for_json.append(len(m2mdocs))    
+    sorted_feature_list = []
 
+    for feature in features_data:
+        sorted_feature_list.append([feature.name,features_data[feature], colours]) 
+    sorted_feature_list = sorted(sorted_feature_list,key =lambda x: x[1],reverse = True) 
+
+    feature_list_full = []
+    for feature in sorted_feature_list:
+        feature_list_full.append(feature)
+        #feature_list_full.append(["", 0, ""])
+
+    data_for_json.append(feature_list_full)
     return HttpResponse(json.dumps(data_for_json), content_type = 'application/json')             
 
 def view_word_graph(request, motif_id):
@@ -184,20 +191,9 @@ def view_word_graph(request, motif_id):
     context_dict['motif_features'] = motif_features
     return render(request,'basicviz/view_word_graph.html',context_dict)
 
-# // For a particular m2m:
-# //      Find all features in that m2m (Mass2MotifInstance) (possibly include probability threshold)
-# //      set all feature counts to zero
-# // Find all documents that use that m2m (DocumentMass2Motif)
-# // For each document:
-# //      Find all feature instances in the document (FeatureInstance)
-# //      For each feature instance:
-# //      If the feature is in the m2m (see list made earlier) 
-# //          then extract FeatureMass2MotifInstance from FeatureMass2MotifInstance
-# //          multiply the featuremass2motifinstance.probability by the featureinstance intensity 
-# //          increase feature count for this feature by the result
 def get_intensity(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
-    features_m2m = Mass2MotifInstance.objects.filter(mass2motif = motif)
+    features_m2m = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
     features = [f.feature for f in features_m2m]
     colours = ['#0000b4', '#00001a']
     total_intensity = {}
@@ -213,14 +209,19 @@ def get_intensity(request, motif_id):
             fm2m = FeatureMass2MotifInstance.objects.filter(featureinstance = instance, mass2motif = motif)
             if len(fm2m) > 0:
                 mass2motif_intensity[feature] += fm2m[0].probability * instance.intensity
-
     data_for_json = []
+    features_list = []
+    highest_intensity = 0;
     for feature in features:
         if mass2motif_intensity[feature] > 0:
-            data_for_json.append((feature.name,total_intensity[feature], colours[0]))
-            data_for_json.append(('', mass2motif_intensity[feature], colours[1]))
-            data_for_json.append(('', '', ''))
+            features_list.append((feature.name,total_intensity[feature], colours[0]))
+            features_list.append(('', mass2motif_intensity[feature], colours[1]))
+            if total_intensity[feature] > highest_intensity:
+                highest_intensity = total_intensity[feature]
+            features_list.append(('', 0, ''))
 
+    data_for_json.append(highest_intensity)
+    data_for_json.append(features_list)
     return HttpResponse(json.dumps(data_for_json), content_type = 'application/json')
 
 def view_intensity(request, motif_id):
