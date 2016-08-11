@@ -87,7 +87,7 @@ def get_word_graph(request, motif_id):
 
     data_for_json = [] 
     for feature in features_data:
-        data_for_json.append((feature.name,features_data[feature], colours)) # Could even sort this object by count (descending): 
+        data_for_json.append((feature.name,features_data[feature], colours)) 
     data_for_json = sorted(data_for_json,key =lambda x: x[1],reverse = True)                
 
     return HttpResponse(json.dumps(data_for_json), content_type = 'application/json')             
@@ -128,17 +128,13 @@ def get_intensity(request, motif_id):
             fm2m = FeatureMass2MotifInstance.objects.filter(featureinstance = instance, mass2motif = motif)
             if len(fm2m) > 0:
                 mass2motif_intensity[feature] += fm2m[0].probability * instance.intensity
-        #feature_instances = FeatureInstance.objects.filter(feature = feature)
-        
-                       
-    print [(f.name, total_intensity[f]) for f in total_intensity]
 
-    data_for_json = [] 
+    data_for_json = []
     for feature in features:
         if mass2motif_intensity[feature] > 0:
-            data_for_json.append((feature.name,total_intensity[feature], colours[0], mass2motif_intensity[feature], colours[1])) 
-    data_for_json = sorted(data_for_json,key =lambda x: x[2],reverse = True) 
-
+            data_for_json.append((feature.name,total_intensity[feature], colours[0]))
+            data_for_json.append(('', mass2motif_intensity[feature], colours[1]))
+            data_for_json.append(('', '', ''))
 
     return HttpResponse(json.dumps(data_for_json), content_type = 'application/json')
 

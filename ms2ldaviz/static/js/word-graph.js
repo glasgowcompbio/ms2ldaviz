@@ -14,7 +14,7 @@ function plot(mass2motif_id, total_dataset){
 	var height = 350;
 	var width = 600;
 	var margin = {top: 30, right: 10, bottom: 30, left: 200}
-	var barPadding = 10
+	
 
 	//data
 	var names = []
@@ -27,7 +27,9 @@ function plot(mass2motif_id, total_dataset){
 		}
 		docCount = i;
 	}
-	
+	if (docCount < total_dataset[0][1])	
+		docCount = total_dataset[0][1];
+
 	//x and y scales
 	var xscale = d3.scale.linear()
 					.domain([0, docCount]) //sets x values up to total amount of docs
@@ -38,9 +40,10 @@ function plot(mass2motif_id, total_dataset){
 					.range([margin.top, height+margin.top]); //length of y axis
 
 
-
+	d3.select('#canvas').remove()
 	//new svg element 900x550
-	var canvas = d3.select("graphs")
+	var canvas = d3.select("body")
+					.append("graphs")
 					.append("svg")
 					.attr({'width':width+margin.left+margin.right,'height':height+margin.bottom+margin.top});
 					
@@ -78,12 +81,12 @@ function plot(mass2motif_id, total_dataset){
 						.enter()
 						.append('rect')
 						.attr('height', barHeight)
-						.attr({'x':xscale(0),'y':function(d,i){ return yscale(i)-barHeight/2; }}) //bar pos
+						.attr({'x':xscale(0),'y':function(d,i){ return yscale(i); }}) //bar pos
 						.style('fill', function(d, i) {
 							var color = total_dataset[i][2];							
 							return color;})
 						.attr('width', 0)
-						.attr('stroke', '#000000');
+						.attr('stroke', '#ffffff');
 
 	animation
 	var animation = d3.select("svg").selectAll("rect")
@@ -97,7 +100,7 @@ function plot(mass2motif_id, total_dataset){
 						.data(values)
 						.enter()
 						.append('text')
-						.attr({'x':function(d) {return xscale(d)-margin.left+20; },'y':function(d,i){ return yscale(i)+18; }})
+						.attr({'x':function(d) {return xscale(d)-15; },'y':function(d,i){ return yscale(i)+18; }})
 						.text(function(d){ return d; })
 						.style({'fill':'#fff','font-size':'14px'});
 
