@@ -4,8 +4,6 @@
 
 {% block body_block %}
 
-<script type='text/javascript' src="{% static "js/jquery-2.2.2.min.js" %}"></script>
-<script type='text/javascript' src="{% static "js/jquery-ui.min.js" %}"> </script>
 <script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
 <script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
 <script type='text/javascript' src="{% static "js/word-graph.js" %}"></script>
@@ -20,6 +18,7 @@
 	plot_word_graph(url, motif_id, motif_name);
 
 </script>
+<div id="graphs"></div>
 </body>
 <style>
 .axis path,
