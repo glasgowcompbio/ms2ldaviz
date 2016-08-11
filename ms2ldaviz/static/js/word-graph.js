@@ -49,7 +49,7 @@ function plot(mass2motif_id, total_dataset){
 	var	yAxis = d3.svg.axis();
 		yAxis
 			.orient('left')
-			.scale(yscale)
+			.scale(yscale)		    
 			.ticks(names.length)
 			.tickFormat(function(d,i){ return names[i]; });
 			
@@ -58,7 +58,8 @@ function plot(mass2motif_id, total_dataset){
 	var x_axis = canvas.append('g')
 					  .attr("transform", "translate(0," + (height+margin.top) + ")")
 					  .attr('id','x_axis')
-					  .call(xAxis);
+					  .call(xAxis
+					  .tickFormat(d3.format("s")));
 	var y_axis = canvas.append('g')
 					  .attr("transform", "translate(" + (margin.left) + ",0)")
 					  .attr('id','y_axis')
@@ -77,8 +78,30 @@ function plot(mass2motif_id, total_dataset){
 						.style('fill', function(d, i) {	return total_dataset[1][i][2]; })
 						.attr('width', function(d, i) {return xscale(total_dataset[1][i][1])-margin.left})
 						.attr('stroke', '#ffffff')
-						.on('mouseover', function(){ return tooltip.style('visibility', 'visible')})						
-						.on('mouseout', function(){ return tooltip.style('visibility', 'hidden')});
+						.on("mouseover",function(d, i) {
+				            d3.select(this)
+				                // .attr("stroke","green")
+				                .attr("stroke-width",2);
+			                    var xPos = xscale(d/2);
+			            		function yPos(d,i){ return yscale(i); };
+				            	canvas.append("text")
+				                .attr("id","tooltip")
+				                .attr("x",xPos)
+				                .attr("y",yPos(d,i))
+				                .attr("font-family","sans-serif")
+				                .attr("font-size","16px")
+				                .attr("font-weight","bold")
+				                .attr("fill", "#000000")				          
+				                .text(total_dataset[1][i][1])})
+						.on("mouseout",function() {
+				            d3.select(this)
+				                .transition()
+				                .duration(250)
+				                .attr("stroke-width",1);
+				            d3.select("#tooltip").remove()
+				        });
+						// .on('mouseover', function(){ return tooltip.style('visibility', 'visible')})						
+						// .on('mouseout', function(){ return tooltip.style('visibility', 'hidden')});
 	
 	// var animation = d3.select("#bars")
 	// 					.data(values)
@@ -87,15 +110,6 @@ function plot(mass2motif_id, total_dataset){
 	// 				    .duration(700) 
 	// 				    .attr('width', function(d, i) {return xscale(total_dataset[i][1])-margin.left});
 
-	//appear on hover
-	var tooltip = d3.select('#bars')
-						.selectAll('text')
-						.data(values)
-						.enter()
-						.append('text')
-						.attr({'x':function(d) {return xscale(d)-15; },'y':function(d,i){ return yscale(i)+18; }})
-						.text(function(d){ return d; })
-						.style({'fill':'#fff','font-size':'14px'})
-						.style('visibility','hidden');
+
 
 }

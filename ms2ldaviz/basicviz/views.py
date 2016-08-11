@@ -157,7 +157,7 @@ def get_word_graph(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
     m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
-    colours = '#0000b4'
+    colours = '#404080'
     features_data = {}
     for feat in m2mIns:                        
         features_data[feat.feature] = 0
@@ -195,7 +195,7 @@ def get_intensity(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     features_m2m = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
     features = [f.feature for f in features_m2m]
-    colours = ['#0000b4', '#00001a']
+    colours = ['#404080', '#0080C0']
     total_intensity = {}
     mass2motif_intensity = {}
 
