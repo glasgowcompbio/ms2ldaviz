@@ -304,11 +304,11 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
     topics = {}
     for mass2motif in mass2motifs:
         topics[mass2motif] = 0
-        docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif)
+        docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif,probability__gte=edge_thresh)
         for d in docm2ms:
-            if just_annotated_docs and d.document.annotation and d.probability > edge_thresh:
+            if just_annotated_docs and d.document.annotation:
                 topics[mass2motif] += 1
-            elif (not just_annotated_docs) and d.probability > edge_thresh:
+            elif (not just_annotated_docs):
                 topics[mass2motif] += 1
     to_remove = []
     for topic in topics:
@@ -317,7 +317,7 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
     for topic in to_remove:
         del topics[topic]
 
-
+    print "First"
     # Add the topics to the graph
     G = nx.Graph()
     for topic in topics:
@@ -334,26 +334,34 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
                 score = 1,node_id = topic.id,is_topic = True)
 
     documents = Document.objects.filter(experiment = experiment)
-    doc_nodes = []
-    for document in documents:
-        # name = document.name
- #        name = self.lda_dict['doc_metadata'][doc].get('compound',doc)
-        if just_annotated_docs and not document.annotation:
-            continue
-        metadata = jsonpickle.decode(document.metadata)
-        if 'compound' in metadata:
-          name = metadata['compound']
-        else:
-          name = document.name
-        for docm2m in DocumentMass2Motif.objects.filter(document=document):
-            if docm2m.mass2motif in topics and docm2m.probability > edge_thresh:
-                if not document in doc_nodes:
-                    G.add_node(name,group=1,name = name,size=20,
-                            type='square',peakid = document.name,special=False,
-                            in_degree=0,score=0,is_topic = False)
-                    doc_nodes.append(document)
 
-                G.add_edge(docm2m.mass2motif.name,document.name,weight = edge_scale_factor*docm2m.probability)
+    if just_annotated_docs:
+        to_remove = []
+        for document in documents:
+            if not document.annotation:
+                to_remove.append(documents.index(document))
+        for index in to_remove:
+            del documents[index]
+
+    doc_nodes = []
+
+    print "Second"
+
+    for docm2m in DocumentMass2Motif.objects.filter(document__in=documents,mass2motif__in=topics,probability__gte=edge_thresh):
+            # if docm2m.mass2motif in topics:
+        if not docm2m.document in doc_nodes:
+            metadata = jsonpickle.decode(docm2m.document.metadata)
+            if 'compound' in metadata:
+              name = metadata['compound']
+            else:
+              name = docm2m.document.name
+            G.add_node(docm2m.document.name,group=1,name = name,size=20,
+                    type='square',peakid = docm2m.document.name,special=False,
+                    in_degree=0,score=0,is_topic = False)
+            doc_nodes.append(docm2m.document)
+
+        G.add_edge(docm2m.mass2motif.name,docm2m.document.name,weight = edge_scale_factor*docm2m.probability)
+    print "Third"
     return G
 def topic_pca(request,experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
