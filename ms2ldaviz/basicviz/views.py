@@ -116,16 +116,15 @@ def get_parents(request,motif_id,vo_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     vo = VizOptions.objects.all()
     viz_options  = VizOptions.objects.get(id = vo_id)
-    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif)
+    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte=viz_options.edge_thresh)
     documents = [d.document for d in docm2m]
     parent_data = []
     for dm in docm2m:
-        if dm.probability > 0.05:
-            document = dm.document
-            if viz_options.just_annotated_docs and document.annotation:
-                parent_data.append(get_doc_for_plot(document.id,motif_id))
-            elif not viz_options.just_annotated_docs:
-                parent_data.append(get_doc_for_plot(document.id,motif_id))
+        document = dm.document
+        if viz_options.just_annotated_docs and document.annotation:
+            parent_data.append(get_doc_for_plot(document.id,motif_id))
+        elif not viz_options.just_annotated_docs:
+            parent_data.append(get_doc_for_plot(document.id,motif_id))
     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
 
@@ -141,22 +140,23 @@ def get_parents_no_vo(request,motif_id):
     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
 
-def get_annotated_parents(request,motif_id):
-    motif = Mass2Motif.objects.get(id=motif_id)
-    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif)
-    documents = [d.document for d in docm2m]
-    parent_data = []
-    for dm in docm2m:
-        if dm.probability > 0.05:
-            document = dm.document
-            if len(document.annotation) > 0:
-                parent_data.append(get_doc_for_plot(document.id,motif_id))
-    return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
+# def get_annotated_parents(request,motif_id):
+#     motif = Mass2Motif.objects.get(id=motif_id)
+#     docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif)
+#     documents = [d.document for d in docm2m]
+#     parent_data = []
+#     for dm in docm2m:
+#         if dm.probability > 0.05:
+#             document = dm.document
+#             if len(document.annotation) > 0:
+#                 parent_data.append(get_doc_for_plot(document.id,motif_id))
+#     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
-def get_word_graph(request, motif_id):
+def get_word_graph(request, motif_id, vo_id):
+    viz_options = VizOptions.objects.get(id = vo_id)
     motif = Mass2Motif.objects.get(id=motif_id)
     m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
-    m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
+    m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif, probability__gte=viz_options.edge_thresh)
     colours = '#404080'
     features_data = {}
     for feat in m2mIns:                        
@@ -173,7 +173,16 @@ def get_word_graph(request, motif_id):
     sorted_feature_list = []
 
     for feature in features_data:
-        sorted_feature_list.append([feature.name,features_data[feature], colours]) 
+        if '.' in feature.name:
+            split_name = feature.name.split('.')
+            short_name = split_name[0]
+            if len(split_name[1]) < 5:
+                short_name += '.' + split_name[1]
+            else:
+                short_name += '.' + split_name[1][:5]
+        else:
+            short_name = feature.name
+        sorted_feature_list.append([short_name,features_data[feature], colours]) 
     sorted_feature_list = sorted(sorted_feature_list,key =lambda x: x[1],reverse = True) 
 
     feature_list_full = []
@@ -191,7 +200,7 @@ def view_word_graph(request, motif_id):
     context_dict['motif_features'] = motif_features
     return render(request,'basicviz/view_word_graph.html',context_dict)
 
-def get_intensity(request, motif_id):
+def get_intensity(request, motif_id,vo_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     features_m2m = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
     features = [f.feature for f in features_m2m]
@@ -214,7 +223,16 @@ def get_intensity(request, motif_id):
     highest_intensity = 0;
     for feature in features:
         if mass2motif_intensity[feature] > 0:
-            features_list.append((feature.name,total_intensity[feature], colours[0]))
+            if '.' in feature.name:
+                split_name = feature.name.split('.')
+                short_name = split_name[0]
+                if len(split_name[1]) < 5:
+                    short_name += '.' + split_name[1]
+                else:
+                    short_name += '.' + split_name[1][:5]
+            else:
+                short_name = feature.name
+            features_list.append((short_name,total_intensity[feature], colours[0]))
             features_list.append(('', mass2motif_intensity[feature], colours[1]))
             if total_intensity[feature] > highest_intensity:
                 highest_intensity = total_intensity[feature]
