@@ -7,8 +7,8 @@ function plot_graph(vo_id) {
 
     Math.seedrandom('hello');
 
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    var width = 700;
+    var height = 500;
     var topicName = 'motif';
 
     var minNodeSize = 8;
@@ -49,7 +49,7 @@ function plot_graph(vo_id) {
 
         // the initial zoom and transform on the svg should be set to the same value
         var zoom = d3.behavior.zoom().translate([300,300]).scale(.1,.1);
-        svg = d3.select('svg').append('svg')
+        var svg = d3.select('#network').append('svg')
             .attr('y',500)
             .attr('width', width)
             .attr('height', height)
@@ -61,12 +61,12 @@ function plot_graph(vo_id) {
         //Set up tooltip
         var tip = d3.tip()
             .attr('class', 'd3-tip')
-            .offset([-10, 0])
+            .offset([-10, 0])            
             .html(function(d) {
                 name = d.name;
                 tooltip_label = d.name;
                 return '<strong>' + tooltip_label + "</strong>";
-            })
+            });
         svg.call(tip);
 
         // to prevent excessive animation
@@ -118,6 +118,8 @@ function plot_graph(vo_id) {
                     $('#message').text('Loading ' + d.name)
                     $('#message').fadeIn('fast');
                     load_parents(d.node_id,d.name,vo_id);
+                    plot_word_graph('/basicviz/get_word_graph/'+d.node_id, d.node_id, d.name);
+                    plot_word_graph('/basicviz/get_intensity/'+d.node_id, d.node_id, d.name);
                 }
 
                 // reduce the opacity of all but the neighbouring nodes

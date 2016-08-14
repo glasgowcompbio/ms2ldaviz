@@ -153,6 +153,84 @@ def get_annotated_parents(request,motif_id):
                 parent_data.append(get_doc_for_plot(document.id,motif_id))
     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
+def get_word_graph(request, motif_id):
+    motif = Mass2Motif.objects.get(id=motif_id)
+    m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
+    m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
+    colours = '#404080'
+    features_data = {}
+    for feat in m2mIns:                        
+        features_data[feat.feature] = 0
+    
+    for doc in m2mdocs:
+        feature_instances = FeatureInstance.objects.filter(document = doc.document)
+        for ft in feature_instances:
+            if ft.feature in features_data:
+                features_data[ft.feature] += 1
+
+    data_for_json = [] 
+    data_for_json.append(len(m2mdocs))    
+    sorted_feature_list = []
+
+    for feature in features_data:
+        sorted_feature_list.append([feature.name,features_data[feature], colours]) 
+    sorted_feature_list = sorted(sorted_feature_list,key =lambda x: x[1],reverse = True) 
+
+    feature_list_full = []
+    for feature in sorted_feature_list:
+        feature_list_full.append(feature)
+        #feature_list_full.append(["", 0, ""])
+
+    data_for_json.append(feature_list_full)
+    return HttpResponse(json.dumps(data_for_json), content_type = 'application/json')             
+
+def view_word_graph(request, motif_id):
+    motif = Mass2Motif.objects.get(id=motif_id)
+    context_dict = {'mass2motif':motif}
+    motif_features = Mass2MotifInstance.objects.filter(mass2motif = motif).order_by('-probability')
+    context_dict['motif_features'] = motif_features
+    return render(request,'basicviz/view_word_graph.html',context_dict)
+
+def get_intensity(request, motif_id):
+    motif = Mass2Motif.objects.get(id=motif_id)
+    features_m2m = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
+    features = [f.feature for f in features_m2m]
+    colours = ['#404080', '#0080C0']
+    total_intensity = {}
+    mass2motif_intensity = {}
+
+    #getting the total intensities of each feature
+    for feature in features:
+        feature_instances = FeatureInstance.objects.filter(feature = feature)
+        total_intensity[feature] = 0.0
+        mass2motif_intensity[feature] = 0.0
+        for instance in feature_instances:
+            total_intensity[feature] += instance.intensity
+            fm2m = FeatureMass2MotifInstance.objects.filter(featureinstance = instance, mass2motif = motif)
+            if len(fm2m) > 0:
+                mass2motif_intensity[feature] += fm2m[0].probability * instance.intensity
+    data_for_json = []
+    features_list = []
+    highest_intensity = 0;
+    for feature in features:
+        if mass2motif_intensity[feature] > 0:
+            features_list.append((feature.name,total_intensity[feature], colours[0]))
+            features_list.append(('', mass2motif_intensity[feature], colours[1]))
+            if total_intensity[feature] > highest_intensity:
+                highest_intensity = total_intensity[feature]
+            features_list.append(('', 0, ''))
+
+    data_for_json.append(highest_intensity)
+    data_for_json.append(features_list)
+    return HttpResponse(json.dumps(data_for_json), content_type = 'application/json')
+
+def view_intensity(request, motif_id):
+    motif = Mass2Motif.objects.get(id=motif_id)
+    context_dict = {'mass2motif':motif}
+    motif_features = Mass2MotifInstance.objects.filter(mass2motif = motif).order_by('-probability')
+    context_dict['motif_features'] = motif_features
+    return render(request,'basicviz/view_intensity.html',context_dict)
+
 
 def view_mass2motifs(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
