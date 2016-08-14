@@ -8,7 +8,8 @@
 <h3>Select an experiment to view</h3>
 <table class="table">
 <tr><th>Name</th><th>Description</th><th>Actions</th></tr>
-{% for experiment in experiments %}
+
+{% for experiment in experiments|dictsort:"name" %}
 	<tr><td>{{experiment.name}}</td>
 	<td>{{experiment.description}}</td>
 	<td>
