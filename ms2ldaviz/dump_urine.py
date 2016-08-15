@@ -34,4 +34,4 @@ if __name__ == '__main__':
     												mass2motif__in = annotated_mass2motifs,
     												probability__gte = p_thresh)
     	for docm2m in docm2ms:
-	    	print "{}: {}, {}".format(document.annotation,docm2m.mass2motif.annotation,docm2m.probability)
+	    	print "{}: {}, {}".format(document.annotation.encode('utf8'),docm2m.mass2motif.annotation.encode('utf8'),docm2m.probability)
