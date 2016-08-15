@@ -29,9 +29,10 @@ if __name__ == '__main__':
 
     print "Found {} m2ms and {} documents".format(len(annotated_mass2motifs),len(annotated_documents))
 
-    for document in annotated_documents:
-    	docm2ms = DocumentMass2Motif.objects.filter(document = document,
-    												mass2motif__in = annotated_mass2motifs,
-    												probability__gte = p_thresh)
-    	for docm2m in docm2ms:
-	    	print "{}: {}, {}".format(document.annotation.encode('utf8'),docm2m.mass2motif.annotation.encode('utf8'),docm2m.probability)
+    with open(out_file,'w') as f:
+	    for document in annotated_documents:
+	    	docm2ms = DocumentMass2Motif.objects.filter(document = document,
+	    												mass2motif__in = annotated_mass2motifs,
+	    												probability__gte = p_thresh)
+	    	for docm2m in docm2ms:
+		    	f.write("{}\t{}\t{}\n".format(document.annotation.encode('utf8'),docm2m.mass2motif.annotation.encode('utf8'),docm2m.probability))
