@@ -39,6 +39,10 @@ class CorpusMaker(object):
 			self.load_csv()
 		if self.input_type == 'gnps':
 			self.load_gnps()
+		if self.input_type == 'metfamily':
+			self.load_metfamily_matrix()
+			# Loads corpus directly, so can just return
+			return 
 
 		self.make_queues()
 			
@@ -533,6 +537,58 @@ class CorpusMaker(object):
 			if n_processed % 100 == 0:
 				print "Processed {} spectra".format(n_processed)
 			
+	def load_metfamily_matrix(self):
+		self.files = ['metfamily']
+		self.corpus = {}
+		self.corpus['metfamily'] = {}
+		self.metadata = {}
+		self.word_counts = {}
+		with open(self.input_set,'r') as f:
+			line = f.readline()
+			line = f.readline()
+			# headings line
+			line = f.readline()
+			heads = line.rstrip().split('\t')
+			sample_names = heads[17:23]
+			raw_feature_names = heads[23:]
+			feature_names = []
+			for feat in raw_feature_names:
+				if feat.startswith('-'):
+					feature_names.append('loss_{}'.format(feat[1:]))
+				else:
+					feature_names.append('fragment_{}'.format(feat))
+
+			for feat in feature_names:
+				self.word_counts[feat] = 0
+
+			print "Samples:", sample_names
+			max_metadata_pos = 16
+
+			n_docs = 0
+			for line in f:
+				tokens = line.rstrip('\n').split('\t')
+				mz = tokens[0]
+				rt = tokens[1]
+				doc_name = "{}_{}".format(mz,rt)
+				self.metadata[doc_name] = {}
+				self.corpus['metfamily'][doc_name] = {}
+				for i in range(max_metadata_pos + 1):
+					key = heads[i]
+					value = tokens[i]
+					self.metadata[doc_name][key] = value
+				self.metadata[doc_name]['intensities'] = dict(zip(sample_names,[float(i) for i in tokens[17:23]]))
+				feats = [(index,intensity) for index,intensity in enumerate(tokens[23:]) if len(intensity) > 0]
+				for index,intensity in feats:
+					self.corpus['metfamily'][doc_name][feature_names[index]] = float(intensity)
+					self.word_counts[feature_names[index]] += 1
+				
+				n_docs += 1
+				if n_docs % 100 == 0:
+					print n_docs
+
+		print "Loaded {} documents, and {} unique words ({} total word instances)".format(n_docs,
+																						  len(self.word_counts),
+																						  sum(self.word_counts.values()))
 
 
 	def load_csv(self):
