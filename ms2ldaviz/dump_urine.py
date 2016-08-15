@@ -32,6 +32,6 @@ if __name__ == '__main__':
     for document in annotated_documents:
     	docm2ms = DocumentMass2Motif.objects.filter(document = document,
     												mass2motif__in = annotated_mass2motifs,
-    												probability__get = p_thresh)
+    												probability__gte = p_thresh)
     	for docm2m in docm2ms:
 	    	print "{}: {}, {}".format(document.annotation,docm2m.mass2motif.annotation,docm2m.probability)
