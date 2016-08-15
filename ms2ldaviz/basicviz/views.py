@@ -593,8 +593,10 @@ def validation(request,experiment_id):
         form = ValidationForm(request.POST)
         if form.is_valid():
             p_thresh = form.cleaned_data['p_thresh']
+            just_annotated = form.cleaned_data['just_annotated']
             mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
             annotated_mass2motifs = []
+
             counts = []
             for mass2motif in mass2motifs:
                 if mass2motif.annotation:
@@ -603,14 +605,16 @@ def validation(request,experiment_id):
                     tot = 0
                     val = 0
                     for d in dm2ms:
-                        tot += 1
-                        if d.validated:
-                            val += 1
+                        if (just_annotated and d.document.annotation) or not just_annotated:
+                            tot += 1
+                            if d.validated:
+                                val += 1
                     counts.append((tot,val))
             annotated_mass2motifs = zip(annotated_mass2motifs,counts)
             context_dict['annotated_mass2motifs'] = annotated_mass2motifs
             context_dict['counts'] = counts
             context_dict['p_thresh'] = p_thresh
+            context_dict['just_annotated'] = just_annotated
 
         else:
             context_dict['validation_form'] = form

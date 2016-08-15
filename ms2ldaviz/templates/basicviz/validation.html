@@ -35,6 +35,8 @@
 			<tr><th>Name</th><th>Probability</th><th width=200px>Annotation</th><th>Image</th><th>link</th><th>Validated?</th><th>View in ms2ldaviz</th></tr>
 				{% for doc in m2m.documentmass2motif_set.all %}
 					{% if doc.probability > p_thresh %}
+
+					{% if not just_annotated or doc.document.annotation %}
 					<tr><td>{{doc.document.name}}</td><td>{{doc.probability}}</td><td>{{doc.document.display_name}}</td>
 					<td>
 						{% if doc.document.csid %}
@@ -58,6 +60,7 @@
 					</td>
 					<td><a href="/basicviz/show_doc/{{doc.document.id}}" target=new>Show doc</a></td>
 					</tr>
+					{% endif %}
 					{% endif %}
 			{% endfor %}
 			</table>
