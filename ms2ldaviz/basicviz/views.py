@@ -22,6 +22,7 @@ def show_docs(request,experiment_id):
     context_dict = {}
     context_dict['experiment'] = experiment
     context_dict['documents'] = documents
+    context_dict['n_docs'] = len(documents)
     return render(request,'basicviz/show_docs.html',context_dict)
 
 def show_doc(request,doc_id):
