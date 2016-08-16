@@ -51,11 +51,27 @@ class Document(models.Model):
 			display_name = md['annotation']
 		return display_name
 
+	def get_rt(self):
+		md = jsonpickle.decode(self.metadata)
+		if 'rt' in md:
+			return md['rt']
+		else:
+			return None
+
+	def get_logFC(self):
+		md = jsonpickle.decode(self.metadata)
+		if 'logFC' in md:
+			return md['logFC']
+		else:
+			return None
+
 	mass = property(get_mass)
 	csid = property(get_csid)
 	inchikey = property(get_inchi)
 	annotation = property(get_annotation)
 	display_name = property(get_display_name)
+	rt = property(get_rt)
+	logFC = property(get_logFC)
 
 	def __unicode__(self):
 		return self.name

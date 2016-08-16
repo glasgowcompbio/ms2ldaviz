@@ -60,8 +60,7 @@ function plot_graph(vo_id) {
 
         //Set up tooltip
         var tip = d3.tip()
-            .attr('class', 'd3-tip')
-            .offset([-10, 0])            
+            .attr('class', 'd3-tip')           
             .html(function(d) {
                 name = d.name;
                 tooltip_label = d.name;
@@ -187,8 +186,12 @@ function plot_graph(vo_id) {
             .enter().append('g')
                 .call(drag)
                 .on('dblclick', selectNode)
-                .on('mouseover', tip.show)
-                .on('mouseout', tip.hide)
+                .on('mousemove', function(){
+                    console.log('meow');
+                    return tip
+                            .style("top", (d3.event.pageY + 16) + "px")
+                            .style("left", (d3.event.pageX + 16) + "px");
+                });
 
         var circle = node.append('path')
             .attr('class', 'node-shape')
