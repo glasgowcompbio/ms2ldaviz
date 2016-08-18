@@ -117,8 +117,8 @@ function plot_graph(vo_id) {
                     $('#message').text('Loading ' + d.name)
                     $('#message').fadeIn('fast');
                     load_parents(d.node_id,d.name,vo_id);
-                    plot_word_graph('/basicviz/get_word_graph/'+d.node_id, d.node_id, d.name);
-                    plot_word_graph('/basicviz/get_intensity/'+d.node_id, d.node_id, d.name);
+                    plot_word_graph('/basicviz/get_word_graph/'+d.node_id + '/' + vo_id + '/', d.node_id, d.name);
+                    plot_word_graph('/basicviz/get_intensity/'+d.node_id + '/' + vo_id + '/', d.node_id, d.name);
                 }
 
                 // reduce the opacity of all but the neighbouring nodes

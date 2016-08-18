@@ -22,6 +22,7 @@ def show_docs(request,experiment_id):
     context_dict = {}
     context_dict['experiment'] = experiment
     context_dict['documents'] = documents
+    context_dict['n_docs'] = len(documents)
     return render(request,'basicviz/show_docs.html',context_dict)
 
 def show_doc(request,doc_id):
@@ -116,16 +117,15 @@ def get_parents(request,motif_id,vo_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     vo = VizOptions.objects.all()
     viz_options  = VizOptions.objects.get(id = vo_id)
-    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif)
+    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte=viz_options.edge_thresh)
     documents = [d.document for d in docm2m]
     parent_data = []
     for dm in docm2m:
-        if dm.probability > 0.05:
-            document = dm.document
-            if viz_options.just_annotated_docs and document.annotation:
-                parent_data.append(get_doc_for_plot(document.id,motif_id))
-            elif not viz_options.just_annotated_docs:
-                parent_data.append(get_doc_for_plot(document.id,motif_id))
+        document = dm.document
+        if viz_options.just_annotated_docs and document.annotation:
+            parent_data.append(get_doc_for_plot(document.id,motif_id))
+        elif not viz_options.just_annotated_docs:
+            parent_data.append(get_doc_for_plot(document.id,motif_id))
     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
 
@@ -141,22 +141,23 @@ def get_parents_no_vo(request,motif_id):
     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
 
-def get_annotated_parents(request,motif_id):
-    motif = Mass2Motif.objects.get(id=motif_id)
-    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif)
-    documents = [d.document for d in docm2m]
-    parent_data = []
-    for dm in docm2m:
-        if dm.probability > 0.05:
-            document = dm.document
-            if len(document.annotation) > 0:
-                parent_data.append(get_doc_for_plot(document.id,motif_id))
-    return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
+# def get_annotated_parents(request,motif_id):
+#     motif = Mass2Motif.objects.get(id=motif_id)
+#     docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif)
+#     documents = [d.document for d in docm2m]
+#     parent_data = []
+#     for dm in docm2m:
+#         if dm.probability > 0.05:
+#             document = dm.document
+#             if len(document.annotation) > 0:
+#                 parent_data.append(get_doc_for_plot(document.id,motif_id))
+#     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
-def get_word_graph(request, motif_id):
+def get_word_graph(request, motif_id, vo_id):
+    viz_options = VizOptions.objects.get(id = vo_id)
     motif = Mass2Motif.objects.get(id=motif_id)
     m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
-    m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
+    m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif, probability__gte=viz_options.edge_thresh)
     colours = '#404080'
     features_data = {}
     for feat in m2mIns:                        
@@ -173,7 +174,16 @@ def get_word_graph(request, motif_id):
     sorted_feature_list = []
 
     for feature in features_data:
-        sorted_feature_list.append([feature.name,features_data[feature], colours]) 
+        if '.' in feature.name:
+            split_name = feature.name.split('.')
+            short_name = split_name[0]
+            if len(split_name[1]) < 5:
+                short_name += '.' + split_name[1]
+            else:
+                short_name += '.' + split_name[1][:5]
+        else:
+            short_name = feature.name
+        sorted_feature_list.append([short_name,features_data[feature], colours]) 
     sorted_feature_list = sorted(sorted_feature_list,key =lambda x: x[1],reverse = True) 
 
     feature_list_full = []
@@ -191,7 +201,7 @@ def view_word_graph(request, motif_id):
     context_dict['motif_features'] = motif_features
     return render(request,'basicviz/view_word_graph.html',context_dict)
 
-def get_intensity(request, motif_id):
+def get_intensity(request, motif_id,vo_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     features_m2m = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
     features = [f.feature for f in features_m2m]
@@ -214,7 +224,16 @@ def get_intensity(request, motif_id):
     highest_intensity = 0;
     for feature in features:
         if mass2motif_intensity[feature] > 0:
-            features_list.append((feature.name,total_intensity[feature], colours[0]))
+            if '.' in feature.name:
+                split_name = feature.name.split('.')
+                short_name = split_name[0]
+                if len(split_name[1]) < 5:
+                    short_name += '.' + split_name[1]
+                else:
+                    short_name += '.' + split_name[1][:5]
+            else:
+                short_name = feature.name
+            features_list.append((short_name,total_intensity[feature], colours[0]))
             features_list.append(('', mass2motif_intensity[feature], colours[1]))
             if total_intensity[feature] > highest_intensity:
                 highest_intensity = total_intensity[feature]
@@ -382,11 +401,11 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
     topics = {}
     for mass2motif in mass2motifs:
         topics[mass2motif] = 0
-        docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif)
+        docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif,probability__gte=edge_thresh)
         for d in docm2ms:
-            if just_annotated_docs and d.document.annotation and d.probability > edge_thresh:
+            if just_annotated_docs and d.document.annotation:
                 topics[mass2motif] += 1
-            elif (not just_annotated_docs) and d.probability > edge_thresh:
+            elif (not just_annotated_docs):
                 topics[mass2motif] += 1
     to_remove = []
     for topic in topics:
@@ -395,7 +414,7 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
     for topic in to_remove:
         del topics[topic]
 
-
+    print "First"
     # Add the topics to the graph
     G = nx.Graph()
     for topic in topics:
@@ -412,26 +431,34 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
                 score = 1,node_id = topic.id,is_topic = True)
 
     documents = Document.objects.filter(experiment = experiment)
-    doc_nodes = []
-    for document in documents:
-        # name = document.name
- #        name = self.lda_dict['doc_metadata'][doc].get('compound',doc)
-        if just_annotated_docs and not document.annotation:
-            continue
-        metadata = jsonpickle.decode(document.metadata)
-        if 'compound' in metadata:
-          name = metadata['compound']
-        else:
-          name = document.name
-        for docm2m in DocumentMass2Motif.objects.filter(document=document):
-            if docm2m.mass2motif in topics and docm2m.probability > edge_thresh:
-                if not document in doc_nodes:
-                    G.add_node(name,group=1,name = name,size=20,
-                            type='square',peakid = document.name,special=False,
-                            in_degree=0,score=0,is_topic = False)
-                    doc_nodes.append(document)
 
-                G.add_edge(docm2m.mass2motif.name,document.name,weight = edge_scale_factor*docm2m.probability)
+    if just_annotated_docs:
+        to_remove = []
+        for document in documents:
+            if not document.annotation:
+                to_remove.append(documents.index(document))
+        for index in to_remove:
+            del documents[index]
+
+    doc_nodes = []
+
+    print "Second"
+
+    for docm2m in DocumentMass2Motif.objects.filter(document__in=documents,mass2motif__in=topics,probability__gte=edge_thresh):
+            # if docm2m.mass2motif in topics:
+        if not docm2m.document in doc_nodes:
+            metadata = jsonpickle.decode(docm2m.document.metadata)
+            if 'compound' in metadata:
+              name = metadata['compound']
+            else:
+              name = docm2m.document.name
+            G.add_node(docm2m.document.name,group=1,name = name,size=20,
+                    type='square',peakid = docm2m.document.name,special=False,
+                    in_degree=0,score=0,is_topic = False)
+            doc_nodes.append(docm2m.document)
+
+        G.add_edge(docm2m.mass2motif.name,docm2m.document.name,weight = edge_scale_factor*docm2m.probability)
+    print "Third"
     return G
 def topic_pca(request,experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
@@ -567,8 +594,10 @@ def validation(request,experiment_id):
         form = ValidationForm(request.POST)
         if form.is_valid():
             p_thresh = form.cleaned_data['p_thresh']
+            just_annotated = form.cleaned_data['just_annotated']
             mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
             annotated_mass2motifs = []
+
             counts = []
             for mass2motif in mass2motifs:
                 if mass2motif.annotation:
@@ -577,14 +606,16 @@ def validation(request,experiment_id):
                     tot = 0
                     val = 0
                     for d in dm2ms:
-                        tot += 1
-                        if d.validated:
-                            val += 1
+                        if (just_annotated and d.document.annotation) or not just_annotated:
+                            tot += 1
+                            if d.validated:
+                                val += 1
                     counts.append((tot,val))
             annotated_mass2motifs = zip(annotated_mass2motifs,counts)
             context_dict['annotated_mass2motifs'] = annotated_mass2motifs
             context_dict['counts'] = counts
             context_dict['p_thresh'] = p_thresh
+            context_dict['just_annotated'] = just_annotated
 
         else:
             context_dict['validation_form'] = form

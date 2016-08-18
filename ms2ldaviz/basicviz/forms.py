@@ -12,8 +12,9 @@ class DocFilterForm(forms.Form):
 
 class ValidationForm(forms.Form):
 	p_thresh = forms.DecimalField(required = True,initial = 0.05,label='Enter document -> mass2motif membership threshold')
+	just_annotated = forms.BooleanField(required = False,initial  = False,label = 'just show annotated docs?')
 
 class VizForm(forms.Form):
-	min_degree = forms.IntegerField(required = True,initial = 0,label='Enter minimum topic degree for inclusion')
+	min_degree = forms.IntegerField(required = True,initial = 20,label='Enter minimum topic degree for inclusion')
 	edge_thresh = forms.DecimalField(required = True,initial = 0.05,label = 'Enter probability threshold for edge')
 	just_annotated_docs = forms.BooleanField(required = False,initial = False,label = 'Just show annotated documents?')
