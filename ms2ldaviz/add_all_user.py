@@ -10,8 +10,9 @@ from basicviz.models import Experiment,User,UserExperiment
 
 if __name__ == '__main__':
 	username = sys.argv[1]
-	email = sys.argv[2]
-	pw = sys.argv[3]
+	if len(sys.argv) > 2:
+		email = sys.argv[2]
+		pw = sys.argv[3]
 	user = User.objects.get(username = username)
 	if user == None:
 		user = User.objects.create_user(username, email, pw)
