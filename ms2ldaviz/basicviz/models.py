@@ -1,13 +1,22 @@
 from django.db import models
+from django.contrib.auth.models import User
 import jsonpickle
 
 # Create your models here.
+
+
 class Experiment(models.Model):
 	name = models.CharField(max_length=128,unique=True)
 	description = models.CharField(max_length=1024,null=True)
 	status = models.CharField(max_length=128,null=True)
 	def __unicode__(self):
 		return self.name
+
+
+class UserExperiment(models.Model):
+	user = models.ForeignKey(User)
+	experiment = models.ForeignKey(Experiment)
+
 
 class Document(models.Model):
 	name = models.CharField(max_length=32)

@@ -29,4 +29,7 @@ urlpatterns = patterns('',
 		url(r'^dump_validations/(?P<experiment_id>\w+)/$',views.dump_validations,name='dump_validations'),
 		url(r'^mass2motif_feature/(?P<fm2m_id>\w+)/$',views.mass2motif_feature,name ='mass2motif_feature'),
 		url(r'^extract_docs/(?P<experiment_id>\w+)/$',views.extract_docs,name='extract_docs'),
+	    url(r'^register/$', views.register, name='register'),
+	    url(r'^login/$', views.user_login, name='login'),
+	    url(r'^logout/$',views.user_logout, name='logout'),
         )
