@@ -60,6 +60,14 @@ class Document(models.Model):
 			display_name = md['annotation']
 		return display_name
 
+	def get_logfc(self):
+		md = jsonpickle.decode(self.metadata)
+		if 'logfc' in md:
+			return md['logfc']
+		else:
+			return None
+
+	logfc = property(get_logfc)
 	mass = property(get_mass)
 	csid = property(get_csid)
 	inchikey = property(get_inchi)
@@ -131,3 +139,4 @@ class VizOptions(models.Model):
 	edge_thresh = models.FloatField(null = False)
 	min_degree = models.IntegerField(null = False)
 	just_annotated_docs = models.BooleanField(null = False)
+	colour_by_logfc = models.BooleanField(null = False)

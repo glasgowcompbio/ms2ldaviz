@@ -20,6 +20,7 @@ class VizForm(forms.Form):
 	min_degree = forms.IntegerField(required = True,initial = 20,label='Enter minimum topic degree for inclusion')
 	edge_thresh = forms.DecimalField(required = True,initial = 0.05,label = 'Enter probability threshold for edge')
 	just_annotated_docs = forms.BooleanField(required = False,initial = False,label = 'Just show annotated documents?')
+	colour_by_logfc = forms.BooleanField(required = False,initial = False,label = 'colour nodes by logfc')
 
 class UserForm(forms.ModelForm):
 	password = forms.CharField(widget = forms.PasswordInput())

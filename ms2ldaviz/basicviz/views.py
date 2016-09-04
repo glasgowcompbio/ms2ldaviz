@@ -9,9 +9,12 @@ from sklearn.decomposition import PCA
 import json
 import jsonpickle
 import csv
+import numpy as np
 from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,VizForm,UserForm
 
 from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment
+
+
 
 @login_required(login_url='/basicviz/login/')
 def index(request):
@@ -431,10 +434,12 @@ def start_viz(request,experiment_id):
             min_degree = viz_form.cleaned_data['min_degree']
             edge_thresh = viz_form.cleaned_data['edge_thresh']
             j_a_n = viz_form.cleaned_data['just_annotated_docs']
+            colour_by_logfc = viz_form.cleaned_data['colour_by_logfc']
             vo = VizOptions.objects.get_or_create(experiment = experiment, 
                                                   min_degree = min_degree, 
                                                   edge_thresh = edge_thresh,
-                                                  just_annotated_docs = j_a_n)[0]
+                                                  just_annotated_docs = j_a_n,
+                                                  colour_by_logfc = colour_by_logfc)[0]
             context_dict['viz_options'] = vo
 
         else:
@@ -470,14 +475,16 @@ def get_graph(request,vo_id):
     experiment = viz_options.experiment
     G = make_graph(experiment,min_degree = viz_options.min_degree,
                                         edge_thresh = viz_options.edge_thresh,
-                                        just_annotated_docs = viz_options.just_annotated_docs)
+                                        just_annotated_docs = viz_options.just_annotated_docs,
+                                        colour_by_logfc = viz_options.colour_by_logfc)
     d = json_graph.node_link_data(G)
     return HttpResponse(json.dumps(d),content_type='application/json')
 
 
 
 def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
-    topic_scale_factor = 5,edge_scale_factor=5,just_annotated_docs = False):
+    topic_scale_factor = 5,edge_scale_factor=5,just_annotated_docs = False,
+    colour_by_logfc = False):
     mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
     # Find the degrees
     topics = {}
@@ -513,6 +520,27 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
                 score = 1,node_id = topic.id,is_topic = True)
 
     documents = Document.objects.filter(experiment = experiment)
+    if colour_by_logfc:
+        all_logfc_vals = []
+        if colour_by_logfc:
+            for document in documents:
+                if document.logfc:
+                    val = float(document.logfc)
+                    if not np.abs(val) == np.inf:
+                        all_logfc_vals.append(float(document.logfc))
+        logfc_vals = np.sort(np.array(all_logfc_vals))
+
+
+        perc10 = logfc_vals[int(np.floor(0.1*len(logfc_vals)))]
+        perc90 = logfc_vals[int(np.ceil(0.9*len(logfc_vals)))]
+
+
+        lowcol = [255,0,0]
+        endcol = [0,0,255]
+
+
+
+    print "Percentiles: {},{}".format(perc10,perc90)
 
     if just_annotated_docs:
         to_remove = []
@@ -534,9 +562,30 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
               name = metadata['compound']
             else:
               name = docm2m.document.name
-            G.add_node(docm2m.document.name,group=1,name = name,size=20,
-                    type='square',peakid = docm2m.document.name,special=False,
-                    in_degree=0,score=0,is_topic = False)
+            if not colour_by_logfc:
+                G.add_node(docm2m.document.name,group=1,name = name,size=20,
+                        type='square',peakid = docm2m.document.name,special=False,
+                        in_degree=0,score=0,is_topic = False)
+            else:
+                if docm2m.document.logfc:
+                    lfc = float(docm2m.document.logfc)
+                    if lfc > perc90 or lfc == np.inf:
+                        col = "#{}{}{}".format('00','00','FF')
+                    elif lfc < perc10 or -lfc == np.inf:
+                        col = "#{}{}{}".format('FF','00','00')
+                    else:
+                        pos = (lfc - perc10)/(perc90-perc10)
+                        r = lowcol[0] + int(pos*(endcol[0] - lowcol[0]))
+                        g = lowcol[1] + int(pos*(endcol[1] - lowcol[1]))
+                        b = lowcol[2] + int(pos*(endcol[2] - lowcol[2]))
+                        col = "#{}{}{}".format("{:02x}".format(r),"{:02x}".format(g),"{:02x}".format(b))
+                else:
+                    col = '#000000'
+                G.add_node(docm2m.document.name,group=1,name = name,size=20,
+                        type='square',peakid = docm2m.document.name,special=True,
+                        highlight_colour = col,logfc = docm2m.document.logfc,
+                        in_degree=0,score=0,is_topic = False)
+
             doc_nodes.append(docm2m.document)
 
         G.add_edge(docm2m.mass2motif.name,docm2m.document.name,weight = edge_scale_factor*docm2m.probability)
@@ -560,7 +609,7 @@ def document_pca(request,experiment_id):
 def get_topic_pca_data(request,experiment_id):
 
 
-    import numpy as np
+    
 
     experiment = Experiment.objects.get(id = experiment_id)
     motifs = Mass2Motif.objects.filter(experiment = experiment)
