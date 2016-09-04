@@ -29,15 +29,20 @@ def load_ms2lda_peaks(experiment_id):
 		ms2lda_peaks.append((doc.id, doc.mass, doc.rt))
 	return ms2lda_peaks
 
-#still need to delete a peak if there are more than 1 peak matching
-#min(myList, key=lambda x:abs(x-myNumber)) ?? for the closest one
+#peakmass_diff and diff are needed to pick the closest peak in case more than
+#one peak match 
 def match_peaks(pimp_peaks, ms2lda_peaks):
 	matching_peaks = []
 	for peak in ms2lda_peaks:
+		# peakmass_diff = 0.0
 		for pimp_peak in pimp_peaks:
-			if (pimp_peak[1]-0.000005 < peak[1] < pimp_peak[1]+0.000005 
-				and pimp_peak[2] - 5 < peak[2] < pimp_peak[2] +5):
+			mass_tol = 5 #ppm
+			mass_error = ((abs(peak[1]-pimp_peak[1])/peak[1])*1000000)
+			if (mass_error < mass_tol and pimp_peak[2] - 5 < peak[2] < pimp_peak[2] + 5):
+				# diff = abs(peak[1]-pimp_peak[1])
+				# if (peakmass_diff < diff):
 				matching_peaks.append((peak, pimp_peak[3]))
+				# peakmass_diff = diff
 	return matching_peaks
 
 def add_metadata(experiment_id, matching_peaks):
@@ -48,7 +53,7 @@ def add_metadata(experiment_id, matching_peaks):
 		for doc in documents:			
 			if doc.id == peak[0][0]:
 				current_metadata = jsonpickle.decode(doc.metadata)
-				current_metadata['logFC'] = peak[1]
+				current_metadata['logfc'] = peak[1]
 				doc.metadata = jsonpickle.encode(current_metadata)
 				doc.save()
 
@@ -57,9 +62,9 @@ experiment_id = 1
 pimp_peaks = load_pimp_peaks(filename)
 ms2lda_peaks = load_ms2lda_peaks(experiment_id)
 matching_peaks = match_peaks(pimp_peaks, ms2lda_peaks)
-add_metadata(experiment_id, matching_peaks)
-for peaks in matching_peaks:
-	print peaks, '\n'
-# print('number of matching peaks: ', len(matching_peaks))
+# add_metadata(experiment_id, matching_peaks)
+# for peaks in matching_peaks:
+# 	print peaks, '\n'
+print len(matching_peaks), len(ms2lda_peaks), len(pimp_peaks)
 print ('Fin')
 

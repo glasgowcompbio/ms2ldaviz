@@ -58,10 +58,10 @@ class Document(models.Model):
 		else:
 			return None
 
-	def get_logFC(self):
+	def get_logfc(self):
 		md = jsonpickle.decode(self.metadata)
-		if 'logFC' in md:
-			return md['logFC']
+		if 'logfc' in md:
+			return md['logfc']
 		else:
 			return None
 
@@ -71,7 +71,7 @@ class Document(models.Model):
 	annotation = property(get_annotation)
 	display_name = property(get_display_name)
 	rt = property(get_rt)
-	logFC = property(get_logFC)
+	logfc = property(get_logfc)
 
 	def __unicode__(self):
 		return self.name

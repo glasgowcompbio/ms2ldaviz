@@ -443,7 +443,6 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
     doc_nodes = []
 
     print "Second"
-
     for docm2m in DocumentMass2Motif.objects.filter(document__in=documents,mass2motif__in=topics,probability__gte=edge_thresh):
             # if docm2m.mass2motif in topics:
         if not docm2m.document in doc_nodes:
@@ -452,9 +451,14 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
               name = metadata['compound']
             else:
               name = docm2m.document.name
-            G.add_node(docm2m.document.name,group=1,name = name,size=20,
+            if 'logfc' in metadata:
+                G.add_node(docm2m.document.name,group=1,name = name,size=20,
                     type='square',peakid = docm2m.document.name,special=False,
-                    in_degree=0,score=0,is_topic = False)
+                    in_degree=0,score=0,is_topic = False, logfc = metadata['logfc'])
+            else:
+                G.add_node(docm2m.document.name,group=1,name = name,size=20,
+                        type='square',peakid = docm2m.document.name,special=False,
+                        in_degree=0,score=0,is_topic = False)
             doc_nodes.append(docm2m.document)
 
         G.add_edge(docm2m.mass2motif.name,docm2m.document.name,weight = edge_scale_factor*docm2m.probability)

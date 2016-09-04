@@ -2,7 +2,7 @@
 // - http://bl.ocks.org/mbostock/3750558
 // - https://github.com/mbostock/d3/wiki/Force-Layout
 // - http://www.coppelia.io/2014/07/an-a-to-z-of-extra-features-for-the-d3-force-layout/
-
+var graphNodes;
 function plot_graph(vo_id) {
 
     Math.seedrandom('hello');
@@ -25,6 +25,14 @@ function plot_graph(vo_id) {
     var color = d3.scale.linear()
         .domain([minScore, (minScore + maxScore) / 2, maxScore])
         .range(['#1f77b4', '#2ca02c', '#ff7f0e']);
+
+    var min_color = 'blue'
+    var max_color = 'red'
+    
+    var min_logfc = -10
+    var max_logfc = 5
+    var logfc_colour = d3.scale.linear().domain([min_logfc, max_logfc]).range([min_color, max_color]);
+
 
     var simulationNumber = 10;
     var simulationTimeout = 1;
@@ -80,6 +88,7 @@ function plot_graph(vo_id) {
         // Run force simulation for n steps then stop it
         // ***************************************************************************
 
+        graphNodes = graph.nodes;
         n = simulationNumber;
         force
           .nodes(graph.nodes)
@@ -149,8 +158,6 @@ function plot_graph(vo_id) {
             link.style('opacity', 1);
             text.style('display', 'none');
             toggle = 0;
-            // remove parent plot svg ??
-            // d3.select('#frag_graph_svg').remove()
         }
 
         function setNodeColour(d) {
@@ -161,8 +168,16 @@ function plot_graph(vo_id) {
                     return specialNodeColour; // returns the default colour for highlighted item
                 }
             } else {
-                if (isNumber(d.score) && d.score >= 0) {
-                    return color(d.score);
+                if (d.hasOwnProperty('logfc')) {
+                    if (d.logfc=='Inf' || d.logfc > max_logfc) {
+                        return max_color;
+                    }
+                    else if (d.logfc == '-Inf' || d.logfc < min_logfc) {
+                        return min_color;
+                    }
+                    else {
+                        return logfc_colour(d.logfc);
+                    }
                 } else {
                     return defaultNodeColour;
                 }
@@ -187,7 +202,6 @@ function plot_graph(vo_id) {
                 .call(drag)
                 .on('dblclick', selectNode)
                 .on('mousemove', function(){
-                    console.log('meow');
                     return tip
                             .style("top", (d3.event.pageY + 16) + "px")
                             .style("left", (d3.event.pageX + 16) + "px");
@@ -235,9 +249,7 @@ function plot_graph(vo_id) {
         // Fix nodes positions after double click or dragging
         // *****************************************************************************
 
-        function dblclick(d) {
-            d3.select(this).classed('fixed', d.fixed = false);
-        }
+
 
         function dragstart(d) {
             d3.event.sourceEvent.stopPropagation();
@@ -344,29 +356,34 @@ function plot_graph(vo_id) {
         });
     });
 
-    function searchNode() {
 
-        //find the node
-        var selectedVal = document.getElementById('searchText').value;
-        if (selectedVal == "none") {
-            node.style("stroke", "white").style("stroke-width", "1");
-        } else {
-            var selected = graphNodes.filter(function (d, i) {
-                return d.name == selectedVal;
-            });
-            toggle = 0;
-            selected.each(function(d, i) {
-                var onClickFunc = d3.select(this).on("dblclick");
-                onClickFunc.apply(this, [d, i]);
-            });
-        }
-
-    }
-
-    function resetSearch() {
-        var searchText = document.getElementById('searchText');
-        searchText.value = '';
-        unselectNode();
-    }
 
 } //end plot_graph()
+function dblclick(d) {
+    d3.select(this).classed('fixed', d.fixed = false);
+}
+
+function searchNode() {
+
+    //find the node
+    var selectedVal = document.getElementById('searchText').value;
+    if (selectedVal == "none") {
+        node.style("stroke", "white").style("stroke-width", "1");
+    } else {
+        var selected = graphNodes.filter(function (d, i) {
+            return d.name == selectedVal;
+        });
+        toggle = 0;
+        selected.forEach(function(d, i) {
+            var onClickFunc = d3.select(this).on("dblclick");
+            onClickFunc.apply(this, [d, i]);
+        });
+    }
+
+}
+
+function resetSearch() {
+    var searchText = document.getElementById('searchText');
+    searchText.value = '';
+    unselectNode();
+}
