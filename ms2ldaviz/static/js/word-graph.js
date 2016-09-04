@@ -88,10 +88,7 @@ function plot(mass2motif_id, total_dataset){
 				                .attr("id","tooltip")
 				                .attr("x",xPos)
 				                .attr("y",yPos(d,i))
-				                .attr("font-family","sans-serif")
-				                .attr("font-size","16px")
-				                .attr("font-weight","bold")
-				                .attr("fill", "#000000")				          
+				                .attr("class", "tooltips")				          
 				                .text(+total_dataset[1][i][1].toFixed(2))})
 						.on("mouseout",function() {
 				            d3.select(this)
