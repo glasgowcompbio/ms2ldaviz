@@ -12,7 +12,9 @@ if __name__ == '__main__':
 	username = sys.argv[1]
 	email = sys.argv[2]
 	pw = sys.argv[3]
-	user = User.objects.create_user(username, email, pw)
+	user = User.objects.get(username = username)
+	if user == None:
+		user = User.objects.create_user(username, email, pw)
 
 	experiments = Experiment.objects.all()
 
