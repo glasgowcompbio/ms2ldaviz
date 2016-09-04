@@ -92,7 +92,7 @@ function plot(mass2motif_id, total_dataset){
 				                .attr("font-size","16px")
 				                .attr("font-weight","bold")
 				                .attr("fill", "#000000")				          
-				                .text(total_dataset[1][i][1])})
+				                .text(+total_dataset[1][i][1].toFixed(2))})
 						.on("mouseout",function() {
 				            d3.select(this)
 				                .transition()
