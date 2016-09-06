@@ -140,3 +140,6 @@ class VizOptions(models.Model):
 	min_degree = models.IntegerField(null = False)
 	just_annotated_docs = models.BooleanField(null = False)
 	colour_by_logfc = models.BooleanField(null = False)
+	discrete_colour = models.BooleanField(null = False)
+	upper_colour_perc = models.IntegerField(null = False)
+	lower_colour_perc = models.IntegerField(null = False)

@@ -435,11 +435,17 @@ def start_viz(request,experiment_id):
             edge_thresh = viz_form.cleaned_data['edge_thresh']
             j_a_n = viz_form.cleaned_data['just_annotated_docs']
             colour_by_logfc = viz_form.cleaned_data['colour_by_logfc']
+            discrete_colour = viz_form.cleaned_data['discrete_colour']
+            lower_colour_perc = viz_form.cleaned_data['lower_colour_perc']
+            upper_colour_perc = viz_form.cleaned_data['upper_colour_perc']
             vo = VizOptions.objects.get_or_create(experiment = experiment, 
                                                   min_degree = min_degree, 
                                                   edge_thresh = edge_thresh,
                                                   just_annotated_docs = j_a_n,
-                                                  colour_by_logfc = colour_by_logfc)[0]
+                                                  colour_by_logfc = colour_by_logfc,
+                                                  discrete_colour = discrete_colour,
+                                                  lower_colour_perc = lower_colour_perc,
+                                                  upper_colour_perc = upper_colour_perc)[0]
             context_dict['viz_options'] = vo
 
         else:
@@ -476,7 +482,10 @@ def get_graph(request,vo_id):
     G = make_graph(experiment,min_degree = viz_options.min_degree,
                                         edge_thresh = viz_options.edge_thresh,
                                         just_annotated_docs = viz_options.just_annotated_docs,
-                                        colour_by_logfc = viz_options.colour_by_logfc)
+                                        colour_by_logfc = viz_options.colour_by_logfc,
+                                        discrete_colour = viz_options.discrete_colour,
+                                        lower_colour_perc = viz_options.lower_colour_perc,
+                                        upper_colour_perc = viz_options.upper_colour_perc)
     d = json_graph.node_link_data(G)
     return HttpResponse(json.dumps(d),content_type='application/json')
 
@@ -484,7 +493,7 @@ def get_graph(request,vo_id):
 
 def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
     topic_scale_factor = 5,edge_scale_factor=5,just_annotated_docs = False,
-    colour_by_logfc = False):
+    colour_by_logfc = False,discrete_colour = False,lower_colour_perc = 10,upper_colour_perc = 90):
     mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
     # Find the degrees
     topics = {}
@@ -531,8 +540,8 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
         logfc_vals = np.sort(np.array(all_logfc_vals))
 
 
-        perc10 = logfc_vals[int(np.floor(0.1*len(logfc_vals)))]
-        perc90 = logfc_vals[int(np.ceil(0.9*len(logfc_vals)))]
+        perc_lower = logfc_vals[int(np.floor((lower_colour_perc/100.0)*len(logfc_vals)))]
+        perc_upper = logfc_vals[int(np.ceil((upper_colour_perc/100.0)*len(logfc_vals)))]
 
 
         lowcol = [255,0,0]
@@ -540,7 +549,6 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
 
 
 
-    print "Percentiles: {},{}".format(perc10,perc90)
 
     if just_annotated_docs:
         to_remove = []
@@ -569,18 +577,21 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
             else:
                 if docm2m.document.logfc:
                     lfc = float(docm2m.document.logfc)
-                    if lfc > perc90 or lfc == np.inf:
+                    if lfc > perc_upper or lfc == np.inf:
                         col = "#{}{}{}".format('00','00','FF')
-                    elif lfc < perc10 or -lfc == np.inf:
+                    elif lfc < perc_lower or -lfc == np.inf:
                         col = "#{}{}{}".format('FF','00','00')
                     else:
-                        pos = (lfc - perc10)/(perc90-perc10)
-                        r = lowcol[0] + int(pos*(endcol[0] - lowcol[0]))
-                        g = lowcol[1] + int(pos*(endcol[1] - lowcol[1]))
-                        b = lowcol[2] + int(pos*(endcol[2] - lowcol[2]))
-                        col = "#{}{}{}".format("{:02x}".format(r),"{:02x}".format(g),"{:02x}".format(b))
+                        if not discrete_colour:
+                            pos = (lfc - perc_lower)/(perc_upper-perc_lower)
+                            r = lowcol[0] + int(pos*(endcol[0] - lowcol[0]))
+                            g = lowcol[1] + int(pos*(endcol[1] - lowcol[1]))
+                            b = lowcol[2] + int(pos*(endcol[2] - lowcol[2]))
+                            col = "#{}{}{}".format("{:02x}".format(r),"{:02x}".format(g),"{:02x}".format(b))
+                        else:
+                            col = '#FFFFFF'
                 else:
-                    col = '#000000'
+                    col = '#FFFFFF'
                 G.add_node(docm2m.document.name,group=1,name = name,size=20,
                         type='square',peakid = docm2m.document.name,special=True,
                         highlight_colour = col,logfc = docm2m.document.logfc,

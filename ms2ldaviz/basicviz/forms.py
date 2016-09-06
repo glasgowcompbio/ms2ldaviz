@@ -21,6 +21,9 @@ class VizForm(forms.Form):
 	edge_thresh = forms.DecimalField(required = True,initial = 0.05,label = 'Enter probability threshold for edge')
 	just_annotated_docs = forms.BooleanField(required = False,initial = False,label = 'Just show annotated documents?')
 	colour_by_logfc = forms.BooleanField(required = False,initial = False,label = 'colour nodes by logfc')
+	discrete_colour = forms.BooleanField(required = False,initial = False,label = 'discrete colouring')
+	lower_colour_perc = forms.IntegerField(required = True,initial = 25,label = 'lower colour percentile')
+	upper_colour_perc = forms.IntegerField(required = True,initial = 75,label = 'upper colour percentile')
 
 class UserForm(forms.ModelForm):
 	password = forms.CharField(widget = forms.PasswordInput())
