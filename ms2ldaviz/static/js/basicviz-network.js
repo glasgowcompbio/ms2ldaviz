@@ -58,17 +58,6 @@ function plot_graph(vo_id) {
             .append('g')
             .attr('transform', 'translate(300,300)scale(.1,.1)');
 
-        //Set up tooltip
-        var tip = d3.tip()
-            .attr('class', 'd3-tip')
-            .offset([-10, 0])
-            .html(function(d) {
-                name = d.name;
-                tooltip_label = d.name;
-                return '<strong>' + tooltip_label + "</strong>";
-            });
-        svg.call(tip);
-
         // to prevent excessive animation
         svg.on('mouseup', function() {
               // force.stop();
@@ -154,6 +143,16 @@ function plot_graph(vo_id) {
             // d3.select('#frag_graph_svg').remove()
         }
 
+        showToolTip = function(d) {
+            target = document.getElementById(d.name + '_label');
+            target.style.display = 'inline';
+        }
+
+        hideToolTip = function(d) {
+            target = document.getElementById(d.name + '_label');
+            target.style.display = 'none';
+        }
+
         function setNodeColour(d) {
             if (d.special == true) {
                 if (d.hasOwnProperty('highlight_colour')) {
@@ -187,8 +186,8 @@ function plot_graph(vo_id) {
             .enter().append('g')
                 .call(drag)
                 .on('dblclick', selectNode)
-                .on('mouseover', tip.show)
-                .on('mouseout', tip.hide)
+                .on('mouseover', showToolTip)
+                .on('mouseout', hideToolTip)
 
         var circle = node.append('path')
             .attr('class', 'node-shape')
