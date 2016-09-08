@@ -18,21 +18,20 @@ function load_parents(mass2motif_id,motif_name,vo_id) {
         if (error) throw error;
         key = null
         plot_parent(total_dataset,motif_name)
-        $('#message').fadeOut('fast');
     });
 
 }
 
 function load_parent(url) {
+    $('#status').text('Loading motif')
     current_pos = 0
     d3.json(url,function(error,total_dataset) {
     if (error) throw error;
     key = total_dataset[0][1]
     console.log(key)
     plot_parent(total_dataset[0][0],"")
-    $('#message').fadeOut('fast');
     });
-
+    $('#status').text('Loaded')
 }
 
 function plot_parent(total_dataset,motif_name) {

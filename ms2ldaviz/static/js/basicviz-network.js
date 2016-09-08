@@ -36,9 +36,21 @@ function plot_graph(vo_id) {
     var toggle = 0;
     var url = '/basicviz/get_graph/' + vo_id
 
-    d3.json(url, function(error, graph) {
+    // see https://gist.github.com/mbostock/3750941
+    d3.json(url)
+        .on("progress", function() {
+            $("#status").text('Loading network graph: ' + d3.event.loaded)
+        })
+        .on("load", function(json) {
+            $("#status").text('Loaded')
+            loadGraph(json);
+        })
+        .on("error", function(error) {
+            $("#status").text('Cannot load network graph!')
+        })
+        .get();
 
-        if (error) throw error;
+    function loadGraph(graph) {
 
         var force = d3.layout.force()
             .size([width, height])
@@ -106,11 +118,8 @@ function plot_graph(vo_id) {
             if (toggle == 0) {
 
                 toggle = 1;
-
                 d = d3.select(this).node().__data__;
                 if(d.is_topic) {
-                    $('#message').text('Loading ' + d.name)
-                    $('#message').fadeIn('fast');
                     load_parents(d.node_id,d.name,vo_id);
                     plot_word_graph('/basicviz/get_word_graph/'+d.node_id + '/' + vo_id + '/', d.node_id, d.name);
                     plot_word_graph('/basicviz/get_intensity/'+d.node_id + '/' + vo_id + '/', d.node_id, d.name);
@@ -326,15 +335,7 @@ function plot_graph(vo_id) {
             }
         }
 
-        msg = document.getElementById('message');
-        msg.innerHTML = 'Search for a node above.<br/>' +
-            '<b>Double-click</b> on a Mass2Motif in the network graph to select it.<br/>' +
-            'Press [H] to show only the special nodes';
-        setTimeout(function() {
-            $('#message').fadeOut('fast');
-        }, 10000);
-
-    });
+    }
 
     // *****************************************************************************
     // Search node
