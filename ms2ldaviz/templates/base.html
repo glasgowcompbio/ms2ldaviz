@@ -2,18 +2,23 @@
 {% load static %}
 <html lang="en">
   <head>
+
+    <!-- The following 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <title>MS2LDA - {% block title %}{% endblock %}</title>
-    <script type='text/javascript' src="{% static "js/jquery-2.2.2.min.js" %}"></script>
-    <script type='text/javascript' src="{% static "js/jquery-ui.min.js" %}"> </script>
-    <!-- Bootstrap -->
-    <script type='text/javascript' src="{% static "js/jquery-2.2.2.min.js" %}"></script>
-    <script type='text/javascript' src="{% static "js/jquery-ui.min.js" %}"> </script>
-    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
-    <link href="{% static 'css/bootstrap-theme.min.css' %}" rel="stylesheet">
+
+    <!-- Bootstrap and jquery -->
+    <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/bootstrap-theme.css' %}" rel="stylesheet">
+    <link href="{% static 'css/jquery-ui.css' %}" rel="stylesheet">
+    <link href="{% static 'css/jquery-ui.structure.css' %}" rel="stylesheet">
+    <link href="{% static 'css/jquery-ui.theme.css' %}" rel="stylesheet">
+
+    <!-- Any other additional things you want to include .. -->
+    {% block head_block %}
+    {% endblock %}
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -53,17 +58,20 @@
         </div><!--/.nav-collapse -->
       </div>
     </nav>
-
-
-
     <div class="container">
       <div class="jumbotron">
         {% block body_block %}<h1>Hello, world!</h1>{% endblock %}
       </div>
     </div>
+
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script> -->
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script type='text/javascript' src='{% static "js/jquery-2.2.2.min.js" %}'></script>
+    <script type='text/javascript' src='{% static "js/jquery-ui.min.js" %}'> </script>
+    <script type='text/javascript' src='{% static "js/bootstrap.min.js" %}'></script>
+    {% block js_block %}
+    {% endblock %}
+
   </body>
 </html>

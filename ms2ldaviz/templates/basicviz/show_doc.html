@@ -1,6 +1,25 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block head_block %}
+	<style>
+	.axis path,
+	.axis line {
+	    fill: none;
+	    stroke: black;
+	    shape-rendering: crispEdges;
+	}
+	.axis text {
+	    font-family: sans-serif;
+	    font-size: 11px;
+	}
+	.axis-label {
+	  font-family: sans-serif;
+	  font-size: 14px;
+	}
+	</style>
+{% endblock %}
+
 {% block body_block %}
 	{% if document %}
 		<h3>Document {{document.name}} -- {{document.display_name}}</h3>
@@ -33,49 +52,17 @@
 		{% endfor %}
 		</table>
 	{% endif %}
-
-
-	
 	<a href="/basicviz/show_docs/{{experiment.id}}">return to parent list for {{experiment.name}}</a>
-	
-	
-
-
-<div id="spectra" border="20" padding="20">
-</div>
-
-
-<script type='text/javascript' src="{% static "js/jquery-2.2.2.min.js" %}"></script>
-<script type='text/javascript' src="{% static "js/jquery-ui.min.js" %}"> </script>
-<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
-<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
-<script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
-
-<script type="text/javascript">
-
-load_parent('/basicviz/get_doc_topics/{{document.id}}');
-
-</script>
-
-<style>
-.axis path,
-.axis line {
-    fill: none;
-    stroke: black;
-    shape-rendering: crispEdges;
-}
-.axis text {
-    font-family: sans-serif;
-    font-size: 11px;
-}
-.axis-label {
-  font-family: sans-serif;
-  font-size: 14px;
-}
-</style>
-
-
-
+	<div id="spectra" border="20" padding="20">
+	</div>
 {% endblock %}
 
+{% block js_block %}
+	<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
+	<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
+	<script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
+	<script type="text/javascript">
+		load_parent('/basicviz/get_doc_topics/{{document.id}}');
+	</script>
+{% endblock %}
 

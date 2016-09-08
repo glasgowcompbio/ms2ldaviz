@@ -2,17 +2,34 @@
 
 {% load static %}
 
+{% block head_block %}
+	<style>
+		.axis path,
+		.axis line {
+		    fill: none;
+		    stroke: black;
+		    shape-rendering: crispEdges;
+		}
+		.axis text {
+		    font-family: sans-serif;
+		    font-size: 11px;
+		}
+		.axis-label {
+		  font-family: sans-serif;
+		  font-size: 14px;
+		}
+	</style>
+{% endblock %}
+
 {% block body_block %}
 	<h3>Mass2Motif: {{mass2motif.name}} ({{mass2motif.experiment.name}})</h3>
 	<h4>{{mass2motif.annotation}}</h4>
-
 	<a href="/basicviz/view_mass2motifs/{{mass2motif.experiment.id}}">return to mass2motif list for {{mass2motif.experiment.name}}</a>
- <hr />
-
- <div>
- <p>{{ status }}</p>
- <form id="mass2motifmetadata_form" method="post" action="/basicviz/view_parents/{{mass2motif.id}}/">
- 	{% csrf_token %}
+ 	<hr />
+	<div>
+	<p>{{ status }}</p>
+	<form id="mass2motifmetadata_form" method="post" action="/basicviz/view_parents/{{mass2motif.id}}/">
+		{% csrf_token %}
 	{% for hidden in metadata_form.hidden_fields %}
 	 	{{ hidden }}
 	{% endfor %}
@@ -22,61 +39,35 @@
 		{{ field }}
 	{% endfor %}
 	<input type="submit" name="submit" value="Modify metadata" />
- </form>
- </div>
- <hr />
+	</form>
+	</div>
+	<hr />
 
-<div id="spectra" border="20" padding="20"></div>
+	<div id="spectra" border="20" padding="20"></div>
 
-<div>
-<h3>Mass2Motif details</h3>
-	<table class='table'>
-		<tr><th>Name</th><th>Probability</th><th>link</th></tr>
-		{% for motif_feature in motif_features %}
-			<tr><td>{{motif_feature.feature.name}}</td><td>{{motif_feature.probability}}</td>
-			<td><a href="/basicviz/mass2motif_feature/{{motif_feature.id}}">details</td></tr>
-		{% endfor %}
-	</table>
-</div>
+	<div>
+	<h3>Mass2Motif details</h3>
+		<table class='table'>
+			<tr><th>Name</th><th>Probability</th><th>link</th></tr>
+			{% for motif_feature in motif_features %}
+				<tr><td>{{motif_feature.feature.name}}</td><td>{{motif_feature.probability}}</td>
+				<td><a href="/basicviz/mass2motif_feature/{{motif_feature.id}}">details</td></tr>
+			{% endfor %}
+		</table>
+	</div>
 
-<hr />
-
-<script type='text/javascript' src="{% static "js/jquery-2.2.2.min.js" %}"></script>
-<script type='text/javascript' src="{% static "js/jquery-ui.min.js" %}"> </script>
-<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
-<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
-<script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
-
-<script type="text/javascript">
-
-	var current_pos = 0
-	var motif_name = '{{mass2motif.name}}'
-	var motif_id = {{mass2motif.id}}
-	load_parents(motif_id, motif_name,-1);
-
-
-
-</script>
-
-<style>
-.axis path,
-.axis line {
-    fill: none;
-    stroke: black;
-    shape-rendering: crispEdges;
-}
-.axis text {
-    font-family: sans-serif;
-    font-size: 11px;
-}
-.axis-label {
-  font-family: sans-serif;
-  font-size: 14px;
-}
-</style>
-
-
+	<hr />
 
 {% endblock %}
 
-
+{% block js_block %}
+	<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
+	<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
+	<script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
+	<script type="text/javascript">
+		var current_pos = 0
+		var motif_name = '{{mass2motif.name}}'
+		var motif_id = {{mass2motif.id}}
+		load_parents(motif_id, motif_name,-1);
+	</script>
+{% endblock %}

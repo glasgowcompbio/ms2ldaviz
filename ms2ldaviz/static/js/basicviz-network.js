@@ -61,7 +61,7 @@ function plot_graph(vo_id) {
         //Set up tooltip
         var tip = d3.tip()
             .attr('class', 'd3-tip')
-            .offset([-10, 0])            
+            .offset([-10, 0])
             .html(function(d) {
                 name = d.name;
                 tooltip_label = d.name;

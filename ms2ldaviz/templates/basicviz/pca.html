@@ -1,31 +1,24 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block body_block %}
-	<meta charset='utf-8'>
 
+{% block head_block %}
 	<!-- Stlye to get nice plot axis -->
 	<style>
 		.axis path,
 		.axis line {
-		    fill: none;
-		    stroke: black;
-		    shape-rendering: crispEdges;
+			fill: none;
+			stroke: black;
+			shape-rendering: crispEdges;
 		}
 		.axis text {
-		    font-family: sans-serif;
-		    font-size: 11px;
+			font-family: sans-serif;
+			font-size: 11px;
 		}
-</style>
-
-	<link rel="stylesheet" type="text/css" href="{% static "css/jquery-ui.css" %}">
+	</style>
 	<link rel="stylesheet" type="text/css" href="{% static "css/basicviz.css" %}">
+{% endblock %}
 
-	<script type='text/javascript' src="{% static "js/jquery-2.2.2.min.js" %}"></script>
-	<script type='text/javascript' src="{% static "js/jquery-ui.min.js" %}"> </script>
-	<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
-	<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
-	<script type='text/javascript' src="{% static "js/basicviz-pcaplot.js" %}"></script>
-
+{% block body_block %}
 
 	{% if experiment %}
 		<h3>Experiment {{ experiment.name }}</h3>
@@ -35,9 +28,17 @@
 	<div id='pca_div' width=1000 height=1000>
 		<div id='message'>Please wait, loading...</div>
 	</div>
-
-	<script>
-	// var experiment_id = '{{ experiment.id }}'
-	pca_plot('{{url}}')
-	</script>
+	
 {% endblock %}
+
+{% block js_block %}
+	<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
+	<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
+	<script type='text/javascript' src="{% static "js/basicviz-pcaplot.js" %}"></script>
+    <script type='text/javascript'>
+		pca_plot('{{url}}')
+    </script>
+{% endblock %}
+
+
+

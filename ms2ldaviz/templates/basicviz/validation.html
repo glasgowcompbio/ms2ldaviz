@@ -68,36 +68,35 @@
 		<p>&nbsp;</p>
 	{% endfor %}
 {% endif %}
-<script type='text/javascript' src="{% static "js/jquery-2.2.2.min.js" %}"></script>
-<script type='text/javascript' src="{% static "js/jquery-ui.min.js" %}"> </script>
-<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
 
+{% endblock %}
 
-<script>
-function toggle_validation(docm2m_id,m2m_id) {
-	var url = '/basicviz/toggle_dm2m/{{experiment.id}}/' + docm2m_id
-	var d = document.getElementById("t" + docm2m_id);
-	var c = document.getElementById("c" + m2m_id);
-	var count = parseInt(c.innerHTML);
-	if(d.innerHTML == 'Yes') {
-		count --;
-		c.innerHTML = "" + count;
-	}
-	d.innerHTML = 'Pending....';
-	d3.json(url,function(error,jd) {
-		if (error) throw error;
-		new_html = jd[0];
-		d.innerHTML = new_html;
-		if(jd[0] == 'Yes') {
-			count ++;
+{% block js_block %}
+	<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
+	<script>
+	function toggle_validation(docm2m_id,m2m_id) {
+		var url = '/basicviz/toggle_dm2m/{{experiment.id}}/' + docm2m_id
+		var d = document.getElementById("t" + docm2m_id);
+		var c = document.getElementById("c" + m2m_id);
+		var count = parseInt(c.innerHTML);
+		if(d.innerHTML == 'Yes') {
+			count --;
 			c.innerHTML = "" + count;
-			d.style.fontWeight = 'bold';
-		} else {
-			d.style.fontWeight = 'normal';
 		}
-	});
-}
-
-</script>
+		d.innerHTML = 'Pending....';
+		d3.json(url,function(error,jd) {
+			if (error) throw error;
+			new_html = jd[0];
+			d.innerHTML = new_html;
+			if(jd[0] == 'Yes') {
+				count ++;
+				c.innerHTML = "" + count;
+				d.style.fontWeight = 'bold';
+			} else {
+				d.style.fontWeight = 'normal';
+			}
+		});
+	}
+	</script>
 
 {% endblock %}
