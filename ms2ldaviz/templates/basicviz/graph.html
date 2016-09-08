@@ -8,8 +8,8 @@
 {% block body_block %}
     <div class="ui-widget" style="padding-top: 10px; padding-bottom: 10px">
         <input id="searchText">
-        <button id="searchBtn" type="button" onclick="searchNode()">Search</button>&nbsp;
-        <button id="resetBtn" type="button" onclick="resetSearch()">Reset</button>
+        <button id="searchBtn" type="button">Search</button>&nbsp;
+        <button id="resetBtn" type="button">Reset</button>
         <div id="message">
             Loading, please wait ...
         </div>
@@ -20,11 +20,13 @@
 {% endblock %}
 
 {% block js_block %}
+
     <script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
     <script type='text/javascript' src="{% static "js/basicviz-network.js" %}"> </script>
     <script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"> </script>
     <script type='text/javascript' src="{% static "js/seedrandom.min.js" %}"> </script>
     <script type='text/javascript' src="{% static "js/word-graph.js" %}"> </script>
+
     <script type='text/javascript'>
         var annotated = 0
         // var experiment_id = '{{ experiment.id}}'
@@ -43,5 +45,7 @@
 
         var url = '/basicviz/get_intensity/' + motif_id + '/' + viz_options + '/';
         plot_word_graph(url,motif_id, motif_name);
+
     </script>
+
 {% endblock %}

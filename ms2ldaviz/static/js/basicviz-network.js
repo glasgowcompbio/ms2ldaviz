@@ -28,9 +28,14 @@ function plot_graph(vo_id) {
 
     var simulationNumber = 10;
     var simulationTimeout = 1;
+
+    var graphNodes = undefined;
+    var selectNode = undefined;
+    var unselectNode = undefined;
     var optArray = [];
     var toggle = 0;
     var url = '/basicviz/get_graph/' + vo_id
+
     d3.json(url, function(error, graph) {
 
         if (error) throw error;
@@ -143,12 +148,12 @@ function plot_graph(vo_id) {
             // d3.select('#frag_graph_svg').remove()
         }
 
-        showToolTip = function(d) {
+        function showToolTip(d) {
             target = document.getElementById(d.name + '_label');
             target.style.display = 'inline';
         }
 
-        hideToolTip = function(d) {
+        function hideToolTip(d) {
             target = document.getElementById(d.name + '_label');
             target.style.display = 'none';
         }
@@ -206,11 +211,12 @@ function plot_graph(vo_id) {
             .style('display', 'none') // initially all node labels are invisible
             .text(function(d) { return '\u2002' + d.name; });
 
-        // for the search box
+        // to be used in parent window later
         for (var i = 0; i < graph.nodes.length - 1; i++) {
             optArray.push(graph.nodes[i].name);
         }
         optArray = optArray.sort();
+        graphNodes = node;
 
         // *****************************************************************************
         // Handle force tick event
@@ -334,35 +340,28 @@ function plot_graph(vo_id) {
     // Search node
     // *****************************************************************************
 
-    $(function () {
-        $("#searchText").autocomplete({
-            source: optArray
-        });
-    });
-
-    function searchNode() {
+    $('#searchBtn').click(function(e) {
 
         //find the node
-        var selectedVal = document.getElementById('searchText').value;
-        if (selectedVal == "none") {
-            node.style("stroke", "white").style("stroke-width", "1");
-        } else {
-            var selected = graphNodes.filter(function (d, i) {
-                return d.name == selectedVal;
-            });
-            toggle = 0;
-            selected.each(function(d, i) {
-                var onClickFunc = d3.select(this).on("dblclick");
-                onClickFunc.apply(this, [d, i]);
-            });
-        }
+        var selectedVal = $("#searchText").val()
+        var selected = graphNodes.filter(function (d, i) {
+            return d.name == selectedVal;
+        });
+        toggle = 0;
+        selected.each(function(d, i) {
+            var onClickFunc = d3.select(this).on("dblclick");
+            onClickFunc.apply(this, [d, i]);
+        });
 
-    }
+    });
 
-    function resetSearch() {
-        var searchText = document.getElementById('searchText');
-        searchText.value = '';
+    $('#resetBtn').click(function(e) {
+        $("#searchText").val('');
         unselectNode();
-    }
+    });
+
+    $("#searchText").autocomplete({
+        source: optArray
+    });
 
 } //end plot_graph()
