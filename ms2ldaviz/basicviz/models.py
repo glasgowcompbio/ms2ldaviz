@@ -12,6 +12,8 @@ class Experiment(models.Model):
 	def __unicode__(self):
 		return self.name
 
+class ExtraUsers(models.Model):
+	user = models.ForeignKey(User)
 
 class UserExperiment(models.Model):
 	user = models.ForeignKey(User)

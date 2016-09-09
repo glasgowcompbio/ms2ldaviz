@@ -10,9 +10,9 @@ import json
 import jsonpickle
 import csv
 import numpy as np
-from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,VizForm,UserForm
+from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,VizForm,UserForm,TopicScoringForm
 
-from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment
+from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers
 
 
 
@@ -25,6 +25,12 @@ def index(request):
     # experiments = Experiment.objects.all()
     context_dict = {'experiments':experiments}
     context_dict['user'] = request.user
+    eu = ExtraUsers.objects.filter(user = request.user)
+    if len(eu) > 0:
+        extra_user = True
+    else:
+        extra_user = False
+    context_dict['extra_user'] = extra_user
     return render(request,'basicviz/basicviz.html',context_dict)
 
 @login_required(login_url = '/basicviz/login/')
@@ -98,6 +104,119 @@ def user_login(request):
         # No context variables to pass to the template system, hence the
         # blank dictionary object...
         return render(request, 'basicviz/login.html', {})
+
+
+def compute_topic_scores(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    context_dict = {'experiment':experiment}
+    # Insert form logic here once form has been made
+    # Start with a discrete hypergeo score
+    documents = Document.objects.filter(experiment = experiment)
+    md = jsonpickle.decode(documents[0].metadata)
+    intensities = md['intensities']
+    choices = [(i,i) for i in intensities.keys()]
+    choices = sorted(choices,key = lambda x: x[0])
+
+    if request.method == 'POST':
+        form = TopicScoringForm(choices,request.POST)
+        if form.is_valid():
+            groups = form.cleaned_data['group1'] + form.cleaned_data['group2']
+            
+            intensities = []
+            for document in documents:
+                md = jsonpickle.decode(document.metadata)
+                temp_intensity = []
+                for group in groups:
+                    temp_intensity.append(md['intensities'][group])
+                intensities.append(temp_intensity)
+
+            intensitynp = np.array(intensities)
+            
+            # Compute the logfc values
+            logfc = []
+
+            group1pos = range(len(form.cleaned_data['group1']))
+            group2pos = range(len(form.cleaned_data['group1']),len(group1pos)+len(form.cleaned_data['group2']))
+
+
+            SMALL = 1e-3
+            for i,document in enumerate(documents):
+                m1 = max(intensitynp[i,group1pos].mean(),SMALL)
+                m2 = max(intensitynp[i,group2pos].mean(),SMALL)
+                thisfc = np.log2(m1)-np.log2(m2)
+                logfc.append(thisfc)
+                if form.cleaned_data['storelogfc']:
+                    md = jsonpickle.decode(document.metadata)
+                    md['logfc'] = thisfc
+                    document.metadata = jsonpickle.encode(md)
+                    document.save()
+
+            logfc = np.array(logfc)
+
+
+            # These should be set in a form
+            lowperc = form.cleaned_data['lower_perc']
+            upperc = form.cleaned_data['upper_perc']
+            
+
+            lfccopy = logfc.copy()
+            lfccopy = np.sort(lfccopy)
+            le = len(lfccopy)
+            lowperc_value = lfccopy[int(np.floor(le*(lowperc/100.0)))]
+            upperc_value = lfccopy[int(np.ceil(le*(upperc/100.0)))]
+
+            total_above = len(np.where(logfc > upperc_value)[0])
+            total_below = len(np.where(logfc < lowperc_value)[0])
+
+            from scipy.stats.distributions import hypergeom
+
+            M = len(documents)
+
+            discrete_scores = []
+
+            motifs = Mass2Motif.objects.filter(experiment = experiment)
+            for motif in motifs:
+                score_list = []
+                doc_indices = []
+                m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
+                for m2mdoc in m2mdocs:
+                    doc_indices.append(list(documents).index(m2mdoc.document))
+                n_above = 0
+                n_below = 0
+                for ind in doc_indices:
+                    if logfc[ind] < lowperc_value:
+                        n_below += 1
+                    if logfc[ind] > upperc_value:
+                        n_above += 1
+                n_sub_docs = len(m2mdocs)
+                up_range = range(n_above,n_sub_docs+1)
+                down_range = range(n_below,n_sub_docs+1)
+                score_list.append(n_sub_docs)
+                score_list.append(n_above)
+                score_list.append(hypergeom.pmf(up_range,M,total_above,n_sub_docs).sum())
+                score_list.append(n_below)
+                score_list.append(hypergeom.pmf(down_range,M,total_below,n_sub_docs).sum())
+                discrete_scores.append((motif,score_list))
+            context_dict['total_above'] = total_above
+            context_dict['total_below'] = total_below
+            context_dict['discrete_scores'] = discrete_scores
+            context_dict['group1'] = form.cleaned_data['group1']
+            context_dict['group2'] = form.cleaned_data['group2']
+
+        else:
+            # invalid form
+            context_dict['topicscoringform'] = form
+    else:
+        form = TopicScoringForm(choices)
+        context_dict['topicscoringform'] = form
+
+
+
+
+
+
+    return render(request,'basicviz/compute_topic_scores.html',context_dict)
+
 
 
 

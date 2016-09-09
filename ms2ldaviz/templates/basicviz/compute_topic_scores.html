@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}{{experiment.name}}{% endblock %}
+
+{% block body_block %}
+	<h3>Computing topic scores for {{experiment.name}}</h3>
+
+	<p>Fold changes were computed by log2(mean({% for g in group1 %}{{g}}&nbsp;{% endfor %})) - log2(mean({% for g in group2 %}{{g}}&nbsp;{% endfor %}))</p>
+	<p>Topic scores are computed by using the hyper-geometric distribution to assess the probability of getting at least this many up (or down) fold changes associated to the topic</p>
+
+	<a href="/basicviz/">Return to visualisation menu</a>
+	{% if topicscoringform %}
+		<form id="doc_form" method="post" action="/basicviz/compute_topic_scores/{{experiment.id}}/">
+		 	{% csrf_token %}
+			{% for hidden in topicscringform.hidden_fields %}
+			 	{{ hidden }}
+			{% endfor %}
+
+			{% for field in topicscoringform.visible_fields %}
+				<p>{{ field.errors }}</p>
+				<p>{{ field }}
+				{{ field.label }}</p>
+			{% endfor %}
+		<input type="submit" name="submit" value="Compute scores" />
+ 		</form>
+	{% else %}
+
+		<p>Total above: {{total_above}}, total below: {{total_below}}</p>
+		<table id="thetable" class="display table">
+		<thead>
+		<tr><th>Motif</th><th>Annotation</th><th>N_spectra</th><th>N_up</th><th>Up score</th><th>N_down</th><th>Downscore</th></tr>
+		</thead>
+		<tbody>
+		{% for score_list in discrete_scores %}
+		<tr>
+			<td><a href="/basicviz/view_parents/{{score_list.0.id}}">{{score_list.0}}</a></td>
+			<td>{{score_list.0.annotation}}</td>
+			{% for s in score_list.1 %}
+				<td>{% if s < 0.05 %} <b>{{s}}</b> {% else %} {{s}} {% endif %}</td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+		</tbody>
+		</table>
+	{% endif %}
+{% endblock %}
+
+{% block js_block %}
+<!-- <script src='https://code.jquery.com/jquery-1.12.3.js'></script> -->
+<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" type="text/css"> -->
+<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$('#thetable').DataTable();
+});
+</script>
+{% endblock %}
+
+
