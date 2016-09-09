@@ -35,7 +35,7 @@ class UserForm(forms.ModelForm):
 class TopicScoringForm(forms.Form):
 	upper_perc = forms.IntegerField(required=True,initial=75,label= 'upper percentile')
 	lower_perc = forms.IntegerField(required=True,initial=25,label= 'lower percentile')
-	storelogfc = forms.BooleanField(initial = False,label = 'Check this box to overwrite stored spectra logfc values')
+	storelogfc = forms.BooleanField(initial = False,required = False,label = 'Check this box to overwrite stored spectra logfc values')
 	def __init__(self,choices,*args,**kwargs):
 		super(TopicScoringForm, self).__init__(*args,**kwargs)
 		self.fields['group1'] = forms.MultipleChoiceField(choices = choices,label='Pick samples for group 1 (fold change is defined as group 1 over group 2)',required=True)
