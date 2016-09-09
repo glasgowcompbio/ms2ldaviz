@@ -175,7 +175,8 @@ def compute_topic_scores(request,experiment_id):
             discrete_scores = []
 
             motifs = Mass2Motif.objects.filter(experiment = experiment)
-            for motif in motifs:
+            n_done = 0
+            for motif1ind,motif in enumerate(motifs):
                 score_list = []
                 doc_indices = []
                 m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
@@ -206,6 +207,40 @@ def compute_topic_scores(request,experiment_id):
                     md['downscore'] = float(down_score)
                     motif.metadata = jsonpickle.encode(md)
                     motif.save()
+
+                if form.cleaned_data['do_pairs']:
+                    docs1 = set([m.document for m in m2mdocs])
+                    for motif2 in motifs[motif1ind+1:]:
+                        m2mdocs2 = DocumentMass2Motif.objects.filter(mass2motif = motif2)
+                        docs2 = set([m.document for m in m2mdocs2])
+                        # Find the intersect
+                        intersect = list(docs1 & docs2)
+                        if len(intersect) > 0:
+                            doc_indices = []
+                            for doc in intersect:
+                                doc_indices.append(list(documents).index(doc))
+                            n_above = 0
+                            n_below = 0
+                            for ind in doc_indices:
+                                if logfc[ind] < lowperc_value:
+                                    n_below += 1
+                                if logfc[ind] > upperc_value:
+                                    n_above += 1
+                            score_list = []
+                            n_sub_docs = len(intersect)
+                            up_range = range(n_above,n_sub_docs+1)
+                            down_range = range(n_below,n_sub_docs+1)
+                            score_list.append(n_sub_docs)
+                            score_list.append(n_above)
+                            up_score = hypergeom.pmf(up_range,M,total_above,n_sub_docs).sum()
+                            score_list.append(up_score)
+                            score_list.append(n_below)
+                            down_score = hypergeom.pmf(down_range,M,total_below,n_sub_docs).sum()
+                            score_list.append(down_score)
+                            discrete_scores.append(("{}+{}".format(motif.name,motif2.name),score_list))
+                n_done += 1
+                print n_done
+
 
             context_dict['total_above'] = total_above
             context_dict['total_below'] = total_below

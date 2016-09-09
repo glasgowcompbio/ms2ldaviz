@@ -51,12 +51,23 @@
 <!-- <script src='https://code.jquery.com/jquery-1.12.3.js'></script> -->
 <script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
 <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" type="text/css"> -->
 <link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
 
 <script type="text/javascript">
 $(document).ready(function() {
-	$('#thetable').DataTable();
+	$('#thetable').DataTable({
+		dom: 'Bfrtip',
+		buttons: [
+        'csv',
+        ]
+    }
+    );
 });
 </script>
 {% endblock %}

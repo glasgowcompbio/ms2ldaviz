@@ -38,6 +38,7 @@ class TopicScoringForm(forms.Form):
 	lower_perc = forms.IntegerField(required=True,initial=25,label= 'lower percentile')
 	storelogfc = forms.BooleanField(initial = False,required = False,label = 'Check this box to overwrite stored spectra logfc values')
 	savetopicscores = forms.BooleanField(initial = True,required = False,label = 'Save the computed up and down scores?')
+	do_pairs = forms.BooleanField(initial = False, required = False,label = 'Compute scores for topic combinations? (takes a looooong time)')
 	def __init__(self,choices,*args,**kwargs):
 		super(TopicScoringForm, self).__init__(*args,**kwargs)
 		self.fields['group1'] = forms.MultipleChoiceField(choices = choices,label='Pick samples for group 1 (fold change is defined as group 1 over group 2)',required=True)
