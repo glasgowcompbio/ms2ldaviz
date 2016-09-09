@@ -147,7 +147,7 @@ def compute_topic_scores(request,experiment_id):
                 logfc.append(thisfc)
                 if form.cleaned_data['storelogfc']:
                     md = jsonpickle.decode(document.metadata)
-                    md['logfc'] = thisfc
+                    md['logfc'] = float(thisfc)
                     document.metadata = jsonpickle.encode(md)
                     document.save()
 
@@ -193,10 +193,20 @@ def compute_topic_scores(request,experiment_id):
                 down_range = range(n_below,n_sub_docs+1)
                 score_list.append(n_sub_docs)
                 score_list.append(n_above)
-                score_list.append(hypergeom.pmf(up_range,M,total_above,n_sub_docs).sum())
+                up_score = hypergeom.pmf(up_range,M,total_above,n_sub_docs).sum()
+                score_list.append(up_score)
                 score_list.append(n_below)
-                score_list.append(hypergeom.pmf(down_range,M,total_below,n_sub_docs).sum())
+                down_score = hypergeom.pmf(down_range,M,total_below,n_sub_docs).sum()
+                score_list.append(down_score)
                 discrete_scores.append((motif,score_list))
+
+                if form.cleaned_data['savetopicscores']:
+                    md = jsonpickle.decode(motif.metadata)
+                    md['upscore'] = float(up_score)
+                    md['downscore'] = float(down_score)
+                    motif.metadata = jsonpickle.encode(md)
+                    motif.save()
+
             context_dict['total_above'] = total_above
             context_dict['total_below'] = total_below
             context_dict['discrete_scores'] = discrete_scores
@@ -557,6 +567,7 @@ def start_viz(request,experiment_id):
             discrete_colour = viz_form.cleaned_data['discrete_colour']
             lower_colour_perc = viz_form.cleaned_data['lower_colour_perc']
             upper_colour_perc = viz_form.cleaned_data['upper_colour_perc']
+            colour_topic_by_score = viz_form.cleaned_data['colour_topic_by_score']
             vo = VizOptions.objects.get_or_create(experiment = experiment, 
                                                   min_degree = min_degree, 
                                                   edge_thresh = edge_thresh,
@@ -564,7 +575,8 @@ def start_viz(request,experiment_id):
                                                   colour_by_logfc = colour_by_logfc,
                                                   discrete_colour = discrete_colour,
                                                   lower_colour_perc = lower_colour_perc,
-                                                  upper_colour_perc = upper_colour_perc)[0]
+                                                  upper_colour_perc = upper_colour_perc,
+                                                  colour_topic_by_score = colour_topic_by_score)[0]
             context_dict['viz_options'] = vo
 
         else:
@@ -604,7 +616,8 @@ def get_graph(request,vo_id):
                                         colour_by_logfc = viz_options.colour_by_logfc,
                                         discrete_colour = viz_options.discrete_colour,
                                         lower_colour_perc = viz_options.lower_colour_perc,
-                                        upper_colour_perc = viz_options.upper_colour_perc)
+                                        upper_colour_perc = viz_options.upper_colour_perc,
+                                        colour_topic_by_score = viz_options.colour_topic_by_score)
     d = json_graph.node_link_data(G)
     return HttpResponse(json.dumps(d),content_type='application/json')
 
@@ -612,7 +625,8 @@ def get_graph(request,vo_id):
 
 def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
     topic_scale_factor = 5,edge_scale_factor=5,just_annotated_docs = False,
-    colour_by_logfc = False,discrete_colour = False,lower_colour_perc = 10,upper_colour_perc = 90):
+    colour_by_logfc = False,discrete_colour = False,lower_colour_perc = 10,upper_colour_perc = 90,
+    colour_topic_by_score = False):
     mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
     # Find the degrees
     topics = {}
@@ -636,16 +650,33 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
     G = nx.Graph()
     for topic in topics:
         metadata = jsonpickle.decode(topic.metadata)
-        if 'annotation' in metadata:
-            G.add_node(topic.name,group=2,name=metadata['annotation'],
+        if colour_topic_by_score:
+            upscore = metadata.get('upscore',1.0)
+            downscore = metadata.get('downscore',1.0)
+            if upscore < 0.05:
+                highlight_colour = '#0000FF'
+            elif downscore < 0.05:
+                highlight_colour = '#FF0000'
+            else:
+                highlight_colour = '#AAAAAA'
+            name = metadata.get('annotation',topic.name)
+            G.add_node(topic.name,group=2,name=name,
                 size=topic_scale_factor * topics[topic],
                 special = True, in_degree = topics[topic],
-                score = 1,node_id = topic.id,is_topic = True)
+                score = 1,node_id = topic.id,is_topic = True,
+                highlight_colour = highlight_colour)
+
         else:
-            G.add_node(topic.name,group=2,name=topic.name,
-                size=topic_scale_factor * topics[topic],
-                special = False, in_degree = topics[topic],
-                score = 1,node_id = topic.id,is_topic = True)
+            if 'annotation' in metadata:
+                G.add_node(topic.name,group=2,name=metadata['annotation'],
+                    size=topic_scale_factor * topics[topic],
+                    special = True, in_degree = topics[topic],
+                    score = 1,node_id = topic.id,is_topic = True)
+            else:
+                G.add_node(topic.name,group=2,name=topic.name,
+                    size=topic_scale_factor * topics[topic],
+                    special = False, in_degree = topics[topic],
+                    score = 1,node_id = topic.id,is_topic = True)
 
     documents = Document.objects.filter(experiment = experiment)
     if colour_by_logfc:

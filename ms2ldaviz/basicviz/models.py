@@ -145,3 +145,4 @@ class VizOptions(models.Model):
 	discrete_colour = models.BooleanField(null = False)
 	upper_colour_perc = models.IntegerField(null = False)
 	lower_colour_perc = models.IntegerField(null = False)
+	colour_topic_by_score = models.BooleanField(null = False)

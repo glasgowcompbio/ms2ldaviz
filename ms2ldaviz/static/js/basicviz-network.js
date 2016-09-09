@@ -7,8 +7,8 @@ function plot_graph(vo_id) {
 
     Math.seedrandom('hello');
 
-    var width = 700;
-    var height = 500;
+    var width = 1000;
+    var height = 700;
     var topicName = 'motif';
 
     var minNodeSize = 8;

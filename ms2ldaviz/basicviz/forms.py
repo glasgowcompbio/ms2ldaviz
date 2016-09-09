@@ -21,6 +21,7 @@ class VizForm(forms.Form):
 	edge_thresh = forms.DecimalField(required = True,initial = 0.05,label = 'Enter probability threshold for edge')
 	just_annotated_docs = forms.BooleanField(required = False,initial = False,label = 'Just show annotated documents?')
 	colour_by_logfc = forms.BooleanField(required = False,initial = False,label = 'colour nodes by logfc')
+	colour_topic_by_score = forms.BooleanField(required = False,initial = False,label = 'colour motifs by up and down scores')
 	discrete_colour = forms.BooleanField(required = False,initial = False,label = 'discrete colouring')
 	lower_colour_perc = forms.IntegerField(required = True,initial = 25,label = 'lower colour percentile')
 	upper_colour_perc = forms.IntegerField(required = True,initial = 75,label = 'upper colour percentile')
@@ -36,6 +37,7 @@ class TopicScoringForm(forms.Form):
 	upper_perc = forms.IntegerField(required=True,initial=75,label= 'upper percentile')
 	lower_perc = forms.IntegerField(required=True,initial=25,label= 'lower percentile')
 	storelogfc = forms.BooleanField(initial = False,required = False,label = 'Check this box to overwrite stored spectra logfc values')
+	savetopicscores = forms.BooleanField(initial = True,required = False,label = 'Save the computed up and down scores?')
 	def __init__(self,choices,*args,**kwargs):
 		super(TopicScoringForm, self).__init__(*args,**kwargs)
 		self.fields['group1'] = forms.MultipleChoiceField(choices = choices,label='Pick samples for group 1 (fold change is defined as group 1 over group 2)',required=True)
