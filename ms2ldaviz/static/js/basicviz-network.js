@@ -252,7 +252,7 @@ function plot_graph(vo_id) {
 
         function dragstart(d) {
             d3.event.sourceEvent.stopPropagation();
-            // d3.select(this).classed('fixed', d.fixed = true);
+            d3.select(this).classed('fixed', d.fixed = true);
         }
 
         // *****************************************************************************
