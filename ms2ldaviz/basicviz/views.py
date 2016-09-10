@@ -71,8 +71,8 @@ def multi_alphas(request,mf_id):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
     context_dict = {'mfe':mfe}
     links = MultiLink.objects.filter(multifileexperiment = mfe)
-    individuals = [l.experiment for l in links][:7]
-    context_dict['individuals'] = individuals[:7]
+    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
+    context_dict['individuals'] = individuals
 
     motifs = Mass2Motif.objects.filter(experiment = individuals[0])
     print "Found {} motifs".format(len(motifs))
