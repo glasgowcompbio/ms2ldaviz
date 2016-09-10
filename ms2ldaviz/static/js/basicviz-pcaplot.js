@@ -1,6 +1,6 @@
 function pca_plot(url) {
-		var plot_width=800
-	var plot_height=500
+		var plot_width=950
+	var plot_height=950
 	var hor_margin = 50
 	var ver_margin = 50
 
@@ -14,7 +14,7 @@ function pca_plot(url) {
 	function pca_plot(pca_data) {
 		var def_circ_radius = 4;
 		var circ_size = def_circ_radius;
-		var def_tip_font_size = 48;
+		var def_tip_font_size = 72;
 		var tip_font_size = def_tip_font_size;
 		var tip_offset_x = 10;
 		var tip_offset_y = 10;
@@ -83,6 +83,29 @@ function pca_plot(url) {
 	        .attr("transform","translate(" + xScale(0) + ",0)")
 	        .call(yAxis);
 
+
+	    lines.attr("x1",xScale(0))
+	    	 .attr("y1",yScale(0))
+	    	 .attr("x2", function(d) { return xScale(d[0]);})
+	    	 .attr("y2", function(d) { return yScale(d[1]);})
+	    	 .attr("stroke-width",def_stroke_width)
+	    	 .attr("stroke", function(d) { return d[3];})
+	    	 .on("mouseover",function(d) {
+    			var xPos = parseFloat(d3.select(this).attr("x2")) - tip_offset_x
+	            var yPos = parseFloat(d3.select(this).attr("y2")) - tip_offset_y
+	            pca_plot_svg.append("text")
+	            	.attr("id","line_tooltip")
+	            	.attr('x',xPos)
+	            	.attr('y',yPos)
+                	.attr("font-family","sans-serif")
+                	.attr("font-weight","bold")
+	                .attr("font-size",""+ tip_font_size + "px")
+                	.text(d[2]);
+	    	 })
+	    	 .on("mouseout",function(d) {
+	    	 	d3.select("#line_tooltip").remove()
+	    	 });
+	    	 
 	    circles.attr("cx",function(d) {return xScale(d[0])})
 	    		.attr("cy",function (d) {return yScale(d[1])})
 	    		.attr("r",def_circ_radius)
@@ -113,27 +136,7 @@ function pca_plot(url) {
 	            	d3.select('#tooltip').remove()
 	            });
 
-	    lines.attr("x1",xScale(0))
-	    	 .attr("y1",yScale(0))
-	    	 .attr("x2", function(d) { return xScale(d[0]);})
-	    	 .attr("y2", function(d) { return yScale(d[1]);})
-	    	 .attr("stroke-width",def_stroke_width)
-	    	 .attr("stroke", function(d) { return d[3];})
-	    	 .on("mouseover",function(d) {
-    			var xPos = parseFloat(d3.select(this).attr("x2")) - tip_offset_x
-	            var yPos = parseFloat(d3.select(this).attr("y2")) - tip_offset_y
-	            pca_plot_svg.append("text")
-	            	.attr("id","line_tooltip")
-	            	.attr('x',xPos)
-	            	.attr('y',yPos)
-                	.attr("font-family","sans-serif")
-                	.attr("font-weight","bold")
-	                .attr("font-size",""+ tip_font_size + "px")
-                	.text(d[2]);
-	    	 })
-	    	 .on("mouseout",function(d) {
-	    	 	d3.select("#line_tooltip").remove()
-	    	 });
+	    
 
 	    function zoom() {
 	    	pca_plot_svg.attr("transform","translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");

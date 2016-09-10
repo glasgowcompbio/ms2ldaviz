@@ -67,19 +67,11 @@ def register(request):
     return render(request,
         'basicviz/register.html', context_dict)
 
-def multi_alphas(request,mf_id):
-    mfe = MultiFileExperiment.objects.get(id = mf_id)
-    context_dict = {'mfe':mfe}
-    links = MultiLink.objects.filter(multifileexperiment = mfe)
-    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
-    context_dict['individuals'] = individuals
-
-    motifs = Mass2Motif.objects.filter(experiment = individuals[0])
-    print "Found {} motifs".format(len(motifs))
-    motif_names = [m.name for m in motifs]
-
+def make_alpha_matrix(motifs,individuals,normalise = True,variances = False,add_motif = False):
+    
+    print "Creating alpha matrix"
     alp_vals = []
-    for i,motif in enumerate(motifs):
+    for motif in motifs:
         new_row = []
         tot = 0.0
         tot2 = 0.0
@@ -91,10 +83,75 @@ def multi_alphas(request,mf_id):
             tot2 += alp.value**2
         mu = tot / len(individuals)
         ss = (tot2)/len(individuals) - mu**2
-        new_row.append(ss)
-        alp_vals.append((motif,new_row))
-    context_dict['alp_vals'] = alp_vals
+        if normalise:
+            new_row = [n/tot for n in new_row]
+            tot = 1.0
+            tot2 = sum([n**2 for n in new_row])
+            mu = tot / len(individuals)
+            ss = tot2/len(individuals) - mu**2
+        if variances:
+            new_row.append(ss)
+        if add_motif:
+            alp_vals.append((motif,new_row))
+        else:
+            alp_vals.append(new_row)
 
+
+    return alp_vals    
+
+def alpha_pca(request,mf_id):
+    # Returns a json object to be rendered into a pca plot
+    mfe = MultiFileExperiment.objects.get(id = mf_id)
+    links = MultiLink.objects.filter(multifileexperiment = mfe)
+    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
+    motifs = Mass2Motif.objects.filter(experiment = individuals[0])
+
+    # context_dict{'mfe':mfe}
+    alp_vals = make_alpha_matrix(motifs,individuals,normalise = True,variances = False,add_motif = False)
+    print alp_vals
+    print "doing PCA"
+    np_alp = np.array(alp_vals)
+    pca = PCA(n_components = 2,whiten = True,copy = True)
+    pca.fit(np_alp.T)
+    X = pca.transform(np_alp.T)
+    print pca.components_.shape
+    # Make the object to pass to the view
+    points = []
+    lines = []
+    for i,individual in enumerate(individuals):
+        new_row = [X[i,0],X[i,1],individual.name,'#FF0000']
+        points.append(new_row)
+
+    ma = np.abs(pca.components_).max()
+    pma = np.abs(X).max()
+    
+    scale_factor = 0.5*pma/ma
+    print scale_factor
+
+    for i,motif in enumerate(motifs):
+        new_row = [pca.components_[0,i]*scale_factor,pca.components_[1,i]*scale_factor,motif.name,'#999999']
+        lines.append(new_row)
+    pca_data = (points,lines)
+    return HttpResponse(json.dumps(pca_data),content_type = 'application/json')
+
+
+
+def multi_alphas(request,mf_id):
+    mfe = MultiFileExperiment.objects.get(id = mf_id)
+    context_dict = {'mfe':mfe}
+    links = MultiLink.objects.filter(multifileexperiment = mfe)
+    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
+    context_dict['individuals'] = individuals
+
+    motifs = Mass2Motif.objects.filter(experiment = individuals[0])
+    print "Found {} motifs".format(len(motifs))
+    motif_names = [m.name for m in motifs]
+
+
+    alp_vals = make_alpha_matrix(motifs,individuals,normalise=True,variances=True,add_motif=True)
+    
+    context_dict['alp_vals'] = alp_vals
+    context_dict['url'] = '/basicviz/alpha_pca/{}/'.format(mfe.id)
     return render(request,'basicviz/multi_alphas.html',context_dict)
 
 def user_login(request):
@@ -548,7 +605,14 @@ def get_doc_for_plot(doc_id,motif_id = None,get_key = False):
 
     # Get the parent info
     metadata = jsonpickle.decode(document.metadata)
-    parent_mass = float(metadata['parentmass'])
+    if 'parentmass' in metadata:
+        parent_mass = float(metadata['parentmass'])
+    elif 'mz' in metadata:
+        parent_mass = float(metadata['mz'])
+    elif '_' in document.name:
+        parent_mass = float(document.name.split('_')[0])
+    else:
+        parent_mass = 0.0
     parent_data = (parent_mass,100.0,document.display_name,document.annotation)
     plot_fragments.append(parent_data)
     child_data = []
