@@ -16,7 +16,8 @@ if __name__ == '__main__':
 	user = User.objects.filter(username = username)
 	if len(user) == 0:
 		user = User.objects.create_user(username, email, pw)
-
+	else:
+		user = user[0]
 	experiments = Experiment.objects.all()
 
 	for experiment in experiments:
