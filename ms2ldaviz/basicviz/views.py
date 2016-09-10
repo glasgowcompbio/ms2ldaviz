@@ -12,7 +12,7 @@ import csv
 import numpy as np
 from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,VizForm,UserForm,TopicScoringForm
 
-from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers
+from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha
 
 
 
@@ -26,11 +26,15 @@ def index(request):
     context_dict = {'experiments':experiments}
     context_dict['user'] = request.user
     eu = ExtraUsers.objects.filter(user = request.user)
+
+    mfe = MultiFileExperiment.objects.all()
+
     if len(eu) > 0:
         extra_user = True
     else:
         extra_user = False
     context_dict['extra_user'] = extra_user
+    context_dict['mfe'] = mfe
     return render(request,'basicviz/basicviz.html',context_dict)
 
 @login_required(login_url = '/basicviz/login/')
@@ -63,6 +67,35 @@ def register(request):
     return render(request,
         'basicviz/register.html', context_dict)
 
+def multi_alphas(request,mf_id):
+    mfe = MultiFileExperiment.objects.get(id = mf_id)
+    context_dict = {'mfe':mfe}
+    links = MultiLink.objects.filter(multifileexperiment = mfe)
+    individuals = [l.experiment for l in links][:7]
+    context_dict['individuals'] = individuals[:7]
+
+    motifs = Mass2Motif.objects.filter(experiment = individuals[0])
+    print "Found {} motifs".format(len(motifs))
+    motif_names = [m.name for m in motifs]
+
+    alp_vals = []
+    for i,motif in enumerate(motifs):
+        new_row = []
+        tot = 0.0
+        tot2 = 0.0
+        for individual in individuals:
+            thismotif = Mass2Motif.objects.get(name = motif.name,experiment = individual)
+            alp = Alpha.objects.get(mass2motif = thismotif)
+            new_row.append(alp.value)
+            tot += alp.value
+            tot2 += alp.value**2
+        mu = tot / len(individuals)
+        ss = (tot2)/len(individuals) - mu**2
+        new_row.append(ss)
+        alp_vals.append((motif,new_row))
+    context_dict['alp_vals'] = alp_vals
+
+    return render(request,'basicviz/multi_alphas.html',context_dict)
 
 def user_login(request):
 

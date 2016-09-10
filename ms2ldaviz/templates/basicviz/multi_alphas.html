@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Alphas{% endblock %}
+
+{% block body_block %}
+<h3>Alpha values for {{mfe.name}}</h3>
+<p>Logged in as {{user}}, <a href="/basicviz/logout">Logout</a></p>
+<p>This experiment consists of the following individual MS2LDAs:</p>
+<ul>
+{% for ms2lda in individuals %}
+	<li>{{ms2lda.name}}</li>
+{% endfor %}
+</ul>
+
+<table id="thetable" class="table">
+	<thead>
+		<tr>
+			<th>Motif</th>
+			{% for ms2lda in individuals %}
+				<th>{{ ms2lda.name }}</th>
+			{% endfor %}
+			<th>Variance</th>
+		</tr>
+	</thead>
+	<tbody>
+	{% for row in alp_vals %}
+		<tr>
+			<td>{{row.0.name}}</td>
+			{% for val in row.1 %}
+				<td>{{val|stringformat:".4e" }}</td>
+			{% endfor %}
+		</tr>
+	{% endfor %}
+	</tbody>
+</table>
+
+{% endblock %}
+
+
+{% block js_block %}
+<!-- <script src='https://code.jquery.com/jquery-1.12.3.js'></script> -->
+<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" type="text/css"> -->
+<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$('#thetable').DataTable({
+		dom: 'Bfrtip',
+		buttons: [
+        'csv',
+        ]
+    }
+    );
+});
+</script>
+{% endblock %}
+
+

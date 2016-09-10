@@ -30,5 +30,23 @@ Logged in as {{user}}, <a href="/basicviz/logout">Logout</a>
     {% endif %}
     </td></tr>
 {% endfor %}
+</table>
+
+{% if extra_user %}
+	<hr />
+	<h3>MultiFileExperiments</h3>
+	<ul>
+	{% for mf in mfe %}
+		<li>{{mf.name}}, {{mf.description}}, {{mf.status}}</li>
+		<ul>
+			{% for exp in mf.multilink_set.all %}
+				<li>{{exp.experiment}}</li>
+			{% endfor %}
+		</ul>
+		<A href="/basicviz/multi_alphas/{{mf.id}}" class="btn btn-xs btn-warning" role="button">Explore alphas</A>
+	{% endfor %}
+	</ul>
+{% endif %}
+
 </ul>
 {% endblock %}

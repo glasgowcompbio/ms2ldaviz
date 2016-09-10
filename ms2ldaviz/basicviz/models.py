@@ -3,6 +3,14 @@ from django.contrib.auth.models import User
 import jsonpickle
 
 # Create your models here.
+class MultiFileExperiment(models.Model):
+	name = models.CharField(max_length=128,unique=True)
+	description = models.CharField(max_length=1024,null=True)
+	status = models.CharField(max_length=128,null=True)
+	def __unicode__(self):
+		return self.name
+
+
 
 
 class Experiment(models.Model):
@@ -11,6 +19,15 @@ class Experiment(models.Model):
 	status = models.CharField(max_length=128,null=True)
 	def __unicode__(self):
 		return self.name
+
+
+class MultiLink(models.Model):
+	multifileexperiment = models.ForeignKey(MultiFileExperiment)
+	experiment = models.ForeignKey(Experiment)
+
+
+
+
 
 class ExtraUsers(models.Model):
 	user = models.ForeignKey(User)
@@ -110,6 +127,12 @@ class Mass2Motif(models.Model):
 
 	def __unicode__(self):
 		return self.name
+
+
+class Alpha(models.Model):
+	mass2motif = models.ForeignKey(Mass2Motif)
+	value = models.FloatField()
+
 
 class Mass2MotifInstance(models.Model):
 	mass2motif = models.ForeignKey(Mass2Motif)

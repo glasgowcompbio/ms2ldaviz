@@ -33,4 +33,5 @@ urlpatterns = patterns('',
 	    url(r'^login/$', views.user_login, name='login'),
 	    url(r'^logout/$',views.user_logout, name='logout'),
 	    url(r'^compute_topic_scores/(?P<experiment_id>\w+)/$',views.compute_topic_scores,name='compute_topic_scores'),
+	    url(r'^multi_alphas/(?P<mf_id>\w+)/$',views.multi_alphas,name = 'multi_alphas'),
         )
