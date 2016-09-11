@@ -71,8 +71,10 @@ def make_alpha_matrix(motifs,individuals,normalise = True,variances = False,add_
     
     print "Creating alpha matrix"
     alp_vals = []
+    degrees = []
     for motif in motifs:
         new_row = []
+        deg_row = []
         tot = 0.0
         tot2 = 0.0
         for individual in individuals:
@@ -81,6 +83,8 @@ def make_alpha_matrix(motifs,individuals,normalise = True,variances = False,add_
             new_row.append(alp.value)
             tot += alp.value
             tot2 += alp.value**2
+            docs = DocumentMass2Motif.objects.filter(mass2motif = thismotif)
+            deg_row.append(len(docs))
         mu = tot / len(individuals)
         ss = (tot2)/len(individuals) - mu**2
         if normalise:
@@ -93,11 +97,81 @@ def make_alpha_matrix(motifs,individuals,normalise = True,variances = False,add_
             new_row.append(ss)
         if add_motif:
             alp_vals.append((motif,new_row))
+            degrees.append((motif,deg_row))
         else:
             alp_vals.append(new_row)
+            degrees.append(deg_row)
 
 
-    return alp_vals    
+    return alp_vals,degrees
+
+def view_multi_m2m(request,mf_id,motif_name):
+    mfe = MultiFileExperiment.objects.get(id = mf_id)
+    links = MultiLink.objects.filter(multifileexperiment = mfe)
+    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
+    context_dict = {'mfe':mfe}
+    context_dict['motif_name'] = motif_name
+
+    # get the features
+    firstm2m = Mass2Motif.objects.get(name = motif_name,experiment = individuals[0])
+    m2mfeatures = Mass2MotifInstance.objects.filter(mass2motif = firstm2m)
+    m2mfeatures = sorted(m2mfeatures,key = lambda x: x.probability,reverse=True)
+    context_dict['m2m_features'] = m2mfeatures
+
+    # Get the m2m in the individual models
+    individual_m2m = []
+    alps = []
+    for individual in individuals:
+        m2m = Mass2Motif.objects.get(name = motif_name,experiment = individual)
+        alpha = Alpha.objects.get(mass2motif = m2m)
+        docs = DocumentMass2Motif.objects.filter(mass2motif = m2m)
+        individual_m2m.append([individual,m2m,alpha,len(docs)])
+        alps.append(alpha.value)
+
+    tot_alps = sum(alps)
+    m_alp = sum(alps)/len(alps)
+    m_alp2 = sum([a**2 for a in alps])/len(alps)
+    var = m_alp2 - m_alp**2
+    context_dict['alpha_variance'] = var
+    context_dict['alphas'] = zip([i.name for i in individuals],alps)
+    print individual_m2m
+    context_dict['individual_m2m'] = individual_m2m
+
+    return render(request,'basicviz/view_multi_m2m.html',context_dict)
+
+def get_alphas(request,mf_id,motif_name):
+    mfe = MultiFileExperiment.objects.get(id = mf_id)
+    links = MultiLink.objects.filter(multifileexperiment = mfe)
+    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
+    alps = []
+    for individual in individuals:
+        m2m = Mass2Motif.objects.get(name = motif_name,experiment = individual)
+        alpha = Alpha.objects.get(mass2motif = m2m)
+        alps.append(alpha.value)
+    
+    alps = zip([i.name for i in individuals],alps)
+
+    json_alps = json.dumps(alps)
+
+    return HttpResponse(json_alps,content_type = 'application/json')
+
+def get_degrees(request,mf_id,motif_name):
+    mfe = MultiFileExperiment.objects.get(id = mf_id)
+    links = MultiLink.objects.filter(multifileexperiment = mfe)
+    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
+    degs = []
+    for individual in individuals:
+        m2m = Mass2Motif.objects.get(name = motif_name,experiment = individual)
+        docs = DocumentMass2Motif.objects.filter(mass2motif = m2m)
+        degs.append(len(docs))
+    
+    degs = zip([i.name for i in individuals],degs)
+
+    json_degs = json.dumps(degs)
+
+    return HttpResponse(json_degs,content_type = 'application/json')
+
+
 
 def alpha_pca(request,mf_id):
     # Returns a json object to be rendered into a pca plot
@@ -107,7 +181,7 @@ def alpha_pca(request,mf_id):
     motifs = Mass2Motif.objects.filter(experiment = individuals[0])
 
     # context_dict{'mfe':mfe}
-    alp_vals = make_alpha_matrix(motifs,individuals,normalise = True,variances = False,add_motif = False)
+    alp_vals,_ = make_alpha_matrix(motifs,individuals,normalise = True,variances = False,add_motif = False)
     print alp_vals
     print "doing PCA"
     np_alp = np.array(alp_vals)
@@ -148,9 +222,10 @@ def multi_alphas(request,mf_id):
     motif_names = [m.name for m in motifs]
 
 
-    alp_vals = make_alpha_matrix(motifs,individuals,normalise=True,variances=True,add_motif=True)
+    alp_vals,degrees = make_alpha_matrix(motifs,individuals,normalise=False,variances=True,add_motif=True)
     
     context_dict['alp_vals'] = alp_vals
+    context_dict['degrees'] = degrees
     context_dict['url'] = '/basicviz/alpha_pca/{}/'.format(mfe.id)
     return render(request,'basicviz/multi_alphas.html',context_dict)
 

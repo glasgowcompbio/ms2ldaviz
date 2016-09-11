@@ -35,4 +35,7 @@ urlpatterns = patterns('',
 	    url(r'^compute_topic_scores/(?P<experiment_id>\w+)/$',views.compute_topic_scores,name='compute_topic_scores'),
 	    url(r'^multi_alphas/(?P<mf_id>\w+)/$',views.multi_alphas,name = 'multi_alphas'),
 	    url(r'^alpha_pca/(?P<mf_id>\w+)/$',views.alpha_pca,name = 'alpha_pca'),
+	    url(r'^view_multi_m2m/(?P<mf_id>\w+)/(?P<motif_name>\w+)/$',views.view_multi_m2m,name='view_multi_m2m'),
+	    url(r'^get_alphas/(?P<mf_id>\w+)/(?P<motif_name>\w+)/$',views.get_alphas,name='get_alphas'),
+	    url(r'^get_degrees/(?P<mf_id>\w+)/(?P<motif_name>\w+)/$',views.get_degrees,name='get_degrees'),
         )

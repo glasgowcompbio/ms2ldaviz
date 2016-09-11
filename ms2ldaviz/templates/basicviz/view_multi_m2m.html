@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block title %}Multifile Motif View{% endblock %}
+
+{% block body_block %}
+<h3>Motif {{motif_name}} in {{mfe.name}}</h3>
+<h4>Variance: {{alpha_variance}}</h4>
+<p>Return to <a href="/basicviz/multi_alphas/{{mfe.id}}/">alpha page</a></p>
+<h4>Features:</h4>
+
+<table class="table" id="featuretable">
+	<thead>
+		<th>Feature</th>
+		<th>Probability</th>
+	</thead>
+	<tbody>
+	{% for feature in m2m_features %}
+		<tr>
+			<td>{{feature.feature.name}}</td>
+			<td>{{feature.probability}}</td>
+		</tr>
+	{% endfor %}
+	</tbody>
+</table>
+
+<hr />
+<h4>Individual Mass2Motifs</h4>
+
+<table class="table" id = "m2mtable">
+	<thead>
+		<th>Individual MS2LDA</th><th>Motif</th><th>Alpha</th><th>Degree</th>
+	</thead>
+	<bdody>
+		{% for row in individual_m2m %}
+		<tr>
+			<td>{{row.0.name}}</td>
+			<td><a href="/basicviz/view_parents/{{row.1.id}}/">{{row.1.name}}</a></td>
+			<td>{{row.2.value}}</td>
+			<td>{{row.3}}</td>
+		</tr>
+		{% endfor %}
+	</bdody>
+</table>
+
+
+<div id="barplot">
+<h3>Alphas</h3>
+</div>
+<div id="degreeplot">
+<h3>Degrees</h3>
+</div>
+{% endblock %}
+
+
+
+{% block js_block %}
+
+<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+<script type='text/javascript' src="{% static 'js/d3.v3.min.js' %}"></script>
+<script type='text/javascript' src="{% static 'js/basicviz-barplot.js' %}"></script>
+
+
+<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$('#featuretable').DataTable({
+		dom: 'Bfrtip',
+		buttons: [
+        'csv',
+        ],
+        "order": [[ 1, "desc" ]],
+    });
+    $('#m2mtable').DataTable({
+    	dom: 'Bfrtrip',
+    	buttons: [
+    		'csv',
+    	],
+    	"order": [[2,"desc"]],
+    });
+});
+
+
+bar_plot('/basicviz/get_alphas/{{mfe.id}}/{{motif_name}}/','barplot')
+bar_plot('/basicviz/get_degrees/{{mfe.id}}/{{motif_name}}/','degreeplot')
+
+</script>
+{% endblock %}
+
+
