@@ -99,7 +99,7 @@ $(document).ready(function() {
         ],
         "processing": true,
         ajax: {
-        	"url": '/basicviz/get_alpha_matrix/1/',
+        	"url": '/basicviz/get_alpha_matrix/{{mfe.id}}/',
         	"dataSrc": function(json) {
         		for(var i=0,ien = json.length;i<ien;i++) {
         			json[i][0] = "<a href='/basicviz/view_multi_m2m/{{mfe.id}}/" + json[i][0] + "'>" + json[i][0] + "</a>";
@@ -115,7 +115,7 @@ $(document).ready(function() {
         ],
         "processing":true,
         ajax: {
-        	"url": '/basicviz/get_degree_matrix/1/',
+        	"url": '/basicviz/get_degree_matrix/{{mfe.id}}/',
         	"dataSrc": function(json) {
         		for(var i=0,ien = json.length;i<ien;i++) {
         			json[i][0] = "<a href='/basicviz/view_multi_m2m/{{mfe.id}}/" + json[i][0] + "'>" + json[i][0] + "</a>";
