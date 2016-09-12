@@ -129,7 +129,8 @@ $(document).ready(function() {
 		url:"/basicviz/alpha_pca/{{mfe.id}}",
 		success: function(data) {
 			pca_plot(data);
-		}
+		},
+		timeout: 30000,
 	})	
 });
 
