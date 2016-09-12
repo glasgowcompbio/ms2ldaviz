@@ -118,16 +118,46 @@ def view_multi_m2m(request,mf_id,motif_name):
     m2mfeatures = sorted(m2mfeatures,key = lambda x: x.probability,reverse=True)
     context_dict['m2m_features'] = m2mfeatures
 
+
+    individual_motifs = {}
+    for individual in individuals:
+        thism2m = Mass2Motif.objects.get(name = motif_name,experiment = individual)
+        individual_motifs[individual] = thism2m
+
+
+    context_dict['status'] = 'Edit metadata...'
+    if request.method == 'POST':
+        form = Mass2MotifMetadataForm(request.POST)
+        if form.is_valid():
+            new_annotation = form.cleaned_data['metadata']
+            for individual in individual_motifs:
+                motif = individual_motifs[individual]
+                md = jsonpickle.decode(motif.metadata)
+                if len(new_annotation) > 0:
+                    md['annotation'] = new_annotation
+                elif 'annotation' in md:
+                    del md['annotation']
+                motif.metadata = jsonpickle.encode(md)
+                motif.save()
+            context_dict['status'] = 'Metadata saved...'
+
+
+    firstm2m = Mass2Motif.objects.get(name = motif_name,experiment = individuals[0])
+    metadata_form = Mass2MotifMetadataForm(initial={'metadata':firstm2m.annotation})
+    context_dict['metadata_form'] = metadata_form
+
+    
+
     # Get the m2m in the individual models
     individual_m2m = []
     alps = []
     for individual in individuals:
-        m2m = Mass2Motif.objects.get(name = motif_name,experiment = individual)
-        alpha = Alpha.objects.get(mass2motif = m2m)
-        docs = DocumentMass2Motif.objects.filter(mass2motif = m2m)
-        individual_m2m.append([individual,m2m,alpha,len(docs)])
+        alpha = Alpha.objects.get(mass2motif = individual_motifs[individual])
+        docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual])
+        individual_m2m.append([individual,individual_motifs[individual],alpha,len(docs)])
         alps.append(alpha.value)
 
+    # Compute the mean and variance
     tot_alps = sum(alps)
     m_alp = sum(alps)/len(alps)
     m_alp2 = sum([a**2 for a in alps])/len(alps)
