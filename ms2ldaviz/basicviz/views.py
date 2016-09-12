@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse,HttpResponseRedirect
+from django.http import HttpResponse,HttpResponseRedirect,Http404
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
@@ -86,6 +86,59 @@ def register(request):
     context_dict = {'user_form': user_form,'registered':registered}
     return render(request,
         'basicviz/register.html', context_dict)
+
+
+def get_alpha_matrix(request,mf_id):
+    if request.is_ajax():
+        mfe = MultiFileExperiment.objects.get(id = mf_id)
+        links = MultiLink.objects.filter(multifileexperiment = mfe)
+        individuals = [l.experiment for l in links]
+        motifs = Mass2Motif.objects.filter(experiment = individuals[0])
+        alp_vals = []
+        for motif in motifs:
+            new_row = [motif.name,motif.annotation]
+            tot = 0.0
+            tot2 = 0.0
+            for individual in individuals:
+                motif_here = Mass2Motif.objects.get(name = motif.name,experiment = individual)
+                alp = Alpha.objects.get(mass2motif = motif_here)
+                new_row.append(alp.value)
+                tot += alp.value
+                tot2 += alp.value**2
+
+            mu = tot/len(individuals)
+            va = (tot2/len(individuals)) - mu**2
+            new_row.append(va)
+            alp_vals.append(new_row)
+
+
+        data = json.dumps(alp_vals)
+        return HttpResponse(data,content_type = 'application/json')
+    else:
+        raise Http404
+
+def get_degree_matrix(request,mf_id):
+    if request.is_ajax():
+        mfe = MultiFileExperiment.objects.get(id = mf_id)
+        links = MultiLink.objects.filter(multifileexperiment = mfe)
+        individuals = [l.experiment for l in links]
+        motifs = Mass2Motif.objects.filter(experiment = individuals[0])
+        deg_vals = []
+        for motif in motifs:
+            new_row = [motif.name,motif.annotation]
+            for individual in individuals:
+                motif_here = Mass2Motif.objects.get(name = motif.name,experiment = individual)
+                docs = DocumentMass2Motif.objects.filter(mass2motif = motif_here)
+                new_row.append(len(docs))
+
+            deg_vals.append(new_row)
+
+
+        data = json.dumps(deg_vals)
+        return HttpResponse(data,content_type = 'application/json')
+    else:
+        raise Http404
+
 
 def make_alpha_matrix(motifs,individuals,normalise = True,variances = False,add_motif = False):
     
@@ -273,8 +326,9 @@ def multi_alphas(request,mf_id):
     motif_names = [m.name for m in motifs]
 
 
-    alp_vals,degrees = make_alpha_matrix(motifs,individuals,normalise=False,variances=True,add_motif=True)
-    
+    # alp_vals,degrees = make_alpha_matrix(motifs,individuals,normalise=False,variances=True,add_motif=True)
+    alp_vals = []
+    degrees = []
     context_dict['alp_vals'] = alp_vals
     context_dict['degrees'] = degrees
     context_dict['url'] = '/basicviz/alpha_pca/{}/'.format(mfe.id)

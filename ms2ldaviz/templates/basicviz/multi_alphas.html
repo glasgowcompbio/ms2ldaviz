@@ -25,7 +25,7 @@
 			<th>Variance</th>
 		</tr>
 	</thead>
-	<tbody>
+	<!-- <tbody>
 	{% for row in alp_vals %}
 		<tr>
 			<td><a href="/basicviz/view_multi_m2m/{{mfe.id}}/{{row.0.name}}">{{row.0.name}}</a></td>
@@ -35,7 +35,7 @@
 			{% endfor %}
 		</tr>
 	{% endfor %}
-	</tbody>
+	</tbody> -->
 </table>
 <hr />
 <h4>Degree table</h4>
@@ -80,13 +80,14 @@
 <script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
 <script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
 
-<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
-<script type='text/javascript' src="{% static "js/basicviz-pcaplot.js" %}"></script>
-
+<script type='text/javascript' src="{% static 'js/d3.v3.min.js' %}"></script>
+<script type='text/javascript' src="{% static 'js/basicviz-pcaplot-ajax.js' %}"></script>
 
 <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" type="text/css"> -->
 <link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
 <link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
 
 
 <script type="text/javascript">
@@ -95,20 +96,44 @@ $(document).ready(function() {
 		dom: 'Bfrtip',
 		buttons: [
         'csv',
-        ]
-    }
-    );
+        ],
+        "processing": true,
+        ajax: {
+        	"url": '/basicviz/get_alpha_matrix/1/',
+        	"dataSrc": function(json) {
+        		for(var i=0,ien = json.length;i<ien;i++) {
+        			json[i][0] = "<a href='/basicviz/view_multi_m2m/{{mfe.id}}/" + json[i][0] + "'>" + json[i][0] + "</a>";
+        		}
+        		return json;
+        	},
+        },
+    });
 	$('#degree').DataTable({
 		dom: 'Bfrtip',
 		buttons: [
         'csv',
-        ]
-    }
-    );
-
+        ],
+        "processing":true,
+        ajax: {
+        	"url": '/basicviz/get_degree_matrix/1/',
+        	"dataSrc": function(json) {
+        		for(var i=0,ien = json.length;i<ien;i++) {
+        			json[i][0] = "<a href='/basicviz/view_multi_m2m/{{mfe.id}}/" + json[i][0] + "'>" + json[i][0] + "</a>";
+        		}
+        		return json;
+        	}
+        }
+    });
+	$.ajax({
+		type:'GET',
+		url:"/basicviz/alpha_pca/{{mfe.id}}",
+		success: function(data) {
+			pca_plot(data);
+		}
+	})	
 });
 
-pca_plot('{{url}}')
+// pca_plot('{{url}}')
 </script>
 {% endblock %}
 
