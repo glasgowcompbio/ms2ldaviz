@@ -103,8 +103,9 @@ def make_alpha_matrix(motifs,individuals,normalise = True,variances = False,add_
             new_row.append(alp.value)
             tot += alp.value
             tot2 += alp.value**2
-            docs = DocumentMass2Motif.objects.filter(mass2motif = thismotif)
-            deg_row.append(len(docs))
+            # docs = DocumentMass2Motif.objects.filter(mass2motif = thismotif)
+            # deg_row.append(len(docs))
+            deg_row.append(0)
         mu = tot / len(individuals)
         ss = (tot2)/len(individuals) - mu**2
         if normalise:
