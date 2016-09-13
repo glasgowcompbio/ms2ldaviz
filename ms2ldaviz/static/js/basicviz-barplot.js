@@ -26,11 +26,14 @@ function bar_plot(url,div_id) {
 				    .attr("height", plot_height);  
 
 
+
 		var max_alpha = d3.max(dataset,function(d) {return d[1]}) * 1.2
 		var n_bars = dataset.length
-		console.log(n_bars)
+
+		// console.log(n_bars)
+
 		var xScale = d3.scale.linear()
-	    xScale.domain([0, n_bars])
+	    xScale.domain([0, n_bars+2])
 	    xScale.range([ hor_margin,plot_width-hor_margin])
 	    var yScale = d3.scale.linear()
 	    yScale.domain([0,max_alpha])
@@ -45,6 +48,7 @@ function bar_plot(url,div_id) {
 	    height_factor = (plot_height - 2*ver_margin)/max_alpha
 
 
+		
 	    // var xAxis = d3.svg.axis()
 	    //     .scale(xScale)
 	    //     .orient("bottom");
@@ -67,9 +71,10 @@ function bar_plot(url,div_id) {
 	        .attr("transform","translate(" + xScale(0) + ",0)")
 	        .call(yAxis);
 
-
-
-	    rectangles.attr("x",function(d,i) {return xScale(i-0.5)})
+	    console.log(dataset[0])
+	    console.log(dataset.length)
+	    var a = 0
+	    rectangles.attr("x",function(d,i) {console.log(i);return xScale(i-0.5)})
 	    			.attr("y",function(d) {return yScale(d[1])})
 	    			.attr("width",0.9*bar_width)
 	    			.attr("height",function(d) { return yScale(0) - yScale(d[1]);})

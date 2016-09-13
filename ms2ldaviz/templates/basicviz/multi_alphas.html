@@ -126,15 +126,14 @@ $(document).ready(function() {
     });
 	$.ajax({
 		type:'GET',
-		url:"/basicviz/alpha_pca/{{mfe.id}}",
+		url:"/basicviz/alpha_pca/{{mfe.id}}/",
 		success: function(data) {
 			pca_plot(data);
 		},
-		timeout: 30000,
-	})	
+		timeout: 300000,
+	});	
 });
 
-// pca_plot('{{url}}')
 </script>
 {% endblock %}
 

@@ -278,7 +278,6 @@ def view_multi_m2m(request,mf_id,motif_name):
     var = m_alp2 - m_alp**2
     context_dict['alpha_variance'] = var
     context_dict['alphas'] = zip([i.name for i in individuals],alps)
-    print individual_m2m
     context_dict['individual_m2m'] = individual_m2m
 
     return render(request,'basicviz/view_multi_m2m.html',context_dict)
@@ -286,14 +285,17 @@ def view_multi_m2m(request,mf_id,motif_name):
 def get_alphas(request,mf_id,motif_name):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
     links = MultiLink.objects.filter(multifileexperiment = mfe)
-    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
+    individuals = [l.experiment for l in links]
     alps = []
     for individual in individuals:
         m2m = Mass2Motif.objects.get(name = motif_name,experiment = individual)
         alpha = Alpha.objects.get(mass2motif = m2m)
         alps.append(alpha.value)
     
-    alps = zip([i.name for i in individuals],alps)
+    alps = [[individuals[i].name,a] for i,a in enumerate(alps)]
+    # alps = zip([i.name for i in individuals],alps)
+
+    alps = [0] + alps
 
     json_alps = json.dumps(alps)
 
@@ -302,7 +304,7 @@ def get_alphas(request,mf_id,motif_name):
 def get_degrees(request,mf_id,motif_name):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
     links = MultiLink.objects.filter(multifileexperiment = mfe)
-    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
+    individuals = [l.experiment for l in links]
     degs = []
     for individual in individuals:
         m2m = Mass2Motif.objects.get(name = motif_name,experiment = individual)
@@ -310,6 +312,8 @@ def get_degrees(request,mf_id,motif_name):
         degs.append(len(docs))
     
     degs = zip([i.name for i in individuals],degs)
+
+    degs = [0] + degs
 
     json_degs = json.dumps(degs)
 
@@ -319,34 +323,13 @@ def get_degrees(request,mf_id,motif_name):
 
 def alpha_pca(request,mf_id):
     # Returns a json object to be rendered into a pca plot
+    # PCA is pre-computed
     mfe = MultiFileExperiment.objects.get(id = mf_id)
-    links = MultiLink.objects.filter(multifileexperiment = mfe)
-    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
-    motifs = Mass2Motif.objects.filter(experiment = individuals[0])
-    # context_dict{'mfe':mfe}
-    alp_vals = make_alpha_matrix(individuals,normalise = True)
-    np_alp = np.array(alp_vals)
-    pca = PCA(n_components = 2,whiten = True,copy = True)
-    pca.fit(np_alp.T)
-    X = pca.transform(np_alp.T)
-    print pca.components_.shape
-    # Make the object to pass to the view
-    points = []
-    lines = []
-    for i,individual in enumerate(individuals):
-        new_row = [X[i,0],X[i,1],individual.name,'#FF0000']
-        points.append(new_row)
-
-    ma = np.abs(pca.components_).max()
-    pma = np.abs(X).max()
     
-    scale_factor = 0.5*pma/ma
-    print scale_factor
-
-    for i,motif in enumerate(motifs):
-        new_row = [pca.components_[0,i]*scale_factor,pca.components_[1,i]*scale_factor,motif.name,'#999999']
-        lines.append(new_row)
-    pca_data = (points,lines)
+    if mfe.pca:
+        pca_data = jsonpickle.decode(mfe.pca)
+    else:
+        pca_data = []
     return HttpResponse(json.dumps(pca_data),content_type = 'application/json')
 
 
@@ -359,7 +342,6 @@ def multi_alphas(request,mf_id):
     context_dict['individuals'] = individuals
 
     motifs = Mass2Motif.objects.filter(experiment = individuals[0])
-    print "Found {} motifs".format(len(motifs))
     motif_names = [m.name for m in motifs]
 
 
@@ -654,7 +636,6 @@ def mass2motif_feature(request,fm2m_id):
     for instance in feature_instances:
         total_intensity += instance.intensity
         fi_m2m = FeatureMass2MotifInstance.objects.filter(featureinstance = instance,mass2motif = mass2motif_feature.mass2motif)
-        print len(fi_m2m)
         if len(fi_m2m) > 0:
             topic_intensity += fi_m2m[0].probability * instance.intensity
             if fi_m2m[0].probability >= 0.75:
@@ -937,7 +918,6 @@ def start_viz(request,experiment_id):
     if 'viz_form' in context_dict:
         return render(request,'basicviz/viz_form.html',context_dict)
     else:
-        print context_dict
         initial_motif = Mass2Motif.objects.filter(experiment = experiment)[0]
         context_dict['initial_motif'] = initial_motif
         return render(request,'basicviz/graph.html',context_dict)
