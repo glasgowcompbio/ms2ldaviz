@@ -135,7 +135,6 @@ def get_alpha_matrix(request,mf_id):
             mfe.alpha_matrix = jsonpickle.encode(alp_vals)
             mfe.save()
         else:
-            print mfe.alpha_matrix
             alp_vals = jsonpickle.decode(mfe.alpha_matrix)
             data = json.dumps(alp_vals)
 
