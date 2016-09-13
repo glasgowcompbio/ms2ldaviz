@@ -1045,12 +1045,12 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
 
 
     if just_annotated_docs:
-        to_remove = []
+        new_documents = []
         for document in documents:
-            if not document.annotation:
-                to_remove.append(documents.index(document))
-        for index in to_remove:
-            del documents[index]
+            if document.annotation:
+                new_documents.append(document)
+        
+        documents = new_documents
 
     doc_nodes = []
 
@@ -1062,6 +1062,8 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
             metadata = jsonpickle.decode(docm2m.document.metadata)
             if 'compound' in metadata:
               name = metadata['compound']
+            elif 'annotation' in metadata:
+              name = metadata['annotation']  
             else:
               name = docm2m.document.name
             if not colour_by_logfc:
