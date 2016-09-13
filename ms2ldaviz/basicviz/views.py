@@ -90,46 +90,56 @@ def register(request):
 # import time
 def get_alpha_matrix(request,mf_id):
     if request.is_ajax():
-        
         mfe = MultiFileExperiment.objects.get(id = mf_id)
-        links = MultiLink.objects.filter(multifileexperiment = mfe)
-        individuals = [l.experiment for l in links]
-        motifs = Mass2Motif.objects.filter(experiment = individuals[0])
-        
 
-        # OLD CODE
-        # t0 = time.time()
-        # alp_vals = []
-        # for motif in motifs:
-        #     new_row = [motif.name,motif.annotation]
-        #     tot = 0.0
-        #     tot2 = 0.0
-        #     for individual in individuals:
-        #         motif_here = Mass2Motif.objects.get(name = motif.name,experiment = individual)
-        #         # alp = Alpha.objects.get(mass2motif = motif_here)
-        #         alp = motif_here.alpha_set.all()[0]
-        #         new_row.append(alp.value)
-        #         tot += alp.value
-        #         tot2 += alp.value**2
+        if not mfe.alpha_matrix:
 
-        #     mu = tot/len(individuals)
-        #     va = (tot2/len(individuals)) - mu**2
-        #     new_row.append(va)
-        #     alp_vals.append(new_row)
+            links = MultiLink.objects.filter(multifileexperiment = mfe)
+            individuals = [l.experiment for l in links]
+            motifs = Mass2Motif.objects.filter(experiment = individuals[0])
+            
 
-        # t1 = time.time()
-        # print "TIME: {}".format(t1-t0)
+            # OLD CODE
+            # t0 = time.time()
+            # alp_vals = []
+            # for motif in motifs:
+            #     new_row = [motif.name,motif.annotation]
+            #     tot = 0.0
+            #     tot2 = 0.0
+            #     for individual in individuals:
+            #         motif_here = Mass2Motif.objects.get(name = motif.name,experiment = individual)
+            #         # alp = Alpha.objects.get(mass2motif = motif_here)
+            #         alp = motif_here.alpha_set.all()[0]
+            #         new_row.append(alp.value)
+            #         tot += alp.value
+            #         tot2 += alp.value**2
+
+            #     mu = tot/len(individuals)
+            #     va = (tot2/len(individuals)) - mu**2
+            #     new_row.append(va)
+            #     alp_vals.append(new_row)
+
+            # t1 = time.time()
+            # print "TIME: {}".format(t1-t0)
 
 
-        alp_vals = []
-        for individual in individuals:
-            motifs = individual.mass2motif_set.all().order_by('name')
-            alp_vals.append([m.alpha_set.all()[0].value for m in motifs])
+            alp_vals = []
+            for individual in individuals:
+                motifs = individual.mass2motif_set.all().order_by('name')
+                alp_vals.append([m.alpha_set.all()[0].value for m in motifs])
 
-        alp_vals = map(list,zip(*alp_vals))
-        alp_vals = [[motifs[i].name,motifs[i].annotation] + av + [np.array(av).var()] for i,av in enumerate(alp_vals)]
+            alp_vals = map(list,zip(*alp_vals))
+            alp_vals = [[motifs[i].name,motifs[i].annotation] + av + [float(np.array(av).var())] for i,av in enumerate(alp_vals)]
 
-        data = json.dumps(alp_vals)
+            data = json.dumps(alp_vals)
+            mfe.alpha_matrix = jsonpickle.encode(alp_vals)
+            mfe.save()
+        else:
+            print mfe.alpha_matrix
+            alp_vals = jsonpickle.decode(mfe.alpha_matrix)
+            data = json.dumps(alp_vals)
+
+
         return HttpResponse(data,content_type = 'application/json')
     else:
         raise Http404
@@ -137,32 +147,38 @@ def get_alpha_matrix(request,mf_id):
 def get_degree_matrix(request,mf_id):
     if request.is_ajax():
         mfe = MultiFileExperiment.objects.get(id = mf_id)
-        links = MultiLink.objects.filter(multifileexperiment = mfe)
-        individuals = [l.experiment for l in links]
-        motifs = Mass2Motif.objects.filter(experiment = individuals[0])
-        deg_vals = []
-    
-        # OLD CODE        
-        # for motif in motifs:
-        #     new_row = [motif.name,motif.annotation]
-        #     for individual in individuals:
-        #         motif_here = Mass2Motif.objects.get(name = motif.name,experiment = individual)
-        #         docs = DocumentMass2Motif.objects.filter(mass2motif = motif_here)
-        #         new_row.append(len(docs))
-
-        #     deg_vals.append(new_row)
+        if not mfe.degree_matrix:
+            links = MultiLink.objects.filter(multifileexperiment = mfe)
+            individuals = [l.experiment for l in links]
+            motifs = Mass2Motif.objects.filter(experiment = individuals[0])
+            deg_vals = []
         
-        for individual in individuals:
-            new_row = []
-            motif_set = individual.mass2motif_set.all().order_by('name')
-            for motif in motif_set:
-                new_row.append(len(motif.documentmass2motif_set.all()))
-            deg_vals.append(new_row)
+            # OLD CODE        
+            # for motif in motifs:
+            #     new_row = [motif.name,motif.annotation]
+            #     for individual in individuals:
+            #         motif_here = Mass2Motif.objects.get(name = motif.name,experiment = individual)
+            #         docs = DocumentMass2Motif.objects.filter(mass2motif = motif_here)
+            #         new_row.append(len(docs))
 
-        deg_vals = map(list,zip(*deg_vals))
-        deg_vals = [[motif_set[i].name,motif_set[i].annotation]+dv for i,dv in enumerate(deg_vals)]
+            #     deg_vals.append(new_row)
+            
+            for individual in individuals:
+                new_row = []
+                motif_set = individual.mass2motif_set.all().order_by('name')
+                for motif in motif_set:
+                    new_row.append(len(motif.documentmass2motif_set.all()))
+                deg_vals.append(new_row)
 
-        data = json.dumps(deg_vals)
+            deg_vals = map(list,zip(*deg_vals))
+            deg_vals = [[motif_set[i].name,motif_set[i].annotation]+dv for i,dv in enumerate(deg_vals)]
+
+            data = json.dumps(deg_vals)
+            mfe.degree_matrix = jsonpickle.encode(deg_vals)
+            mfe.save()
+        else:
+            deg_vals = jsonpickle.decode(mfe.degree_matrix)
+            data = json.dumps(deg_vals)
         return HttpResponse(data,content_type = 'application/json')
     else:
         raise Http404

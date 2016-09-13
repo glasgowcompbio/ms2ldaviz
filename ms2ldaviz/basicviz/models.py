@@ -8,6 +8,8 @@ class MultiFileExperiment(models.Model):
 	description = models.CharField(max_length=1024,null=True)
 	status = models.CharField(max_length=128,null=True)
 	pca = models.TextField(null = True)
+	alpha_matrix = models.TextField(null=True)
+	degree_matrix = models.TextField(null=True)
 	def __unicode__(self):
 		return self.name
 
