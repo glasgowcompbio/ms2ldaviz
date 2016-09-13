@@ -87,30 +87,47 @@ def register(request):
     return render(request,
         'basicviz/register.html', context_dict)
 
-
+# import time
 def get_alpha_matrix(request,mf_id):
     if request.is_ajax():
+        
         mfe = MultiFileExperiment.objects.get(id = mf_id)
         links = MultiLink.objects.filter(multifileexperiment = mfe)
         individuals = [l.experiment for l in links]
         motifs = Mass2Motif.objects.filter(experiment = individuals[0])
+        
+
+        # OLD CODE
+        # t0 = time.time()
+        # alp_vals = []
+        # for motif in motifs:
+        #     new_row = [motif.name,motif.annotation]
+        #     tot = 0.0
+        #     tot2 = 0.0
+        #     for individual in individuals:
+        #         motif_here = Mass2Motif.objects.get(name = motif.name,experiment = individual)
+        #         # alp = Alpha.objects.get(mass2motif = motif_here)
+        #         alp = motif_here.alpha_set.all()[0]
+        #         new_row.append(alp.value)
+        #         tot += alp.value
+        #         tot2 += alp.value**2
+
+        #     mu = tot/len(individuals)
+        #     va = (tot2/len(individuals)) - mu**2
+        #     new_row.append(va)
+        #     alp_vals.append(new_row)
+
+        # t1 = time.time()
+        # print "TIME: {}".format(t1-t0)
+
+
         alp_vals = []
-        for motif in motifs:
-            new_row = [motif.name,motif.annotation]
-            tot = 0.0
-            tot2 = 0.0
-            for individual in individuals:
-                motif_here = Mass2Motif.objects.get(name = motif.name,experiment = individual)
-                alp = Alpha.objects.get(mass2motif = motif_here)
-                new_row.append(alp.value)
-                tot += alp.value
-                tot2 += alp.value**2
+        for individual in individuals:
+            motifs = individual.mass2motif_set.all().order_by('name')
+            alp_vals.append([m.alpha_set.all()[0].value for m in motifs])
 
-            mu = tot/len(individuals)
-            va = (tot2/len(individuals)) - mu**2
-            new_row.append(va)
-            alp_vals.append(new_row)
-
+        alp_vals = map(list,zip(*alp_vals))
+        alp_vals = [[motifs[i].name,motifs[i].annotation] + av + [np.array(av).var()] for i,av in enumerate(alp_vals)]
 
         data = json.dumps(alp_vals)
         return HttpResponse(data,content_type = 'application/json')
@@ -124,15 +141,26 @@ def get_degree_matrix(request,mf_id):
         individuals = [l.experiment for l in links]
         motifs = Mass2Motif.objects.filter(experiment = individuals[0])
         deg_vals = []
-        for motif in motifs:
-            new_row = [motif.name,motif.annotation]
-            for individual in individuals:
-                motif_here = Mass2Motif.objects.get(name = motif.name,experiment = individual)
-                docs = DocumentMass2Motif.objects.filter(mass2motif = motif_here)
-                new_row.append(len(docs))
+    
+        # OLD CODE        
+        # for motif in motifs:
+        #     new_row = [motif.name,motif.annotation]
+        #     for individual in individuals:
+        #         motif_here = Mass2Motif.objects.get(name = motif.name,experiment = individual)
+        #         docs = DocumentMass2Motif.objects.filter(mass2motif = motif_here)
+        #         new_row.append(len(docs))
 
+        #     deg_vals.append(new_row)
+        
+        for individual in individuals:
+            new_row = []
+            motif_set = individual.mass2motif_set.all().order_by('name')
+            for motif in motif_set:
+                new_row.append(len(motif.documentmass2motif_set.all()))
             deg_vals.append(new_row)
 
+        deg_vals = map(list,zip(*deg_vals))
+        deg_vals = [[motif_set[i].name,motif_set[i].annotation]+dv for i,dv in enumerate(deg_vals)]
 
         data = json.dumps(deg_vals)
         return HttpResponse(data,content_type = 'application/json')
@@ -140,44 +168,56 @@ def get_degree_matrix(request,mf_id):
         raise Http404
 
 
-def make_alpha_matrix(motifs,individuals,normalise = True,variances = False,add_motif = False):
+def make_alpha_matrix(individuals,normalise = True):
     
     print "Creating alpha matrix"
     alp_vals = []
-    degrees = []
-    for motif in motifs:
-        new_row = []
-        deg_row = []
-        tot = 0.0
-        tot2 = 0.0
-        for individual in individuals:
-            thismotif = Mass2Motif.objects.get(name = motif.name,experiment = individual)
-            alp = Alpha.objects.get(mass2motif = thismotif)
-            new_row.append(alp.value)
-            tot += alp.value
-            tot2 += alp.value**2
-            # docs = DocumentMass2Motif.objects.filter(mass2motif = thismotif)
-            # deg_row.append(len(docs))
-            deg_row.append(0)
-        mu = tot / len(individuals)
-        ss = (tot2)/len(individuals) - mu**2
-        if normalise:
-            new_row = [n/tot for n in new_row]
-            tot = 1.0
-            tot2 = sum([n**2 for n in new_row])
-            mu = tot / len(individuals)
-            ss = tot2/len(individuals) - mu**2
-        if variances:
-            new_row.append(ss)
-        if add_motif:
-            alp_vals.append((motif,new_row))
-            degrees.append((motif,deg_row))
-        else:
-            alp_vals.append(new_row)
-            degrees.append(deg_row)
+    for individual in individuals:
+        motifs = individual.mass2motif_set.all().order_by('name')
+        alp_vals.append([m.alpha_set.all()[0].value for m in motifs])
+
+    alp_vals = map(list,zip(*alp_vals))
+    new_alp_vals = []
+    if normalise:
+        for av in alp_vals:
+            s = sum(av)
+            nav = [a/s for a in av]
+            new_alp_vals.append(nav)
+        alp_vals = new_alp_vals
+
+    # for motif in motifs:
+    #     new_row = []
+    #     deg_row = []
+    #     tot = 0.0
+    #     tot2 = 0.0
+    #     for individual in individuals:
+    #         thismotif = Mass2Motif.objects.get(name = motif.name,experiment = individual)
+    #         alp = Alpha.objects.get(mass2motif = thismotif)
+    #         new_row.append(alp.value)
+    #         tot += alp.value
+    #         tot2 += alp.value**2
+    #         # docs = DocumentMass2Motif.objects.filter(mass2motif = thismotif)
+    #         # deg_row.append(len(docs))
+    #         deg_row.append(0)
+    #     mu = tot / len(individuals)
+    #     ss = (tot2)/len(individuals) - mu**2
+    #     if normalise:
+    #         new_row = [n/tot for n in new_row]
+    #         tot = 1.0
+    #         tot2 = sum([n**2 for n in new_row])
+    #         mu = tot / len(individuals)
+    #         ss = tot2/len(individuals) - mu**2
+    #     if variances:
+    #         new_row.append(ss)
+    #     if add_motif:
+    #         alp_vals.append((motif,new_row))
+    #         degrees.append((motif,deg_row))
+    #     else:
+    #         alp_vals.append(new_row)
+    #         degrees.append(deg_row)
 
 
-    return alp_vals,degrees
+    return alp_vals
 
 def view_multi_m2m(request,mf_id,motif_name):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
@@ -283,11 +323,8 @@ def alpha_pca(request,mf_id):
     links = MultiLink.objects.filter(multifileexperiment = mfe)
     individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
     motifs = Mass2Motif.objects.filter(experiment = individuals[0])
-
     # context_dict{'mfe':mfe}
-    alp_vals,_ = make_alpha_matrix(motifs,individuals,normalise = True,variances = False,add_motif = False)
-    print alp_vals
-    print "doing PCA"
+    alp_vals = make_alpha_matrix(individuals,normalise = True)
     np_alp = np.array(alp_vals)
     pca = PCA(n_components = 2,whiten = True,copy = True)
     pca.fit(np_alp.T)
