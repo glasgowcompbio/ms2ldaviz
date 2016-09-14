@@ -265,61 +265,6 @@ function plot_graph(vo_id,random_seed) {
         }
 
         // *****************************************************************************
-        // Key handler
-        // *****************************************************************************
-
-        var keyh = true;
-        d3.select(window).on("keydown", keydown);
-
-        function keydown() {
-            if (d3.event.keyCode == 32) {
-                force.stop();
-            } else if (d3.event.keyCode >= 48 && d3.event.keyCode <= 90 &&
-                    !d3.event.ctrlKey && !d3.event.altKey && !d3.event.metaKey) {
-                pressed = String.fromCharCode(d3.event.keyCode);
-                switch (pressed) {
-                    case "H":
-
-                        keyh = !keyh;
-
-                        console.log('keypressed = ' + pressed + ' keyh=' + keyh);
-                        nodes_to_hide = node.filter(function(d) {
-                            if (isTopicNode(d)) {
-                                return !d.special; // don't hide special topic nodes
-                            } else {
-                                // don't hide document connected to a special topic node
-                                var count = 0;
-                                graph.nodes.forEach(function(o) {
-                                    if (isConnected(d, o) && o.special && isTopicNode(o)) {
-                                        count += 1;
-                                    }
-                                });
-                                return count > 0 ? false : true;
-                            }
-                        });
-                        links_to_hide = link.filter(function(d) {
-                            if ( (d.source.special && isTopicNode(d.source)) ||
-                                (d.target.special && isTopicNode(d.target)) ){
-                                // keep if either side is a special topic node
-                                return false;
-                            }
-                            return true;
-                        });
-                        if (keyh) {
-                            node.style('display', 'inline');
-                            link.style('display', 'inline');
-                        } else {
-                            nodes_to_hide.style('display', 'none');
-                            links_to_hide.style('display', 'none');
-                        }
-
-                        break;
-
-                }
-            }
-        }
-
-        // *****************************************************************************
         // Other functions
         // *****************************************************************************
 
