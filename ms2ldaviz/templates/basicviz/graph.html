@@ -10,12 +10,19 @@
         <input id="searchText">
         <button id="searchBtn" type="button">Search</button>&nbsp;
         <button id="resetBtn" type="button">Reset</button>
-        <div id="status">
+<!--         <div id="status">
             Loading, please wait ...
         </div>
+ -->    </div>
+
+    <div id="network"><h4>Network</h4>
+    <p>The network will appear below. Squares indicate molecules, circles Mass2Motifs (topics). Edges are coloured according to probability (the darker, the higher the probability). Hover over a node to see information. Double-click on a Mass2Motif to see it's molecules.</p><div id="status"><p>Loading...</p></div></div>
+    <div id="spectra">
+    <h4>Spectra</h4>
+    <p>When you double-click on a Mass2Motif, the spectra of the moleceles associated with it will appear here. Features (fragments and losses) explained by this Mass2Motif will be coloured red. Click 'next' and 'previous' to cycle through the molecules.</p></div>
+    <div id="graphs"><h4>Features</h4>
+    <p>When you double-click on a Mass2Motif, two bar plots will appear below this meesage. The first shows the number of times each feature in this Mass2Motif appears in the documents associated with this Mass2Motif. The second shows the proportion of the total intensity of these features explained by this Mass2Motif. Dark blue bars show the total intensity (across the whole dataset), light blue show the proportion explained by the selected Mass2Motif.</p>
     </div>
-    <div id="network"></div>
-    <div id="spectra"></div>
     <div id="graphs"></div>
 {% endblock %}
 
