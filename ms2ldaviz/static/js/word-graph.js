@@ -74,7 +74,7 @@ function plot(mass2motif_id, total_dataset){
 						.enter()
 						.append('rect')
 						.attr('height', barHeight)
-						.attr({'x':xscale(0),'y':function(d,i){ return yscale(i); }}) //bar pos
+						.attr({'x':xscale(0),'y':function(d,i){ return yscale(i-0.5); }}) //bar pos
 						.style('fill', function(d, i) {	return total_dataset[1][i][2]; })
 						.attr('width', function(d, i) {return xscale(total_dataset[1][i][1])-margin.left})
 						.attr('stroke', '#ffffff')

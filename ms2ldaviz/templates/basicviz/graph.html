@@ -14,8 +14,8 @@
             Loading, please wait ...
         </div>
     </div>
-    <div id="spectra"></div>
     <div id="network"></div>
+    <div id="spectra"></div>
     <div id="graphs"></div>
 {% endblock %}
 
@@ -35,16 +35,16 @@
         var viz_options = '{{viz_options.id}}'
         plot_graph(viz_options,'{{viz_options.random_seed}}');
 
-        var current_pos = 0;
-        var motif_name = '{{initial_motif.name}}'
-        var motif_id = {{initial_motif.id}}
-        load_parents(motif_id, motif_name,viz_options); // Hopefully there is such a motif!
+        // var current_pos = 0;
+        // var motif_name = '{{initial_motif.name}}'
+        // var motif_id = {{initial_motif.id}}
+        // load_parents(motif_id, motif_name,viz_options); // Hopefully there is such a motif!
 
-        var url = '/basicviz/get_word_graph/' + motif_id + '/' + viz_options + '/';
-        plot_word_graph(url,motif_id, motif_name);
+        // var url = '/basicviz/get_word_graph/' + motif_id + '/' + viz_options + '/';
+        // plot_word_graph(url,motif_id, motif_name);
 
-        var url = '/basicviz/get_intensity/' + motif_id + '/' + viz_options + '/';
-        plot_word_graph(url,motif_id, motif_name);
+        // var url = '/basicviz/get_intensity/' + motif_id + '/' + viz_options + '/';
+        // plot_word_graph(url,motif_id, motif_name);
 
     </script>
 
