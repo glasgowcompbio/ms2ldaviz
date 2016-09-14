@@ -3,11 +3,11 @@
 // - https://github.com/mbostock/d3/wiki/Force-Layout
 // - http://www.coppelia.io/2014/07/an-a-to-z-of-extra-features-for-the-d3-force-layout/
 
-function plot_graph(vo_id) {
+function plot_graph(vo_id,random_seed) {
 
-    Math.seedrandom('hello');
+    Math.seedrandom(random_seed);
 
-    var width = 1000;
+    var width = 700;
     var height = 700;
     var topicName = 'motif';
 

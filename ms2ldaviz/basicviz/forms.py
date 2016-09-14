@@ -25,6 +25,7 @@ class VizForm(forms.Form):
 	discrete_colour = forms.BooleanField(required = False,initial = False,label = 'discrete colouring')
 	lower_colour_perc = forms.IntegerField(required = True,initial = 25,label = 'lower colour percentile')
 	upper_colour_perc = forms.IntegerField(required = True,initial = 75,label = 'upper colour percentile')
+	random_seed = forms.CharField(required = True,initial = 'hello',label = 'seed for network visualisation')
 
 class UserForm(forms.ModelForm):
 	password = forms.CharField(widget = forms.PasswordInput())

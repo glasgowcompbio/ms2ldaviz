@@ -172,3 +172,4 @@ class VizOptions(models.Model):
 	upper_colour_perc = models.IntegerField(null = False)
 	lower_colour_perc = models.IntegerField(null = False)
 	colour_topic_by_score = models.BooleanField(null = False)
+	random_seed = models.CharField(null = False,max_length = 128)

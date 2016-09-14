@@ -913,6 +913,7 @@ def start_viz(request,experiment_id):
             lower_colour_perc = viz_form.cleaned_data['lower_colour_perc']
             upper_colour_perc = viz_form.cleaned_data['upper_colour_perc']
             colour_topic_by_score = viz_form.cleaned_data['colour_topic_by_score']
+            random_seed = viz_form.cleaned_data['random_seed']
             vo = VizOptions.objects.get_or_create(experiment = experiment, 
                                                   min_degree = min_degree, 
                                                   edge_thresh = edge_thresh,
@@ -921,7 +922,8 @@ def start_viz(request,experiment_id):
                                                   discrete_colour = discrete_colour,
                                                   lower_colour_perc = lower_colour_perc,
                                                   upper_colour_perc = upper_colour_perc,
-                                                  colour_topic_by_score = colour_topic_by_score)[0]
+                                                  colour_topic_by_score = colour_topic_by_score,
+                                                  random_seed = random_seed)[0]
             context_dict['viz_options'] = vo
 
         else:
