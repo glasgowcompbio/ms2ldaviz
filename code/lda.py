@@ -749,7 +749,7 @@ class MultiFileVariationalLDA(object):
 					self.individual_lda[lda_name].alpha = self.individual_lda[lda_name].alpha_nr()
 			temp_beta += self.eta
 			temp_beta /= temp_beta.sum(axis=1)[:,None]
-			total_difference = (np.abs(temp_beta - self.individual_lda[0].beta_matrix)).sum()
+			total_difference = (np.abs(temp_beta - self.individual_lda[self.individual_lda.keys()[0]].beta_matrix)).sum()
 			for lda_name in self.individual_lda:
 				self.individual_lda[lda_name].beta_matrix = temp_beta
 			print total_difference
