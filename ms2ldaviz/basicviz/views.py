@@ -65,6 +65,15 @@ def user_logout(request):
     # Take the user back to the homepage.
     return HttpResponseRedirect('/')
 
+
+def topic_table(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    motifs = Mass2Motif.objects.filter(experiment = experiment)
+    context_dict = {}
+    context_dict['experiment'] = experiment
+    context_dict['motifs'] = motifs
+    return render(request,'basicviz/topic_table.html',context_dict)
+
 def register(request):
     registered = False
     if request.method == 'POST':
