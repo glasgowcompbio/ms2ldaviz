@@ -419,6 +419,60 @@ def user_login(request):
         return render(request, 'basicviz/login.html', {})
 
 
+def alpha_correlation(request,mf_id):
+    mfe = MultiFileExperiment.objects.get(id = mf_id)
+    context_dict = {}
+    context_dict['mfe'] = mfe
+
+    return render(request,'basicviz/alpha_correlation.html',context_dict)
+
+
+def get_alpha_correlation_graph(request,mf_id):
+    from itertools import combinations
+    mfe = MultiFileExperiment.objects.get(id = mf_id)
+    links = mfe.multilink_set.all()
+    individuals = [l.experiment for l in links]
+    an_experiment = links[0].experiment
+    motifs = Mass2Motif.objects.filter(experiment = an_experiment).order_by('name')
+    alp_vals = make_alpha_matrix(individuals,normalise = True)
+
+    threshold = 0.98
+    max_score = 0.0
+    n_edges = 0
+
+    # Add motifs as nodes
+    G = nx.Graph()
+    for motif in motifs:
+        md = jsonpickle.decode(motif.metadata)
+        name = md.get('annotation',motif.name)
+        G.add_node(motif.name,name = name)
+
+        # (topic.name,group=2,name=name,
+        #         size=topic_scale_factor * topics[topic],
+        #         special = True, in_degree = topics[topic],
+        #         score = 1,node_id = topic.id,is_topic = True,
+        #         highlight_colour = highlight_colour)
+    # add edges where the score is > thresh
+
+
+    for i,j in combinations(range(len(motifs)),2):
+        a1 = np.array(alp_vals[i])
+        a1n = a1/np.linalg.norm(a1)
+        # a1 = a1/np.sqrt((a1**2).sum())
+        a2 = np.array(alp_vals[j])
+        a2n = a2/np.linalg.norm(a2)
+        # a2 = a2/np.sqrt((a2**2).sum())
+        score = np.dot(a1n,a2n)
+        if score > max_score:
+            max_score = score
+        if score > threshold:
+            n_edges += 1
+            G.add_edge(motifs[i].name,motifs[j].name)
+    d = json_graph.node_link_data(G)
+    return HttpResponse(json.dumps(d),content_type = 'application/json')
+
+
+
 def compute_topic_scores(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
     context_dict = {'experiment':experiment}

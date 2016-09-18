@@ -3,6 +3,168 @@
 // - https://github.com/mbostock/d3/wiki/Force-Layout
 // - http://www.coppelia.io/2014/07/an-a-to-z-of-extra-features-for-the-d3-force-layout/
 
+function alpha_graph(url) {
+   
+    var width = 1000;
+    var height = 700;
+
+    // var force = d3.layout.force()
+    //     .size([width, height])
+    //     .charge(-1000)
+    //     .linkDistance(80)
+    //     .on("tick", tick);
+
+    // var drag = force.drag()
+    //     .on("dragstart", dragstart);
+
+
+    var zoom = d3.behavior.zoom().translate([300,300]).scale(.1,.1);
+
+    var svg = d3.select("#network").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+
+
+    var drag = d3.behavior.drag();
+    var viewBoxX = 0, viewBoxY = 0;
+    drag.on('dragstart', function() {
+        console.log('new dragstart is called');
+    }).on('drag', function() {
+        viewBoxX -= d3.event.dx;
+        viewBoxY -= d3.event.dy;
+        svg.select('g.node-area').attr('transform', 'translate(' + (-viewBoxX) + ',' + (-viewBoxY) + ')');
+    }).on('dragend', function() {
+    console.log('new dragend is called');
+    });
+
+        // .call(drag);
+    bgrect = svg.append('rect')
+      .classed('bg', true)
+      .attr('stroke', '#666666')
+      .attr('fill', 'transparent')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', width)
+      .attr('height', height)
+      .call(zoom.on('zoom', zoomed)) 
+      // .attr('transform','translate(300,300)scale(.1,.1)')
+      // .call(drag);
+            // .call(zoom.on('zoom', zoomed))
+            // .on('dblclick.zoom', null)
+            // .append('g')
+            // .attr('transform', 'translate(300,300)scale(.1,.1)');
+
+
+    var nodeArea = svg.append('g')
+          .attr('transform','translate(300,300)scale(.1,.1)')
+          .classed('node-area', true);
+
+    
+
+d3.json(url, function(error, graph) {
+      if (error) throw error;
+
+    // var nodeSel = nodeArea.selectAll('circle')
+    //     .data(graph.nodes).enter().append('circle')
+    //     .attr('r', 10).attr('fill', 'black');
+
+    var linkSel = nodeArea.selectAll('line').data(graph.links).enter().append('line')
+        .attr('stroke', '#999999');
+    var node = nodeArea.selectAll(".node")
+      .data(graph.nodes)
+        .enter().append("g")
+        .attr("class", "node");
+      // .call(force.drag);
+
+    node.append('circle').attr('r',10).attr('fill','black');
+    node.append("text")
+      .attr("dx", 12)
+      .attr("dy", ".35em")
+      .attr('font-size',"14px")
+      .text(function(d) { return d.name });
+    // var nodeSel = nodeArea.selectAll('circle')
+    //     .data(graph.nodes).enter().append('circle').attr('r',10).attr('fill','black');
+
+    
+
+    var force = d3.layout.force()
+    .size([width, height])
+    .nodes(graph.nodes).links(graph.links)
+    .linkDistance(200)
+    .charge(-2000)
+    .on('tick', function() {
+        linkSel
+            .attr('x1', function(d) { return d.source.x; })
+            .attr('y1', function(d) { return d.source.y; })
+            .attr('x2', function(d) { return d.target.x; })
+            .attr('y2', function(d) { return d.target.y; });
+        node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+    });
+
+    var mydrag = force.drag()
+        .on("dragstart",dragstart);
+    // node.call(force.drag);
+    node.call(mydrag)
+
+
+
+    force.start();
+});
+
+    // var link = svg.selectAll(".link"),
+    //     node = svg.selectAll(".node");
+
+
+    // d3.json(url, function(error, graph) {
+    //   if (error) throw error;
+
+    //    force
+    //     .nodes(graph.nodes)
+    //     .links(graph.links)
+    //       .start();
+
+    //    link = link.data(graph.links)
+    //     .enter().append("line")
+    //       .attr("class", "link");
+
+
+    //     node = node.data(graph.nodes)
+    //         .enter().append("circle")
+    //           .attr("class", "node")
+    //           .attr("r", 12)
+    //           .on("dblclick", dblclick)
+    //           .call(drag);
+    // });
+
+    // function tick() {
+    //   link.attr("x1", function(d) { return d.source.x; })
+    //       .attr("y1", function(d) { return d.source.y; })
+    //       .attr("x2", function(d) { return d.target.x; })
+    //       .attr("y2", function(d) { return d.target.y; });
+
+    //   node.attr("cx", function(d) { return d.x; })
+    //       .attr("cy", function(d) { return d.y; });
+    // }
+
+    // function dblclick(d) {
+    //   d3.select(this).classed("fixed", d.fixed = false);
+    // }
+    function dragstart(d) {
+      d3.select(this).classed("fixed", d.fixed = true);
+    }
+    function zoomed() {
+        nodeArea.attr('transform',
+                'translate(' + d3.event.translate + ') scale(' + d3.event.scale + ')');
+        console.log('zooming');
+    }
+
+
+}
+
+
+
 function plot_graph(vo_id,random_seed) {
 
     Math.seedrandom(random_seed);
@@ -310,4 +472,4 @@ function plot_graph(vo_id,random_seed) {
         source: optArray
     });
 
-} //end plot_graph()
+    } //end plot_graph()
