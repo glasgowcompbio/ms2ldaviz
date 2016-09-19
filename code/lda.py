@@ -783,8 +783,10 @@ def make_split_dictionary(mflda,filename,postfix):
 		outname = lda_name + postfix
 		multifile_dict['individual_lda'].append(outname)
 		mflda.individual_lda.make_dictionary(filename = outname + '.dict')
+	multifile_dict['word_index'] = mflda.word_index
+	multifile_dict['K'] = mflda.K
 	with open(filename,'w') as f:
 		pickle.dump(multifile_dict,f)
-	
+
 
 
