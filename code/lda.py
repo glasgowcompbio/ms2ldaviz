@@ -775,5 +775,16 @@ class MultiFileVariationalLDA(object):
 
 
 
+def make_split_dictionary(mflda,filename,postfix):
+	# Makes a multifile LDA into several individual dictionary files
+	multifile_dict = {}
+	multifile_dict['individual_lda'] = []
+	for lda_name in mflda.individual_lda:
+		outname = lda_name + postfix
+		multifile_dict['individual_lda'].append(outname)
+		mflda.individual_lda.make_dictionary(filename = outname + '.dict')
+	with open(filename,'w') as f:
+		pickle.dump(multifile_dict,f)
+	
 
 
