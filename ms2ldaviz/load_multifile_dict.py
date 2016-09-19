@@ -65,6 +65,7 @@ def add_document_words(document,doc_name,experiment,lda_dict):
 if __name__ == '__main__':
 
 	filename = sys.argv[1]
+	postfix = sys.argv[2]
 	verbose = False
 	if 'verbose' in sys.argv:
 		verbose = True
@@ -81,7 +82,7 @@ if __name__ == '__main__':
 		experiment_name = lda_dict_name
 		lda_dict = multi_lda_dict['individual_lda'][experiment_name]
 		print experiment_name
-		experiment = Experiment.objects.get_or_create(name=experiment_name)[0]
+		experiment = Experiment.objects.get_or_create(name=experiment_name+postfix)[0]
 		experiment.status = 'loading'
 		experiment.save()
 		ml = MultiLink.objects.get_or_create(experiment = experiment, multifileexperiment = mfe)
