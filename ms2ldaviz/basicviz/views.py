@@ -823,10 +823,15 @@ def get_parents_no_vo(request,motif_id):
 #     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
 def get_word_graph(request, motif_id, vo_id):
-    viz_options = VizOptions.objects.get(id = vo_id)
+    if not vo_id == 'nan':
+        viz_options = VizOptions.objects.get(id = vo_id)
+        edge_thresh = viz_options.edge_thresh
+    else:
+        edge_thresh = 0.0
+
     motif = Mass2Motif.objects.get(id=motif_id)
     m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
-    m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif, probability__gte=viz_options.edge_thresh)
+    m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif, probability__gte=edge_thresh)
     colours = '#404080'
     features_data = {}
     for feat in m2mIns:                        
