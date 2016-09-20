@@ -173,3 +173,11 @@ class VizOptions(models.Model):
 	lower_colour_perc = models.IntegerField(null = False)
 	colour_topic_by_score = models.BooleanField(null = False)
 	random_seed = models.CharField(null = False,max_length = 128)
+
+class AlphaCorrOptions(models.Model):
+	multifileexperiment = models.ForeignKey(MultiFileExperiment)
+	edge_thresh = models.FloatField(null = False)
+	distance_score = models.CharField(null = False,max_length=24)
+	normalise_alphas = models.BooleanField(null=False)
+	max_edges = models.IntegerField(null = False)
+

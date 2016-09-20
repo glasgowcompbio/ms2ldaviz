@@ -7,16 +7,10 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('basicviz', '0027_multifileexperiment_pca'),
+        ('basicviz', '0028_multifileexperiment_alpha_matrix'),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='multifileexperiment',
-            name='alpha_matrix',
-            field=models.TextField(null=True),
-            preserve_default=True,
-        ),
         migrations.AddField(
             model_name='multifileexperiment',
             name='degree_matrix',

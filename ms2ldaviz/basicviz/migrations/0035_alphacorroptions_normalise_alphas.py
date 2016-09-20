@@ -7,14 +7,14 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('basicviz', '0028_auto_20160913_1408'),
+        ('basicviz', '0034_alphacorroptions'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='vizoptions',
-            name='random_seed',
-            field=models.CharField(default='hello', max_length=128),
+            model_name='alphacorroptions',
+            name='normalise_alphas',
+            field=models.BooleanField(default=True),
             preserve_default=False,
         ),
     ]

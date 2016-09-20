@@ -10,9 +10,9 @@ import json
 import jsonpickle
 import csv
 import numpy as np
-from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,VizForm,UserForm,TopicScoringForm
+from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,VizForm,UserForm,TopicScoringForm,AlphaCorrelationForm
 
-from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha
+from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,AlphaCorrOptions
 
 
 
@@ -424,17 +424,45 @@ def alpha_correlation(request,mf_id):
     context_dict = {}
     context_dict['mfe'] = mfe
 
+    if request.method == 'POST':
+        form = AlphaCorrelationForm(request.POST)
+        if form.is_valid():
+            distance_score = form.cleaned_data['distance_score']
+            edge_thresh = form.cleaned_data['edge_thresh']
+            normalise_alphas = form.cleaned_data['normalise_alphas']
+            max_edges = form.cleaned_data['max_edges']
+            acviz = AlphaCorrOptions.objects.get_or_create(multifileexperiment = mfe,
+                                                            distance_score = distance_score,
+                                                            edge_thresh = edge_thresh,
+                                                            normalise_alphas = normalise_alphas,
+                                                            max_edges = max_edges)[0]
+            context_dict['acviz'] = acviz
+        else:
+            context_dict['form'] = form
+    else:
+        context_dict['form'] = AlphaCorrelationForm()
+
     return render(request,'basicviz/alpha_correlation.html',context_dict)
 
 
-def get_alpha_correlation_graph(request,mf_id):
+def get_alpha_correlation_graph(request,acviz_id):
     from itertools import combinations
-    mfe = MultiFileExperiment.objects.get(id = mf_id)
+    acviz = AlphaCorrOptions.objects.get(id = acviz_id)
+    mfe = acviz.multifileexperiment
     links = mfe.multilink_set.all()
     individuals = [l.experiment for l in links]
     an_experiment = links[0].experiment
     motifs = Mass2Motif.objects.filter(experiment = an_experiment).order_by('name')
-    alp_vals = make_alpha_matrix(individuals,normalise = True)
+
+
+
+    if mfe.alpha_matrix:
+        alp_vals_with_names = jsonpickle.decode(mfe.alpha_matrix)
+        alp_vals = []
+        for av in alp_vals_with_names:
+            alp_vals.append(av[2:-1])
+    else:
+        alp_vals = make_alpha_matrix(individuals,normalise = True)
 
     threshold = 0.98
     max_score = 0.0
@@ -454,20 +482,46 @@ def get_alpha_correlation_graph(request,mf_id):
         #         highlight_colour = highlight_colour)
     # add edges where the score is > thresh
 
-
+    scores = []
     for i,j in combinations(range(len(motifs)),2):
         a1 = np.array(alp_vals[i])
-        a1n = a1/np.linalg.norm(a1)
-        # a1 = a1/np.sqrt((a1**2).sum())
         a2 = np.array(alp_vals[j])
-        a2n = a2/np.linalg.norm(a2)
-        # a2 = a2/np.sqrt((a2**2).sum())
-        score = np.dot(a1n,a2n)
-        if score > max_score:
-            max_score = score
-        if score > threshold:
-            n_edges += 1
+
+        if acviz.normalise_alphas:
+            a1n = a1/np.linalg.norm(a1)    
+            a2n = a2/np.linalg.norm(a2)
+        else:
+            a1n = a1
+            a2n = a2
+        
+        if acviz.distance_score == 'cosine':
+            score = np.dot(a1n,a2n)
+        elif acviz.distance_score == 'euclidean':
+            score = np.sqrt((a1n-a2n)**2)
+        elif acviz.distance_score == 'rms':
+            score = np.sqrt(((a1n-a2n)**2).mean())
+        
+
+        scores.append((i,j,score))
+
+    if acviz.distance_score == 'cosine':
+        scores = sorted(scores,key = lambda x:x[2],reverse=True)
+    else:
+        scores = sorted(scores,key = lambda x:x[2])
+
+    pos = 0
+    while True:
+        i,j,score = scores[pos]
+        if acviz.distance_score == 'cosine' and score > acviz.edge_thresh:
             G.add_edge(motifs[i].name,motifs[j].name)
+        elif (not acviz.distance_score == 'cosine') and score < acviz.edge_thresh:
+            G.add_edge(motifs[i].name,motifs[j].name)
+        else:
+            break
+        pos += 1
+        if pos > acviz.max_edges:
+            break
+
     d = json_graph.node_link_data(G)
     return HttpResponse(json.dumps(d),content_type = 'application/json')
 
