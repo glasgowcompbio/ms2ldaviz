@@ -300,7 +300,7 @@ def view_multi_m2m(request,mf_id,motif_name):
             split_name = name.split('_')
             mz = float(split_name[0])
             rt = float(split_name[1])
-            doc_table.append([mz,rt,i])
+            doc_table.append([mz,rt,i,doc.probability])
 
     # Compute the mean and variance
     tot_alps = sum(alps)
