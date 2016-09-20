@@ -47,12 +47,16 @@
 
 	<div>
 	<h3>Mass2Motif details</h3>
-		<table class='table'>
+		<table class='table' id='featuretable'>
+			<thead>
 			<tr><th>Name</th><th>Probability</th><th>link</th></tr>
+			</thead>
+			<tbody>
 			{% for motif_feature in motif_features %}
 				<tr><td>{{motif_feature.feature.name}}</td><td>{{motif_feature.probability}}</td>
-				<td><a href="/basicviz/mass2motif_feature/{{motif_feature.id}}">details</td></tr>
+				<td><a href="/basicviz/mass2motif_feature/{{motif_feature.id}}">details</a></td></tr>
 			{% endfor %}
+			</tbody>
 		</table>
 	</div>
 
@@ -68,6 +72,17 @@
 	<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
 	<script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
 	<script type='text/javascript' src="{% static "js/word-graph.js" %}"></script>
+
+	<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+	<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+	<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+	<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
 	<script type="text/javascript">
 		var current_pos = 0
 		var motif_name = '{{mass2motif.name}}'
@@ -77,5 +92,17 @@
 		plot_word_graph(url,motif_id,motif_name)
 		url = '/basicviz/get_intensity/{{mass2motif.id}}/nan/'
 		plot_word_graph(url,motif_id,motif_name)
+
+
+		$(document).ready(function() {
+			$('#featuretable').DataTable({
+				dom: 'Bfrtip',
+				buttons: [
+			        'csv',
+		        ],
+		    });
+		});
 	</script>
+
+
 {% endblock %}
