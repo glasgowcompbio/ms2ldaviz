@@ -289,11 +289,18 @@ def view_multi_m2m(request,mf_id,motif_name):
     # Get the m2m in the individual models
     individual_m2m = []
     alps = []
-    for individual in individuals:
+    doc_table = []
+    for i,individual in enumerate(individuals):
         alpha = Alpha.objects.get(mass2motif = individual_motifs[individual])
         docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual])
         individual_m2m.append([individual,individual_motifs[individual],alpha,len(docs)])
         alps.append(alpha.value)
+        for doc in docs:
+            name = doc.document.name
+            split_name = name.split('_')
+            mz = float(split_name[0])
+            rt = float(split_name[1])
+            doc_table.append([mz,rt,i])
 
     # Compute the mean and variance
     tot_alps = sum(alps)
@@ -303,6 +310,8 @@ def view_multi_m2m(request,mf_id,motif_name):
     context_dict['alpha_variance'] = var
     context_dict['alphas'] = zip([i.name for i in individuals],alps)
     context_dict['individual_m2m'] = individual_m2m
+    context_dict['doc_table'] = doc_table
+
 
     return render(request,'basicviz/view_multi_m2m.html',context_dict)
 

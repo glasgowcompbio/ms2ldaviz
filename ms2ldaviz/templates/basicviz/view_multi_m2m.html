@@ -6,6 +6,23 @@
 
 {% block title %}Multifile Motif View{% endblock %}
 
+{% block head_block %}
+	<style>
+		.axis path,
+		.axis line {
+			fill: none;
+			stroke: black;
+			shape-rendering: crispEdges;
+		}
+		.axis text {
+			font-family: sans-serif;
+			font-size: 11px;
+		}
+	</style>
+	<link rel="stylesheet" type="text/css" href="{% static "css/basicviz.css" %}">
+
+{% endblock %}
+
 {% block body_block %}
 <h3>Motif {{motif_name}} in {{mfe.name}}</h3>
 
@@ -69,6 +86,10 @@
 <div id="degreeplot">
 <h3>Degrees</h3>
 </div>
+
+
+<div id="scatter">
+</div>	
 {% endblock %}
 
 
@@ -105,11 +126,80 @@ $(document).ready(function() {
     	],
     	"order": [[2,"desc"]],
     });
+   
 });
 
 
 bar_plot('/basicviz/get_alphas/{{mfe.id}}/{{motif_name}}/','barplot')
 bar_plot('/basicviz/get_degrees/{{mfe.id}}/{{motif_name}}/','degreeplot')
+
+
+scatter_data = {{doc_table|safe}}
+
+scatter_svg = d3.select('#scatter').append('svg')
+	.attr('width',700)
+	.attr('height',700);
+
+min_mz = d3.min(scatter_data,function(d) {return d[0];}) - 20
+max_mz = d3.max(scatter_data,function(d) {return d[0];}) + 20
+min_rt = d3.min(scatter_data,function(d) {return d[1];}) - 20
+max_rt = d3.max(scatter_data,function(d) {return d[1];}) + 20
+
+var plot_height = 700
+var plot_width = 700
+var ver_margin = 50
+var hor_margin = 50
+var xScale = d3.scale.linear()
+xScale.domain([min_mz, max_mz])
+xScale.range([ hor_margin,plot_width-hor_margin])
+var yScale = d3.scale.linear()
+yScale.domain([min_rt,max_rt])
+yScale.range([plot_height-ver_margin,ver_margin])
+
+
+var xAxis = d3.svg.axis()
+    .scale(xScale)
+    .orient("bottom");
+
+scatter_svg.append("g")
+    .attr("class", "axis")
+    .attr("transform", "translate(0," + yScale(min_rt) + ")")
+    .attr('stroke-width',1)
+    .attr('id','xax')
+    .call(xAxis);
+
+
+var yAxis = d3.svg.axis()
+    .scale(yScale)
+    .orient("left");
+
+scatter_svg.append("g")
+	.attr('id','yax')
+    .attr("class","axis")
+    .attr('stroke-width',1)
+    .attr("transform","translate(" + xScale(min_mz) + ",0)")
+    .call(yAxis);
+
+
+scatter_svg.append('text').attr('x',xScale(0.5*(max_mz + min_mz)))
+						  .attr('y',yScale(min_rt) + 50)
+						  .text('mz');
+
+
+scatter_svg.append('text').attr('x',xScale(min_mz) - 50)
+						  .attr('y',yScale(0.5*(min_rt+max_rt)))
+						  .text('rt');
+
+var circles = scatter_svg.selectAll("circle")
+				.data(scatter_data)
+				.enter()
+				.append("circle")
+
+var colorscale = d3.scale.category20()
+circles.attr('cx',function(d) {return xScale(d[0]);})
+	    .attr('cy',function(d) {return yScale(d[1]);})
+		.attr('r',2)
+		.attr('fill',function(d) {return colorscale(d[2])});
 
 </script>
 {% endblock %}

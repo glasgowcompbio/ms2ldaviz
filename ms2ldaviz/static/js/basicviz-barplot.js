@@ -71,10 +71,8 @@ function bar_plot(url,div_id) {
 	        .attr("transform","translate(" + xScale(0) + ",0)")
 	        .call(yAxis);
 
-	    console.log(dataset[0])
-	    console.log(dataset.length)
 	    var a = 0
-	    rectangles.attr("x",function(d,i) {console.log(i);return xScale(i-0.5)})
+	    rectangles.attr("x",function(d,i) {return xScale(i-0.5)})
 	    			.attr("y",function(d) {return yScale(d[1])})
 	    			.attr("width",0.9*bar_width)
 	    			.attr("height",function(d) { return yScale(0) - yScale(d[1]);})
