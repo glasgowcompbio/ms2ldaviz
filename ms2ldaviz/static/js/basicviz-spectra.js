@@ -47,6 +47,7 @@ function plot_parent(total_dataset,motif_name) {
     var parent_intensity = total_dataset[current_pos][0][1]
     var parent_name = total_dataset[current_pos][0][2]
     var parent_annotation = total_dataset[current_pos][0][3]
+    var parent_probability = total_dataset[current_pos][0][4]
     var dataset = total_dataset[current_pos][1]
     var max_mass = d3.max(dataset,function(d) {return d[0]+50})
 
@@ -60,7 +61,7 @@ function plot_parent(total_dataset,motif_name) {
     var plot_height = 300
     var ver_margin = 30
     var hor_margin = 50
-    var head_height = 50
+    var head_height = 70
 
     var n_parents = total_dataset.length
     n_parents -= 1
@@ -160,7 +161,11 @@ function plot_parent(total_dataset,motif_name) {
     frag_graph_titlebar_svg.append("text")
                 .attr("x",plot_width-500)
                 .attr("y",20)
-                .text(motif_name)
+                .text(motif_name);
+    frag_graph_titlebar_svg.append("text")
+                .attr("x",plot_width-500)
+                .attr("y",60)
+                .text("Probability: " + parent_probability);
 
     var frag_graph_svg = d3.select("#spectra")
                .append("svg")

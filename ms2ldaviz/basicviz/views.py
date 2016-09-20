@@ -786,7 +786,7 @@ def get_parents(request,motif_id,vo_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     vo = VizOptions.objects.all()
     viz_options  = VizOptions.objects.get(id = vo_id)
-    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte=viz_options.edge_thresh)
+    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte=viz_options.edge_thresh).orfer_by('-probability')
     documents = [d.document for d in docm2m]
     parent_data = []
     for dm in docm2m:
@@ -800,7 +800,7 @@ def get_parents(request,motif_id,vo_id):
 
 def get_parents_no_vo(request,motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
-    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif)
+    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif).order_by('-probability')
     documents = [d.document for d in docm2m]
     parent_data = []
     for dm in docm2m:
@@ -948,7 +948,14 @@ def get_doc_for_plot(doc_id,motif_id = None,get_key = False):
         parent_mass = float(document.name.split('_')[0])
     else:
         parent_mass = 0.0
-    parent_data = (parent_mass,100.0,document.display_name,document.annotation)
+    probability = "na"
+
+    if not motif_id == None:
+        m2m = Mass2Motif.objects.get(id = motif_id)
+        dm2m = DocumentMass2Motif.objects.get(mass2motif = m2m,document = document)
+        probability = dm2m.probability
+
+    parent_data = (parent_mass,100.0,document.display_name,document.annotation,probability)
     plot_fragments.append(parent_data)
     child_data = []
 
