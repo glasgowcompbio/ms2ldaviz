@@ -1422,6 +1422,24 @@ def dump_validations(request,experiment_id):
     # return HttpResponse(outstring,content_type='text')
     return response
 
+def dump_topic_molecules(request,m2m_id):
+    mass2motif = Mass2Motif.objects.get(id = m2m_id)
+
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="topic_molecules_{}.csv"'.format(mass2motif.id)
+    writer = csv.writer(response)
+    writer.writerow(['m2m_id','m2m_name','m2m_annotation','doc_id','doc_annotation','valid','probability','doc_csid','doc_inchi'])
+    
+    dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.02)
+    for dm2m in dm2ms:
+        document = dm2m.document
+        # outstring +='{},{},{},"{}",{}\n'.format(mass2motif.id,mass2motif.annotation,dm2m.document.id,dm2m.document.annotation.encode('utf8'),dm2m.validated)
+        doc_name = '"' + dm2m.document.display_name + '"'
+        annotation = '"' + mass2motif.annotation + '"'
+        writer.writerow([mass2motif.id,mass2motif.name,mass2motif.annotation.encode('utf8'),dm2m.document.id,doc_name.encode('utf8'),dm2m.validated,dm2m.probability,dm2m.document.csid,dm2m.document.inchikey])
+
+    return response
 
 def extract_docs(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)

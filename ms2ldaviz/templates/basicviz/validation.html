@@ -28,6 +28,7 @@
 	{% for m2m,count in annotated_mass2motifs %}
 		<h3>{{m2m.name}}: {{m2m.annotation}} <a href="/basicviz/view_parents/{{m2m.id}}" target=new>Show in ms2ldaviz</a></h3>
 		<h4><span id='c{{m2m.id}}'>{{count.1}}</span> validated out of {{count.0}}</h4>
+		<a href="/basicviz/dump_topic_molecules/{{m2m.id}}" class="btn btn-xs btn-warning" role="button">Dump molecules</a>
 		<button data-toggle="collapse" data-target="#{{m2m.id}}">Show</button>
 
 		<div id="{{m2m.id}}" class="collapse">

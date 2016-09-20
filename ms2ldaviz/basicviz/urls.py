@@ -43,4 +43,5 @@ urlpatterns = patterns('',
 	    url(r'^get_degrees/(?P<mf_id>\w+)/(?P<motif_name>\w+)/$',views.get_degrees,name='get_degrees'),
 	    url(r'^alpha_correlation/(?P<mf_id>\w+)/$',views.alpha_correlation,name ='alpha_correlation'),
 	    url(r'^get_alpha_correlation_graph/(?P<acviz_id>\w+)/$',views.get_alpha_correlation_graph,name ='alpha_correlation'),
+	    url(r'^dump_topic_molecules/(?P<m2m_id>\w+)/$',views.dump_topic_molecules,name = 'dump_topic_molecues'),
         )
