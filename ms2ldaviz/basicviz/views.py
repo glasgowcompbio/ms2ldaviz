@@ -486,9 +486,7 @@ def get_alpha_correlation_graph(request,acviz_id):
         alp_vals = []
         for av in alp_vals_with_names:
             newav = av[2:-1]
-            s = sum(newav)
-            newavn = [a/s for a in newav]
-            alp_vals.append(newavn)
+            alp_vals.append(newav)
 
     else:
         alp_vals = make_alpha_matrix(individuals,normalise = True)
