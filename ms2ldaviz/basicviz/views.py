@@ -314,7 +314,7 @@ def view_multi_m2m(request,mf_id,motif_name):
                 rt = float(split_name[1])
 
             
-            doc_table.append([mz,rt,i,doc.probability])
+            doc_table.append([rt,mz,i,doc.probability])
         individual_names.append(individual.name)
 
     # Compute the mean and variance
@@ -485,7 +485,11 @@ def get_alpha_correlation_graph(request,acviz_id):
         alp_vals_with_names = jsonpickle.decode(mfe.alpha_matrix)
         alp_vals = []
         for av in alp_vals_with_names:
-            alp_vals.append(av[2:-1])
+            newav = av[2:-1]
+            s = sum(newav)
+            newavn = [a/s for a in newav]
+            alp_vals.append(newavn)
+
     else:
         alp_vals = make_alpha_matrix(individuals,normalise = True)
 

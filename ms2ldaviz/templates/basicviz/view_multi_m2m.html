@@ -151,19 +151,19 @@ scatter_svg = d3.select('#scatter').append('svg')
 	.attr('width',plot_width)
 	.attr('height',plot_height);
 
-min_mz = d3.min(scatter_data,function(d) {return d[0];}) - 20
-max_mz = d3.max(scatter_data,function(d) {return d[0];}) + 20
-min_rt = d3.min(scatter_data,function(d) {return d[1];}) - 20
-max_rt = d3.max(scatter_data,function(d) {return d[1];}) + 20
+min_mz = d3.min(scatter_data,function(d) {return d[1];}) - 20
+max_mz = d3.max(scatter_data,function(d) {return d[1];}) + 20
+min_rt = d3.min(scatter_data,function(d) {return d[0];}) - 20
+max_rt = d3.max(scatter_data,function(d) {return d[0];}) + 20
 max_ind = d3.max(scatter_data,function(d) {return d[2];})
 
 var ver_margin = 50
 var hor_margin = 50
 var xScale = d3.scale.linear()
-xScale.domain([min_mz, max_mz])
+xScale.domain([min_rt, max_rt])
 xScale.range([ hor_margin,plot_width-hor_margin])
 var yScale = d3.scale.linear()
-yScale.domain([min_rt,max_rt])
+yScale.domain([min_mz,max_mz])
 yScale.range([plot_height-ver_margin,ver_margin])
 
 
@@ -191,14 +191,14 @@ scatter_svg.append("g")
     .call(yAxis);
 
 
-scatter_svg.append('text').attr('x',xScale(0.5*(max_mz + min_mz)))
-						  .attr('y',yScale(min_rt) + 50)
-						  .text('mz');
-
-
-scatter_svg.append('text').attr('x',xScale(min_mz) - 50)
-						  .attr('y',yScale(0.5*(min_rt+max_rt)))
+scatter_svg.append('text').attr('x',xScale(0.5*(max_rt + min_rt)))
+						  .attr('y',yScale(min_mz) + 50)
 						  .text('rt');
+
+
+scatter_svg.append('text').attr('x',xScale(min_rt) - 50)
+						  .attr('y',yScale(0.5*(min_mz+max_mz)))
+						  .text('mz');
 
 var circles = scatter_svg.selectAll("circle")
 				.data(scatter_data)
@@ -206,8 +206,8 @@ var circles = scatter_svg.selectAll("circle")
 				.append("circle")
 
 var individual_name = scatter_svg.append('text')
-									.attr('x',xScale(0.5*(max_mz + min_mz)))
-									.attr('y',yScale(max_rt)-20)
+									.attr('x',xScale(min_rt)+50)
+									.attr('y',yScale(max_mz)-20)
 
 var colorscale = d3.scale.linear().domain([0,max_ind]).range(["red","blue"])
 circles.attr('cx',function(d) {return xScale(d[0]);})
