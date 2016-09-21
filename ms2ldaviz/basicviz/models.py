@@ -180,4 +180,5 @@ class AlphaCorrOptions(models.Model):
 	distance_score = models.CharField(null = False,max_length=24)
 	normalise_alphas = models.BooleanField(null=False)
 	max_edges = models.IntegerField(null = False)
+	just_annotated = models.BooleanField(null = False)
 

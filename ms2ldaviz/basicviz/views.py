@@ -463,11 +463,13 @@ def alpha_correlation(request,mf_id):
             edge_thresh = form.cleaned_data['edge_thresh']
             normalise_alphas = form.cleaned_data['normalise_alphas']
             max_edges = form.cleaned_data['max_edges']
+            just_annotated = form.cleaned_data['just_annotated']
             acviz = AlphaCorrOptions.objects.get_or_create(multifileexperiment = mfe,
                                                             distance_score = distance_score,
                                                             edge_thresh = edge_thresh,
                                                             normalise_alphas = normalise_alphas,
-                                                            max_edges = max_edges)[0]
+                                                            max_edges = max_edges,
+                                                            just_annotated = just_annotated)[0]
             context_dict['acviz'] = acviz
         else:
             context_dict['form'] = form
@@ -502,12 +504,19 @@ def get_alpha_correlation_graph(request,acviz_id):
     max_score = 0.0
     n_edges = 0
 
+    an_motifs = []
+    if acviz.just_annotated:
+        for motif in motifs:
+            if 'annotation' in jsonpickle.decode(motif.metadata):
+                an_motifs.append(motif)
+        motifs = an_motifs
     # Add motifs as nodes
     G = nx.Graph()
     for motif in motifs:
         md = jsonpickle.decode(motif.metadata)
         name = md.get('annotation',motif.name)
         G.add_node(motif.name,name = name)
+
 
         # (topic.name,group=2,name=name,
         #         size=topic_scale_factor * topics[topic],
