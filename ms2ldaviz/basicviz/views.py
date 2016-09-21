@@ -544,7 +544,7 @@ def get_alpha_correlation_graph(request,acviz_id):
         elif acviz.distance_score == 'rms':
             score = np.sqrt(((a1n-a2n)**2).mean())
         elif acviz.distance_score == 'pearson':
-            score = pearsonr(a1n,a2n)
+            score,_ = pearsonr(a1n,a2n)
         
 
         scores.append((i,j,score))
