@@ -512,9 +512,11 @@ def get_alpha_correlation_graph(request,acviz_id):
         motifs = an_motifs
     # Add motifs as nodes
     G = nx.Graph()
+    motif_names = []
     for motif in motifs:
         md = jsonpickle.decode(motif.metadata)
         name = md.get('annotation',motif.name)
+        motif_names.append(name)
         G.add_node(motif.name,name = name)
 
 
@@ -545,6 +547,7 @@ def get_alpha_correlation_graph(request,acviz_id):
             score = np.sqrt(((a1n-a2n)**2).mean())
         elif acviz.distance_score == 'pearson':
             score,_ = pearsonr(a1n,a2n)
+            print score
         
 
         scores.append((i,j,score))
@@ -558,9 +561,9 @@ def get_alpha_correlation_graph(request,acviz_id):
     while True:
         i,j,score = scores[pos]
         if (acviz.distance_score == 'cosine' or acviz.distance_score == 'pearson') and score > acviz.edge_thresh:
-            G.add_edge(motifs[i].name,motifs[j].name)
+            G.add_edge(motif_names[i],motif_names[j])
         elif (acviz.distance_score == 'euclidean' or acviz.distance_score == 'rms') and score > acviz.edge_thresh:
-            G.add_edge(motifs[i].name,motifs[j].name)
+            G.add_edge(motif_names[i],motif_names[j])
         else:
             break
         pos += 1
