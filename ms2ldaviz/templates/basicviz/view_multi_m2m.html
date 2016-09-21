@@ -173,7 +173,7 @@ var xAxis = d3.svg.axis()
 
 scatter_svg.append("g")
     .attr("class", "axis")
-    .attr("transform", "translate(0," + yScale(min_rt) + ")")
+    .attr("transform", "translate(0," + yScale(min_mz) + ")")
     .attr('stroke-width',1)
     .attr('id','xax')
     .call(xAxis);
@@ -187,7 +187,7 @@ scatter_svg.append("g")
 	.attr('id','yax')
     .attr("class","axis")
     .attr('stroke-width',1)
-    .attr("transform","translate(" + xScale(min_mz) + ",0)")
+    .attr("transform","translate(" + xScale(min_rt) + ",0)")
     .call(yAxis);
 
 
