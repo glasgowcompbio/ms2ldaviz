@@ -297,10 +297,23 @@ def view_multi_m2m(request,mf_id,motif_name):
         individual_m2m.append([individual,individual_motifs[individual],alpha,len(docs)])
         alps.append(alpha.value)
         for doc in docs:
-            name = doc.document.name
-            split_name = name.split('_')
-            mz = float(split_name[0])
-            rt = float(split_name[1])
+            mz = 0
+            rt = 0
+            md = jsonpickle.decode(doc.document.metadata)
+            if 'parentmass' in md:
+                mz = md['parentmass']
+            elif 'mz' in md:
+                mz = md['mz']
+            elif '_' in doc.document.name:
+                split_name = doc.document.name.split('_')
+                mz = float(split_name[0])
+            if 'rt' in md:
+                rt = md['rt']
+            elif '_' in doc.document.name:
+                split_name = doc.document.name.split('_')
+                rt = float(split_name[1])
+
+            
             doc_table.append([mz,rt,i,doc.probability])
         individual_names.append(individual.name)
 
