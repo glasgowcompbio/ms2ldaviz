@@ -44,4 +44,5 @@ urlpatterns = patterns('',
 	    url(r'^alpha_correlation/(?P<mf_id>\w+)/$',views.alpha_correlation,name ='alpha_correlation'),
 	    url(r'^get_alpha_correlation_graph/(?P<acviz_id>\w+)/$',views.get_alpha_correlation_graph,name ='alpha_correlation'),
 	    url(r'^dump_topic_molecules/(?P<m2m_id>\w+)/$',views.dump_topic_molecules,name = 'dump_topic_molecues'),
+	    url(r'^wipe_cache/(?P<mf_id>\w+)/$',views.wipe_cache,name = 'wipe_cache'),
         )

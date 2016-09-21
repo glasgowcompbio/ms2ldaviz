@@ -243,6 +243,13 @@ def make_alpha_matrix(individuals,normalise = True):
 
     return alp_vals
 
+def wipe_cache(request,mf_id):
+    mfe = MultiFileExperiment.objects.get(id = mf_id)
+    mfe.alpha_matrix = None
+    mfe.degree_matrix = None
+    mfe.save()
+    return index(request)
+
 def view_multi_m2m(request,mf_id,motif_name):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
     links = MultiLink.objects.filter(multifileexperiment = mfe)

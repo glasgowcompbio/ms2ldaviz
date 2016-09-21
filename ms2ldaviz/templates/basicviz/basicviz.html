@@ -46,6 +46,7 @@ Logged in as {{user}}, <a href="/basicviz/logout">Logout</a>
 		</ul>
 		<A href="/basicviz/multi_alphas/{{mf.id}}" class="btn btn-xs btn-warning" role="button">Explore alphas</A>
 		<A href="/basicviz/alpha_correlation/{{mf.id}}" class="btn btn-xs btn-warning" role="button">Alpha correlation</A>
+		<A href="/basicviz/wipe_cache/{{mf.id}}" class="btn btn-xs btn-warning" role="button">Wipe Cache</A>(force recomputation of alpha tables when, e.g. annotations have been added)
 	{% endfor %}
 	</ul>
 {% endif %}
