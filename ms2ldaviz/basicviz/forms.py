@@ -47,7 +47,7 @@ class TopicScoringForm(forms.Form):
 
 class AlphaCorrelationForm(forms.Form):
 	edge_thresh = forms.DecimalField(required = True, initial = 0.98,label = 'Enter edge threshold')
-	distance_score = forms.ChoiceField(choices = (('cosine','cosine'),('euclidean','euclidean'),('rms','rms')))
+	distance_score = forms.ChoiceField(choices = (('cosine','cosine'),('euclidean','euclidean'),('rms','rms'),('pearson','pearson')))
 	normalise_alphas = forms.BooleanField(required = False,initial = True,label = 'Normalise alpha vectors?')
 	max_edges = forms.IntegerField(required = False,initial = 1000, label = 'Maximum number of edges')
 	just_annotated = forms.BooleanField(required = True,initial = False,label = 'Restrict to annotated M2Ms?')

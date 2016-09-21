@@ -14,7 +14,7 @@ from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,V
 
 from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,AlphaCorrOptions
 
-
+from scipy.stats import pearsonr
 
 @login_required(login_url='/basicviz/login/')
 def index(request):
@@ -543,6 +543,8 @@ def get_alpha_correlation_graph(request,acviz_id):
             score = np.sqrt((a1n-a2n)**2)
         elif acviz.distance_score == 'rms':
             score = np.sqrt(((a1n-a2n)**2).mean())
+        elif acviz.distance_score == 'pearson':
+            score = pearsonr(a1n,a2n)
         
 
         scores.append((i,j,score))
@@ -555,14 +557,16 @@ def get_alpha_correlation_graph(request,acviz_id):
     pos = 0
     while True:
         i,j,score = scores[pos]
-        if acviz.distance_score == 'cosine' and score > acviz.edge_thresh:
+        if (acviz.distance_score == 'cosine' or acviz.distance_score == 'pearson') and score > acviz.edge_thresh:
             G.add_edge(motifs[i].name,motifs[j].name)
-        elif (not acviz.distance_score == 'cosine') and score < acviz.edge_thresh:
+        elif (acviz.distance_score == 'euclidean' or acviz.distanc_score == 'rms') and score > acviz.edge_thresh:
             G.add_edge(motifs[i].name,motifs[j].name)
         else:
             break
         pos += 1
         if pos > acviz.max_edges:
+            break
+        if pos >= len(scores):
             break
 
     d = json_graph.node_link_data(G)
