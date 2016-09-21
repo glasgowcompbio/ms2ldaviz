@@ -546,12 +546,12 @@ def get_alpha_correlation_graph(request,acviz_id):
         elif acviz.distance_score == 'rms':
             score = np.sqrt(((a1n-a2n)**2).mean())
         elif acviz.distance_score == 'pearson':
-            score,_ = pearsonr(a1n,a2n)
+            score = ((a1n - a1n.mean())*(a2n-a2n.mean())).mean()/(a1n.std()*a2n.std())
         
 
         scores.append((i,j,score))
 
-    if acviz.distance_score == 'cosine':
+    if acviz.distance_score == 'cosine' or acviz.distance_score == 'pearson':
         scores = sorted(scores,key = lambda x:x[2],reverse=True)
     else:
         scores = sorted(scores,key = lambda x:x[2])
