@@ -79,18 +79,23 @@
 	</bdody>
 </table>
 
-
-<div id="barplot">
-<h3>Alphas</h3>
+<div class="row">
+	<div class="col-md-6">
+		<div id="barplot">
+			<h3>Alphas</h3>
+		</div>
+		<div id="degreeplot">
+			<h3>Degrees</h3>
+		</div>
+	</div>
+	<div class="col-md-6">
+		<div id="scatter">
+			<h3>Parent ions</h3>
+		</div>	
+	</div>
 </div>
-<div id="degreeplot">
-<h3>Degrees</h3>
-</div>
 
 
-<div id="scatter">
-<h3>Parent ions</h3>
-</div>	
 {% endblock %}
 
 
@@ -136,10 +141,15 @@ bar_plot('/basicviz/get_degrees/{{mfe.id}}/{{motif_name}}/','degreeplot')
 
 
 scatter_data = {{doc_table|safe}}
+individual_names = {{individual_names|safe}}
+
+var plot_height = 500
+var plot_width = 500
+
 
 scatter_svg = d3.select('#scatter').append('svg')
-	.attr('width',700)
-	.attr('height',700);
+	.attr('width',plot_width)
+	.attr('height',plot_height);
 
 min_mz = d3.min(scatter_data,function(d) {return d[0];}) - 20
 max_mz = d3.max(scatter_data,function(d) {return d[0];}) + 20
@@ -147,8 +157,6 @@ min_rt = d3.min(scatter_data,function(d) {return d[1];}) - 20
 max_rt = d3.max(scatter_data,function(d) {return d[1];}) + 20
 max_ind = d3.max(scatter_data,function(d) {return d[2];})
 
-var plot_height = 700
-var plot_width = 700
 var ver_margin = 50
 var hor_margin = 50
 var xScale = d3.scale.linear()
@@ -197,11 +205,49 @@ var circles = scatter_svg.selectAll("circle")
 				.enter()
 				.append("circle")
 
+var individual_name = scatter_svg.append('text')
+									.attr('x',xScale(0.5*(max_mz + min_mz)))
+									.attr('y',yScale(max_rt)-20)
+
 var colorscale = d3.scale.linear().domain([0,max_ind]).range(["red","blue"])
 circles.attr('cx',function(d) {return xScale(d[0]);})
 	    .attr('cy',function(d) {return yScale(d[1]);})
 		.attr('r',function(d) {return Math.ceil(5*d[3]);})
-		.attr('fill',function(d) {console.log(colorscale(d[2]));return colorscale(d[2])});
+		.attr('fill','#666666')
+		.attr('class',function(d) {return "ind_" + d[2];})
+		.on('mouseover',function(d) {
+			scatter_highlight(d[2]);
+				// scatter_svg.selectAll('.ind_'+d[2])
+				// 	.transition()
+				// 	.duration(250)
+				// 	.attr('r',function(d) {return Math.ceil(40*d[3]);})
+				// 	.attr('fill',function(d) {return colorscale(d[2]);});
+				// individual_name.text(individual_names[d[2]]);
+			})
+		.on('mouseout',function(d) {
+			scatter_unhighlight(d[2])
+		});
+
+function scatter_highlight(n) {
+	scatter_svg.selectAll('.ind_'+n)
+					.transition()
+					.duration(250)
+					.attr('r',function(d) {return Math.ceil(40*d[3]);})
+					.attr('fill',function(d) {return colorscale(d[2]);});
+				individual_name.text(individual_names[n]);
+}	
+function scatter_unhighlight(n) {
+	scatter_svg.selectAll('.ind_'+n)
+				.transition()
+				.duration(250)
+				.attr('fill','#666666')
+				.attr('r',function(d) {return Math.ceil(5*d[3]);})
+			individual_name.text("");
+}
+
+// var a= scatter_svg.selectAll('.ind_1').attr('r',20);
+// console.log(a.length)
+// console.log(a)
 
 </script>
 {% endblock %}

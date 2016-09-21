@@ -290,6 +290,7 @@ def view_multi_m2m(request,mf_id,motif_name):
     individual_m2m = []
     alps = []
     doc_table = []
+    individual_names = []
     for i,individual in enumerate(individuals):
         alpha = Alpha.objects.get(mass2motif = individual_motifs[individual])
         docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual])
@@ -301,6 +302,7 @@ def view_multi_m2m(request,mf_id,motif_name):
             mz = float(split_name[0])
             rt = float(split_name[1])
             doc_table.append([mz,rt,i,doc.probability])
+        individual_names.append(individual.name)
 
     # Compute the mean and variance
     tot_alps = sum(alps)
@@ -311,6 +313,7 @@ def view_multi_m2m(request,mf_id,motif_name):
     context_dict['alphas'] = zip([i.name for i in individuals],alps)
     context_dict['individual_m2m'] = individual_m2m
     context_dict['doc_table'] = doc_table
+    context_dict['individual_names'] = json.dumps(individual_names)
 
 
     return render(request,'basicviz/view_multi_m2m.html',context_dict)
@@ -328,7 +331,7 @@ def get_alphas(request,mf_id,motif_name):
     alps = [[individuals[i].name,a] for i,a in enumerate(alps)]
     # alps = zip([i.name for i in individuals],alps)
 
-    alps = [0] + alps
+    # alps = [0] + alps
 
     json_alps = json.dumps(alps)
 
@@ -346,7 +349,7 @@ def get_degrees(request,mf_id,motif_name):
     
     degs = zip([i.name for i in individuals],degs)
 
-    degs = [0] + degs
+    # degs = [0] + degs
 
     json_degs = json.dumps(degs)
 

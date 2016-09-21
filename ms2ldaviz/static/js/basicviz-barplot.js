@@ -10,7 +10,7 @@ function bar_plot(url,div_id) {
 
 		var hor_margin = 70
 		var ver_margin = 30
-		var plot_width = 800
+		var plot_width = 600
 		var plot_height = 300
 
 		var bar_plot_svg = d3.select("#" + div_id)
@@ -19,11 +19,11 @@ function bar_plot(url,div_id) {
 			                    .attr("height",plot_height)
 			                    .attr("id","bar_plot_svg")
 
-		bar_plot_svg.append("rect")
-		    		.attr("class", "overlay")
-		    		.attr("fill",'#cccccc')
-				    .attr("width", plot_width)
-				    .attr("height", plot_height);  
+		// bar_plot_svg.append("rect")
+		//     		.attr("class", "overlay")
+		//     		.attr("fill",'#cccccc')
+		// 		    .attr("width", plot_width)
+		// 		    .attr("height", plot_height);  
 
 
 
@@ -72,13 +72,13 @@ function bar_plot(url,div_id) {
 	        .call(yAxis);
 
 	    var a = 0
-	    rectangles.attr("x",function(d,i) {return xScale(i-0.5)})
+	    rectangles.attr("x",function(d,i) {return xScale(i)})
 	    			.attr("y",function(d) {return yScale(d[1])})
 	    			.attr("width",0.9*bar_width)
 	    			.attr("height",function(d) { return yScale(0) - yScale(d[1]);})
 	    			.attr("stroke",'#000000')
 	    			.attr("fill",'#AA0000')
-	    			.on("mouseover",function(d) {
+	    			.on("mouseover",function(d,i) {
 			            d3.select(this)
 		                	.transition()
 		                	.duration(250)
@@ -91,13 +91,15 @@ function bar_plot(url,div_id) {
 		                	.attr("font-weight","bold")
 			                .attr("font-size",""+ 14 + "px")
 		                	.text(d[0]);
+		                scatter_highlight(i);
 		            })
-		            .on("mouseout",function(d) {
+		            .on("mouseout",function(d,i) {
 		            	d3.select(this)
 			            	.transition()
 			                .duration(250)
 		            		.attr('fill','#AA0000');
-		            	d3.select('#tooltip').remove()
+		            	d3.select('#tooltip').remove();
+		            	scatter_unhighlight(i);
 		            });
 
 	}
