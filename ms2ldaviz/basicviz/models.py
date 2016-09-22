@@ -182,3 +182,14 @@ class AlphaCorrOptions(models.Model):
 	max_edges = models.IntegerField(null = False)
 	just_annotated = models.BooleanField(null = False)
 
+
+class PeakSet(models.Model):
+	multifileexperiment = models.ForeignKey(MultiFileExperiment)
+	mz = models.FloatField(null = False)
+	rt = models.FloatField(null = False)
+
+class IntensityInstance(models.Model):
+	peakset = models.ForeignKey(PeakSet)
+	intensity = models.FloatField(null = True)
+	experiment = models.ForeignKey(Experiment,null=True)
+	document = models.ForeignKey(Document,null=True)
