@@ -21,4 +21,5 @@ from basicviz.models import MultiFileExperiment,Experiment,Document,PeakSet,Inte
 if __name__ == '__main__':
 	multifile_experiment_name = sys.argv[1]
 	mfe = MultiFileExperiment.objects.get(name = multifile_experiment_name)
-	peaksets = mfe.peakset_set.delete()
+	peaksets = mfe.peakset_set.all()
+	peaksets.delete()
