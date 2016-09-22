@@ -185,6 +185,8 @@ class AlphaCorrOptions(models.Model):
 
 class PeakSet(models.Model):
 	multifileexperiment = models.ForeignKey(MultiFileExperiment)
+	original_file = models.CharField(max_length = 124,null=True)
+	original_id = models.IntegerField(null = True)
 	mz = models.FloatField(null = False)
 	rt = models.FloatField(null = False)
 

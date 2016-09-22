@@ -79,7 +79,8 @@ if __name__ == '__main__':
 	print "Making the peakset objects"
 	for i,mz_value in enumerate(mz_list):
 		rt_value = rt_list[i]
-		new_peakset = PeakSet.objects.get_or_create(multifileexperiment = mfe,mz = mz_value,rt = rt_value)[0]
+		new_peakset = PeakSet.objects.get_or_create(multifileexperiment = mfe,mz = mz_value,rt = rt_value,
+													original_file = combined_file_name,original_id = id_list[i])[0]
 		for j,intense in enumerate(intensities[i]):
 			if not intense == 'nan':
 				exper = experiment_match[short_heads[j]]
