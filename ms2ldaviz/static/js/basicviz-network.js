@@ -71,7 +71,7 @@ d3.json(url, function(error, graph) {
 
     var linkSel = nodeArea.selectAll('line').data(graph.links).enter().append('line')
         .attr('stroke', '#999999')
-        .style("stroke-width", function(d) { return 10*d.weight; });
+        .style("stroke-width", function(d) { return 5*d.weight; });
     var node = nodeArea.selectAll(".node")
       .data(graph.nodes)
         .enter().append("g")
