@@ -70,7 +70,7 @@ d3.json(url, function(error, graph) {
     //     .attr('r', 10).attr('fill', 'black');
 
     var linkSel = nodeArea.selectAll('line').data(graph.links).enter().append('line')
-        .attr('stroke', '#999999');
+        .attr('stroke', '#999999')
         .style("stroke-width", function(d) { return d.weight; });
     var node = nodeArea.selectAll(".node")
       .data(graph.nodes)
