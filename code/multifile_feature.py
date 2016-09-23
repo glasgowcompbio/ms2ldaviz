@@ -7,7 +7,7 @@ import math
 class FeatureExtractor(object):
 
     def __init__(self, input_set, fragment_grouping_tol, loss_grouping_tol,
-                 loss_threshold_min_count, loss_threshold_max_val,
+                 loss_threshold_min_count, loss_threshold_max_val,loss_threshold_min_val,
                  input_type):
 
         self.all_ms1 = []
@@ -20,6 +20,7 @@ class FeatureExtractor(object):
         self.loss_grouping_tol = loss_grouping_tol
         self.loss_threshold_min_count = loss_threshold_min_count
         self.loss_threshold_max_val = loss_threshold_max_val
+        self.loss_threshold_min_val = loss_threshold_min_val
 
         # load all the ms1 and ms2 files
         self.F = len(input_set)
@@ -112,6 +113,8 @@ class FeatureExtractor(object):
         if len(group) < self.loss_threshold_min_count:
             valid = False
         if current_mass > self.loss_threshold_max_val:
+            valid = False
+        if current_mass < self.loss_threshold_min_val:
             valid = False
         return valid
 
@@ -234,7 +237,8 @@ class FeatureExtractor(object):
             for _, _, val in group:
                 group_vals.append(val)
             mean_mz = np.mean(np.array(group_vals))
-            rounded_mz = np.round(mean_mz, 5)
+            # rounded_mz = np.round(mean_mz, 5)
+            rounded_mz = mean_mz
             w = '%s_%s' % (prefix, rounded_mz)
             group_words[k] = w
         return group_words
