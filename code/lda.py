@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-from scipy.special import psi as psi
-from scipy.special import polygamma as pg
-import time
+import multiprocessing
 import pickle
+import time
+
+from scipy.special import polygamma as pg
+from scipy.special import psi as psi
+
+from parallel_calls import par_e_step
+import numpy as np
 
 
 # This is a Gibbs sampler LDA object. Don't use it. I'll probably delete it when I have time
@@ -128,7 +132,7 @@ class LDA(object):
 		for doc in self.corpus:
 			di = self.doc_index[doc]
 			if self.post_sample_count == 0:
-				tprobs = self.doc_topic_counts[:,di]
+				tcounts = self.doc_topic_counts[:,di]
 				tprobs = tcounts / 1.0*tcounts.sum()
 			else:
 				tprobs = self.get_post_mean_theta()
@@ -705,7 +709,7 @@ class MS1(object):
 
 # TODO: comment this class!
 class MultiFileVariationalLDA(object):
-	def __init__(self,corpus_dictionary,word_index,topic_index = None,topic_metadata = None,K = 20,alpha=1,eta = 0.1):
+	def __init__(self,corpus_dictionary,word_index,topic_index = None,topic_metadata = None,K = 20,alpha=1,eta = 0.1,update_alpha=True):
 		self.word_index = word_index # this needs to be consistent across the instances
 		self.corpus_dictionary = corpus_dictionary
 		self.K = K
@@ -715,6 +719,7 @@ class MultiFileVariationalLDA(object):
 			self.alpha = self.alpha*np.ones(self.K)
 		self.eta = eta # Smoothing parameter for beta
 		self.individual_lda = {}
+		self.update_alpha = update_alpha		
 
 		self.topic_index = topic_index
 		if topic_index == None:
@@ -730,26 +735,62 @@ class MultiFileVariationalLDA(object):
 		for corpus_name in self.corpus_dictionary:
 			new_lda = VariationalLDA(corpus=self.corpus_dictionary[corpus_name],K=K,
 				alpha=alpha,eta=eta,word_index=word_index,
-				topic_index = self.topic_index,topic_metadata = self.topic_metadata)
+				topic_index = self.topic_index,topic_metadata = self.topic_metadata,update_alpha=self.update_alpha)
 			self.individual_lda[corpus_name] = new_lda
 
 
-	def run_vb(self,n_its = 10,initialise=True):
+	def run_vb(self,n_its = 10,initialise=True,parallel=False):
 		if initialise:
 			for lda_name in self.individual_lda:
 				self.individual_lda[lda_name].init_vb()
-		first_lda = self.individual_lda[self.individual_lda.keys()[0]]
+
+		if parallel:
+			num_cores = multiprocessing.cpu_count()
+			print 'parallel=%s num_cores=%d' % (parallel, num_cores)
+			pool = multiprocessing.Pool(num_cores)
+		else:
+			print 'serial processing'
+		
 		for it in range(n_its):
+
 			print "Iteration: {}".format(it)
 			temp_beta = np.zeros((self.K,self.n_words),np.float)
 			total_difference = []
+			
+			if parallel:			
+
+				# map each param_set for an individual lda to a worker that performs par_e_step()
+				ldas = [self.individual_lda[lda_name] for lda_name in self.individual_lda]	
+				params = []
+				for l in ldas:
+					param_set = (l.corpus, l.K, l.n_words, l.doc_index, l.alpha, l.word_index, l.phi_matrix, l.beta_matrix, l.gamma_matrix)
+					params.append(param_set)
+				par_results = pool.map(par_e_step, params)
+
+				# process the results
+				assert len(par_results) == len(ldas)
+				for i in range(len(par_results)):
+					
+					beta_res, phi_res, gamma_res = par_results[i]
+					temp_beta += beta_res
+					ldas[i].phi_matrix = phi_res
+					ldas[i].gamma_matrix = gamma_res
+					
+			else: # serial
+				
+				for lda_name in self.individual_lda:
+					temp_beta += self.individual_lda[lda_name].e_step()
+
+			# cannot run this in parallel due to recursion .. ??
+			# see http://stackoverflow.com/questions/7222570/parallel-recursive-function-in-python
 			for lda_name in self.individual_lda:
-				temp_beta += self.individual_lda[lda_name].e_step()
 				if self.individual_lda[lda_name].update_alpha:
 					self.individual_lda[lda_name].alpha = self.individual_lda[lda_name].alpha_nr()
+
 			temp_beta += self.eta
 			temp_beta /= temp_beta.sum(axis=1)[:,None]
-			total_difference = (np.abs(temp_beta - self.individual_lda[0].beta_matrix)).sum()
+			first_lda = self.individual_lda[self.individual_lda.keys()[0]]			
+			total_difference = (np.abs(temp_beta - first_lda.beta_matrix)).sum()
 			for lda_name in self.individual_lda:
 				self.individual_lda[lda_name].beta_matrix = temp_beta
 			print total_difference
@@ -772,8 +813,3 @@ class MultiFileVariationalLDA(object):
 				pickle.dump(multifile_dict,f)
 
 		return multifile_dict
-
-
-
-
-
