@@ -35,9 +35,6 @@ class LDA(object):
 					self.word_index[word] = self.nwords
 					self.nwords += 1
 
-		
-
-
 	def initialise(self):
 		self.Z = {}
 		self.doc_topic_counts = np.zeros((self.K,self.ndocs),np.int) + self.alpha
@@ -68,7 +65,6 @@ class LDA(object):
 		self.post_sample_count = 0.0
 		self.post_mean_theta = np.zeros((self.K,self.ndocs),np.float)
 		self.post_mean_topics = np.zeros((self.K,self.nwords),np.float)
-
 
 	def gibbs_iteration(self,n_samples = 1,verbose = True,burn = True):
 		# Does one gibbs step
@@ -125,7 +121,6 @@ class LDA(object):
 		m,probs = zip(*m_probs)
 		return np.array(m),np.array(probs)
 
-
 	def plot_topic(self,topic_id,nrows = 10,ncols = 10):
 
 		image_array = np.zeros((nrows,ncols),np.float)
@@ -168,8 +163,6 @@ class LDA(object):
 				top.append((word,pmth[topic_id,pos]))
 
 		return sorted(top,key = lambda x: x[1], reverse=True)
-
-
 
 # This is the LDA implementation to use
 # Corpus can be passed in, or loaded from .csv files in joes style
@@ -339,8 +332,6 @@ class VariationalLDA(object):
 		self.beta_matrix[:self.n_fixed_topics,:] /= self.beta_matrix[:self.n_fixed_topics,:].sum(axis=1)[:,None]
 		print "Matched {}/{} topics at prob_thresh={}".format(self.n_fixed_topics,len(topics),prob_thresh)
 
-
-
 	def normalise_intensities(self):
 		for doc in self.corpus:
 			max_i = 0.0
@@ -350,82 +341,81 @@ class VariationalLDA(object):
 			for word in self.corpus[doc]:
 				self.corpus[doc][word] = int(self.normalise*self.corpus[doc][word]/max_i)
 
-    # Load the features from a Joe .csv file. Pass the file name up until the _ms1.csv or _ms2.csv
-    # these are added here
-    # The scale factor is what we multiply intensities by
+	# Load the features from a Joe .csv file. Pass the file name up until the _ms1.csv or _ms2.csv
+	# these are added here
+	# The scale factor is what we multiply intensities by
 	def load_features_from_csv(self,prefix,scale_factor=100.0):
 		# Load the MS1 peaks (MS1 object defined below)
 		self.ms1peaks = []
 		self.doc_metadata = {}
 		ms1file = prefix + '_ms1.csv'
 		with open(ms1file,'r') as f:
-		    heads = f.readline()
-		    for line in f:
-		        split_line = line.split(',')
-		        ms1_id = split_line[1]
-		        mz = float(split_line[5])
-		        rt = float(split_line[4])
-		        name = split_line[5] + '_' + split_line[4]
-		        intensity = float(split_line[6])
-		        new_ms1 = MS1(ms1_id,mz,rt,intensity,name)
-		        self.ms1peaks.append(name)
-		        self.doc_metadata[name] = {}
-		        self.doc_metadata[name]['parentmass'] = mz
-		        self.doc_metadata[name]['rt'] = rt
-		        self.doc_metadata[name]['intensity'] = intensity
-		        self.doc_metadata[name]['id'] = ms1_id
+			heads = f.readline()
+			for line in f:
+				split_line = line.split(',')
+				ms1_id = split_line[1]
+				mz = float(split_line[5])
+				rt = float(split_line[4])
+				name = split_line[5] + '_' + split_line[4]
+				intensity = float(split_line[6])
+				new_ms1 = MS1(ms1_id,mz,rt,intensity,name)
+				self.ms1peaks.append(name)
+				self.doc_metadata[name] = {}
+				self.doc_metadata[name]['parentmass'] = mz
+				self.doc_metadata[name]['rt'] = rt
+				self.doc_metadata[name]['intensity'] = intensity
+				self.doc_metadata[name]['id'] = ms1_id
 		print "Loaded {} MS1 peaks".format(len(self.ms1peaks))
 		parent_id_list = [self.doc_metadata[name]['id'] for name in self.ms1peaks]
-
 
 		# Load the ms2 objects
 		frag_file = prefix + '_ms2.csv'
 		features = []
 		self.corpus = {}
 		with open(frag_file,'r') as f:
-		    heads = f.readline().split(',')
-		    for line in f:
-		        split_line = line.rstrip().split(',')
-		        frag_name = split_line[10]
-		        if not frag_name == 'NA':
-		            frag_name = frag_name[1:-1]
-		        frag_id = 'fragment_' + frag_name
-		        
-		        loss_name = split_line[11]
-		        if not loss_name == 'NA':
-		            loss_name = loss_name[1:-1]
-		        loss_id = 'loss_' + loss_name
-		        
-		        if not frag_id == "fragment_NA":
-		            if not frag_id in features:
-		                features.append(frag_id)
-		            frag_idx = features.index(frag_id)
+			heads = f.readline().split(',')
+			for line in f:
+				split_line = line.rstrip().split(',')
+				frag_name = split_line[10]
+				if not frag_name == 'NA':
+					frag_name = frag_name[1:-1]
+				frag_id = 'fragment_' + frag_name
 
-		        if not loss_id == "loss_NA":
-		            if not loss_id in features:
-		                features.append(loss_id)
-		            loss_idx = features.index(loss_id)
-		        
-		        intensity = float(split_line[6])
-		        
-		        parent_id = split_line[2]
-		        # Find the parent
-		        parent = self.ms1peaks[parent_id_list.index(parent_id)]
+				loss_name = split_line[11]
+				if not loss_name == 'NA':
+					loss_name = loss_name[1:-1]
+				loss_id = 'loss_' + loss_name
 
-		        if parent == '156.076766819657_621.074':
-		        	print loss_id
-		        	print frag_id
-		        	print line
+				if not frag_id == "fragment_NA":
+					if not frag_id in features:
+						features.append(frag_id)
+					frag_idx = features.index(frag_id)
 
-		        # If we've not seen this parent before, create it as an empty dict
-		        if not parent in self.corpus:
-		            self.corpus[parent] = {}
-
-		        # Store the ms2 features in the parent dictionary
-		        if not frag_id == "fragment_NA":
-		            self.corpus[parent][frag_id] = intensity * scale_factor
-		        if not loss_id == "loss_NA":
-		            self.corpus[parent][loss_id] = intensity * scale_factor
+				if not loss_id == "loss_NA":
+					if not loss_id in features:
+						features.append(loss_id)
+					loss_idx = features.index(loss_id)
+				
+				intensity = float(split_line[6])
+				
+				parent_id = split_line[2]
+				# Find the parent
+				parent = self.ms1peaks[parent_id_list.index(parent_id)]
+				
+				if parent == '156.076766819657_621.074':
+					print loss_id
+					print frag_id
+					print line
+				
+				# If we've not seen this parent before, create it as an empty dict
+				if not parent in self.corpus:
+					self.corpus[parent] = {}
+				
+				# Store the ms2 features in the parent dictionary
+				if not frag_id == "fragment_NA":
+					self.corpus[parent][frag_id] = intensity * scale_factor
+				if not loss_id == "loss_NA":
+					self.corpus[parent][loss_id] = intensity * scale_factor
 
 		self.n_docs = len(self.corpus)
 		if self.word_index == None:
@@ -457,7 +447,6 @@ class VariationalLDA(object):
 			if verbose:
 				print "Iteration {} (change = {}) ({} seconds, I think I'll finish in {} minutes)".format(it,diff,end_time - start_time,estimated_finish)
 
-
 	# D a VB step
 	def vb_step(self):
 		# Run an e-step
@@ -476,29 +465,27 @@ class VariationalLDA(object):
 		return total_difference
 		# self.m_step()
 
-
-
 	# Newton-Raphson procedure for updating alpha
 	def alpha_nr(self,maxit=20,init_alpha=[]):
-	    M,K = self.gamma_matrix.shape
-	    if not len(init_alpha) > 0:
-	        init_alpha = self.gamma_matrix.mean(axis=0)/K
-	    alpha = init_alpha.copy()
-	    alphap = init_alpha.copy()
-	    g_term = (psi(self.gamma_matrix) - psi(self.gamma_matrix.sum(axis=1))[:,None]).sum(axis=0)
-	    for it in range(maxit):
-	        grad = M *(psi(alpha.sum()) - psi(alpha)) + g_term
-	        H = -M*np.diag(pg(1,alpha)) + M*pg(1,alpha.sum())
-	        alpha_new = alpha - np.dot(np.linalg.inv(H),grad)
-	        if (alpha_new < 0).sum() > 0:
-	            init_alpha /= 10.0
-	            return self.alpha_nr(maxit=maxit,init_alpha = init_alpha)
-	        
-	        diff = np.sum(np.abs(alpha-alpha_new))
-	        alpha = alpha_new
-	        if diff < 1e-6 and it > 1:
-	            return alpha
-	    return alpha
+		M,K = self.gamma_matrix.shape
+		if not len(init_alpha) > 0:
+			init_alpha = self.gamma_matrix.mean(axis=0)/K
+		alpha = init_alpha.copy()
+		alphap = init_alpha.copy()
+		g_term = (psi(self.gamma_matrix) - psi(self.gamma_matrix.sum(axis=1))[:,None]).sum(axis=0)
+		for it in range(maxit):
+			grad = M *(psi(alpha.sum()) - psi(alpha)) + g_term
+			H = -M*np.diag(pg(1,alpha)) + M*pg(1,alpha.sum())
+			alpha_new = alpha - np.dot(np.linalg.inv(H),grad)
+			if (alpha_new < 0).sum() > 0:
+				init_alpha /= 10.0
+				return self.alpha_nr(maxit=maxit,init_alpha = init_alpha)
+
+			diff = np.sum(np.abs(alpha-alpha_new))
+			alpha = alpha_new
+			if diff < 1e-6 and it > 1:
+				return alpha
+		return alpha
 
 	# TODO: tidy up and comment this function
 	def e_step(self):
@@ -539,7 +526,6 @@ class VariationalLDA(object):
 		for doc in self.corpus:
 			self.doc_index[doc] = doc_pos
 			doc_pos += 1
-
 
 	# Initialise the VB algorithm
 	# TODO: tidy this up
@@ -623,16 +609,15 @@ class VariationalLDA(object):
 		lda_dict['topic_index'] = self.topic_index
 		lda_dict['topic_metadata'] = self.topic_metadata
 
-
 		# Create the inverse indexes
 		wi = []
 		for i in self.word_index:
-		    wi.append((i,self.word_index[i]))
+			wi.append((i,self.word_index[i]))
 		wi = sorted(wi,key = lambda x: x[1])
 
 		di = []
 		for i in self.doc_index:
-		    di.append((i,self.doc_index[i]))
+			di.append((i,self.doc_index[i]))
 		di = sorted(di,key=lambda x: x[1])
 
 		ri,i = zip(*wi)
@@ -645,67 +630,56 @@ class VariationalLDA(object):
 		tp = sorted(tp,key = lambda x: x[1])
 		reverse,_ = zip(*tp)
 
-
 		for k in range(self.K):
-		    pos = np.where(self.beta_matrix[k,:]>min_prob_to_keep_beta)[0]
-		    motif_name = reverse[k]
-		    # motif_name = 'motif_{}'.format(k)
-		    lda_dict['beta'][motif_name] = {}
-		    for p in pos:
-		        word_name = ri[p]
-		        lda_dict['beta'][motif_name][word_name] = self.beta_matrix[k,p]
-
-
-
+			pos = np.where(self.beta_matrix[k,:]>min_prob_to_keep_beta)[0]
+			motif_name = reverse[k]
+			# motif_name = 'motif_{}'.format(k)
+			lda_dict['beta'][motif_name] = {}
+			for p in pos:
+				word_name = ri[p]
+				lda_dict['beta'][motif_name][word_name] = self.beta_matrix[k,p]
 
 		eth = self.get_expect_theta()
 		lda_dict['theta'] = {}
 		for i,t in enumerate(eth):
-		    doc = di[i]
-		    lda_dict['theta'][doc] = {}
-		    pos = np.where(t > min_prob_to_keep_theta)[0]
-		    for p in pos:
-		    	motif_name = reverse[p]
-		        # motif_name = 'motif_{}'.format(p)
-		        lda_dict['theta'][doc][motif_name] = t[p]
+			doc = di[i]
+			lda_dict['theta'][doc] = {}
+			pos = np.where(t > min_prob_to_keep_theta)[0]
+			for p in pos:
+				motif_name = reverse[p]
+				# motif_name = 'motif_{}'.format(p)
+				lda_dict['theta'][doc][motif_name] = t[p]
 
 		lda_dict['phi'] = {}
 		ndocs = 0
 		for doc in self.corpus:
-		    ndocs += 1
-		    lda_dict['phi'][doc] = {}
-		    for word in self.corpus[doc]:
-		        lda_dict['phi'][doc][word] = {}
-		        pos = np.where(self.phi_matrix[doc][word] >= min_prob_to_keep_phi)[0]
-		        for p in pos:
-		            motif_name = reverse[p]
-		            lda_dict['phi'][doc][word][motif_name] = self.phi_matrix[doc][word][p]
-		    if ndocs % 500 == 0:
-		        print "Done {}".format(ndocs)
+			ndocs += 1
+			lda_dict['phi'][doc] = {}
+			for word in self.corpus[doc]:
+				lda_dict['phi'][doc][word] = {}
+				pos = np.where(self.phi_matrix[doc][word] >= min_prob_to_keep_phi)[0]
+				for p in pos:
+					motif_name = reverse[p]
+					lda_dict['phi'][doc][word][motif_name] = self.phi_matrix[doc][word][p]
+			if ndocs % 500 == 0:
+				print "Done {}".format(ndocs)
 
 		if not filename == None:
 			with open(filename,'w') as f:
 				pickle.dump(lda_dict,f)
 
 		return lda_dict
-        
-    
-
-    
 
 # MS1 object used by Variational Bayes LDA
 class MS1(object):
-    def __init__(self,ms1_id,mz,rt,intensity,name):
-        self.ms1_id = ms1_id
-        self.mz = mz
-        self.rt = rt
-        self.intensity = intensity
-        self.name = name
-    def __str__(self):
-        return self.name
-
-
-
+	def __init__(self,ms1_id,mz,rt,intensity,name):
+		self.ms1_id = ms1_id
+		self.mz = mz
+		self.rt = rt
+		self.intensity = intensity
+		self.name = name
+	def __str__(self):
+		return self.name
 
 # TODO: comment this class!
 class MultiFileVariationalLDA(object):
@@ -813,7 +787,6 @@ class MultiFileVariationalLDA(object):
 				pickle.dump(multifile_dict,f)
 
 		return multifile_dict
-
 
 def make_split_dictionary(mflda,filename,postfix):
 	# Makes a multifile LDA into several individual dictionary files
