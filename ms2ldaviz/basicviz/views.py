@@ -567,7 +567,7 @@ def get_alpha_correlation_graph(request,acviz_id):
     while True:
         i,j,score = scores[pos]
         if (acviz.distance_score == 'cosine' or acviz.distance_score == 'pearson') and score > acviz.edge_thresh:
-            G.add_edge(motif_names[i],motif_names[j])
+            G.add_edge(motif_names[i],motif_names[j],weight=score)
         elif (acviz.distance_score == 'euclidean' or acviz.distance_score == 'rms') and score > acviz.edge_thresh:
             G.add_edge(motif_names[i],motif_names[j])
         else:
