@@ -16,6 +16,9 @@ from basicviz.models import Feature,Experiment,Document,FeatureInstance,Document
 
 from scipy.stats import pearsonr
 
+import math
+
+
 @login_required(login_url='/basicviz/login/')
 def index(request):
     userexperiments = UserExperiment.objects.filter(user = request.user)
@@ -298,12 +301,21 @@ def view_multi_m2m(request,mf_id,motif_name):
     alps = []
     doc_table = []
     individual_names = []
+    peaksets = {}
     for i,individual in enumerate(individuals):
         alpha = Alpha.objects.get(mass2motif = individual_motifs[individual])
         docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual])
         individual_m2m.append([individual,individual_motifs[individual],alpha,len(docs)])
         alps.append(alpha.value)
         for doc in docs:
+            ii = doc.document.intensityinstance_set.all()
+            if len(ii) > 0:
+                ii = ii[0]
+                ps = ii.peakset
+                if not ps in peaksets:
+                    peaksets[ps] = {}
+                peaksets[ps][individual] = ii.intensity
+
             mz = 0
             rt = 0
             md = jsonpickle.decode(doc.document.metadata)
@@ -324,6 +336,31 @@ def view_multi_m2m(request,mf_id,motif_name):
             doc_table.append([rt,mz,i,doc.probability])
         individual_names.append(individual.name)
 
+    
+    intensity_table = []
+    counts = []
+    final_peaksets = []
+    for peakset in peaksets:
+        new_row = []
+        for individual in individuals:
+            new_row.append(peaksets[peakset].get(individual,0))
+        count = sum([1 for i in new_row if i > 0])
+        if count > 5:
+            nz_vals = [v for v in new_row if v > 0]
+            me = sum(nz_vals)/len(nz_vals)
+            va = sum([v**2 for v in nz_vals])/len(nz_vals) - me**2
+            va = math.sqrt(va)
+            new_row_n = [(v - me)/va if v > 0 else 0 for v in new_row]
+            intensity_table.append(new_row_n)
+            counts.append(count)
+            final_peaksets.append(peakset)
+    
+    temp = zip(counts,intensity_table)
+    temp = sorted(temp,key = lambda x:x[0],reverse = True)
+    counts,intensity_table = zip(*temp)
+    intensity_table = list(intensity_table)
+
+    print intensity_table,counts
     # Compute the mean and variance
     tot_alps = sum(alps)
     m_alp = sum(alps)/len(alps)
@@ -334,6 +371,7 @@ def view_multi_m2m(request,mf_id,motif_name):
     context_dict['individual_m2m'] = individual_m2m
     context_dict['doc_table'] = doc_table
     context_dict['individual_names'] = json.dumps(individual_names)
+    context_dict['intensity_table'] = intensity_table
 
 
     return render(request,'basicviz/view_multi_m2m.html',context_dict)

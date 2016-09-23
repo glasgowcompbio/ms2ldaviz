@@ -33,7 +33,7 @@ function bar_plot(url,div_id) {
 		// console.log(n_bars)
 
 		var xScale = d3.scale.linear()
-	    xScale.domain([0, n_bars+2])
+	    xScale.domain([0, n_bars])
 	    xScale.range([ hor_margin,plot_width-hor_margin])
 	    var yScale = d3.scale.linear()
 	    yScale.domain([0,max_alpha])

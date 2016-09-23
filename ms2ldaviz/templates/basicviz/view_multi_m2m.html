@@ -87,6 +87,8 @@
 		<div id="degreeplot">
 			<h3>Degrees</h3>
 		</div>
+			<div id="heatmap">
+		</div>
 	</div>
 	<div class="col-md-6">
 		<div id="scatter">
@@ -94,6 +96,8 @@
 		</div>	
 	</div>
 </div>
+
+
 
 
 {% endblock %}
@@ -248,6 +252,68 @@ function scatter_unhighlight(n) {
 // var a= scatter_svg.selectAll('.ind_1').attr('r',20);
 // console.log(a.length)
 // console.log(a)
+var heatmap_height = 400
+var heatmap_width = 600
+
+var heatmap_hor_margin = 70
+var heatmap_ver_margin = 30
+var heatmap_svg = d3.select('#heatmap').append('svg')
+	.attr('width',heatmap_width)
+	.attr('height',heatmap_height);
+
+heatmap_data = {{intensity_table|safe}}
+
+console.log(heatmap_data.length)
+
+var n_rows = heatmap_data.length
+var n_cols = individual_names.length
+
+var heatmap_xScale = d3.scale.linear()
+heatmap_xScale.domain([0,n_cols])
+heatmap_xScale.range([ heatmap_hor_margin,heatmap_width-heatmap_hor_margin])
+var heatmap_yScale = d3.scale.linear()
+heatmap_yScale.domain([0,n_rows])
+heatmap_yScale.range([heatmap_ver_margin,heatmap_height - heatmap_ver_margin])
+
+var box_width = (heatmap_width - 2*heatmap_hor_margin)/n_cols
+var box_height = Math.min((heatmap_height - 2*heatmap_ver_margin)/n_rows,20)
+
+
+max_val = 0.0
+min_val = 1e10
+
+
+for (var i = 0; i < heatmap_data.length; i++) {
+	for (var j=0 ; j<heatmap_data[i].length; j++) {
+		if(heatmap_data[i][j] != 0) {
+			if(heatmap_data[i][j] < min_val) {
+				min_val = heatmap_data[i][j];
+			}
+			if(heatmap_data[i][j] > max_val) {
+				max_val = heatmap_data[i][j];
+			}
+		}
+	}
+}
+
+var heatmap_colorscape = d3.scale.linear()
+							.domain([min_val,max_val]).range(["blue","yellow"]);
+
+
+for (var i = 0; i < heatmap_data.length; i++) {
+	for (var j=0 ; j<heatmap_data[i].length; j++) {
+		if(heatmap_data[i][j] != 0) {
+			heatmap_svg.append("rect")
+				.attr('x',heatmap_xScale(j))
+				.attr('y',i*box_height)
+				.attr('width',box_width)
+				.attr('height',box_height)
+				.attr('stroke','#000000')
+				.attr('fill',heatmap_colorscape(heatmap_data[i][j]));
+		}
+	}
+}
+
 
 </script>
 {% endblock %}
