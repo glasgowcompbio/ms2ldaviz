@@ -503,13 +503,16 @@ def get_alpha_correlation_graph(request,acviz_id):
     threshold = 0.98
     max_score = 0.0
     n_edges = 0
-
+    motif_index = []
     an_motifs = []
     if acviz.just_annotated:
-        for motif in motifs:
+        for i,motif in enumerate(motifs):
             if 'annotation' in jsonpickle.decode(motif.metadata):
                 an_motifs.append(motif)
+                motif_index.append(i)
         motifs = an_motifs
+    else:
+        motif_index = range(len(motifs))
     # Add motifs as nodes
     G = nx.Graph()
     motif_names = []
@@ -533,8 +536,8 @@ def get_alpha_correlation_graph(request,acviz_id):
 
     scores = []
     for i,j in combinations(range(len(motifs)),2):
-        a1 = np.array(alp_vals[i])
-        a2 = np.array(alp_vals[j])
+        a1 = np.array(alp_vals[motif_index[i]])
+        a2 = np.array(alp_vals[motif_index[j]])
 
         if acviz.normalise_alphas:
             a1n = a1/np.linalg.norm(a1)    
