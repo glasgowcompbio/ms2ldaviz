@@ -77,7 +77,8 @@ d3.json(url, function(error, graph) {
         .attr("class", "node");
       // .call(force.drag);
 
-    node.append('circle').attr('r',10).attr('fill','black');
+    node.append('circle').attr('r',10)
+        .attr('fill',function(d) {return d.col});
     node.append("text")
       .attr("dx", 12)
       .attr("dy", ".35em")

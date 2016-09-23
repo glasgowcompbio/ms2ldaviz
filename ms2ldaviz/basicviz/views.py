@@ -517,7 +517,10 @@ def get_alpha_correlation_graph(request,acviz_id):
         md = jsonpickle.decode(motif.metadata)
         name = md.get('annotation',motif.name)
         motif_names.append(name)
-        G.add_node(name,name = name)
+        if 'annotation' in md:
+            G.add_node(name,name = name,col='#FF0000')
+        else:
+            G.add_node(name,name = name,col='#333333')
 
 
         # (topic.name,group=2,name=name,
