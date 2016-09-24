@@ -70,6 +70,15 @@ class Document(models.Model):
 		md = jsonpickle.decode(self.metadata)
 		if 'parentmass' in md:
 			return md['parentmass']
+		elif 'mz' in mz:
+			return md['mz']
+		else:
+			return None
+
+	def get_rt(self):
+		md = jsonpickle.decode(self.metadata)
+		if 'rt' in md:
+			return md['rt']
 		else:
 			return None
 
@@ -89,6 +98,7 @@ class Document(models.Model):
 		else:
 			return None
 
+	rt = property(get_rt)
 	logfc = property(get_logfc)
 	mass = property(get_mass)
 	csid = property(get_csid)
