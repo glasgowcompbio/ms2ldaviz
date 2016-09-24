@@ -91,7 +91,7 @@ function bar_plot(url,div_id) {
 		                	.attr("font-weight","bold")
 			                .attr("font-size",""+ 14 + "px")
 		                	.text(d[0]);
-		                scatter_highlight(i);
+		                scatter_highlight('.ind_' + i,individual_names[i]);
 		            })
 		            .on("mouseout",function(d,i) {
 		            	d3.select(this)
@@ -99,7 +99,7 @@ function bar_plot(url,div_id) {
 			                .duration(250)
 		            		.attr('fill','#AA0000');
 		            	d3.select('#tooltip').remove();
-		            	scatter_unhighlight(i);
+		            	scatter_unhighlight('.ind_'+i);
 		            });
 
 	}

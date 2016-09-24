@@ -302,18 +302,25 @@ def view_multi_m2m(request,mf_id,motif_name):
     doc_table = []
     individual_names = []
     peaksets = {}
+    peakset_list = []
+    peakset_masses = []
     for i,individual in enumerate(individuals):
         alpha = Alpha.objects.get(mass2motif = individual_motifs[individual])
         docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual])
         individual_m2m.append([individual,individual_motifs[individual],alpha,len(docs)])
         alps.append(alpha.value)
+        
         for doc in docs:
+            peakset_index = -1
             ii = doc.document.intensityinstance_set.all()
             if len(ii) > 0:
                 ii = ii[0]
                 ps = ii.peakset
                 if not ps in peaksets:
                     peaksets[ps] = {}
+                    peakset_list.append(ps)
+                    peakset_masses.append(ps.mz)
+                peakset_index = peakset_list.index(ps)
                 peaksets[ps][individual] = ii.intensity
 
             mz = 0
@@ -333,13 +340,14 @@ def view_multi_m2m(request,mf_id,motif_name):
                 rt = float(split_name[1])
 
             
-            doc_table.append([rt,mz,i,doc.probability])
+            doc_table.append([rt,mz,i,doc.probability,peakset_index])
         individual_names.append(individual.name)
 
     
     intensity_table = []
     counts = []
     final_peaksets = []
+    final_peakset_masses = []
     for peakset in peaksets:
         new_row = []
         for individual in individuals:
@@ -354,13 +362,25 @@ def view_multi_m2m(request,mf_id,motif_name):
             intensity_table.append(new_row_n)
             counts.append(count)
             final_peaksets.append(peakset)
+    for row in doc_table:
+        old_ps_index = row[-1]
+        if old_ps_index > -1:
+            old_ps = peakset_list[old_ps_index]
+            if old_ps in final_peaksets:
+                new_ps_index = final_peaksets.index(old_ps)
+            else:
+                new_ps_index = -1
+            row[-1] = new_ps_index
     
+
+    final_peakset_masses = [p.mz for p in final_peaksets]
+    final_peakset_rt = [p.rt for p in final_peaksets]
+
     temp = zip(counts,intensity_table)
     temp = sorted(temp,key = lambda x:x[0],reverse = True)
     counts,intensity_table = zip(*temp)
     intensity_table = list(intensity_table)
 
-    print intensity_table,counts
     # Compute the mean and variance
     tot_alps = sum(alps)
     m_alp = sum(alps)/len(alps)
@@ -372,6 +392,8 @@ def view_multi_m2m(request,mf_id,motif_name):
     context_dict['doc_table'] = doc_table
     context_dict['individual_names'] = json.dumps(individual_names)
     context_dict['intensity_table'] = intensity_table
+    context_dict['peakset_masses'] = final_peakset_masses
+    context_dict['peakset_rt'] = final_peakset_rt
 
 
     return render(request,'basicviz/view_multi_m2m.html',context_dict)
