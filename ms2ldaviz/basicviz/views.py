@@ -365,10 +365,11 @@ def view_multi_m2m(request,mf_id,motif_name):
             me = sum(nz_vals)/len(nz_vals)
             va = sum([v**2 for v in nz_vals])/len(nz_vals) - me**2
             va = math.sqrt(va)
-            new_row_n = [(v - me)/va if v > 0 else 0 for v in new_row]
-            intensity_table.append(new_row_n)
-            counts.append(count)
-            final_peaksets.append(peakset)
+            if va > 0: # if variance is zero, skip...
+                new_row_n = [(v - me)/va if v > 0 else 0 for v in new_row]
+                intensity_table.append(new_row_n)
+                counts.append(count)
+                final_peaksets.append(peakset)
     for row in doc_table:
         old_ps_index = row[-1]
         if old_ps_index > -1:
