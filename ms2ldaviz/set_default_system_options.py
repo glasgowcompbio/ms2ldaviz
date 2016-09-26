@@ -28,3 +28,7 @@ if __name__ == '__main__':
 	s = SystemOptions.objects.get_or_create(key = 'peakset_matching_tolerance')[0]
 	s.value = '5,5'
 	s.save()
+
+	s = SystemOptions.objects.get_or_create(key = 'log_peakset_intensities')[0]
+	s.value = 'true'
+	s.save()

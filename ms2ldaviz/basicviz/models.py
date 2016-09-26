@@ -212,3 +212,5 @@ class IntensityInstance(models.Model):
 class SystemOptions(models.Model):
 	key = models.CharField(null = False,unique = True,max_length = 124)
 	value = models.CharField(null = False,max_length = 124)
+	def __unicode__(self):
+		return "{}  =  {}".format(self.key,self.value)

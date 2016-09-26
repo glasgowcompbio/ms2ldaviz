@@ -355,6 +355,15 @@ def view_multi_m2m(request,mf_id,motif_name):
     else:
         min_count = 5
 
+    log_peakset_intensities = True
+    log_intensities_options = SystemOptions.objects.filter(key = 'log_peakset_intensities')
+    if len(log_intensities_options) > 0:
+        val = log_intensities_options[0].value
+        if val == 'true':
+            log_peakset_intensities = True
+        else:
+            log_peakset_intensities = False
+
     for peakset in peaksets:
         new_row = []
         for individual in individuals:
@@ -362,6 +371,8 @@ def view_multi_m2m(request,mf_id,motif_name):
         count = sum([1 for i in new_row if i > 0])
         if min_count >= 5:
             nz_vals = [v for v in new_row if v > 0]
+            if log_peakset_intensities:
+                nz_vals = [np.log(v) for v in nz_vals]
             me = sum(nz_vals)/len(nz_vals)
             va = sum([v**2 for v in nz_vals])/len(nz_vals) - me**2
             va = math.sqrt(va)
