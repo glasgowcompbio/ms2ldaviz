@@ -207,3 +207,8 @@ class IntensityInstance(models.Model):
 	intensity = models.FloatField(null = True)
 	experiment = models.ForeignKey(Experiment,null=True)
 	document = models.ForeignKey(Document,null=True)
+
+
+class SystemOptions(models.Model):
+	key = models.CharField(null = False,unique = True,max_length = 124)
+	value = models.CharField(null = False,max_length = 124)

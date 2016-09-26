@@ -12,7 +12,7 @@ import csv
 import numpy as np
 from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,VizForm,UserForm,TopicScoringForm,AlphaCorrelationForm
 
-from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,AlphaCorrOptions
+from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,AlphaCorrOptions,SystemOptions
 
 from scipy.stats import pearsonr
 
@@ -348,12 +348,19 @@ def view_multi_m2m(request,mf_id,motif_name):
     counts = []
     final_peaksets = []
     final_peakset_masses = []
+
+    min_count_options = SystemOptions.objects.filter(key = 'heatmap_minimum_display_count')
+    if len(min_count_options) > 0:
+        min_count = int(min_count_options[0].value)
+    else:
+        min_count = 5
+
     for peakset in peaksets:
         new_row = []
         for individual in individuals:
             new_row.append(peaksets[peakset].get(individual,0))
         count = sum([1 for i in new_row if i > 0])
-        if count > 5:
+        if min_count >= 5:
             nz_vals = [v for v in new_row if v > 0]
             me = sum(nz_vals)/len(nz_vals)
             va = sum([v**2 for v in nz_vals])/len(nz_vals) - me**2

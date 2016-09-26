@@ -1,5 +1,5 @@
 from django.contrib import admin
-from basicviz.models import Experiment,Document,Mass2Motif,Feature,FeatureMass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,PeakSet,IntensityInstance
+from basicviz.models import Experiment,Document,Mass2Motif,Feature,FeatureMass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,PeakSet,IntensityInstance,SystemOptions
 
 
 admin.site.register(Experiment)
@@ -15,3 +15,4 @@ admin.site.register(MultiLink)
 admin.site.register(Alpha)
 admin.site.register(PeakSet)
 admin.site.register(IntensityInstance)
+admin.site.register(SystemOptions)
