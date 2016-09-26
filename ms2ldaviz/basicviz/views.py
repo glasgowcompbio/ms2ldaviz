@@ -353,7 +353,7 @@ def view_multi_m2m(request,mf_id,motif_name):
         for individual in individuals:
             new_row.append(peaksets[peakset].get(individual,0))
         count = sum([1 for i in new_row if i > 0])
-        if count > 2:
+        if count > 5:
             nz_vals = [v for v in new_row if v > 0]
             me = sum(nz_vals)/len(nz_vals)
             va = sum([v**2 for v in nz_vals])/len(nz_vals) - me**2
