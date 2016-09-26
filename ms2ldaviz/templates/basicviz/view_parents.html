@@ -47,6 +47,7 @@
 
 	<div>
 	<h3>Mass2Motif details</h3>
+	<p>After thresholding to save the model, the total probability left in this motif is {{total_prob}}</p>
 		<table class='table' id='featuretable'>
 			<thead>
 			<tr><th>Name</th><th>Probability</th><th>link</th></tr>
@@ -60,6 +61,20 @@
 		</table>
 	</div>
 
+	<hr />
+
+	<div>
+	<h3>Documents in Mass2Mitif</h3>
+		<table class='table' id='doctable'>
+			<thead>
+				<tr><th>Document name</th><th>Doc Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
+			</thead>
+			<tbody>
+				{% for dm2m in mass2motif.documentmass2motif_set.all %}
+					<tr><td><a href="/basicviz/show_doc/{{dm2m.document.id}}">{{dm2m.document.name}}</a></td><td>{{dm2m.document.annotation}}</td><td>{{dm2m.probability}}</td><td>{{dm2m.overlap_score}}</td></tr>
+				{% endfor %}
+			</tbody>
+		</table>
 	<hr />
 
 
@@ -102,6 +117,14 @@
 		        ],
 		        "order": [[ 1, "desc" ]],
 		    });
+			$('#doctable').DataTable({
+				dom: 'Bfrtip',
+				buttons: [
+			        'csv',
+		        ],
+		        "order": [[ 2, "desc" ]],
+		    });
+
 		});
 	</script>
 

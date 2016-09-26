@@ -845,7 +845,9 @@ def view_parents(request,motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     context_dict = {'mass2motif':motif}
     motif_features = Mass2MotifInstance.objects.filter(mass2motif = motif).order_by('-probability')
+    total_prob = sum([m.probability for m in motif_features])
     context_dict['motif_features'] = motif_features
+    context_dict['total_prob'] = total_prob
 
 
     context_dict['status'] = 'Edit metadata...'
@@ -1159,6 +1161,7 @@ def start_viz(request,experiment_id):
             upper_colour_perc = viz_form.cleaned_data['upper_colour_perc']
             colour_topic_by_score = viz_form.cleaned_data['colour_topic_by_score']
             random_seed = viz_form.cleaned_data['random_seed']
+            edge_choice = viz_form.cleaned_data['edge_choice']
             vo = VizOptions.objects.get_or_create(experiment = experiment, 
                                                   min_degree = min_degree, 
                                                   edge_thresh = edge_thresh,
@@ -1168,7 +1171,8 @@ def start_viz(request,experiment_id):
                                                   lower_colour_perc = lower_colour_perc,
                                                   upper_colour_perc = upper_colour_perc,
                                                   colour_topic_by_score = colour_topic_by_score,
-                                                  random_seed = random_seed)[0]
+                                                  random_seed = random_seed,
+                                                  edge_choice = edge_choice)[0]
             context_dict['viz_options'] = vo
 
         else:
@@ -1208,7 +1212,8 @@ def get_graph(request,vo_id):
                                         discrete_colour = viz_options.discrete_colour,
                                         lower_colour_perc = viz_options.lower_colour_perc,
                                         upper_colour_perc = viz_options.upper_colour_perc,
-                                        colour_topic_by_score = viz_options.colour_topic_by_score)
+                                        colour_topic_by_score = viz_options.colour_topic_by_score,
+                                        edge_choice = viz_options.edge_choice)
     d = json_graph.node_link_data(G)
     return HttpResponse(json.dumps(d),content_type='application/json')
 
@@ -1217,13 +1222,16 @@ def get_graph(request,vo_id):
 def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
     topic_scale_factor = 5,edge_scale_factor=5,just_annotated_docs = False,
     colour_by_logfc = False,discrete_colour = False,lower_colour_perc = 10,upper_colour_perc = 90,
-    colour_topic_by_score = False):
+    colour_topic_by_score = False,edge_choice = 'probability'):
     mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
     # Find the degrees
     topics = {}
     for mass2motif in mass2motifs:
         topics[mass2motif] = 0
-        docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif,probability__gte=edge_thresh)
+        if edge_choice == 'probability':
+            docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif,probability__gte=edge_thresh)
+        else:
+            docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif,overlap_score__gte=edge_thresh)
         for d in docm2ms:
             if just_annotated_docs and d.document.annotation:
                 topics[mass2motif] += 1
@@ -1342,7 +1350,11 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
 
             doc_nodes.append(docm2m.document)
 
-        G.add_edge(docm2m.mass2motif.name,docm2m.document.name,weight = edge_scale_factor*docm2m.probability)
+        if edge_choice == 'probability':
+            weight = edge_scale_factor * docm2m.probability
+        else:
+            weight = edge_scale_factor * docm2m.overlap_score
+        G.add_edge(docm2m.mass2motif.name,docm2m.document.name,weight = weight)
     print "Third"
     return G
 def topic_pca(request,experiment_id):
@@ -1613,3 +1625,21 @@ def extract_docs(request,experiment_id):
         context_dict['doc_form'] = doc_form
     context_dict['experiment'] = experiment
     return render(request,'basicviz/extract_docs.html',context_dict)
+
+
+def compute_overlap_score(mass2motif,document):
+    # Computes the 'simon' score that looks at the proportion of the 
+    # mass2motif that is represented in the document
+    document_feature_instances = FeatureInstance.objects.filter(document = document)
+    # Following are the phi scores
+    feature_mass2motif_instances = FeatureMass2MotifInstance.objects.filter(featureinstance__in = document_feature_instances)
+    score = 0.0
+    for feature_mass2motif_instance in feature_mass2motif_instances:
+        feature = feature_mass2motif_instance.featureinstance.feature
+        m2m_feature = Mass2MotifInstance.objects.filter(mass2motif = mass2motif,feature = feature)
+        if len(m2m_feature) > 0:
+            score += feature_mass2motif_instance.probability * m2m_feature[0].probability
+    return score
+
+
+

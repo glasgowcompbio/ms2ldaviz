@@ -160,6 +160,7 @@ class DocumentMass2Motif(models.Model):
 	mass2motif = models.ForeignKey(Mass2Motif)
 	probability = models.FloatField()
 	validated = models.NullBooleanField()
+	overlap_score = models.FloatField(null=True)
 
 	def __unicode__(self):
 		return str(self.probability)
@@ -183,6 +184,7 @@ class VizOptions(models.Model):
 	lower_colour_perc = models.IntegerField(null = False)
 	colour_topic_by_score = models.BooleanField(null = False)
 	random_seed = models.CharField(null = False,max_length = 128)
+	edge_choice = models.CharField(null = False,max_length = 128)
 
 class AlphaCorrOptions(models.Model):
 	multifileexperiment = models.ForeignKey(MultiFileExperiment)
