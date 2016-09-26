@@ -22,7 +22,7 @@ from basicviz.views import compute_overlap_score
 
 if __name__ == '__main__':
 	mf_experiment_name = sys.argv[1]
-	mfe = MultiFileExperiment.objects.get(name = experiment_name)
+	mfe = MultiFileExperiment.objects.get(name = mf_experiment_name)
 	links = mfe.multilink_set.all()
 	experiments = [l.experiment for l in links]
 	for experiment in experiments:
