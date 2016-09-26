@@ -16,7 +16,7 @@ django.setup()
 import jsonpickle
 import csv
 
-from basicviz.models import MultiFileExperiment,Experiment,Document,PeakSet,IntensityInstance
+from basicviz.models import MultiFileExperiment,Experiment,Document,PeakSet,IntensityInstance,SystemOptions
 
 
 def hit(mass1,mass2,tol):
@@ -53,8 +53,15 @@ if __name__ == '__main__':
 		low_pos = 0
 		high_pos = 0
 
+		# Default values
 		mass_tol = 5 # ppm
 		rt_tol = 2 # seconds?
+
+		tolerances = SystemOptions.objects.filter(key = 'peakset_matching_tolerance')
+		if len(tolerances) > 0:
+			mass_tol = int(tolerances[0].value.split(',')[0])
+			rt_tol = int(tolerances[0].value.split(',')[1])
+
 		peaksets_found = [0 for p in peaksets]
 		for doc,mz,rt in experiment_mz_rt:
 			while not hit(mz,peaksets[low_pos].mz,mass_tol) and peaksets[low_pos].mz < mz:
