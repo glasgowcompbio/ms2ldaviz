@@ -33,12 +33,12 @@
 
 		<div id="{{m2m.id}}" class="collapse">
 			<table class="table">
-			<tr><th>Name</th><th>Probability</th><th width=200px>Annotation</th><th>Image</th><th>link</th><th>Validated?</th><th>View in ms2ldaviz</th></tr>
+			<tr><th>Name</th><th>Probability</th><th>Overlap score</th><th width=200px>Annotation</th><th>Image</th><th>link</th><th>Validated?</th><th>View in ms2ldaviz</th></tr>
 				{% for doc in m2m.documentmass2motif_set.all %}
 					{% if doc.probability > p_thresh %}
 
 					{% if not just_annotated or doc.document.annotation %}
-					<tr><td>{{doc.document.name}}</td><td>{{doc.probability}}</td><td>{{doc.document.display_name}}</td>
+					<tr><td>{{doc.document.name}}</td><td>{{doc.probability}}</td><td>{{doc.overlap_score}}</td><td>{{doc.document.display_name}}</td>
 					<td>
 						{% if doc.document.csid %}
 							<img src="http://www.chemspider.com/ImagesHandler.ashx?id={{doc.document.csid}}"></td>
