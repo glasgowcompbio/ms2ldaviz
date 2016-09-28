@@ -253,9 +253,133 @@ def wipe_cache(request,mf_id):
     mfe.save()
     return index(request)
 
+def get_doc_table(request,mf_id,motif_name):
+    mfe = MultiFileExperiment.objects.get(id = mf_id)
+    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment')
+    individuals = [l.experiment for l in links]
+
+    individual_motifs = {}
+    for individual in individuals:
+        thismotif = Mass2Motif.objects.get(experiment = individual,name = motif_name)
+        individual_motifs[individual] = thismotif
+
+    doc_table = []
+    individual_names = []
+    peaksets = {}
+    peakset_list = []
+    peakset_masses = []
+    for i,individual in enumerate(individuals):
+        individual_names.append(individual.name)
+        docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual])
+        for doc in docs:
+            peakset_index = -1
+            ii = doc.document.intensityinstance_set.all()
+            if len(ii) > 0:
+                ii = ii[0]
+                ps = ii.peakset
+                if not ps in peaksets:
+                    peaksets[ps] = {}
+                    peakset_list.append(ps)
+                    peakset_masses.append(ps.mz)
+                peakset_index = peakset_list.index(ps)
+                peaksets[ps][individual] = ii.intensity
+
+            mz = 0
+            rt = 0
+            md = jsonpickle.decode(doc.document.metadata)
+            if 'parentmass' in md:
+                mz = md['parentmass']
+            elif 'mz' in md:
+                mz = md['mz']
+            elif '_' in doc.document.name:
+                split_name = doc.document.name.split('_')
+                mz = float(split_name[0])
+            if 'rt' in md:
+                rt = md['rt']
+            elif '_' in doc.document.name:
+                split_name = doc.document.name.split('_')
+                rt = float(split_name[1])
+
+            
+            doc_table.append([rt,mz,i,doc.probability,peakset_index])
+
+    print ps.mz,ps.rt
+    print peaksets[ps]
+
+    intensity_table = []
+    counts = []
+    final_peaksets = []
+    final_peakset_masses = []
+
+    min_count_options = SystemOptions.objects.filter(key = 'heatmap_minimum_display_count')
+    if len(min_count_options) > 0:
+        min_count = int(min_count_options[0].value)
+    else:
+        min_count = 5
+
+    log_peakset_intensities = True
+    log_intensities_options = SystemOptions.objects.filter(key = 'log_peakset_intensities')
+    if len(log_intensities_options) > 0:
+        val = log_intensities_options[0].value
+        if val == 'true':
+            log_peakset_intensities = True
+        else:
+            log_peakset_intensities = False
+
+    for peakset in peaksets:
+        new_row = []
+        for individual in individuals:
+            new_row.append(peaksets[peakset].get(individual,0))
+        count = sum([1 for i in new_row if i > 0])
+        if min_count >= 0:
+            nz_vals = [v for v in new_row if v > 0]
+            if log_peakset_intensities:
+                nz_vals = [np.log(v) for v in nz_vals]
+            me = sum(nz_vals)/len(nz_vals)
+            va = sum([v**2 for v in nz_vals])/len(nz_vals) - me**2
+            va = math.sqrt(va)
+            if va > 0: # if variance is zero, skip...
+                new_row_n = [(v - me)/va if v > 0 else 0 for v in new_row]
+                intensity_table.append(new_row_n)
+                counts.append(count)
+                final_peaksets.append(peakset)
+
+
+    # Order so that the most popular are at the top
+    temp = zip(counts,intensity_table,final_peaksets)
+    temp = sorted(temp,key = lambda x:x[0],reverse = True)
+    counts,intensity_table,final_peaksets = zip(*temp)
+    intensity_table = list(intensity_table)
+
+
+    # Change the indexes in the doc table to match the new ordering
+    for row in doc_table:
+        old_ps_index = row[-1]
+        if old_ps_index > -1:
+            old_ps = peakset_list[old_ps_index]
+            if old_ps in final_peaksets:
+                new_ps_index = final_peaksets.index(old_ps)
+            else:
+                new_ps_index = -1
+            row[-1] = new_ps_index
+    
+
+    final_peakset_masses = [p.mz for p in final_peaksets]
+    final_peakset_rt = [p.rt for p in final_peaksets]
+
+
+
+
+    return HttpResponse(json.dumps((individual_names,doc_table,intensity_table,final_peakset_masses,final_peakset_rt)),content_type = 'application/json')
+
+
+
+
+
+
 def view_multi_m2m(request,mf_id,motif_name):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
-    links = MultiLink.objects.filter(multifileexperiment = mfe)
+    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment')
     individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
     context_dict = {'mfe':mfe}
     context_dict['motif_name'] = motif_name
@@ -310,95 +434,95 @@ def view_multi_m2m(request,mf_id,motif_name):
         individual_m2m.append([individual,individual_motifs[individual],alpha,len(docs)])
         alps.append(alpha.value)
         
-        for doc in docs:
-            peakset_index = -1
-            ii = doc.document.intensityinstance_set.all()
-            if len(ii) > 0:
-                ii = ii[0]
-                ps = ii.peakset
-                if not ps in peaksets:
-                    peaksets[ps] = {}
-                    peakset_list.append(ps)
-                    peakset_masses.append(ps.mz)
-                peakset_index = peakset_list.index(ps)
-                peaksets[ps][individual] = ii.intensity
+        # for doc in docs:
+        #     peakset_index = -1
+        #     ii = doc.document.intensityinstance_set.all()
+        #     if len(ii) > 0:
+        #         ii = ii[0]
+        #         ps = ii.peakset
+        #         if not ps in peaksets:
+        #             peaksets[ps] = {}
+        #             peakset_list.append(ps)
+        #             peakset_masses.append(ps.mz)
+        #         peakset_index = peakset_list.index(ps)
+        #         peaksets[ps][individual] = ii.intensity
 
-            mz = 0
-            rt = 0
-            md = jsonpickle.decode(doc.document.metadata)
-            if 'parentmass' in md:
-                mz = md['parentmass']
-            elif 'mz' in md:
-                mz = md['mz']
-            elif '_' in doc.document.name:
-                split_name = doc.document.name.split('_')
-                mz = float(split_name[0])
-            if 'rt' in md:
-                rt = md['rt']
-            elif '_' in doc.document.name:
-                split_name = doc.document.name.split('_')
-                rt = float(split_name[1])
+        #     mz = 0
+        #     rt = 0
+        #     md = jsonpickle.decode(doc.document.metadata)
+        #     if 'parentmass' in md:
+        #         mz = md['parentmass']
+        #     elif 'mz' in md:
+        #         mz = md['mz']
+        #     elif '_' in doc.document.name:
+        #         split_name = doc.document.name.split('_')
+        #         mz = float(split_name[0])
+        #     if 'rt' in md:
+        #         rt = md['rt']
+        #     elif '_' in doc.document.name:
+        #         split_name = doc.document.name.split('_')
+        #         rt = float(split_name[1])
 
             
-            doc_table.append([rt,mz,i,doc.probability,peakset_index])
-        individual_names.append(individual.name)
+        #     doc_table.append([rt,mz,i,doc.probability,peakset_index])
+        # individual_names.append(individual.name)
 
     
-    intensity_table = []
-    counts = []
-    final_peaksets = []
-    final_peakset_masses = []
+    # intensity_table = []
+    # counts = []
+    # final_peaksets = []
+    # final_peakset_masses = []
 
-    min_count_options = SystemOptions.objects.filter(key = 'heatmap_minimum_display_count')
-    if len(min_count_options) > 0:
-        min_count = int(min_count_options[0].value)
-    else:
-        min_count = 5
+    # min_count_options = SystemOptions.objects.filter(key = 'heatmap_minimum_display_count')
+    # if len(min_count_options) > 0:
+    #     min_count = int(min_count_options[0].value)
+    # else:
+    #     min_count = 5
 
-    log_peakset_intensities = True
-    log_intensities_options = SystemOptions.objects.filter(key = 'log_peakset_intensities')
-    if len(log_intensities_options) > 0:
-        val = log_intensities_options[0].value
-        if val == 'true':
-            log_peakset_intensities = True
-        else:
-            log_peakset_intensities = False
+    # log_peakset_intensities = True
+    # log_intensities_options = SystemOptions.objects.filter(key = 'log_peakset_intensities')
+    # if len(log_intensities_options) > 0:
+    #     val = log_intensities_options[0].value
+    #     if val == 'true':
+    #         log_peakset_intensities = True
+    #     else:
+    #         log_peakset_intensities = False
 
-    for peakset in peaksets:
-        new_row = []
-        for individual in individuals:
-            new_row.append(peaksets[peakset].get(individual,0))
-        count = sum([1 for i in new_row if i > 0])
-        if min_count >= 5:
-            nz_vals = [v for v in new_row if v > 0]
-            if log_peakset_intensities:
-                nz_vals = [np.log(v) for v in nz_vals]
-            me = sum(nz_vals)/len(nz_vals)
-            va = sum([v**2 for v in nz_vals])/len(nz_vals) - me**2
-            va = math.sqrt(va)
-            if va > 0: # if variance is zero, skip...
-                new_row_n = [(v - me)/va if v > 0 else 0 for v in new_row]
-                intensity_table.append(new_row_n)
-                counts.append(count)
-                final_peaksets.append(peakset)
-    for row in doc_table:
-        old_ps_index = row[-1]
-        if old_ps_index > -1:
-            old_ps = peakset_list[old_ps_index]
-            if old_ps in final_peaksets:
-                new_ps_index = final_peaksets.index(old_ps)
-            else:
-                new_ps_index = -1
-            row[-1] = new_ps_index
+    # for peakset in peaksets:
+    #     new_row = []
+    #     for individual in individuals:
+    #         new_row.append(peaksets[peakset].get(individual,0))
+    #     count = sum([1 for i in new_row if i > 0])
+    #     if min_count >= 5:
+    #         nz_vals = [v for v in new_row if v > 0]
+    #         if log_peakset_intensities:
+    #             nz_vals = [np.log(v) for v in nz_vals]
+    #         me = sum(nz_vals)/len(nz_vals)
+    #         va = sum([v**2 for v in nz_vals])/len(nz_vals) - me**2
+    #         va = math.sqrt(va)
+    #         if va > 0: # if variance is zero, skip...
+    #             new_row_n = [(v - me)/va if v > 0 else 0 for v in new_row]
+    #             intensity_table.append(new_row_n)
+    #             counts.append(count)
+    #             final_peaksets.append(peakset)
+    # for row in doc_table:
+    #     old_ps_index = row[-1]
+    #     if old_ps_index > -1:
+    #         old_ps = peakset_list[old_ps_index]
+    #         if old_ps in final_peaksets:
+    #             new_ps_index = final_peaksets.index(old_ps)
+    #         else:
+    #             new_ps_index = -1
+    #         row[-1] = new_ps_index
     
 
-    final_peakset_masses = [p.mz for p in final_peaksets]
-    final_peakset_rt = [p.rt for p in final_peaksets]
+    # final_peakset_masses = [p.mz for p in final_peaksets]
+    # final_peakset_rt = [p.rt for p in final_peaksets]
 
-    temp = zip(counts,intensity_table)
-    temp = sorted(temp,key = lambda x:x[0],reverse = True)
-    counts,intensity_table = zip(*temp)
-    intensity_table = list(intensity_table)
+    # temp = zip(counts,intensity_table)
+    # temp = sorted(temp,key = lambda x:x[0],reverse = True)
+    # counts,intensity_table = zip(*temp)
+    # intensity_table = list(intensity_table)
 
     # Compute the mean and variance
     tot_alps = sum(alps)
@@ -408,18 +532,18 @@ def view_multi_m2m(request,mf_id,motif_name):
     context_dict['alpha_variance'] = var
     context_dict['alphas'] = zip([i.name for i in individuals],alps)
     context_dict['individual_m2m'] = individual_m2m
-    context_dict['doc_table'] = doc_table
-    context_dict['individual_names'] = json.dumps(individual_names)
-    context_dict['intensity_table'] = intensity_table
-    context_dict['peakset_masses'] = final_peakset_masses
-    context_dict['peakset_rt'] = final_peakset_rt
+    # context_dict['doc_table'] = doc_table
+    # context_dict['individual_names'] = json.dumps(individual_names)
+    # context_dict['intensity_table'] = intensity_table
+    # context_dict['peakset_masses'] = final_peakset_masses
+    # context_dict['peakset_rt'] = final_peakset_rt
 
 
     return render(request,'basicviz/view_multi_m2m.html',context_dict)
 
 def get_alphas(request,mf_id,motif_name):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
-    links = MultiLink.objects.filter(multifileexperiment = mfe)
+    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment')
     individuals = [l.experiment for l in links]
     alps = []
     for individual in individuals:
@@ -438,7 +562,7 @@ def get_alphas(request,mf_id,motif_name):
 
 def get_degrees(request,mf_id,motif_name):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
-    links = MultiLink.objects.filter(multifileexperiment = mfe)
+    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment')
     individuals = [l.experiment for l in links]
     degs = []
     for individual in individuals:

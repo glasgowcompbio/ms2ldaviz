@@ -143,95 +143,106 @@ $(document).ready(function() {
 bar_plot('/basicviz/get_alphas/{{mfe.id}}/{{motif_name}}/','barplot')
 bar_plot('/basicviz/get_degrees/{{mfe.id}}/{{motif_name}}/','degreeplot')
 
+d3.json('/basicviz/get_doc_table/{{mfe.id}}/{{motif_name}}/',function(error,dataset) {
+	        if (error) throw error;
+	        draw_scatter(dataset);
+	    });
 
-scatter_data = {{doc_table|safe}}
-individual_names = {{individual_names|safe}}
-
-var plot_height = 500
-var plot_width = 500
-
-
-scatter_svg = d3.select('#scatter').append('svg')
-	.attr('width',plot_width)
-	.attr('height',plot_height);
-
-min_mz = d3.min(scatter_data,function(d) {return d[1];}) - 20
-max_mz = d3.max(scatter_data,function(d) {return d[1];}) + 20
-min_rt = d3.min(scatter_data,function(d) {return d[0];}) - 20
-max_rt = d3.max(scatter_data,function(d) {return d[0];}) + 20
-max_ind = d3.max(scatter_data,function(d) {return d[2];})
-
-var ver_margin = 50
-var hor_margin = 50
-var xScale = d3.scale.linear()
-xScale.domain([min_rt, max_rt])
-xScale.range([ hor_margin,plot_width-hor_margin])
-var yScale = d3.scale.linear()
-yScale.domain([min_mz,max_mz])
-yScale.range([plot_height-ver_margin,ver_margin])
+function draw_scatter(dataset) {
+	// scatter_data = {{doc_table|safe}}
+	scatter_data = dataset[1]
+	// individual_names = {{individual_names|safe}}
+	individual_names = dataset[0]
+	var plot_height = 500
+	var plot_width = 500
 
 
-var xAxis = d3.svg.axis()
-    .scale(xScale)
-    .orient("bottom");
+	scatter_svg = d3.select('#scatter').append('svg')
+		.attr('width',plot_width)
+		.attr('height',plot_height);
 
-scatter_svg.append("g")
-    .attr("class", "axis")
-    .attr("transform", "translate(0," + yScale(min_mz) + ")")
-    .attr('stroke-width',1)
-    .attr('id','xax')
-    .call(xAxis);
+	min_mz = d3.min(scatter_data,function(d) {return d[1];}) - 20
+	max_mz = d3.max(scatter_data,function(d) {return d[1];}) + 20
+	min_rt = d3.min(scatter_data,function(d) {return d[0];}) - 20
+	max_rt = d3.max(scatter_data,function(d) {return d[0];}) + 20
+	max_ind = d3.max(scatter_data,function(d) {return d[2];})
 
-
-var yAxis = d3.svg.axis()
-    .scale(yScale)
-    .orient("left");
-
-scatter_svg.append("g")
-	.attr('id','yax')
-    .attr("class","axis")
-    .attr('stroke-width',1)
-    .attr("transform","translate(" + xScale(min_rt) + ",0)")
-    .call(yAxis);
+	var ver_margin = 50
+	var hor_margin = 50
+	var xScale = d3.scale.linear()
+	xScale.domain([min_rt, max_rt])
+	xScale.range([ hor_margin,plot_width-hor_margin])
+	var yScale = d3.scale.linear()
+	yScale.domain([min_mz,max_mz])
+	yScale.range([plot_height-ver_margin,ver_margin])
 
 
-scatter_svg.append('text').attr('x',xScale(0.5*(max_rt + min_rt)))
-						  .attr('y',yScale(min_mz) + 50)
-						  .text('rt');
+	var xAxis = d3.svg.axis()
+	    .scale(xScale)
+	    .orient("bottom");
+
+	scatter_svg.append("g")
+	    .attr("class", "axis")
+	    .attr("transform", "translate(0," + yScale(min_mz) + ")")
+	    .attr('stroke-width',1)
+	    .attr('id','xax')
+	    .call(xAxis);
 
 
-scatter_svg.append('text').attr('x',xScale(min_rt) - 50)
-						  .attr('y',yScale(0.5*(min_mz+max_mz)))
-						  .text('mz');
+	var yAxis = d3.svg.axis()
+	    .scale(yScale)
+	    .orient("left");
 
-var circles = scatter_svg.selectAll("circle")
-				.data(scatter_data)
-				.enter()
-				.append("circle")
+	scatter_svg.append("g")
+		.attr('id','yax')
+	    .attr("class","axis")
+	    .attr('stroke-width',1)
+	    .attr("transform","translate(" + xScale(min_rt) + ",0)")
+	    .call(yAxis);
 
-var individual_name = scatter_svg.append('text')
-									.attr('x',xScale(min_rt)+50)
-									.attr('y',yScale(max_mz)-20)
 
-var colorscale = d3.scale.linear().domain([0,max_ind]).range(["red","blue"])
-circles.attr('cx',function(d) {return xScale(d[0]);})
-	    .attr('cy',function(d) {return yScale(d[1]);})
-		.attr('r',function(d) {return Math.ceil(5*d[3]);})
-		.attr('fill','#666666')
-		.attr('class',function(d) {return "ind_" + d[2] + " ps_" + d[4];})
-		.on('mouseover',function(d) {
-			scatter_highlight('.ind_' + d[2],individual_names[d[2]]);
-				// scatter_svg.selectAll('.ind_'+d[2])
-				// 	.transition()
-				// 	.duration(250)
-				// 	.attr('r',function(d) {return Math.ceil(40*d[3]);})
-				// 	.attr('fill',function(d) {return colorscale(d[2]);});
-				// individual_name.text(individual_names[d[2]]);
-			})
-		.on('mouseout',function(d) {
-			scatter_unhighlight('.ind_'+d[2])
-		});
+	scatter_svg.append('text').attr('x',xScale(0.5*(max_rt + min_rt)))
+							  .attr('y',yScale(min_mz) + 50)
+							  .text('rt');
 
+
+	scatter_svg.append('text').attr('x',xScale(min_rt) - 50)
+							  .attr('y',yScale(0.5*(min_mz+max_mz)))
+							  .text('mz');
+
+	var circles = scatter_svg.selectAll("circle")
+					.data(scatter_data)
+					.enter()
+					.append("circle")
+
+	individual_name = scatter_svg.append('text')
+										.attr('x',xScale(min_rt)+50)
+										.attr('y',yScale(max_mz)-20)
+
+	colorscale = d3.scale.linear().domain([0,max_ind]).range(["red","blue"])
+	circles.attr('cx',function(d) {return xScale(d[0]);})
+		    .attr('cy',function(d) {return yScale(d[1]);})
+			.attr('r',function(d) {return Math.ceil(5*d[3]);})
+			.attr('fill','#666666')
+			.attr('class',function(d) {return "ind_" + d[2] + " ps_" + d[4];})
+			.on('mouseover',function(d) {
+				scatter_highlight('.ind_' + d[2],individual_names[d[2]]);
+					// scatter_svg.selectAll('.ind_'+d[2])
+					// 	.transition()
+					// 	.duration(250)
+					// 	.attr('r',function(d) {return Math.ceil(40*d[3]);})
+					// 	.attr('fill',function(d) {return colorscale(d[2]);});
+					// individual_name.text(individual_names[d[2]]);
+				})
+			.on('mouseout',function(d) {
+				scatter_unhighlight('.ind_'+d[2])
+			});
+
+	heatmap_data = dataset[2]
+	peakset_masses = dataset[3]
+	peakset_rt = dataset[4]
+	plot_heatmap(heatmap_data,peakset_masses,peakset_rt,individual_names)
+}
 function scatter_highlight(cl,na) {
 	scatter_svg.selectAll(cl)
 					.transition()
@@ -252,105 +263,107 @@ function scatter_unhighlight(cl) {
 // var a= scatter_svg.selectAll('.ind_1').attr('r',20);
 // console.log(a.length)
 // console.log(a)
-var overall_width = 800
-var heatmap_height = 400
-var heatmap_width = 600
+function plot_heatmap(heatmap_data,peakset_masses,peakset_rt,individual_names) {
+	var overall_width = 800
+	var heatmap_height = 800
+	var heatmap_width = 600
 
-var heatmap_hor_margin = 70
-var heatmap_ver_margin = 30
-var heatmap_svg = d3.select('#heatmap').append('svg')
-	.attr('width',overall_width)
-	.attr('height',heatmap_height);
+	var heatmap_hor_margin = 70
+	var heatmap_ver_margin = 30
+	var heatmap_svg = d3.select('#heatmap').append('svg')
+		.attr('width',overall_width)
+		.attr('height',heatmap_height);
 
-heatmap_data = {{intensity_table|safe}}
-peakset_masses = {{peakset_masses|safe}}
-peakset_rt = {{peakset_rt| safe}}
+	// heatmap_data = {{intensity_table|safe}}
+	// peakset_masses = {{peakset_masses|safe}}
+	// peakset_rt = {{peakset_rt| safe}}
+	// individual_names = {{individual_names|safe}}
+	console.log(heatmap_data.length)
 
-console.log(heatmap_data.length)
+	var n_rows = heatmap_data.length
+	var n_cols = individual_names.length
 
-var n_rows = heatmap_data.length
-var n_cols = individual_names.length
+	var heatmap_xScale = d3.scale.linear()
+	heatmap_xScale.domain([0,n_cols])
+	heatmap_xScale.range([ heatmap_hor_margin,heatmap_width-heatmap_hor_margin])
+	var heatmap_yScale = d3.scale.linear()
+	heatmap_yScale.domain([0,n_rows])
+	heatmap_yScale.range([heatmap_ver_margin,heatmap_height - heatmap_ver_margin])
 
-var heatmap_xScale = d3.scale.linear()
-heatmap_xScale.domain([0,n_cols])
-heatmap_xScale.range([ heatmap_hor_margin,heatmap_width-heatmap_hor_margin])
-var heatmap_yScale = d3.scale.linear()
-heatmap_yScale.domain([0,n_rows])
-heatmap_yScale.range([heatmap_ver_margin,heatmap_height - heatmap_ver_margin])
-
-var box_width = (heatmap_width - 2*heatmap_hor_margin)/n_cols
-var box_height = Math.min((heatmap_height - 2*heatmap_ver_margin)/n_rows,20)
-
-
-max_val = 0.0
-min_val = 1e10
+	var box_width = (heatmap_width - 2*heatmap_hor_margin)/n_cols
+	var box_height = Math.min((heatmap_height - 2*heatmap_ver_margin)/n_rows,20)
 
 
-for (var i = 0; i < heatmap_data.length; i++) {
-	for (var j=0 ; j<heatmap_data[i].length; j++) {
-		if(heatmap_data[i][j] != 0) {
-			if(heatmap_data[i][j] < min_val) {
-				min_val = heatmap_data[i][j];
-			}
-			if(heatmap_data[i][j] > max_val) {
-				max_val = heatmap_data[i][j];
+	max_val = 0.0
+	min_val = 1e10
+
+
+	for (var i = 0; i < heatmap_data.length; i++) {
+		for (var j=0 ; j<heatmap_data[i].length; j++) {
+			if(heatmap_data[i][j] != 0) {
+				if(heatmap_data[i][j] < min_val) {
+					min_val = heatmap_data[i][j];
+				}
+				if(heatmap_data[i][j] > max_val) {
+					max_val = heatmap_data[i][j];
+				}
 			}
 		}
 	}
-}
 
-var heatmap_colorscape = d3.scale.linear()
-							.domain([min_val,max_val]).range(["blue","yellow"]);
+	var heatmap_colorscape = d3.scale.linear()
+								.domain([min_val,max_val]).range(["blue","yellow"]);
 
 
-for (var i = 0; i < heatmap_data.length; i++) {
-	for (var j=0 ; j<heatmap_data[i].length; j++) {
-		if(heatmap_data[i][j] != 0) {
-			heatmap_svg.append("rect")
-				.attr('x',heatmap_xScale(j))
-				.attr('y',i*box_height)
-				.attr('width',box_width)
-				.attr('height',box_height)
-				.attr('stroke','#000000')
-				.attr('row',i)
-				.attr('fill',heatmap_colorscape(heatmap_data[i][j]))
-				.attr('class','row_'+i)
-				// .on('mouseover',function() {
-				// 	var row = d3.select(this).attr('row');
-				// 	scatter_highlight('.ps_' + row,""+peakset_masses[row]);
-				// })
-				// .on('mouseout',function() {
-				// 	var row = d3.select(this).attr('row');
-				// 	scatter_unhighlight('.ps_' + row);
+	for (var i = 0; i < heatmap_data.length; i++) {
+		for (var j=0 ; j<heatmap_data[i].length; j++) {
+			if(heatmap_data[i][j] != 0) {
+				heatmap_svg.append("rect")
+					.attr('x',heatmap_xScale(j))
+					.attr('y',i*box_height)
+					.attr('width',box_width)
+					.attr('height',box_height)
+					// .attr('stroke','#000000')
+					.attr('row',i)
+					.attr('fill',heatmap_colorscape(heatmap_data[i][j]))
+					.attr('class','row_'+i)
+					// .on('mouseover',function() {
+					// 	var row = d3.select(this).attr('row');
+					// 	scatter_highlight('.ps_' + row,""+peakset_masses[row]);
+					// })
+					// .on('mouseout',function() {
+					// 	var row = d3.select(this).attr('row');
+					// 	scatter_unhighlight('.ps_' + row);
 
-				// })
-				.on('click',function() {
-					if(d3.select(this).attr('clicked') == 'yes') {
-						var row = d3.select(this).attr('row');
-						scatter_unhighlight('.ps_' + row);
-						d3.select(this).attr('clicked','no');
-						d3.selectAll('.row_'+row).attr('stroke','black')
-												.attr('stroke-width',1);
-						d3.selectAll('.row_text_' + row).attr('font-weight','normal');
-					} else {
-						var row = d3.select(this).attr('row');
-						scatter_highlight('.ps_' + row,""+peakset_masses[row]);					
-						d3.select(this).attr('clicked','yes');
-						d3.selectAll('.row_' + row).attr('stroke','red')
-													.attr('stroke-width',3);
-						d3.selectAll('.row_text_' + row).attr('font-weight','bold');
-					}
-				});
+					// })
+					.on('click',function() {
+						if(d3.select(this).attr('clicked') == 'yes') {
+							var row = d3.select(this).attr('row');
+							scatter_unhighlight('.ps_' + row);
+							d3.select(this).attr('clicked','no');
+							d3.selectAll('.row_'+row).attr('stroke','none')
+													.attr('stroke-width',1);
+							d3.selectAll('.row_text_' + row).attr('font-weight','normal').attr('display','none');
+						} else {
+							var row = d3.select(this).attr('row');
+							scatter_highlight('.ps_' + row,""+peakset_masses[row]);					
+							d3.select(this).attr('clicked','yes');
+							d3.selectAll('.row_' + row).attr('stroke','red')
+														.attr('stroke-width',3);
+							d3.selectAll('.row_text_' + row).attr('font-weight','bold').attr('display','inline');
+						}
+					});
+			}
 		}
+		heatmap_svg.append('text')
+							.attr('x',heatmap_width-heatmap_hor_margin)
+							.attr('y',(i+1)*box_height - 0.2*box_height)
+							.text("" + peakset_masses[i].toFixed(4) + ', ' + peakset_rt[i].toFixed(4))
+							.attr('class','row_text_'+i)
+							.attr('display','none');
 	}
-	heatmap_svg.append('text')
-						.attr('x',heatmap_width-hor_margin)
-						.attr('y',(i+1)*box_height - 0.2*box_height)
-						.text("" + peakset_masses[i].toFixed(4) + ', ' + peakset_rt[i].toFixed(4))
-						.attr('class','row_text_'+i);
+
 }
-
-
 </script>
 {% endblock %}
 
