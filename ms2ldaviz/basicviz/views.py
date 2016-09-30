@@ -303,8 +303,6 @@ def get_doc_table(request,mf_id,motif_name):
             
             doc_table.append([rt,mz,i,doc.probability,peakset_index])
 
-    print ps.mz,ps.rt
-    print peaksets[ps]
 
     intensity_table = []
     counts = []
