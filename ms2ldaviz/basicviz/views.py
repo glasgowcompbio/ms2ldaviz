@@ -141,7 +141,7 @@ def get_alpha_matrix(request,mf_id):
                 alp_vals.append([m.alpha_set.all()[0].value for m in motifs])
 
             alp_vals = map(list,zip(*alp_vals))
-            alp_vals = [[motifs[i].name,motifs[i].annotation] + av + [float(np.array(av).var())] for i,av in enumerate(alp_vals)]
+            alp_vals = [[motifs[i].name,motifs[i].annotation] + av + [float((np.array(av)/sum(av)).var())] for i,av in enumerate(alp_vals)]
 
             data = json.dumps(alp_vals)
             mfe.alpha_matrix = jsonpickle.encode(alp_vals)
