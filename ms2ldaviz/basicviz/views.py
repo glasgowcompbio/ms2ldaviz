@@ -344,10 +344,11 @@ def get_doc_table(request,mf_id,motif_name):
 
 
     # Order so that the most popular are at the top
-    temp = zip(counts,intensity_table,final_peaksets)
-    temp = sorted(temp,key = lambda x:x[0],reverse = True)
-    counts,intensity_table,final_peaksets = zip(*temp)
-    intensity_table = list(intensity_table)
+    if len(peaksets) > 0:
+        temp = zip(counts,intensity_table,final_peaksets)
+        temp = sorted(temp,key = lambda x:x[0],reverse = True)
+        counts,intensity_table,final_peaksets = zip(*temp)
+        intensity_table = list(intensity_table)
 
 
     # Change the indexes in the doc table to match the new ordering
