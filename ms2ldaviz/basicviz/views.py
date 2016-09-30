@@ -324,6 +324,8 @@ def get_doc_table(request,mf_id,motif_name):
         else:
             log_peakset_intensities = False
 
+
+    crap = []
     for peakset in peaksets:
         new_row = []
         for individual in individuals:
