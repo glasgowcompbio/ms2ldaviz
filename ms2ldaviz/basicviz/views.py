@@ -325,7 +325,7 @@ def get_doc_table(request,mf_id,motif_name):
             log_peakset_intensities = False
 
 
-    crap = []
+    
     for peakset in peaksets:
         new_row = []
         for individual in individuals:
@@ -335,6 +335,7 @@ def get_doc_table(request,mf_id,motif_name):
             nz_vals = [v for v in new_row if v > 0]
             if log_peakset_intensities:
                 nz_vals = [np.log(v) for v in nz_vals]
+                new_row = [np.log(v) if v > 0 else 0 for v in new_row]
             me = sum(nz_vals)/(1.0*len(nz_vals))
             va = sum([v**2 for v in nz_vals])/len(nz_vals) - me**2
             va = math.sqrt(va)
@@ -343,7 +344,6 @@ def get_doc_table(request,mf_id,motif_name):
                 intensity_table.append(new_row_n)
                 counts.append(count)
                 final_peaksets.append(peakset)
-                crap.append((me,va))
 
 
     # Order so that the most popular are at the top
@@ -372,7 +372,7 @@ def get_doc_table(request,mf_id,motif_name):
 
 
 
-    return HttpResponse(json.dumps((individual_names,doc_table,intensity_table,final_peakset_masses,final_peakset_rt,crap)),content_type = 'application/json')
+    return HttpResponse(json.dumps((individual_names,doc_table,intensity_table,final_peakset_masses,final_peakset_rt)),content_type = 'application/json')
 
 
 
