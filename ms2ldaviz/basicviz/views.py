@@ -1787,4 +1787,29 @@ def compute_overlap_score(mass2motif,document):
     return score
 
 
+def rate_by_conserved_motif_rating(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    mass2motifs = experiment.mass2motif_set.all()
+    motif_scores = []
+
+    for motif in mass2motifs:
+        motif_docs = motif.documentmass2motif_set.all()
+        docs = [m.document for m in motif_docs]
+        total_docs = len(motif_docs)
+        thresh = total_docs*0.4
+        motif_features = motif.mass2motifinstance_set.all()
+        n_matching = 0
+        for motif_feature in motif_features:
+            # How many docs is it in
+            n_docs = len(FeatureInstance.objects.filter(feature = motif_feature.feature,document__in = docs))
+            if n_docs > thresh:
+                n_matching += 1
+        motif_scores.append((motif,n_matching,len(docs)))
+    
+        
+    context_dict = {}
+    context_dict['experiment'] = experiment
+    context_dict['motif_scores'] = motif_scores
+
+    return render(request,'basicviz/rate_by_conserved_motif.html',context_dict)
 
