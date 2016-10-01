@@ -14,21 +14,17 @@ Logged in as {{user}}, <a href="/basicviz/logout">Logout</a>
 	<tr><td>{{experiment.name}}</td>
 	<td>{{experiment.description}}</td>
 	<td>
-	<a href="/basicviz/show_docs/{{experiment.id}}" class="btn btn-xs btn-success" role="button">Show parents</a>
-	<br/><br/>
-    <a href="/basicviz/view_mass2motifs/{{experiment.id}}" class="btn btn-xs btn-success" role="button">Show Mass2Motifs</a>
-	<br/><br/>
-	<a href="/basicviz/start_viz/{{experiment.id}}" class="btn btn-xs btn-primary" role="button">Start vis.</a>
-	<br/><br/>
+    <a href="/basicviz/show_docs/{{experiment.id}}" class="btn btn-block btn-lg btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a>
+    <a href="/basicviz/view_mass2motifs/{{experiment.id}}" class="btn btn-block btn-lg btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Mass2Motifs</a>
+    <a href="/basicviz/start_viz/{{experiment.id}}" class="btn btn-block btn-lg btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a>
 	{% if extra_user %}
-		<p>Extra features for special users:</p>
-	    <a href="/basicviz/validation/{{experiment.id}}" class="btn btn-xs btn-warning" role="button">Validate (for Justin)</a>
-	    <a href="/basicviz/document_pca/{{experiment.id}}" class = "btn btn-xs btn-success" role="button">Document PCA</a>
-	    <a href="/basicviz/topic_pca/{{experiment.id}}" class = "btn btn-xs btn-success" role="button">Topic PCA</a>
-	    <a href="/basicviz/extract_docs/{{experiment.id}}" class="btn btn-xs btn-primary" role="button">Extract documents</a>
-	    <a href="/basicviz/compute_topic_scores/{{experiment.id}}" class="btn btn-xs btn-warning" role="button">Compute topic scores</a>
-	    <a href="/basicviz/topic_table/{{experiment.id}}" class="btn btn-xs btn-warning" role="button">Topic table</a>
-	    <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.id}}" class="btn btn-xs btn-primary" role="button">Rate by conserved motif</a>
+        <a href="/basicviz/validation/{{experiment.id}}" class="btn btn-block btn-lg btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate for Justin</a>
+	    <!-- a href="/basicviz/document_pca/{{experiment.id}}" class="btn btn-block btn-lg btn-success">Document PCA</a -->
+	    <a href="/basicviz/topic_pca/{{experiment.id}}" class="btn btn-block btn-lg btn-default"><span class="glyphicon glyphicon-eye-open"></span> Topic PCA</a>
+	    <a href="/basicviz/topic_table/{{experiment.id}}" class="btn btn-block btn-lg btn-default" role="button"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a>
+	    <a href="/basicviz/extract_docs/{{experiment.id}}" class="btn btn-block btn-lg btn-default"><span class="glyphicon glyphicon-folder-close"></span> Extract Documents</a>
+	    <a href="/basicviz/compute_topic_scores/{{experiment.id}}" class="btn btn-block btn-lg btn-danger" role="button"><span class="glyphicon glyphicon-sort-by-order"></span> Compute Topic Scores</a>
+	    <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.id}}" class="btn btn-block btn-lg btn-danger" role="button"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Mass2Motifs</a>
     {% endif %}
     </td></tr>
 {% endfor %}
