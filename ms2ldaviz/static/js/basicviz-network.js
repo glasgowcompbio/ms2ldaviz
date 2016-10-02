@@ -199,6 +199,7 @@ function plot_graph(vo_id,random_seed) {
     var optArray = [];
     var toggle = 0;
     var url = '/basicviz/get_graph/' + vo_id
+    console.log('url is ' + url)
 
     // see https://gist.github.com/mbostock/3750941
     d3.json(url)
