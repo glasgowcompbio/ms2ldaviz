@@ -70,7 +70,7 @@
 				<tr><th>Document name</th><th>Doc Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
 			</thead>
 			<tbody>
-				{% for dm2m in mass2motif.documentmass2motif_set.all %}
+				{% for dm2m in dm2ms %}
 					<tr><td><a href="/basicviz/show_doc/{{dm2m.document.id}}">{{dm2m.document.name}}</a></td><td>{{dm2m.document.annotation}}</td><td>{{dm2m.probability}}</td><td>{{dm2m.overlap_score}}</td></tr>
 				{% endfor %}
 			</tbody>

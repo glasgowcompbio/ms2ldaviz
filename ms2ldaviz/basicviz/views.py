@@ -173,12 +173,19 @@ def get_degree_matrix(request,mf_id):
             #         new_row.append(len(docs))
 
             #     deg_vals.append(new_row)
+
+            doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
+            if doc_m2m_threshold:
+                doc_m2m_threshold = float(doc_m2m_threshold)
+            else:
+                doc_m2m_threshold = 0.0
             
             for individual in individuals:
                 new_row = []
                 motif_set = individual.mass2motif_set.all().order_by('name')
                 for motif in motif_set:
-                    new_row.append(len(motif.documentmass2motif_set.all()))
+                    dm2m = motif.documentmass2motif_set.all()
+                    new_row.append(len([d for d in dm2m if d.probability > doc_m2m_threshold]))
                 deg_vals.append(new_row)
 
             deg_vals = map(list,zip(*deg_vals))
@@ -1027,6 +1034,13 @@ def view_parents(request,motif_id):
     context_dict['motif_features'] = motif_features
     context_dict['total_prob'] = total_prob
 
+    doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = motif.experiment)
+    if doc_m2m_threshold:
+        doc_m2m_threshold = float(doc_m2m_threshold)
+    else:
+        doc_m2m_threshold = 0.00 # Default value
+    dm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = doc_m2m_threshold)
+    context_dict['dm2ms'] = dm2m
 
     context_dict['status'] = 'Edit metadata...'
     if request.method == 'POST':
@@ -1126,13 +1140,20 @@ def get_parents_no_vo(request,motif_id):
 #     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
 def get_word_graph(request, motif_id, vo_id):
+
+    motif = Mass2Motif.objects.get(id=motif_id)
+
     if not vo_id == 'nan':
         viz_options = VizOptions.objects.get(id = vo_id)
         edge_thresh = viz_options.edge_thresh
     else:
-        edge_thresh = 0.0
+        edge_thresh = get_option('doc_m2m_threshold',experiment = motif.experiment)
+        if edge_thresh:
+            edge_thresh = float(edge_thresh)
+        else:
+            edge_thresh = 0.0
 
-    motif = Mass2Motif.objects.get(id=motif_id)
+
     m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
     m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif, probability__gte=edge_thresh)
     colours = '#404080'
@@ -1650,7 +1671,7 @@ def get_pca_data(request,experiment_id):
 
     for document in documents:
         new_theta = [0 for i in range(n_mass2motifs)]
-        dm2ms = DocumentMass2Motif.objects.filter(document = document,doc_m2m_threshold)
+        dm2ms = DocumentMass2Motif.objects.filter(document = document,probability__gte = doc_m2m_threshold)
         for dm2m in dm2ms:
             if dm2m.mass2motif.name in m2mindex:
                 m2mpos = m2mindex[dm2m.mass2motif.name]
