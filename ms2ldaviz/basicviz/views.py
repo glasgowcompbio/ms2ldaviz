@@ -174,13 +174,16 @@ def get_degree_matrix(request,mf_id):
 
             #     deg_vals.append(new_row)
 
-            doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
-            if doc_m2m_threshold:
-                doc_m2m_threshold = float(doc_m2m_threshold)
-            else:
-                doc_m2m_threshold = 0.0
             
             for individual in individuals:
+
+                doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
+                if doc_m2m_threshold:
+                    doc_m2m_threshold = float(doc_m2m_threshold)
+                else:
+                    doc_m2m_threshold = 0.0
+
+
                 new_row = []
                 motif_set = individual.mass2motif_set.all().order_by('name')
                 for motif in motif_set:
