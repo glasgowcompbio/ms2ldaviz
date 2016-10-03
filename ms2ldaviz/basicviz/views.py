@@ -1049,7 +1049,7 @@ def get_parents(request,motif_id,vo_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     vo = VizOptions.objects.all()
     viz_options  = VizOptions.objects.get(id = vo_id)
-    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte=viz_options.edge_thresh).orfer_by('-probability')
+    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte=viz_options.edge_thresh).order_by('-probability')
     documents = [d.document for d in docm2m]
     parent_data = []
     for dm in docm2m:
@@ -1307,6 +1307,7 @@ def start_viz(request,experiment_id):
             colour_topic_by_score = viz_form.cleaned_data['colour_topic_by_score']
             random_seed = viz_form.cleaned_data['random_seed']
             edge_choice = viz_form.cleaned_data['edge_choice']
+            edge_choice = edge_choice[0].encode('ascii', 'ignore') # should turn the unicode into ascii
             vo = VizOptions.objects.get_or_create(experiment = experiment, 
                                                   min_degree = min_degree, 
                                                   edge_thresh = edge_thresh,

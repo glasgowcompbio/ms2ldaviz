@@ -13,6 +13,7 @@ function load_parents(mass2motif_id,motif_name,vo_id) {
     }else {
         var url = '/basicviz/get_parents/' + mass2motif_id + '/';
     }
+    console.log(url);
 
     d3.json(url,function(error,total_dataset) {
         if (error) throw error;
