@@ -269,8 +269,13 @@ def get_doc_table(request,mf_id,motif_name):
     peakset_list = []
     peakset_masses = []
     for i,individual in enumerate(individuals):
+        doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
+        if doc_m2m_threshold:
+            doc_m2m_threshold = float(doc_m2m_threshold)
+        else:
+            doc_m2m_threshold = 0.0 # Default value
         individual_names.append(individual.name)
-        docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual])
+        docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual],probability__gte = doc_m2m_threshold)
         for doc in docs:
             peakset_index = -1
             ii = doc.document.intensityinstance_set.all()
@@ -432,7 +437,12 @@ def view_multi_m2m(request,mf_id,motif_name):
     peakset_masses = []
     for i,individual in enumerate(individuals):
         alpha = Alpha.objects.get(mass2motif = individual_motifs[individual])
-        docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual])
+        doc_m2m_threshold = get_options('doc_m2m_threshold',experiment = individual)
+        if doc_m2m_threshold:
+            doc_m2m_threshold = float(doc_m2m_threshold)
+        else:
+            doc_m2m_threshold = 0.0 # default
+        docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual],probability__gte = doc_m2m_threshold)
         individual_m2m.append([individual,individual_motifs[individual],alpha,len(docs)])
         alps.append(alpha.value)
         
@@ -568,8 +578,15 @@ def get_degrees(request,mf_id,motif_name):
     individuals = [l.experiment for l in links]
     degs = []
     for individual in individuals:
+        doc_m2m_threshold = get_option
         m2m = Mass2Motif.objects.get(name = motif_name,experiment = individual)
-        docs = DocumentMass2Motif.objects.filter(mass2motif = m2m)
+        doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
+        if doc_m2m_threshold:
+            doc_m2m_threshold = float(doc_m2m_threshold)
+        else:
+            doc_m2m_threshold = 0.0 # Default value
+
+        docs = DocumentMass2Motif.objects.filter(mass2motif = m2m,probability__gte = doc_m2m_threshold)
         degs.append(len(docs))
     
     degs = zip([i.name for i in individuals],degs)
@@ -857,11 +874,21 @@ def compute_topic_scores(request,experiment_id):
             discrete_scores = []
 
             motifs = Mass2Motif.objects.filter(experiment = experiment)
+
+            doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = experiment)
+            if doc_m2m_threshold:
+                doc_m2m_threshold = float(doc_m2m_threshold)
+            else:
+                doc_m2m_threshold = 0.00 # Default value
+
+
+
             n_done = 0
             for motif1ind,motif in enumerate(motifs):
                 score_list = []
                 doc_indices = []
-                m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif)
+
+                m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = doc_m2m_threshold)
                 for m2mdoc in m2mdocs:
                     doc_indices.append(list(documents).index(m2mdoc.document))
                 n_above = 0
@@ -893,7 +920,7 @@ def compute_topic_scores(request,experiment_id):
                 if form.cleaned_data['do_pairs']:
                     docs1 = set([m.document for m in m2mdocs])
                     for motif2 in motifs[motif1ind+1:]:
-                        m2mdocs2 = DocumentMass2Motif.objects.filter(mass2motif = motif2)
+                        m2mdocs2 = DocumentMass2Motif.objects.filter(mass2motif = motif2,probability__gte = doc_m2m_threshold)
                         docs2 = set([m.document for m in m2mdocs2])
                         # Find the intersect
                         intersect = list(docs1 & docs2)
@@ -963,7 +990,13 @@ def show_doc(request,doc_id):
     context_dict = {'document':document,'features':features}
     experiment = document.experiment
     context_dict['experiment'] = experiment
-    mass2motif_instances = DocumentMass2Motif.objects.filter(document = document).order_by('-probability')
+    doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = experiment)
+    if doc_m2m_threshold:
+        doc_m2m_threshold = float(doc_m2m_threshold)
+    else:
+        doc_m2m_threshold = 0.00 # Default value
+
+    mass2motif_instances = DocumentMass2Motif.objects.filter(document = document,probability__gte = doc_m2m_threshold).order_by('-probability')
     context_dict['mass2motifs'] = mass2motif_instances
     feature_mass2motif_instances = []
     for feature in features:
@@ -1063,13 +1096,20 @@ def get_parents(request,motif_id,vo_id):
 
 def get_parents_no_vo(request,motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
-    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif).order_by('-probability')
+
+    doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = motif.experiment)
+    if doc_m2m_threshold:
+        doc_m2m_threshold = float(doc_m2m_threshold)
+    else:
+        doc_m2m_threshold = 0.00 # Default value
+
+
+    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = doc_m2m_threshold).order_by('-probability')
     documents = [d.document for d in docm2m]
     parent_data = []
     for dm in docm2m:
-        if dm.probability > 0.05:
-            document = dm.document
-            parent_data.append(get_doc_for_plot(document.id,motif_id))
+        document = dm.document
+        parent_data.append(get_doc_for_plot(document.id,motif_id))
     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
 
@@ -1335,6 +1375,7 @@ def start_viz(request,experiment_id):
         return render(request,'basicviz/graph.html',context_dict)
 
 def start_annotated_viz(request,experiment_id):
+    # Is this function ever called??
     experiment = Experiment.objects.get(id=experiment_id)
     context_dict = {'experiment':experiment}
     # This is a bit of a hack to make sure that the initial motif is one in the graph
@@ -1599,9 +1640,17 @@ def get_pca_data(request,experiment_id):
     n_mass2motifs = len(mass2motifs)
     m2mindex = {}
     msmpos = 0
+
+    doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = experiment)
+    if doc_m2m_threshold:
+        doc_m2m_threshold = float(doc_m2m_threshold)
+    else:
+        doc_m2m_threshold = 0.00 # Default value
+
+
     for document in documents:
         new_theta = [0 for i in range(n_mass2motifs)]
-        dm2ms = DocumentMass2Motif.objects.filter(document = document)
+        dm2ms = DocumentMass2Motif.objects.filter(document = document,doc_m2m_threshold)
         for dm2m in dm2ms:
             if dm2m.mass2motif.name in m2mindex:
                 m2mpos = m2mindex[dm2m.mass2motif.name]
@@ -1786,6 +1835,19 @@ def compute_overlap_score(mass2motif,document):
         if len(m2m_feature) > 0:
             score += feature_mass2motif_instance.probability * m2m_feature[0].probability
     return score
+
+def get_option(key,experiment = None):
+    # Retrieves an option, looking for an experiment specific one if it exists
+    if experiment:
+        options = SystemOptions.objects.filter(key = key,experiment = experiment)
+        if len(options) == 0:
+            options = SystemOptions.objects.filter(key = key)
+    else:
+        options = SystemOptions.objects.filter(key = key)
+    if len(options) > 0:
+        return options[0].value
+    else:
+        return None
 
 
 def rate_by_conserved_motif_rating(request,experiment_id):

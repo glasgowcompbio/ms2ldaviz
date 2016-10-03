@@ -32,3 +32,7 @@ if __name__ == '__main__':
 	s = SystemOptions.objects.get_or_create(key = 'log_peakset_intensities')[0]
 	s.value = 'true'
 	s.save()
+
+	s = SystemOptions.objects.get_or_create(key = 'doc_m2m_threshold')[0]
+	s.value = '0.05'
+	s.save()
