@@ -447,7 +447,7 @@ def view_multi_m2m(request,mf_id,motif_name):
     peakset_masses = []
     for i,individual in enumerate(individuals):
         alpha = Alpha.objects.get(mass2motif = individual_motifs[individual])
-        doc_m2m_threshold = get_options('doc_m2m_threshold',experiment = individual)
+        doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
         if doc_m2m_threshold:
             doc_m2m_threshold = float(doc_m2m_threshold)
         else:
