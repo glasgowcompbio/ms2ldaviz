@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block head_block %}
+
+{% endblock %}
+
+{% block body_block %}
+
+	<h3>Options for {{experiment.name}}</h3>
+
+	<p>Set and edit experiment-specific options here. Where an option is not set specifically for the experiment, the global option is used.</p>
+	<h3>Experiment-specific options</h3>
+	{% if specific_options %}
+	<table class="table">
+		<thead><tr><th>Name</th><th>Value</th><th>Actions</th></tr></thead>
+		<tbody>
+			{% for option in specific_options %}
+				<tr>
+					<td>{{option.key}}</td>
+					<td>{{option.value}}</td>
+					<td><a href="/basicviz/delete_experiment_option/{{option.id}}">Delete</a>&nbsp;&nbsp;&nbsp;<a href="/basicviz/edit_experiment_option/{{option.id}}">Edit</a>
+				</tr>
+			{% endfor %}
+		</tbody>		
+	</table>
+	{% else %}
+	<p>No experiment-specific options set</p>
+	{% endif %}
+	<a href="/basicviz/add_experiment_option/{{experiment.id}}">Add a new option</a>
+
+	<h3>Global options - cannot be edited</h3>
+	<table class="table">
+		<thead><tr><th>Name</th><th>Value</th></tr></thead>
+		<tbody>
+			{% for option in global_options %}
+				<tr>
+					<td>{{option.key}}</td>
+					<td>{{option.value}}</td>
+				</tr>
+			{% endfor %}
+		</tbody>		
+	</table>
+
+{% endblock %}
+
+{% block js_block %}
+
+{% endblock %}

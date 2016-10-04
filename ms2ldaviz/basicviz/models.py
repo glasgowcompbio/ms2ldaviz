@@ -210,8 +210,10 @@ class IntensityInstance(models.Model):
 
 
 class SystemOptions(models.Model):
-	key = models.CharField(null = False,unique = True,max_length = 124)
+	key = models.CharField(null = False,max_length = 124)
 	value = models.CharField(null = False,max_length = 124)
 	experiment = models.ForeignKey(Experiment,null=True)
+	class Meta:
+	    unique_together = ('key', 'experiment',)
 	def __unicode__(self):
 		return "{}  =  {}".format(self.key,self.value)

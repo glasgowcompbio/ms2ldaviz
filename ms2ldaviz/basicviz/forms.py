@@ -1,5 +1,5 @@
 from django import forms
-from basicviz.models import Mass2Motif
+from basicviz.models import Mass2Motif,SystemOptions
 from django.contrib.auth.models import User
 
 
@@ -52,3 +52,8 @@ class AlphaCorrelationForm(forms.Form):
 	normalise_alphas = forms.BooleanField(required = False,initial = True,label = 'Normalise alpha vectors?')
 	max_edges = forms.IntegerField(required = False,initial = 1000, label = 'Maximum number of edges')
 	just_annotated = forms.BooleanField(required = False,initial = False,label = 'Restrict to annotated M2Ms?')
+
+class SystemOptionsForm(forms.ModelForm):
+	class Meta:
+		model = SystemOptions
+		exclude = ('experiment',)
