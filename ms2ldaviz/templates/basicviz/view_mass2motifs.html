@@ -5,12 +5,16 @@
 <h2>Experiment: {{experiment.name}}</h2>
 <a href="/basicviz">return to experiment list</a>
 <table class="table" id='m2mtable'>
-<tr><th>Name</th><th>Annotation</th><th>Actions</th></tr>
+<thead>
+	<tr><th>Name</th><th>Annotation</th><th>Actions</th></tr>
+</thead>
+<tbody>
 {% for mass2motif in mass2motifs %}
 	<tr><td>{{mass2motif.name}}</td><td>{{mass2motif.annotation}}</td><td><a class = "btn btn-xs btn-default" role="button" href="/basicviz/view_parents/{{mass2motif.id}}">view parents</a></td>
 	</tr>
 	<!-- &nbsp;<a href="/basicviz/show_docs/{{experiment.id}}">show parents</a>&nbsp;<a href="/basicviz/start_viz/{{experiment.id}}">start viz</a>&nbsp;<a href="/basicviz/view_mass2motifs/{{experiment.id}}">show mass2motifs</a></li> -->
 {% endfor %}
+</tbody>
 </table>
 
 </ul>
