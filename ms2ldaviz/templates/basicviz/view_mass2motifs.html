@@ -2,7 +2,7 @@
 {% block body_block %}
 <h2>Experiment: {{experiment.name}}</h2>
 <a href="/basicviz">return to experiment list</a>
-<table class="table">
+<table class="table" id='m2mtable'>
 <tr><th>Name</th><th>Annotation</th><th>Actions</th></tr>
 {% for mass2motif in mass2motifs %}
 	<tr><td>{{mass2motif.name}}</td><td>{{mass2motif.annotation}}</td><td><a class = "btn btn-xs btn-default" role="button" href="/basicviz/view_parents/{{mass2motif.id}}">view parents</a></td>
@@ -12,5 +12,30 @@
 </table>
 
 </ul>
+
+{% endblock %}
+
+{% block js_block %}
+
+<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$('#m2mtable').DataTable({
+		dom: 'Bfrtip',
+		buttons: [
+        'csv',
+        ],
+    });   
+});
+</script>
+
 
 {% endblock %}
