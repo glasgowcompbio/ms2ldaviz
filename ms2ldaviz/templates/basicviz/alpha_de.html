@@ -24,16 +24,17 @@
     <input type="submit" name="submit" value="Compute differential expression" />
     </form>
 {% else %}
+    <p>The table below shows the differential expression between the two groups. z-score is the difference in means divided by the sum of the standard deviations. P-value is from a t-test.</p>
     <table class="table" id="motifdetable">
         <thead>
             <tr>
-                <th>Motif</th><th>Annotation</th><th>DE z-score</th><th>P-value</th></tr>
+                <th>Motif</th><th>Annotation</th><th>DE z-score</th><th>DE P-value</th></tr>
             </tr>
         </thead>
         <tbody>
             {% for mf in motif_scores %}
                 <tr>
-                    <td>{{mf.0}}</td><td>{{mf.0.annotation}}</td><td>{{mf.1}}</td><td>{{mf.2}}</td></tr>
+                    <td><a href="/basicviz/view_multi_m2m/{{mfe.id}}/{{mf.0.name}}/">{{mf.0}}</a></td><td>{{mf.0.annotation}}</td><td>{{mf.1}}</td><td>{{mf.2}}</td></tr>
                 </tr>
             {% endfor %}
         </tbody>
