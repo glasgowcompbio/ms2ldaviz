@@ -2078,6 +2078,7 @@ def alpha_de(request,mfe_id):
     links = mfe.multilink_set.all()
     individuals = [l.experiment for l in links]
     tu = zip(individuals,individuals)
+    tu = sorted(tu,key = lambda x: x[0].name)
     if request.method == 'POST':
         form = AlphaDEForm(tu,request.POST)
         if form.is_valid():
