@@ -14,7 +14,7 @@ from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,V
 
 from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,AlphaCorrOptions,SystemOptions
 
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr,ttest_ind
 
 import math
 
@@ -2109,7 +2109,8 @@ def alpha_de(request,mfe_id):
                 g1 = a[group1_index]
                 g2 = a[group2_index]
                 de = (g1.mean()-g2.mean())/(g1.std() + g2.std())
-                motif_scores.append((motifs[i],de))
+                t, p = ttest_ind(g1,g2,equal_var = False)
+                motif_scores.append((motifs[i],de,p))
             context_dict['motif_scores'] = motif_scores
 
                 

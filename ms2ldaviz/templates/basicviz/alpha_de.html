@@ -27,13 +27,13 @@
     <table class="table" id="motifdetable">
         <thead>
             <tr>
-                <th>Motif</th><th>Annotation</th><th>DE z-score</th></tr>
+                <th>Motif</th><th>Annotation</th><th>DE z-score</th><th>P-value</th></tr>
             </tr>
         </thead>
         <tbody>
             {% for mf in motif_scores %}
                 <tr>
-                    <td>{{mf.0}}</td><td>{{mf.0.annotation}}</td><td>{{mf.1}}</td></tr>
+                    <td>{{mf.0}}</td><td>{{mf.0.annotation}}</td><td>{{mf.1}}</td><td>{{mf.2}}</td></tr>
                 </tr>
             {% endfor %}
         </tbody>
