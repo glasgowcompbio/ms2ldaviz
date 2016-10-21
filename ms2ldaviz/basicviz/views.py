@@ -324,6 +324,21 @@ def get_doc_table(request,mf_id,motif_name):
             doc_table.append([rt,mz,i,doc.probability,peakset_index])
 
 
+    # Add the peaks to the peakset object that are not linked to a document (i.e. the MS1 peak is present, but it wasn't fragmented)
+    for ps in peaksets:
+        # Grab the intensity instances for this peakset
+        intensity_instances = ps.intensityinstance_set.all()
+        # Extract the individual experiments that are represented
+        individuals_present = [i.experiment for i in intensity_instances]
+        # Loop over the experiment
+        for individual in individuals:
+            # If the experiment is not in the current peakset but there is an intensity instance
+            if (not individual in peaksets[ps]) and individual in individuals_present:
+                # Find the intensity instance
+                int_int = filter(lambda x : x.experiment == individual, intensity_instances)
+                peaksets[ps][individual] = int_int[0].intensity
+                print ps,individual,int_int[0].intensity
+
     intensity_table = []
     counts = []
     final_peaksets = []
