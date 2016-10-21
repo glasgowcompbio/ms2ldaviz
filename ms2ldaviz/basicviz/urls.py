@@ -55,4 +55,5 @@ urlpatterns = patterns('',
     url(r'^add_mf_experiment_option/(?P<mfe_id>\w+)/$',views.add_mf_experiment_option,name = 'add_mf_experiment_option'),
     url(r'^delete_mf_experiment_option/(?P<option_id>\w+)/$',views.delete_mf_experiment_option,name = 'delete_mf_experiment_option'),
     url(r'^edit_mf_experiment_option/(?P<option_id>\w+)/$',views.edit_mf_experiment_option,name = 'edit_mf_experiment_option'),
+    url(r'^alpha_de/(?P<mfe_id>\w+)/$',views.alpha_de,name = 'alpha_de'),
 )

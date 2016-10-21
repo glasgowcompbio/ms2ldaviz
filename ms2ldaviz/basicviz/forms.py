@@ -46,6 +46,13 @@ class TopicScoringForm(forms.Form):
 		self.fields['group1'] = forms.MultipleChoiceField(choices = choices,label='Pick samples for group 1 (fold change is defined as group 1 over group 2)',required=True)
 		self.fields['group2'] = forms.MultipleChoiceField(choices = choices,label='Pick samples for group 2',required=True)
 
+class AlphaDEForm(forms.Form):
+	def __init__(self,choices,*args,**kwargs):
+		super(AlphaDEForm, self).__init__(*args,**kwargs)
+		self.fields['group1'] = forms.MultipleChoiceField(choices = choices,label='Pick samples for group 1 (differential expression is defined as group 1 over group 2)',required=True)
+		self.fields['group2'] = forms.MultipleChoiceField(choices = choices,label='Pick samples for group 2',required=True)
+
+
 class AlphaCorrelationForm(forms.Form):
 	edge_thresh = forms.DecimalField(required = True, initial = 0.98,label = 'Enter edge threshold')
 	distance_score = forms.ChoiceField(choices = (('cosine','cosine'),('euclidean','euclidean'),('rms','rms'),('pearson','pearson')))
