@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_tags %}
 
 <html>
 
@@ -12,10 +13,8 @@
 {% for experiment in experiments|dictsort:"name" %}
     <h3><b>{{experiment.name}}</b> ({{experiment.description}})</h3>
     <div>
-        <table class="table">
-        <tr><td>
         <a href="/basicviz/show_docs/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a>
-        <a href="/basicviz/view_mass2motifs/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Mass2Motifs</a>
+        <a href="/basicviz/view_mass2motifs/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a>
         <a href="/basicviz/start_viz/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a>
         {% if extra_user %}
             <a href="/basicviz/validation/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate for Justin</a>
@@ -24,11 +23,9 @@
             <a href="/basicviz/topic_table/{{experiment.id}}" class="btn btn-block btn-default" role="button"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a>
             <a href="/basicviz/extract_docs/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-folder-close"></span> Extract Documents</a>
             <a href="/basicviz/compute_topic_scores/{{experiment.id}}" class="btn btn-block btn-default" role="button"><span class="glyphicon glyphicon-sort-by-order"></span> Compute Topic Scores</a>
-            <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.id}}" class="btn btn-block btn-default" role="button"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Mass2Motifs</a>
-            <a href="/basicviz/view_experiment_options/{{experiment.id}}" class="btn btn-block btn-default" role="button"><span class="glyphicon glyphicon-indent-right"></span> View experiment options</a>
+            <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.id}}" class="btn btn-block btn-default" role="button"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a>
+            <a href="/basicviz/view_experiment_options/{{experiment.id}}" class="btn btn-block btn-default" role="button"><span class="glyphicon glyphicon-option-horizontal"></span> View experiment options</a>
         {% endif %}
-        </td></tr>
-        </table>
     </div>
 {% endfor %}
 </div>
@@ -38,20 +35,27 @@
 	<h2>Multi-file LDA Experiments</h2>
     <p>Once an experiment is selected, you can use the arrow keys to navigate to other experiments. Press <b>Enter</b> to open or close an experiment.</p>
     <div id="accordion2">
-        {% for mf in mfe %}
+        {% for mf in mfe|sort_by:'name' %}
             <h3><b>{{mf.name}}</b> ({{mf.description}})</h3>
             <div>
-                <ul>
-                    {% for exp in mf.multilink_set.all %}
-                        <li>{{exp.experiment}}&nbsp;<a href="/basicviz/show_docs/{{exp.experiment.id}}" class="btn btn-xs btn-success" role="button">Show parents</a>&nbsp;<a href="/basicviz/view_mass2motifs/{{exp.experiment.id}}" class="btn btn-xs btn-success" role="button">Show Mass2Motifs</a>&nbsp;<a href="/basicviz/start_viz/{{exp.experiment.id}}" class="btn btn-xs btn-primary" role="button">Start vis.</a><a href="/basicviz/topic_table/{{exp.experiment.id}}" class="btn btn-xs btn-primary" role="button">Topic table</a>&nbsp;<a href="/basicviz/rate_by_conserved_motif_rating/{{exp.experiment.id}}" class="btn btn-xs btn-primary" role="button">Rate by conserved motifs</a></li>
-                    {% endfor %}
-                </ul>
                 <p>
-                    <A href="/basicviz/multi_alphas/{{mf.id}}" class="btn btn-xs btn-warning" role="button">Explore alphas</A>
-                    <A href="/basicviz/alpha_correlation/{{mf.id}}" class="btn btn-xs btn-warning" role="button">Alpha correlation</A>
-                    <A href="/basicviz/wipe_cache/{{mf.id}}" class="btn btn-xs btn-warning" role="button">Wipe Cache</A>(force recomputation of alpha tables when, e.g. annotations have been added)
-                    <A href="/basicviz/view_mf_experiment_options/{{mf.id}}" class="btn btn-xs btn-warning" role="button">View options</A>
+                    <A href="/basicviz/multi_alphas/{{mf.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-signal"></span> Explore alphas</A>
+                    <A href="/basicviz/alpha_correlation/{{mf.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-tasks"></span> Alpha correlation</A>
+                    <A href="/basicviz/wipe_cache/{{mf.id}}" class="btn btn-block btn-default" title="(force recomputation of alpha tables when, e.g. annotations have been added)"><span class="glyphicon glyphicon-exclamation-sign"></span> Wipe Cache</A>
+                    <A href="/basicviz/view_mf_experiment_options/{{mf.id}}" class="btn btn-block btn-default" role="button"><span class="glyphicon glyphicon-option-horizontal"></span> View options</A>
                 </p>
+                <table class="table">
+                    {% for exp in mf.multilink_set.all|sort_by:'experiment__name' %}
+                        <tr>
+                            <td>{{exp.experiment}}</td>
+                            <td><a href="/basicviz/show_docs/{{exp.experiment.id}}" class="btn btn btn-xs btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a></td>
+                            <td><a href="/basicviz/view_mass2motifs/{{exp.experiment.id}}" class="btn btn-xs btn-default" role="button"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a></td>
+                            <td><a href="/basicviz/start_viz/{{exp.experiment.id}}" class="btn btn btn-xs btn-default" role="button"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a></td>
+                            <td><a href="/basicviz/topic_table/{{exp.experiment.id}}" class="btn btn btn-xs btn-default" role="button"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a></td>
+                            <td><a href="/basicviz/rate_by_conserved_motif_rating/{{exp.experiment.id}}" class="btn btn btn-xs btn-default" role="button"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a></td>
+                        </tr>
+                    {% endfor %}
+                </table>
             </div>
         {% endfor %}
     </div>
