@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+<html>
+
+{% block title %}Alpha differential expression analysis{% endblock %}
+
+{% block body_block %}
+
+<h3>Differential Expression Analysis for {{mfe.name}}</h3>
+
+
+{% if alpha_de_form %}
+    <form id="doc_form" method="post" action="/basicviz/alpha_de/{{mfe.id}}/">
+        {% csrf_token %}
+        {% for hidden in alpha_de_form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+
+        {% for field in alpha_de_form.visible_fields %}
+            <p>{{ field.errors }}</p>
+            <p>{{ field }}
+            {{ field.label }}</p>
+        {% endfor %}
+    <input type="submit" name="submit" value="Compute differential expression" />
+    </form>
+{% else %}
+    <p>The table below shows the differential expression between the two groups. z-score is the difference in means divided by the sum of the standard deviations. P-value is from a t-test.</p>
+    <table class="table" id="motifdetable">
+        <thead>
+            <tr>
+                <th>Motif</th><th>Annotation</th><th>DE z-score</th><th>DE P-value</th></tr>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mf in motif_scores %}
+                <tr>
+                    <td><a href="/basicviz/view_multi_m2m/{{mfe.id}}/{{mf.0.name}}/">{{mf.0}}</a></td><td>{{mf.0.annotation}}</td><td>{{mf.1}}</td><td>{{mf.2}}</td></tr>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
+{% endblock %}
+
+{% block js_block %}
+
+<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+
+<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#motifdetable').DataTable({
+        dom: 'Bfrtip',
+        buttons: [
+        'csv',
+        ],
+        "order": [[ 2, "desc" ]],
+    });   
+});
+
+
+</script>
+
+{% endblock %}

@@ -10,11 +10,11 @@ import json
 import jsonpickle
 import csv
 import numpy as np
-from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,VizForm,UserForm,TopicScoringForm,AlphaCorrelationForm,SystemOptionsForm
+from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,VizForm,UserForm,TopicScoringForm,AlphaCorrelationForm,SystemOptionsForm,AlphaDEForm
 
 from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,AlphaCorrOptions,SystemOptions
 
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr,ttest_ind
 
 import math
 
@@ -2071,3 +2071,54 @@ def edit_mf_experiment_option(request,option_id):
         context_dict['option_form'] = option_form
 
     return render(request,'basicviz/edit_mf_experiment_option.html',context_dict)
+
+def alpha_de(request,mfe_id):
+    mfe = MultiFileExperiment.objects.get(id = mfe_id)
+    context_dict = {'mfe':mfe}
+    links = mfe.multilink_set.all()
+    individuals = [l.experiment for l in links]
+    tu = zip(individuals,individuals)
+    tu = sorted(tu,key = lambda x: x[0].name)
+    if request.method == 'POST':
+        form = AlphaDEForm(tu,request.POST)
+        if form.is_valid():
+            group1_experiments = form.cleaned_data['group1']
+            group2_experiments = form.cleaned_data['group2']
+            motifs = individuals[0].mass2motif_set.all().order_by('name')
+
+            if mfe.alpha_matrix:
+                alp_vals_with_names = jsonpickle.decode(mfe.alpha_matrix)
+                alp_vals = []
+                for av in alp_vals_with_names:
+                    newav = av[2:-1]
+                    alp_vals.append(newav)
+
+            else:
+                alp_vals = make_alpha_matrix(individuals,normalise = True)
+
+            group1_index = []
+            group2_index = []
+            motif_scores = []
+            for experiment_name in group1_experiments:
+                experiment = Experiment.objects.get(name = experiment_name)
+                group1_index.append(individuals.index(experiment))
+            for experiment_name in group2_experiments:
+                experiment = Experiment.objects.get(name = experiment_name)
+                group2_index.append(individuals.index(experiment))
+            for i,alp in enumerate(alp_vals):
+                a = np.array(alp)
+                g1 = a[group1_index]
+                g2 = a[group2_index]
+                de = (g1.mean()-g2.mean())/(g1.std() + g2.std())
+                t, p = ttest_ind(g1,g2,equal_var = False)
+                motif_scores.append((motifs[i],de,p))
+            context_dict['motif_scores'] = motif_scores
+
+                
+                        
+        else:
+            context_dict['alpha_de_form'] = form
+    else:
+        form = AlphaDEForm(tu)        
+        context_dict['alpha_de_form'] = form
+    return render(request,'basicviz/alpha_de.html',context_dict)
