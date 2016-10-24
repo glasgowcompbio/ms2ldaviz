@@ -7,66 +7,70 @@
 {% block body_block %}
 <h3>Alpha values for {{mfe.name}}</h3>
 <p>Logged in as {{user}}, <a href="/basicviz/logout">Logout</a></p>
-<p>This experiment consists of the following individual MS2LDAs:</p>
+<!-- p>This experiment consists of the following individual MS2LDAs:</p>
 <ul>
 {% for ms2lda in individuals %}
 	<li>{{ms2lda.name}}</li>
 {% endfor %}
-</ul>
-<h4>Alpha table</h4>
-<table id="thetable" class="table">
-	<thead>
-		<tr>
-			<th>Motif</th>
-			<th>Annotation</th>
-			{% for ms2lda in individuals %}
-				<th>{{ ms2lda.name }}</th>
-			{% endfor %}
-			<th>Variance</th>
-		</tr>
-	</thead>
-	<!-- <tbody>
-	{% for row in alp_vals %}
-		<tr>
-			<td><a href="/basicviz/view_multi_m2m/{{mfe.id}}/{{row.0.name}}">{{row.0.name}}</a></td>
-			<td>{{row.0.annotation}}</td>
-			{% for val in row.1 %}
-				<td>{{val|stringformat:".4e" }}</td>
-			{% endfor %}
-		</tr>
-	{% endfor %}
-	</tbody> -->
-</table>
-<hr />
-<h4>Degree table</h4>
-<table id="degree" class="table">
-	<thead>
-		<tr>
-			<th>Motif</th>
-			<th>Annotation</th>
-			{% for ms2lda in individuals %}
-				<th>{{ ms2lda.name }}</th>
-			{% endfor %}
-		</tr>
-	</thead>
-	<tbody>
-	{% for row in degrees %}
-		<tr>
-			<td><a href="/basicviz/view_multi_m2m/{{mfe.id}}/{{row.0.name}}">{{row.0.name}}</a></td>
-			<td>{{row.0.annotation}}</td>
-			{% for val in row.1 %}
-				<td>{{val}}</td>
-			{% endfor %}
-		</tr>
-	{% endfor %}
-	</tbody>
-</table>
+</ul -->
+<div style="border:1px solid black; border-style: dashed; padding: 10px; margin-bottom: 20px;">
+    <h4>Alpha table</h4>
+    <table id="thetable" class="table cell-border" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+                <th>Motif</th>
+                <th>Annotation</th>
+                {% for ms2lda in individuals %}
+                    <th>{{ ms2lda.name }}</th>
+                {% endfor %}
+                <th>Variance</th>
+            </tr>
+        </thead>
+        <!-- <tbody>
+        {% for row in alp_vals %}
+            <tr>
+                <td><a href="/basicviz/view_multi_m2m/{{mfe.id}}/{{row.0.name}}">{{row.0.name}}</a></td>
+                <td>{{row.0.annotation}}</td>
+                {% for val in row.1 %}
+                    <td>{{val|stringformat:".4e" }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody> -->
+    </table>
+</div>
 
+<div style="border:1px solid black; border-style: dashed; padding: 10px; margin-bottom: 20px;">
+    <h4>Degree table</h4>
+    <table id="degree" class="table">
+        <thead>
+            <tr>
+                <th>Motif</th>
+                <th>Annotation</th>
+                {% for ms2lda in individuals %}
+                    <th>{{ ms2lda.name }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in degrees %}
+            <tr>
+                <td><a href="/basicviz/view_multi_m2m/{{mfe.id}}/{{row.0.name}}">{{row.0.name}}</a></td>
+                <td>{{row.0.annotation}}</td>
+                {% for val in row.1 %}
+                    <td>{{val}}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-<hr />
-<h3>PCA plot</h3>
-<div id='pca_div' width=1000 height=1000>
-		<div id='message'>Please wait, loading...</div>
+<div style="border:1px solid black; border-style: dashed; padding: 10px; margin-bottom: 20px;">
+    <h3>PCA plot</h3>
+    <div id='pca_div' width=1000 height=1000>
+            <div id='message'>Please wait, loading...</div>
+    </div>
 </div>
 
 {% endblock %}
@@ -93,6 +97,7 @@
 <script type="text/javascript">
 $(document).ready(function() {
 	$('#thetable').DataTable({
+        "scrollX": true,
 		dom: 'Bfrtip',
 		buttons: [
         'csv',
@@ -109,6 +114,7 @@ $(document).ready(function() {
         },
     });
 	$('#degree').DataTable({
+        "scrollX": true,
 		dom: 'Bfrtip',
 		buttons: [
         'csv',
