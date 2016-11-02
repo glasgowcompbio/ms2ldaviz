@@ -187,13 +187,19 @@ def get_degree_matrix(request,mf_id):
                     doc_m2m_threshold = float(doc_m2m_threshold)
                 else:
                     doc_m2m_threshold = 0.0
+                default_score = get_option('default_doc_m2m_score',experiment = individual)
+                if not default_score:
+                    default_score = 'probability'
 
 
                 new_row = []
                 motif_set = individual.mass2motif_set.all().order_by('name')
                 for motif in motif_set:
                     dm2m = motif.documentmass2motif_set.all()
-                    new_row.append(len([d for d in dm2m if d.probability > doc_m2m_threshold]))
+                    if default_score == 'probability':
+                        new_row.append(len([d for d in dm2m if d.probability > doc_m2m_threshold]))
+                    else:
+                        new_row.append(len([d for d in dm2m if d.overlap_score > doc_m2m_threshold]))
                 deg_vals.append(new_row)
 
             deg_vals = map(list,zip(*deg_vals))
@@ -284,13 +290,20 @@ def get_doc_table(request,mf_id,motif_name):
     peakset_list = []
     peakset_masses = []
     for i,individual in enumerate(individuals):
-        doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
-        if doc_m2m_threshold:
-            doc_m2m_threshold = float(doc_m2m_threshold)
-        else:
-            doc_m2m_threshold = 0.0 # Default value
+        # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
+        # if doc_m2m_threshold:
+        #     doc_m2m_threshold = float(doc_m2m_threshold)
+        # else:
+        #     doc_m2m_threshold = 0.0 # Default value
         individual_names.append(individual.name)
-        docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual],probability__gte = doc_m2m_threshold)
+        # default_score = get_option('default_doc_m2m_score',experiment = individual)
+        # if not default_score:
+        #     default_score = 'probability'
+        # if default_score == 'probability':
+        #     docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual],probability__gte = doc_m2m_threshold)
+        # else:
+        #     docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual],overlap_score__gte = doc_m2m_threshold)
+        docs = get_docm2m(individual_motifs[individual])
         for doc in docs:
             peakset_index = -1
             ii = doc.document.intensityinstance_set.all()
@@ -467,12 +480,19 @@ def view_multi_m2m(request,mf_id,motif_name):
     peakset_masses = []
     for i,individual in enumerate(individuals):
         alpha = Alpha.objects.get(mass2motif = individual_motifs[individual])
-        doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
-        if doc_m2m_threshold:
-            doc_m2m_threshold = float(doc_m2m_threshold)
-        else:
-            doc_m2m_threshold = 0.0 # default
-        docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual],probability__gte = doc_m2m_threshold)
+        # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
+        # if doc_m2m_threshold:
+        #     doc_m2m_threshold = float(doc_m2m_threshold)
+        # else:
+        #     doc_m2m_threshold = 0.0 # default
+        # default_score = get_option('default_doc_m2m_score',experiment = individual)
+        # if not default_score:
+        #     default_score = 'probability'
+        # if default_score == 'probability':
+        #     docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual],probability__gte = doc_m2m_threshold)
+        # else:
+        #     docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual],overlap_score__gte = doc_m2m_threshold)
+        docs = get_docm2m(individual_motifs[individual])
         individual_m2m.append([individual,individual_motifs[individual],alpha,len(docs)])
         alps.append(alpha.value)
         
@@ -610,13 +630,20 @@ def get_degrees(request,mf_id,motif_name):
     for individual in individuals:
         doc_m2m_threshold = get_option
         m2m = Mass2Motif.objects.get(name = motif_name,experiment = individual)
-        doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
-        if doc_m2m_threshold:
-            doc_m2m_threshold = float(doc_m2m_threshold)
-        else:
-            doc_m2m_threshold = 0.0 # Default value
+        # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
+        # if doc_m2m_threshold:
+        #     doc_m2m_threshold = float(doc_m2m_threshold)
+        # else:
+        #     doc_m2m_threshold = 0.0 # Default value
 
-        docs = DocumentMass2Motif.objects.filter(mass2motif = m2m,probability__gte = doc_m2m_threshold)
+        # default_score = get_option('default_doc_m2m_score',experiment = individual)
+        # if not default_score:
+        #     default_score = 'probability'
+        # if default_score == 'probability':
+        #     docs = DocumentMass2Motif.objects.filter(mass2motif = m2m,probability__gte = doc_m2m_threshold)
+        # else:
+        #     docs = DocumentMass2Motif.objects.filter(mass2motif = m2m,overlap_score__gte = doc_m2m_threshold)
+        docs = get_docm2m(m2m)
         degs.append(len(docs))
     
     degs = zip([i.name for i in individuals],degs)
@@ -905,20 +932,26 @@ def compute_topic_scores(request,experiment_id):
 
             motifs = Mass2Motif.objects.filter(experiment = experiment)
 
-            doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = experiment)
-            if doc_m2m_threshold:
-                doc_m2m_threshold = float(doc_m2m_threshold)
-            else:
-                doc_m2m_threshold = 0.00 # Default value
+            # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = experiment)
+            # if doc_m2m_threshold:
+            #     doc_m2m_threshold = float(doc_m2m_threshold)
+            # else:
+            #     doc_m2m_threshold = 0.00 # Default value
 
-
+            # default_score = get_option('default_doc_m2m_score',experiment = experiment)
+            # if not default_score:
+            #     default_score = 'probability'
 
             n_done = 0
             for motif1ind,motif in enumerate(motifs):
                 score_list = []
                 doc_indices = []
 
-                m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = doc_m2m_threshold)
+                # if default_score == 'probability':
+                #     m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = doc_m2m_threshold)
+                # else:
+                    # m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = doc_m2m_threshold)
+                m2mdocs = get_docm2m(motif)
                 for m2mdoc in m2mdocs:
                     doc_indices.append(list(documents).index(m2mdoc.document))
                 n_above = 0
@@ -950,7 +983,11 @@ def compute_topic_scores(request,experiment_id):
                 if form.cleaned_data['do_pairs']:
                     docs1 = set([m.document for m in m2mdocs])
                     for motif2 in motifs[motif1ind+1:]:
-                        m2mdocs2 = DocumentMass2Motif.objects.filter(mass2motif = motif2,probability__gte = doc_m2m_threshold)
+                        # if default_score == 'probability':
+                        #     m2mdocs2 = DocumentMass2Motif.objects.filter(mass2motif = motif2,probability__gte = doc_m2m_threshold)
+                        # else:
+                        #     m2mdocs2 = DocumentMass2Motif.objects.filter(mass2motif = motif2,overlap_score__gte = doc_m2m_threshold)
+                        m2mdocs2 = get_docm2m(motif2)
                         docs2 = set([m.document for m in m2mdocs2])
                         # Find the intersect
                         intersect = list(docs1 & docs2)
@@ -1021,12 +1058,19 @@ def show_doc(request,doc_id):
     experiment = document.experiment
     context_dict['experiment'] = experiment
     doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = experiment)
-    if doc_m2m_threshold:
-        doc_m2m_threshold = float(doc_m2m_threshold)
-    else:
-        doc_m2m_threshold = 0.00 # Default value
+    # if doc_m2m_threshold:
+    #     doc_m2m_threshold = float(doc_m2m_threshold)
+    # else:
+    #     doc_m2m_threshold = 0.00 # Default value
+    # default_score = get_option('default_doc_m2m_score',experiment = experiment)
+    # if not default_score:
+    #     default_score = 'probability'
 
-    mass2motif_instances = DocumentMass2Motif.objects.filter(document = document,probability__gte = doc_m2m_threshold).order_by('-probability')
+    # if default_score == 'probability':
+    #     mass2motif_instances = DocumentMass2Motif.objects.filter(document = document,probability__gte = doc_m2m_threshold).order_by('-probability')
+    # else:
+    #     mass2motif_instances = DocumentMass2Motif.objects.filter(document = document,overlap_score__gte = doc_m2m_threshold).order_by('-overlap_score')
+    mass2motif_instances = get_docm2m_bydoc(document)
     context_dict['mass2motifs'] = mass2motif_instances
     feature_mass2motif_instances = []
     for feature in features:
@@ -1057,12 +1101,22 @@ def view_parents(request,motif_id):
     context_dict['motif_features'] = motif_features
     context_dict['total_prob'] = total_prob
 
-    doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = motif.experiment)
-    if doc_m2m_threshold:
-        doc_m2m_threshold = float(doc_m2m_threshold)
-    else:
-        doc_m2m_threshold = 0.00 # Default value
-    dm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = doc_m2m_threshold)
+    # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = motif.experiment)
+    # if doc_m2m_threshold:
+    #     doc_m2m_threshold = float(doc_m2m_threshold)
+    # else:
+    #     doc_m2m_threshold = 0.00 # Default value
+
+    # default_score = get_option('default_doc_m2m_score',experiment = motif.experiment)
+    # if not default_score:
+    #     default_score = 'probability'
+
+    # if default_score == 'probability':
+    #     dm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = doc_m2m_threshold)
+    # else:
+    #     dm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = doc_m2m_threshold)
+
+    dm2m = get_docm2m(motif)
     context_dict['dm2ms'] = dm2m
 
     context_dict['status'] = 'Edit metadata...'
@@ -1119,7 +1173,11 @@ def get_parents(request,motif_id,vo_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     vo = VizOptions.objects.all()
     viz_options  = VizOptions.objects.get(id = vo_id)
-    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte=viz_options.edge_thresh).order_by('-probability')
+    edge_choice = vis_otions.edge_choice
+    if edge_choice == 'probability':
+        docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte=viz_options.edge_thresh).order_by('-probability')
+    else:
+        docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte=viz_options.edge_thresh).order_by('-overlap_score')
     documents = [d.document for d in docm2m]
     parent_data = []
     for dm in docm2m:
@@ -1134,14 +1192,21 @@ def get_parents(request,motif_id,vo_id):
 def get_parents_no_vo(request,motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
 
-    doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = motif.experiment)
-    if doc_m2m_threshold:
-        doc_m2m_threshold = float(doc_m2m_threshold)
-    else:
-        doc_m2m_threshold = 0.00 # Default value
+    # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = motif.experiment)
+    # if doc_m2m_threshold:
+    #     doc_m2m_threshold = float(doc_m2m_threshold)
+    # else:
+    #     doc_m2m_threshold = 0.00 # Default value
 
+    # default_score = get_option('default_doc_m2m_score',experiment = motif.experiment)
+    # if not default_score:
+    #     default_score = 'probability'
 
-    docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = doc_m2m_threshold).order_by('-probability')
+    # if default_score == 'probability':
+    #     docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = doc_m2m_threshold).order_by('-probability')
+    # else:
+    #     docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = doc_m2m_threshold).order_by('-overlap_score')
+    docm2m = get_docm2m(motif)
     documents = [d.document for d in docm2m]
     parent_data = []
     for dm in docm2m:
@@ -1169,16 +1234,25 @@ def get_word_graph(request, motif_id, vo_id):
     if not vo_id == 'nan':
         viz_options = VizOptions.objects.get(id = vo_id)
         edge_thresh = viz_options.edge_thresh
+        default_score = viz_options.edge_choice
     else:
         edge_thresh = get_option('doc_m2m_threshold',experiment = motif.experiment)
         if edge_thresh:
             edge_thresh = float(edge_thresh)
         else:
             edge_thresh = 0.0
+        default_score = get_option('default_doc_m2m_score',experiment = motif.experiment)
+        if not default_score:
+            default_score = 'probability'
 
 
     m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte=0.01)
-    m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif, probability__gte=edge_thresh)
+
+    if default_score == 'probability':
+        m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif, probability__gte=edge_thresh)
+    else:
+        m2mdocs = DocumentMass2Motif.objects.filter(mass2motif = motif, overlap_score__gte=edge_thresh)
+
     colours = '#404080'
     features_data = {}
     for feat in m2mIns:                        
@@ -1297,10 +1371,17 @@ def get_doc_for_plot(doc_id,motif_id = None,get_key = False):
         parent_mass = 0.0
     probability = "na"
 
+    default_score = get_option('default_doc_m2m_score',experiment = document.experiment)
+    if not default_score:
+        default_score = 'probability'
+
     if not motif_id == None:
         m2m = Mass2Motif.objects.get(id = motif_id)
         dm2m = DocumentMass2Motif.objects.get(mass2motif = m2m,document = document)
-        probability = dm2m.probability
+        if default_score == 'probability':
+            probability = dm2m.probability
+        else:
+            probability = dm2m.overlap_score
 
     parent_data = (parent_mass,100.0,document.display_name,document.annotation,probability)
     plot_fragments.append(parent_data)
@@ -1309,7 +1390,10 @@ def get_doc_for_plot(doc_id,motif_id = None,get_key = False):
     # Only colours the first five
     if motif_id == None:
         topic_colours = {}
-        topics = sorted(DocumentMass2Motif.objects.filter(document=document),key=lambda x:x.probability,reverse=True)
+        if default_score == 'probability':
+            topics = sorted(DocumentMass2Motif.objects.filter(document=document),key=lambda x:x.probability,reverse=True)
+        else:
+            topics = sorted(DocumentMass2Motif.objects.filter(document=document),key=lambda x:x.overlap_score,reverse=True)
         topics_to_plot = []
         for i in range(4):
             if i == len(topics):
@@ -1542,7 +1626,12 @@ def make_graph(experiment,edge_thresh = 0.05,min_degree = 5,
 
     print "Second"
 
-    for docm2m in DocumentMass2Motif.objects.filter(document__in=documents,mass2motif__in=topics,probability__gte=edge_thresh):
+    if edge_choice == 'probability':
+        docm2mset = DocumentMass2Motif.objects.filter(document__in=documents,mass2motif__in=topics,probability__gte=edge_thresh)
+    else:
+        docm2mset = DocumentMass2Motif.objects.filter(document__in=documents,mass2motif__in=topics,overlap_score__gte=edge_thresh)
+
+    for docm2m in docm2mset:
             # if docm2m.mass2motif in topics:
         if not docm2m.document in doc_nodes:
             metadata = jsonpickle.decode(docm2m.document.metadata)
@@ -1685,16 +1774,18 @@ def get_pca_data(request,experiment_id):
     m2mindex = {}
     msmpos = 0
 
-    doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = experiment)
-    if doc_m2m_threshold:
-        doc_m2m_threshold = float(doc_m2m_threshold)
-    else:
-        doc_m2m_threshold = 0.00 # Default value
+    # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = experiment)
+    # if doc_m2m_threshold:
+    #     doc_m2m_threshold = float(doc_m2m_threshold)
+    # else:
+    #     doc_m2m_threshold = 0.00 # Default value
+
 
 
     for document in documents:
         new_theta = [0 for i in range(n_mass2motifs)]
-        dm2ms = DocumentMass2Motif.objects.filter(document = document,probability__gte = doc_m2m_threshold)
+        # dm2ms = DocumentMass2Motif.objects.filter(document = document,probability__gte = doc_m2m_threshold)
+        dm2ms = get_docm2m_bydoc(document)
         for dm2m in dm2ms:
             if dm2m.mass2motif.name in m2mindex:
                 m2mpos = m2mindex[dm2m.mass2motif.name]
@@ -1734,11 +1825,19 @@ def validation(request,experiment_id):
             mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
             annotated_mass2motifs = []
 
+            # default_score = get_option('default_doc_m2m_score',experiment = experiment)
+            # if not default_score:
+            #     default_score = 'probability'
+
             counts = []
             for mass2motif in mass2motifs:
                 if mass2motif.annotation:
                     annotated_mass2motifs.append(mass2motif)
-                    dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = p_thresh)
+                    # if default_score == 'probability':
+                    #     dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = p_thresh)
+                    # else:
+                    #     dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,ovelap_score__gte = p_thresh)
+                    dm2ms = get_docm2m(mass2motif,doc_m2m_threshold = p_thresh)
                     tot = 0
                     val = 0
                     for d in dm2ms:
@@ -1789,8 +1888,13 @@ def dump_validations(request,experiment_id):
     response['Content-Disposition'] = 'attachment; filename="valid_dump_{}.csv"'.format(experiment_id)
     writer = csv.writer(response)
     writer.writerow(['msm_id','m2m_name','m2m_annotation','doc_id','doc_annotation','valid','probability'])
+
+  
+
+
+  
     for mass2motif in annotated_mass2motifs:
-        dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.02)
+        dm2ms = get_docm2m(mass2motif)
         for dm2m in dm2ms:
             document = dm2m.document
             # outstring +='{},{},{},"{}",{}\n'.format(mass2motif.id,mass2motif.annotation,dm2m.document.id,dm2m.document.annotation.encode('utf8'),dm2m.validated)
@@ -1810,7 +1914,7 @@ def dump_topic_molecules(request,m2m_id):
     writer = csv.writer(response)
     writer.writerow(['m2m_id','m2m_name','m2m_annotation','doc_id','doc_annotation','valid','probability','doc_csid','doc_inchi'])
     
-    dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = 0.02)
+    dm2ms = get_docm2m(mass2motif)
     for dm2m in dm2ms:
         document = dm2m.document
         # outstring +='{},{},{},"{}",{}\n'.format(mass2motif.id,mass2motif.annotation,dm2m.document.id,dm2m.document.annotation.encode('utf8'),dm2m.validated)
@@ -1819,6 +1923,49 @@ def dump_topic_molecules(request,m2m_id):
         writer.writerow([mass2motif.id,mass2motif.name,mass2motif.annotation.encode('utf8'),dm2m.document.id,doc_name.encode('utf8'),dm2m.validated,dm2m.probability,dm2m.document.csid,dm2m.document.inchikey])
 
     return response
+
+
+def get_docm2m(mass2motif,default_score = None,doc_m2m_threshold = None):
+    experiment = mass2motif.experiment
+    if not default_score:
+        default_score = get_option('default_doc_m2m_score',experiment = experiment)
+        if not default_score:
+            default_score = 'probability'
+    if not doc_m2m_threshold:
+        doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = experiment)
+        if doc_m2m_threshold:
+            doc_m2m_threshold = float(doc_m2m_threshold)
+        else:
+            doc_m2m_threshold = 0.0 # Default
+
+    if default_score == 'probability':
+        dm2m = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = doc_m2m_threshold).order_by('-probability')
+    else:
+        dm2m = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,overlap_score__gte = doc_m2m_threshold).order_by('-probability')
+
+    return dm2m
+
+def get_docm2m_bydoc(document,default_score = None,doc_m2m_threshold = None):
+
+    experiment = document.experiment
+    if not default_score:
+        default_score = get_option('default_doc_m2m_score',experiment = experiment)
+        if not default_score:
+            default_score = 'probability'
+    if not doc_m2m_threshold:
+        doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = experiment)
+        if doc_m2m_threshold:
+            doc_m2m_threshold = float(doc_m2m_threshold)
+        else:
+            doc_m2m_threshold = 0.0 # Default
+
+    if default_score == 'probability':
+        dm2m = DocumentMass2Motif.objects.filter(document = document,probability__gte = doc_m2m_threshold).order_by('-probability')
+    else:
+        dm2m = DocumentMass2Motif.objects.filter(document = document,overlap_score__gte = doc_m2m_threshold).order_by('-probability')
+
+    return dm2m
+
 
 def extract_docs(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)

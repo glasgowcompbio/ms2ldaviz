@@ -36,3 +36,7 @@ if __name__ == '__main__':
 	s = SystemOptions.objects.get_or_create(key = 'doc_m2m_threshold')[0]
 	s.value = '0.05'
 	s.save()
+
+	s = SystemOptions.objects.get_or_create(key = 'default_doc_m2m_score')[0]
+	s.value = 'probability'
+	s.save()
