@@ -1,13 +1,7 @@
 from django import forms
 from basicviz.models import Mass2Motif,SystemOptions
+from basicviz.constants import AVAILABLE_OPTIONS
 from django.contrib.auth.models import User
-
-
-available_options = [('doc_m2m_threshold','Probability threshold for showing document to mass2motif links'),
-                     ('log_peakset_intensities','Whether or not to log the peakset intensities (true,false)'),
-                     ('peakset_matching_tolerance','Tolerance to use when matching peaksets'),
-                     ('heatmap_minimum_display_count','Minimum number of instances in a peakset to display it in the heatmap'),
-                     ('default_doc_m2m_score','Default score to use when extracting document <-> mass2motif matches. Use either "probability" or "overlap_score"')]
 
 
 class Mass2MotifMetadataForm(forms.Form):
@@ -68,7 +62,7 @@ class AlphaCorrelationForm(forms.Form):
 	just_annotated = forms.BooleanField(required = False,initial = False,label = 'Restrict to annotated M2Ms?')
 
 class SystemOptionsForm(forms.ModelForm):
-	key_options = [(a[0],a[0]) for a in available_options]
+	key_options = [(a[0],a[0]) for a in AVAILABLE_OPTIONS]
 	key = forms.ChoiceField(choices = key_options,required = True)
 	class Meta:
 		model = SystemOptions

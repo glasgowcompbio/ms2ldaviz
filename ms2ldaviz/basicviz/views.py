@@ -13,17 +13,13 @@ import numpy as np
 from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,VizForm,UserForm,TopicScoringForm,AlphaCorrelationForm,SystemOptionsForm,AlphaDEForm
 
 from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,AlphaCorrOptions,SystemOptions
+from basicviz.constants import AVAILABLE_OPTIONS
 
 from scipy.stats import pearsonr,ttest_ind
 
 import math
 
 
-available_options = [('doc_m2m_threshold','Probability threshold for showing document to mass2motif links'),
-                     ('log_peakset_intensities','Whether or not to log the peakset intensities (true,false)'),
-                     ('peakset_matching_tolerance','Tolerance to use when matching peaksets'),
-                     ('heatmap_minimum_display_count','Minimum number of instances in a peakset to display it in the heatmap'),
-                     ('default_doc_m2m_score','Default score to use when extracting document <-> mass2motif matches. Use either "probability" or "overlap_score", or "both"')]
 
 @login_required(login_url='/basicviz/login/')
 def index(request):
@@ -2086,7 +2082,7 @@ def add_experiment_option(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
     context_dict = {}
     context_dict['experiment'] = experiment
-    context_dict['available'] = available_options
+    context_dict['available'] = AVAILABLE_OPTIONS
     if request.method == 'POST':
         option_form = SystemOptionsForm(request.POST)
         if option_form.is_valid():
@@ -2130,7 +2126,7 @@ def edit_experiment_option(request,option_id):
         context_dict['experiment'] = experiment
         context_dict['option_form'] = option_form
         context_dict['option'] = option
-        context_dict['available'] = available_options
+        context_dict['available'] = AVAILABLE_OPTIONS
     return render(request,'basicviz/edit_experiment_option.html',context_dict)   
 
 def view_mf_experiment_options(request,mfe_id):
@@ -2153,7 +2149,7 @@ def add_mf_experiment_option(request,mfe_id):
     mfe = MultiFileExperiment.objects.get(id = mfe_id)
     context_dict = {}
     context_dict['mfe'] = mfe
-    context_dict['available'] = available_options
+    context_dict['available'] = AVAILABLE_OPTIONS
     links = mfe.multilink_set.all()
     individuals = [l.experiment for l in links]
 
@@ -2202,7 +2198,7 @@ def edit_mf_experiment_option(request,option_id):
     context_dict = {}
     context_dict['mfe'] = mfe
     context_dict['option'] = option
-    context_dict['available'] = available_options
+    context_dict['available'] = AVAILABLE_OPTIONS
     links = mfe.multilink_set.all()
     individuals = [l.experiment for l in links]
     if request.method == 'POST':
