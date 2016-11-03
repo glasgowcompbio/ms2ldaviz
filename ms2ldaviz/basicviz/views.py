@@ -1941,8 +1941,10 @@ def get_docm2m(mass2motif,default_score = None,doc_m2m_threshold = None):
 
     if default_score == 'probability':
         dm2m = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = doc_m2m_threshold).order_by('-probability')
+    elif default_score == 'overlap_score':
+        dm2m = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,overlap_score__gte = doc_m2m_threshold).order_by('-overlap_score')
     else:
-        dm2m = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,overlap_score__gte = doc_m2m_threshold).order_by('-probability')
+        dm2m = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = doc_m2m_threshold,overlap_score__gte = doc_m2m_threshold).order_by('-probability')
 
     return dm2m
 
@@ -1962,9 +1964,10 @@ def get_docm2m_bydoc(document,default_score = None,doc_m2m_threshold = None):
 
     if default_score == 'probability':
         dm2m = DocumentMass2Motif.objects.filter(document = document,probability__gte = doc_m2m_threshold).order_by('-probability')
+    elif default_score == 'overlap_score':
+        dm2m = DocumentMass2Motif.objects.filter(document = document,overlap_score__gte = doc_m2m_threshold).order_by('-overlap_score')
     else:
-        dm2m = DocumentMass2Motif.objects.filter(document = document,overlap_score__gte = doc_m2m_threshold).order_by('-probability')
-
+        dm2m = DocumentMass2Motif.objects.filter(document = document,probability__gte = doc_m2m_threshold,overlap_score__gte = doc_m2m_threshold).order_by('-probability')
     return dm2m
 
 
