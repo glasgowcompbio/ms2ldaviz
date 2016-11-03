@@ -18,6 +18,17 @@
 		  font-family: sans-serif;
 		  font-size: 14px;
 		}
+
+        /* for massbank dialog */
+        .required:after {
+            content:" *";
+            color:#FF0000;
+        }
+        .massbank-form { padding:20px; }
+        .massbank-form .field { padding: 4px; margin:1px; background: #eee; }
+        .massbank-form .field label { display:inline-block; width:200px; margin-left:5px; }
+        .massbank-form .field input { display:inline-block; }
+
 	</style>
 {% endblock %}
 
@@ -46,7 +57,7 @@
 	<div id="spectra" border="20" padding="20"></div>
 
 	<div>
-	<h3>Mass2Motif details</h3>
+	<h3>Mass2Motif Details</h3>
 	<p>After thresholding to save the model, the total probability left in this motif is {{total_prob}}</p>
 		<table class='table' id='featuretable'>
 			<thead>
@@ -64,7 +75,7 @@
 	<hr />
 
 	<div>
-	<h3>Documents in Mass2Mitif</h3>
+	<h3>Documents in Mass2Motif</h3>
 		<table class='table' id='doctable'>
 			<thead>
 				<tr><th>Document name</th><th>Doc Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
@@ -80,6 +91,87 @@
 
 	<div id="graphs">
 	</div>
+
+    <div id="dialog-massbank" title="Generate Massbank Record">
+        <form class="massbank-form">
+            <div class="field required">
+                <label for="accession">ACCESSION:</label>
+                <input name="accession" type="text" size="50" maxlength=8
+                       title="Identifier of the MassBank Record. Two or three letters site code, followed by record id."
+                       placeholder="GP00001" value="{{accession}}" required />
+            </div>
+            <div class="field required">
+                <label for="authors">AUTHORS:</label>
+                <input type="text" name="authors" size="50"
+                       title="Authors and Affiliations of MassBank Record"
+                       placeholder="Akimoto N, Grad Sch Pharm Sci, Kyoto Univ and Maoka T, Res Inst Prod Dev."
+                       value="{{authors}}" required />
+            </div>
+            <div class="field required">
+                <label for="ch_name">CH$NAME:</label>
+                <input type="text" name="ch_name" size="50"
+                       title="Name of the Chemical Compound Analyzed"
+                       placeholder="D-Tartaric acid" value="{{mass2motif.annotation}}" required />
+            </div>
+            <div class="field required">
+                <label for="ch_compound_class">CH$COMPOUND_CLASS:</label>
+                <input type="text" name="ch_compound_class" size="50"
+                       title="Category of Chemical Compound"
+                       placeholder="Natural Product; Carotenoid; Terpenoid; Lipid" required />
+            </div>
+            <div class="field required">
+                <label for="ch_formula">CH$FORMULA:</label>
+                <input type="text" name="ch_formula" size="50"
+                       title="Molecular Formula of Chemical Compound"
+                       placeholder="C9H10ClNO3" required />
+            </div>
+            <div class="field required">
+                <label for="ch_exact_mass">CH$EXACT_MASS:</label>
+                <input type="text" name="ch_exact_mass" size="50" maxlength="10"
+                       title="Monoisotopic Mass of Chemical Compound."
+                       placeholder="430.38108" required />
+            </div>
+            <div class="field required">
+                <label for="ch_smiles">CH$SMILES:</label>
+                <input type="text" name="ch_smiles" size="50"
+                       title="SMILES String"
+                       placeholder="NCC(O)=O" required />
+            </div>
+            <div class="field required">
+                <label for="ch_iupac">CH$IUPAC:</label>
+                <input type="text" name="ch_iupac" size="50"
+                       title="IUPAC International Chemical Identifier (InChI Code)"
+                       placeholder="InChI=1S/C2H5NO2/c3-1-2(4)5/h1,3H2,(H,4,5)" required />
+            </div>
+            <div class="field required">
+                <label for="ac_instrument">AC$INSTRUMENT:</label>
+                <input type="text" name="ac_instrument" size="50"
+                       title="Commercial Name and Model of (Chromatographic Separation Instrument, if any were coupled, and) Mass Spectrometer and Manufacturer."
+                       placeholder="LC-10ADVPmicro HPLC, Shimadzu; LTQ Orbitrap, Thermo Electron." required />
+            </div>
+            <div class="field required">
+                <label for="ac_instrument_type">AC$INSTRUMENT_TYPE:</label>
+                <input type="text" name="ac_instrument_type" size="50"
+                       title="General Type of Instrument."
+                       placeholder="LC-ESI-QTOF" value="LC-ESI-QTOF" required />
+            </div>
+            <div class="field required">
+                <label for="ac_mass_spectrometry_ms_type">AC$MASS_SPECTROMETRY: MS_TYPE:</label>
+                <input type="text" name="ac_mass_spectrometry_ms_type" size="50"
+                       title="MS1, MS2, MS3, etc."
+                       placeholder="MS2" value="{{ms_type}}" required />
+            </div>
+            <div class="field required">
+                <label for="ac_mass_spectrometry_ion_mode">AC$MASS_SPECTROMETRY: ION_MODE:</label>
+                <input type="text" name="ac_mass_spectrometry_ion_mode" size="50"
+                       title="POSITIVE or NEGATIVE."
+                       placeholder="POSITIVE" value="{{ion_mode}}" required />
+            </div>
+            <input type="hidden" name="peak_text" value="{{peak_text}}" />
+            <input type="hidden" name="hash" value="{{peak_text}}" />
+        </form>
+    </div>
+
 {% endblock %}
 
 {% block js_block %}
@@ -114,6 +206,27 @@
 				dom: 'Bfrtip',
 				buttons: [
 			        'csv',
+                    {
+                        text: 'MassBank Record',
+                        action: function ( e, dt, node, config ) {
+                            $( "#dialog-massbank" ).dialog({
+                                resizable: false,
+                                height: "auto",
+                                width: 800,
+                                modal: true,
+                                buttons: {
+                                    'Copy to clipboard': function () {
+                                        generateData();
+                                        // $(this).dialog('close');
+                                    },
+                                        'Close': function () {
+                                        $(this).dialog('close');
+                                    }
+                                }
+                                });
+
+                        }
+                    }
 		        ],
 		        "order": [[ 1, "desc" ]],
 		    });
@@ -126,6 +239,12 @@
 		    });
 
 		});
+
+    function generateData() {
+        var name = $('input[name="accession"]').val();
+        alert(name);
+    }
+
 	</script>
 
 

@@ -1,25 +1,26 @@
-from django.shortcuts import render
-from django.http import HttpResponse,HttpResponseRedirect,Http404
-
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login, logout
-import networkx as nx
-from networkx.readwrite import json_graph
-from sklearn.decomposition import PCA
-import json
-import jsonpickle
 import csv
-import numpy as np
-from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,VizForm,UserForm,TopicScoringForm,AlphaCorrelationForm,SystemOptionsForm,AlphaDEForm
-
-from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,AlphaCorrOptions,SystemOptions
-from basicviz.constants import AVAILABLE_OPTIONS
-
-from scipy.stats import pearsonr,ttest_ind
-
 import math
 
+import json
+import jsonpickle
+import networkx as nx
+import numpy as np
 
+import requests
+import pprint
+
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse,HttpResponseRedirect,Http404
+from django.shortcuts import render
+from networkx.readwrite import json_graph
+from scipy.stats import ttest_ind
+from sklearn.decomposition import PCA
+from numpy import interp
+
+from basicviz.constants import AVAILABLE_OPTIONS, DEFAULT_MASSBANK_AUTHORS, DEFAULT_MASSBANK_MSTYPE, DEFAULT_MASSBANK_SPLASH
+from basicviz.forms import Mass2MotifMetadataForm,DocFilterForm,ValidationForm,VizForm,UserForm,TopicScoringForm,AlphaCorrelationForm,SystemOptionsForm,AlphaDEForm
+from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,AlphaCorrOptions,SystemOptions
 
 @login_required(login_url='/basicviz/login/')
 def index(request):
@@ -1090,13 +1091,98 @@ def show_doc(request,doc_id):
     context_dict['fm2m'] = feature_mass2motif_instances
     return render(request,'basicviz/show_doc.html',context_dict)
 
+def get_description(motif):
+    exp_desc = motif.experiment.description
+    if exp_desc is None:
+        # look up in multi-file experiment
+        links = MultiLink.objects.filter(experiment = motif.experiment)
+        for link in links:
+            mfe = link.multifileexperiment
+            if mfe.description is not None:
+                return mfe.description # found a multi-file descrption
+        return None # found nothing
+    else:
+        return exp_desc # found single-file experiment description
+
 def view_parents(request,motif_id):
+
     motif = Mass2Motif.objects.get(id=motif_id)
     context_dict = {'mass2motif':motif}
     motif_features = Mass2MotifInstance.objects.filter(mass2motif = motif).order_by('-probability')
     total_prob = sum([m.probability for m in motif_features])
     context_dict['motif_features'] = motif_features
     context_dict['total_prob'] = total_prob
+
+    # for massbank export
+    accession = 'GP%06d' % int(motif_id)
+
+    # attempt to auto-detect from the experiment description
+    exp_desc = get_description(motif)
+    if exp_desc is not None:
+        exp_desc = exp_desc.lower()
+        ion_mode = 'POSITIVE' if 'pos' in exp_desc else 'NEGATIVE' if 'neg' in exp_desc else 'Unknown'
+
+    # get spectral hash
+    peak_list = []
+    for m2m in motif_features:
+        tokens = m2m.feature.name.split('_')
+        f_type = tokens[0] # 'loss' or 'fragment'
+        mz = float(tokens[1])
+        if f_type == 'loss': # represent neutral loss as negative m/z value
+            mz = -mz
+        abs_intensity = m2m.probability
+        rel_intensity = m2m.probability
+        row = (mz, abs_intensity, -1)
+        peak_list.append(row)
+
+    # [m/z, absolute intensity, relative intensity]
+    peaks = np.array(peak_list)
+
+    # sort by first (m/z) column
+    pos = peaks[:, 0].argsort()
+    peaks = peaks[pos]
+
+    # the probabilities are set to be the absolute intensities,
+    # while the relative intensities are scaled from 1 ... 999 (from the manual)??
+    abs_intensities = peaks[:, 1]
+    min_prob = np.min(abs_intensities)
+    max_prob = np.max(abs_intensities)
+    rel_intensities = interp(abs_intensities, [min_prob, max_prob], [1, 999])
+    peaks[:, 2] = rel_intensities
+
+    data = {'ions':[], 'type':'MS'}
+    peak_text = 'm/z int. rel.int.\n'
+    for peak in peaks:
+        mz = '%.5f' % peak[0]
+        abs_intensity = '%.5f' % peak[1]
+        rel_intensity = '%.5f' % peak[2]
+        if peak[0] > 0:
+            ion = {'mass':mz, 'intensity': abs_intensity}
+            data['ions'].append(ion)
+        peak_text += '%s %s %s\n' % (mz, abs_intensity, rel_intensity)
+    data = json.dumps(data)
+
+    print peak_text
+    print data
+
+    url = DEFAULT_MASSBANK_SPLASH
+    headers = {'Content-type': 'application/json'}
+    response = requests.post(url, headers=headers, data=data)
+    hash = response.text
+
+    # data_json = json.dumps(data)
+    # headers = {'Content-type': 'application/json'}
+    # response = requests.post(url, data=data_json, headers=headers)
+    # print response
+    # pprint.pprint(response.json())
+    # pprint.pprint(response.json()['json'])
+
+    context_dict['accession'] = accession
+    context_dict['authors'] = DEFAULT_MASSBANK_AUTHORS
+    context_dict['ms_type'] = DEFAULT_MASSBANK_MSTYPE
+    context_dict['ion_mode'] = ion_mode
+    context_dict['peak_text'] = peak_text
+    context_dict['hash'] = hash
 
     # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = motif.experiment)
     # if doc_m2m_threshold:
@@ -1130,12 +1216,8 @@ def view_parents(request,motif_id):
             motif.save()
             context_dict['status'] = 'Metadata saved...'
 
-
-
     metadata_form = Mass2MotifMetadataForm(initial={'metadata':motif.annotation})
     context_dict['metadata_form'] = metadata_form
-
-
     return render(request,'basicviz/view_parents.html',context_dict)
 
 
