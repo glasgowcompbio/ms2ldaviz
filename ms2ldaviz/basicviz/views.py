@@ -1233,7 +1233,12 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
     peaks = peaks[pos, :]
     hash = get_splash(peaks)
 
-    ch_names = data.get('ch_name', motif.annotation).splitlines()
+    ch_names = data.get('ch_name', motif.annotation)
+    if ch_names is None:
+        ch_names = []
+    else:
+        ch_names = ch_names.splitlines() # convert from string with \n into list
+
     comments = data.get('comments', '').splitlines()
     ch_exact_mass = data.get('ch_exact_mass', '0')
     ch_links = data.get('ch_link', '').splitlines()
