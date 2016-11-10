@@ -114,7 +114,7 @@
         </form>
         <div style="margin: 20px">
             <div id="status">Result goes here: </div><textarea name="massbank_str" id="massbank_str" rows="10" cols="100"></textarea>
-            <button onclick="copyToClipboard('#massbank_str')">Copy</button>
+            <button id="copy_button" onclick="copyToClipboard('#massbank_str')" disabled>Copy</button>
         </div>
     </div>
 
@@ -223,7 +223,8 @@
                 $('#massbank_str').text(massbank_str);
                 console.log(status);
                 console.log(massbank_str);
-
+                $("#copy_button").removeAttr("disabled");
+                
             },
 
             error : function(xhr,errmsg, err) {
@@ -238,7 +239,7 @@
     // $('#massbank_str').hide()
 
     function copyToClipboard(element) {
-        var $temp = $("<input>");
+        var $temp = $("<textarea>");
         $("body").append($temp);
         $temp.val($(element).text()).select();
         document.execCommand("copy");
