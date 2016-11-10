@@ -1235,7 +1235,7 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
 
     ch_names = data.get('ch_name', motif.annotation)
     if ch_names is None:
-        ch_names = []
+        ch_names = ['']
     else:
         ch_names = ch_names.splitlines() # convert from string with \n into list
 
