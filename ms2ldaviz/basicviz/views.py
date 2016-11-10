@@ -19,7 +19,7 @@ from scipy.stats import ttest_ind
 from sklearn.decomposition import PCA
 from numpy import interp
 
-from basicviz.constants import AVAILABLE_OPTIONS, DEFAULT_MASSBANK_AUTHORS, DEFAULT_MASSBANK_SPLASH, DEFAULT_AC_INSTRUMENT, DEFAULT_AC_INSTRUMENT_TYPE, DEFAULT_LICENSE
+from basicviz.constants import AVAILABLE_OPTIONS, DEFAULT_MASSBANK_AUTHORS, DEFAULT_MASSBANK_SPLASH, DEFAULT_AC_INSTRUMENT, DEFAULT_AC_INSTRUMENT_TYPE, DEFAULT_LICENSE, DEFAULT_IONISATION
 from basicviz.forms import Mass2MotifMetadataForm,Mass2MotifMassbankForm,DocFilterForm,ValidationForm,VizForm,UserForm,TopicScoringForm,AlphaCorrelationForm,SystemOptionsForm,AlphaDEForm
 from basicviz.models import Feature,Experiment,Document,FeatureInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Mass2Motif,Mass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,AlphaCorrOptions,SystemOptions
 
@@ -1255,6 +1255,7 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
     massbank_dict['comments'] = comments
     massbank_dict['ch_link'] = ch_links
     massbank_dict['ac_mass_spectrometry_ion_mode'] = ion_mode
+    massbank_dict['ac_ionisation'] = DEFAULT_IONISATION
     massbank_dict['hash'] = hash
     massbank_dict['peaks'] = peaks
 
@@ -1315,6 +1316,12 @@ def get_massbank_str(massbank_dict):
     output.append('CH$IUPAC: %s' % massbank_dict['ch_iupac'])
     for link in massbank_dict['ch_link']:
         output.append('CH$LINK: %s' % link)
+
+    output.append('AC$INSTRUMENT: %s' % massbank_dict['ac_instrument'])
+    output.append('AC$INSTRUMENT_TYPE: %s' % massbank_dict['ac_instrument_type'])
+    output.append('AC$MASS_SPECTROMETRY: MS_TYPE %s' % massbank_dict['ms_type'])
+    output.append('AC$MASS_SPECTROMETRY: ION_MODE %s' % massbank_dict['ac_mass_spectrometry_ion_mode'])
+    output.append('AC$MASS_SPECTROMETRY: IONIZATION %s' % massbank_dict['ac_ionisation'])
 
     peaks = massbank_dict['peaks']
     output.append('PK$SPLASH: %s' % massbank_dict['hash'])
