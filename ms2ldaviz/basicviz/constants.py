@@ -5,5 +5,7 @@ AVAILABLE_OPTIONS = [('doc_m2m_threshold','Probability threshold for showing doc
                      ('default_doc_m2m_score','Default score to use when extracting document <-> mass2motif matches. Use either "probability" or "overlap_score", or "both"')]
 
 DEFAULT_MASSBANK_AUTHORS = "van der Hooft, J. J. J., Wandy J., Rogers, S., University of Glasgow"
-DEFAULT_MASSBANK_MSTYPE = "MS2"
 DEFAULT_MASSBANK_SPLASH = 'http://splash.fiehnlab.ucdavis.edu/splash/it'
+DEFAULT_AC_INSTRUMENT = 'Q-Exactive (Thermo Fisher Scientific)'
+DEFAULT_AC_INSTRUMENT_TYPE = 'LC-ESI-Orbitrap-MS'
+DEFAULT_LICENSE = 'CC BY-SA'
