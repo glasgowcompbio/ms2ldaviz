@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 
 class Mass2MotifMetadataForm(forms.Form):
     metadata = forms.CharField(max_length = 256,required = False,widget=forms.TextInput(attrs={'size':'80'}))
+    short_annotation = forms.CharField(max_length = 256,required = False,widget=forms.TextInput(attrs={'size':'80'}))
 
 class Mass2MotifMassbankForm(forms.Form):
     motif_id = forms.CharField(widget=forms.HiddenInput(attrs={'id':'motif_id'}))

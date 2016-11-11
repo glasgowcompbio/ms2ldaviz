@@ -460,6 +460,7 @@ def view_multi_m2m(request,mf_id,motif_name):
         form = Mass2MotifMetadataForm(request.POST)
         if form.is_valid():
             new_annotation = form.cleaned_data['metadata']
+            new_short_annotation = form.cleaned_data['short_annotation']
             for individual in individual_motifs:
                 motif = individual_motifs[individual]
                 md = jsonpickle.decode(motif.metadata)
@@ -467,13 +468,17 @@ def view_multi_m2m(request,mf_id,motif_name):
                     md['annotation'] = new_annotation
                 elif 'annotation' in md:
                     del md['annotation']
+                if len(new_short_annotation) > 0:
+                    md['short_annotation'] = new_short_annotation
+                elif 'short_annotation' in md:
+                    del md['short_annotation']
                 motif.metadata = jsonpickle.encode(md)
                 motif.save()
             context_dict['status'] = 'Metadata saved...'
 
 
     firstm2m = Mass2Motif.objects.get(name = motif_name,experiment = individuals[0])
-    metadata_form = Mass2MotifMetadataForm(initial={'metadata':firstm2m.annotation})
+    metadata_form = Mass2MotifMetadataForm(initial={'metadata':firstm2m.annotation,'short_annotation':firstm2m.short_annotation})
     context_dict['metadata_form'] = metadata_form
 
     
@@ -1148,16 +1153,21 @@ def view_parents(request,motif_id):
         form = Mass2MotifMetadataForm(request.POST)
         if form.is_valid():
             new_annotation = form.cleaned_data['metadata']
+            new_short_annotation = form.cleaned_data['short_annotation']
             md = jsonpickle.decode(motif.metadata)
             if len(new_annotation) > 0:
                 md['annotation'] = new_annotation
             elif 'annotation' in md:
                 del md['annotation']
+            if len(new_short_annotation) > 0:
+                md['short_annotation'] = new_short_annotation
+            elif 'short_annotation' in md:
+                del md['short_annotation']
             motif.metadata = jsonpickle.encode(md)
             motif.save()
             context_dict['status'] = 'Metadata saved...'
 
-    metadata_form = Mass2MotifMetadataForm(initial={'metadata':motif.annotation})
+    metadata_form = Mass2MotifMetadataForm(initial={'metadata':motif.annotation,'short_annotation':motif.short_annotation})
     context_dict['metadata_form'] = metadata_form
 
     # retrieve existing massbank dictionary for this motif or initialise a default one
@@ -2526,3 +2536,12 @@ def alpha_de(request,mfe_id):
         form = AlphaDEForm(tu)        
         context_dict['alpha_de_form'] = form
     return render(request,'basicviz/alpha_de.html',context_dict)
+
+def get_multifile_mass2motif_metadata(request,mf_id,motif_name):
+    mfe = MultiFileExperiment.objects.get(id=mf_id)
+    links = mfe.multilink_set.all()
+    individuals = [l.experiment for l in links]
+    first_experiment = individuals[0]
+    mass2motif = Mass2Motif.objects.get(experiment = first_experiment,name = motif_name)
+    md = jsonpickle.decode(mass2motif.metadata)
+    return HttpResponse(json.dumps(md),content_type = 'application/json')

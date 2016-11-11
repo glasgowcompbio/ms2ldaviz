@@ -136,6 +136,13 @@ class Mass2Motif(models.Model):
         else:
             return None
 
+    def get_short_annotation(self):
+    	md = jsonpickle.decode(self.metadata)
+    	if 'short_annotation' in md:
+    		return md['short_annotation']
+    	else:
+    		return None
+
     def get_massbank_dict(self):
         md = jsonpickle.decode(self.metadata)
         if 'massbank' in md:
@@ -145,6 +152,7 @@ class Mass2Motif(models.Model):
 
     annotation = property(get_annotation)
     massbank_dict = property(get_massbank_dict)
+    short_annotation = property(get_short_annotation)
 
     def __unicode__(self):
         return self.name
