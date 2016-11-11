@@ -437,7 +437,7 @@ def get_doc_table(request,mf_id,motif_name):
 
 def view_multi_m2m(request,mf_id,motif_name):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
-    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment')
+    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment__name')
     individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
     context_dict = {'mfe':mfe}
     context_dict['motif_name'] = motif_name
@@ -476,12 +476,12 @@ def view_multi_m2m(request,mf_id,motif_name):
                 motif.save()
             context_dict['status'] = 'Metadata saved...'
 
-
     firstm2m = Mass2Motif.objects.get(name = motif_name,experiment = individuals[0])
     metadata_form = Mass2MotifMetadataForm(initial={'metadata':firstm2m.annotation,'short_annotation':firstm2m.short_annotation})
     context_dict['metadata_form'] = metadata_form
 
-    
+    massbank_form = get_massbank_form(firstm2m, m2mfeatures, mf_id=mf_id)
+    context_dict['massbank_form'] = massbank_form
 
     # Get the m2m in the individual models
     individual_m2m = []
@@ -1119,6 +1119,43 @@ def get_description(motif):
     else:
         return exp_desc # found single-file experiment description
 
+def get_massbank_form(motif, motif_features, mf_id=None):
+
+    motif_id = motif.id
+
+    # retrieve existing massbank dictionary for this motif or initialise a default one
+    if motif.massbank_dict is not None:
+        mb_dict = motif.massbank_dict
+        is_new = False
+    else:
+        data = {'motif_id': motif_id}
+        mb_dict = get_massbank_dict(data, motif, motif_features, 0)
+        is_new = True
+
+    print 'is_new', is_new
+    print 'mb_dict', mb_dict
+
+    # set to another form used when generating the massbank record
+    massbank_form = Mass2MotifMassbankForm(initial={
+        'motif_id': motif_id,
+        'accession': mb_dict['accession'],
+        'authors': mb_dict['authors'],
+        'comments': '\n'.join(mb_dict['comments']),
+        'ch_name': '\n'.join(mb_dict['ch_name']),
+        'ch_compound_class': mb_dict['ch_compound_class'],
+        'ch_formula': mb_dict['ch_formula'],
+        'ch_exact_mass': mb_dict['ch_exact_mass'],
+        'ch_smiles': mb_dict['ch_smiles'],
+        'ch_iupac': mb_dict['ch_iupac'],
+        'ch_link': '\n'.join(mb_dict['ch_link']),
+        'ac_instrument': mb_dict['ac_instrument'],
+        'ac_instrument_type': mb_dict['ac_instrument_type'],
+        'ac_mass_spectrometry_ion_mode': mb_dict['ac_mass_spectrometry_ion_mode'],
+        'min_rel_int': 100 if is_new else mb_dict.get('min_rel_int', 100),
+        'mf_id': mf_id if mf_id is not None else ''
+    })
+    return massbank_form
+
 def view_parents(request,motif_id):
 
     motif = Mass2Motif.objects.get(id=motif_id)
@@ -1170,34 +1207,7 @@ def view_parents(request,motif_id):
     metadata_form = Mass2MotifMetadataForm(initial={'metadata':motif.annotation,'short_annotation':motif.short_annotation})
     context_dict['metadata_form'] = metadata_form
 
-    # retrieve existing massbank dictionary for this motif or initialise a default one
-    if motif.massbank_dict is not None:
-        print 'existing'
-        mb_dict = motif.massbank_dict
-    else:
-        print 'new'
-        data = {'motif_id': motif_id}
-        mb_dict = get_massbank_dict(data, motif, motif_features, 0)
-    print 'mb_dict', mb_dict
-
-    # set to another form used when generating the massbank record
-    massbank_form = Mass2MotifMassbankForm(initial={
-        'motif_id': motif_id,
-        'accession': mb_dict['accession'],
-        'authors': mb_dict['authors'],
-        'comments': '\n'.join(mb_dict['comments']),
-        'ch_name': '\n'.join(mb_dict['ch_name']),
-        'ch_compound_class': mb_dict['ch_compound_class'],
-        'ch_formula': mb_dict['ch_formula'],
-        'ch_exact_mass': mb_dict['ch_exact_mass'],
-        'ch_smiles': mb_dict['ch_smiles'],
-        'ch_iupac': mb_dict['ch_iupac'],
-        'ch_link': '\n'.join(mb_dict['ch_link']),
-        'ac_instrument': mb_dict['ac_instrument'],
-        'ac_instrument_type': mb_dict['ac_instrument_type'],
-        'ac_mass_spectrometry_ion_mode': mb_dict['ac_mass_spectrometry_ion_mode'],
-        'min_rel_int': 100,
-    })
+    massbank_form = get_massbank_form(motif, motif_features)
     context_dict['massbank_form'] = massbank_form
 
     return render(request,'basicviz/view_parents.html',context_dict)
@@ -1208,8 +1218,8 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
     accession = data.get('accession', default_accession)
     ms_type = 'MS2'
 
-    if 'ion_mode' in data:
-        ion_mode = data['ion_mode']
+    if 'ac_mass_spectrometry_ion_mode' in data:
+        ion_mode = data['ac_mass_spectrometry_ion_mode']
     else:
         # attempt to auto-detect from the experiment description
         exp_desc = get_description(motif)
@@ -1293,6 +1303,7 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
     to_copy = ['ch_compound_class', 'ch_formula', 'ch_smiles', 'ch_iupac', 'ch_exact_mass']
     for key in to_copy:
         massbank_dict[key] = data.get(key, '')
+    massbank_dict['min_rel_int'] = min_rel_int
 
     return massbank_dict
 
@@ -1370,7 +1381,7 @@ def generate_massbank(request):
             'motif_id', 'accession', 'authors', 'comments',
             'ch_name', 'ch_compound_class', 'ch_formula', 'ch_exact_mass',
             'ch_smiles', 'ch_iupac', 'ch_link',
-            'ac_instrument', 'ac_instrument_type',
+            'ac_instrument', 'ac_instrument_type', 'ac_mass_spectrometry_ion_mode',
             'min_rel_int'
         ]
         for key in keys:
@@ -1394,6 +1405,61 @@ def generate_massbank(request):
         md['massbank'] = mb_dict
         motif.metadata = jsonpickle.encode(md)
         motif.save()
+
+        response_data = {}
+        response_data['status'] = 'Massbank record has been generated. Please copy.'
+        response_data['massbank_str'] = mb_string
+        return HttpResponse(
+            json.dumps(response_data),
+            content_type="application/json"
+        )
+
+    else:
+        raise NotImplementedError
+
+def generate_massbank_multi_m2m(request):
+
+    if request.method == 'POST':
+
+        # populate from post request
+        data = {}
+        keys = [
+            'mf_id', 'motif_id', 'accession', 'authors', 'comments',
+            'ch_name', 'ch_compound_class', 'ch_formula', 'ch_exact_mass',
+            'ch_smiles', 'ch_iupac', 'ch_link',
+            'ac_instrument', 'ac_instrument_type', 'ac_mass_spectrometry_ion_mode',
+            'min_rel_int'
+        ]
+        for key in keys:
+            data[key] = request.POST.get(key)
+
+        mf_id = data['mf_id']
+        first_motif_id = data['motif_id']
+        min_rel_int = int(data['min_rel_int'])
+
+        first_m2m = Mass2Motif.objects.get(id=first_motif_id)
+        mfe = MultiFileExperiment.objects.get(id=mf_id)
+        links = MultiLink.objects.filter(multifileexperiment=mfe).order_by('experiment')
+        individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
+
+        for individual in individuals:
+
+            motif = Mass2Motif.objects.get(name=first_m2m.name, experiment=individual)
+
+            # get the data in dictionary form
+            motif_features = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by('-probability')
+            mb_dict = get_massbank_dict(data, motif, motif_features, min_rel_int)
+
+            # convert to string and add to the dictionary
+            mb_string = get_massbank_str(mb_dict)
+            del (mb_dict['peaks'])  # got error if we jsonpickle this numpy array .. ?
+            mb_dict['massbank_record'] = mb_string
+
+            # decode the metadata first, add the massbank field, then encode it back
+            md = jsonpickle.decode(motif.metadata)
+            md['massbank'] = mb_dict
+            motif.metadata = jsonpickle.encode(md)
+            motif.save()
 
         response_data = {}
         response_data['status'] = 'Massbank record has been generated. Please copy.'
