@@ -107,7 +107,8 @@ def register(request):
 
 # import time
 def get_alpha_matrix(request,mf_id):
-    if request.is_ajax():
+    # if request.is_ajax():
+    if True:
         mfe = MultiFileExperiment.objects.get(id = mf_id)
 
         if not mfe.alpha_matrix:
