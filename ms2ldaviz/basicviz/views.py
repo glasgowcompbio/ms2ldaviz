@@ -361,6 +361,7 @@ def get_doc_table(request,mf_id,motif_name):
                 print ps,individual,int_int[0].intensity
 
     intensity_table = []
+    unnormalised_intensity_table = []
     counts = []
     final_peaksets = []
     final_peakset_masses = []
@@ -396,6 +397,7 @@ def get_doc_table(request,mf_id,motif_name):
             va = sum([v**2 for v in nz_vals])/len(nz_vals) - me**2
             va = math.sqrt(va)
             if va > 0: # if variance is zero, skip...
+                unnormalised_intensity_table.append(new_row)
                 new_row_n = [(v - me)/va if v > 0 else 0 for v in new_row]
                 intensity_table.append(new_row_n)
                 counts.append(count)
@@ -428,7 +430,7 @@ def get_doc_table(request,mf_id,motif_name):
 
 
 
-    return HttpResponse(json.dumps((individual_names,doc_table,intensity_table,final_peakset_masses,final_peakset_rt)),content_type = 'application/json')
+    return HttpResponse(json.dumps((individual_names,doc_table,intensity_table,final_peakset_masses,final_peakset_rt,unnormalised_intensity_table)),content_type = 'application/json')
 
 
 
