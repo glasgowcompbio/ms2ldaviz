@@ -1195,7 +1195,7 @@ def view_parents(request,motif_id):
     metadata_form = Mass2MotifMetadataForm(initial={'metadata':motif.annotation})
     context_dict['metadata_form'] = metadata_form
 
-    massbank_form = get_massbank_form(motif, motif_id, motif_features)
+    massbank_form = get_massbank_form(motif, motif_features)
     context_dict['massbank_form'] = massbank_form
 
     return render(request,'basicviz/view_parents.html',context_dict)
