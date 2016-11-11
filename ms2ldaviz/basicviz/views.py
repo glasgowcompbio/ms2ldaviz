@@ -1108,6 +1108,8 @@ def get_description(motif):
 def view_parents(request,motif_id):
 
     motif = Mass2Motif.objects.get(id=motif_id)
+    print 'Motif metadata', motif.metadata
+
     context_dict = {'mass2motif':motif}
     motif_features = Mass2MotifInstance.objects.filter(mass2motif = motif).order_by('-probability')
     total_prob = sum([m.probability for m in motif_features])
@@ -1195,6 +1197,8 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
         if exp_desc is not None:
             exp_desc = exp_desc.upper()
             ion_mode = 'POSITIVE' if 'POS' in exp_desc else 'NEGATIVE' if 'NEG' in exp_desc else 'Unknown'
+        else:
+            ion_mode = 'Unknown'
 
     # select the fragment/loss features to include
     peak_list = []
