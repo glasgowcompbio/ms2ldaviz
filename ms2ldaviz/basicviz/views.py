@@ -1120,12 +1120,14 @@ def get_massbank_form(motif, motif_features, mf_id=None):
 
     # retrieve existing massbank dictionary for this motif or initialise a default one
     if motif.massbank_dict is not None:
-        print 'existing'
         mb_dict = motif.massbank_dict
+        is_new = False
     else:
-        print 'new'
         data = {'motif_id': motif_id}
         mb_dict = get_massbank_dict(data, motif, motif_features, 0)
+        is_new = True
+
+    print 'is_new', is_new
     print 'mb_dict', mb_dict
 
     # set to another form used when generating the massbank record
@@ -1144,7 +1146,7 @@ def get_massbank_form(motif, motif_features, mf_id=None):
         'ac_instrument': mb_dict['ac_instrument'],
         'ac_instrument_type': mb_dict['ac_instrument_type'],
         'ac_mass_spectrometry_ion_mode': mb_dict['ac_mass_spectrometry_ion_mode'],
-        'min_rel_int': 100,
+        'min_rel_int': 100 if is_new else mb_dict.get('min_rel_int', 100),
         'mf_id': mf_id if mf_id is not None else ''
     })
     return massbank_form
@@ -1291,6 +1293,7 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
     to_copy = ['ch_compound_class', 'ch_formula', 'ch_smiles', 'ch_iupac', 'ch_exact_mass']
     for key in to_copy:
         massbank_dict[key] = data.get(key, '')
+    massbank_dict['min_rel_int'] = min_rel_int
 
     return massbank_dict
 
