@@ -104,6 +104,14 @@ def register(request):
         'basicviz/register.html', context_dict)
 
 # import time
+
+def get_individual_names(request,mf_id):
+    mfe = MultiFileExperiment.objects.get(id = mf_id)
+    links = MultiLink.objects.filter(multifileexperiment = mfe)
+    individuals = [l.experiment for l in links]
+    individual_names = [i.name for i in individuals]
+    return HttpResponse(json.dumps(individual_names),content_type = 'application/json')
+
 def get_alpha_matrix(request,mf_id):
     # if request.is_ajax():
     if True:
