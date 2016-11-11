@@ -1206,8 +1206,8 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
     accession = data.get('accession', default_accession)
     ms_type = 'MS2'
 
-    if 'ion_mode' in data:
-        ion_mode = data['ion_mode']
+    if 'ac_mass_spectrometry_ion_mode' in data:
+        ion_mode = data['ac_mass_spectrometry_ion_mode']
     else:
         # attempt to auto-detect from the experiment description
         exp_desc = get_description(motif)
@@ -1368,7 +1368,7 @@ def generate_massbank(request):
             'motif_id', 'accession', 'authors', 'comments',
             'ch_name', 'ch_compound_class', 'ch_formula', 'ch_exact_mass',
             'ch_smiles', 'ch_iupac', 'ch_link',
-            'ac_instrument', 'ac_instrument_type',
+            'ac_instrument', 'ac_instrument_type', 'ac_mass_spectrometry_ion_mode',
             'min_rel_int'
         ]
         for key in keys:
@@ -1414,7 +1414,7 @@ def generate_massbank_multi_m2m(request):
             'mf_id', 'motif_id', 'accession', 'authors', 'comments',
             'ch_name', 'ch_compound_class', 'ch_formula', 'ch_exact_mass',
             'ch_smiles', 'ch_iupac', 'ch_link',
-            'ac_instrument', 'ac_instrument_type',
+            'ac_instrument', 'ac_instrument_type', 'ac_mass_spectrometry_ion_mode',
             'min_rel_int'
         ]
         for key in keys:
