@@ -18,6 +18,17 @@
 		  font-family: sans-serif;
 		  font-size: 14px;
 		}
+
+        /* for massbank dialog */
+        .required:after {
+            content:" *";
+            color:#FF0000;
+        }
+        .massbank-form { padding:20px; }
+        .massbank-form .field { padding: 4px; margin:1px; background: #eee; }
+        .massbank-form .field label { display:inline-block; width:200px; margin-left:5px; }
+        .massbank-form .field input { display:inline-block; }
+
 	</style>
 {% endblock %}
 
@@ -46,7 +57,7 @@
 	<div id="spectra" border="20" padding="20"></div>
 
 	<div>
-	<h3>Mass2Motif details</h3>
+	<h3>Mass2Motif Details</h3>
 	<p>After thresholding to save the model, the total probability left in this motif is {{total_prob}}</p>
 		<table class='table' id='featuretable'>
 			<thead>
@@ -64,7 +75,7 @@
 	<hr />
 
 	<div>
-	<h3>Documents in Mass2Mitif</h3>
+	<h3>Documents in Mass2Motif</h3>
 		<table class='table' id='doctable'>
 			<thead>
 				<tr><th>Document name</th><th>Doc Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
@@ -80,6 +91,33 @@
 
 	<div id="graphs">
 	</div>
+
+    <div id="dialog-massbank" title="Generate Massbank Record">
+        <form class="massbank-form" id="mass2motifmassbank_form" method="post" action="/basicviz/generate_massbank/">
+            {% for hidden in massbank_form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+            {% for field in massbank_form.visible_fields %}
+                {% if field.field.required %}
+                    <div class="field required">
+                        {{ field.errors }}
+                        {{ field.label_tag }} {{ field }}
+                    </div>
+                {% else %}
+                    <div class="field">
+                        {{ field.errors }}
+                        {{ field.label_tag }} {{ field }}
+                    </div>
+                {% endif %}
+
+            {% endfor %}
+        </form>
+        <div style="margin: 20px">
+            <div id="status">Result goes here: </div><textarea name="massbank_str" id="massbank_str" rows="10" cols="100"></textarea>
+            <button id="copy_button" onclick="copyToClipboard('#massbank_str')" disabled>Copy</button>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block js_block %}
@@ -99,21 +137,41 @@
 
 
 	<script type="text/javascript">
-		var current_pos = 0
-		var motif_name = '{{mass2motif.name}}'
-		var motif_id = '{{mass2motif.id}}'
-		load_parents(motif_id, motif_name,-1);
-		var url = '/basicviz/get_word_graph/{{mass2motif.id}}/nan/'
-		plot_word_graph(url,motif_id,motif_name)
-		url = '/basicviz/get_intensity/{{mass2motif.id}}/nan/'
-		plot_word_graph(url,motif_id,motif_name)
 
+		var current_pos = 0;
+		var motif_name = '{{mass2motif.name}}';
+		var motif_id = '{{mass2motif.id}}';
+		load_parents(motif_id, motif_name,-1);
+		var url = '/basicviz/get_word_graph/{{mass2motif.id}}/nan/';
+		plot_word_graph(url,motif_id,motif_name);
+		url = '/basicviz/get_intensity/{{mass2motif.id}}/nan/';
+		plot_word_graph(url,motif_id,motif_name);
 
 		$(document).ready(function() {
 			$('#featuretable').DataTable({
 				dom: 'Bfrtip',
 				buttons: [
 			        'csv',
+                    {
+                        text: 'MassBank Record',
+                        action: function ( e, dt, node, config ) {
+                            $( "#dialog-massbank" ).dialog({
+                                resizable: false,
+                                height: "auto",
+                                width: 800,
+                                buttons: {
+                                    'Generate': function () {
+                                        $('#mass2motifmassbank_form').submit()
+                                        // $(this).dialog('close');
+                                    },
+                                        'Close': function () {
+                                        $(this).dialog('close');
+                                    }
+                                }
+                                }).css({height:"600px", overflow:"auto"})
+
+                        }
+                    }
 		        ],
 		        "order": [[ 1, "desc" ]],
 		    });
@@ -126,6 +184,68 @@
 		    });
 
 		});
+
+    $('#mass2motifmassbank_form').on('submit', function(event){
+
+        $form = $(this);
+        var action = $form.attr('action');
+        event.preventDefault();
+
+        $('#status').text('Processing ...');
+        $.ajax({
+            url : action,
+            type : "POST",
+            data : {
+                'csrfmiddlewaretoken': '{{csrf_token}}',
+                'motif_id' : $('#motif_id').val(),
+                'accession' : $('#accession').val(),
+                'authors' : $('#authors').val(),
+                'comments' : $('#comments').val(),
+                'ch_name' : $('#ch_name').val(),
+                'ch_compound_class' : $('#ch_compound_class').val(),
+                'ch_formula' : $('#ch_formula').val(),
+                'ch_exact_mass' : $('#ch_exact_mass').val(),
+                'ch_smiles' : $('#ch_smiles').val(),
+                'ch_iupac' : $('#ch_iupac').val(),
+                'ch_link' : $('#ch_link').val(),
+                'ac_instrument' : $('#ac_instrument').val(),
+                'ac_instrument_type' : $('#ac_instrument_type').val(),
+                'ac_mass_spectrometry_ion_mode' : $('#ac_mass_spectrometry_ion_mode').val(),
+                'min_rel_int' : $('#min_rel_int').val(),
+
+            },
+
+            success : function(json) {
+
+                var massbank_str = json['massbank_str'];
+                var status = json['status'];
+                $('#status').text(status);
+                $('#massbank_str').text(massbank_str);
+                console.log(status);
+                console.log(massbank_str);
+                $("#copy_button").removeAttr("disabled");
+                
+            },
+
+            error : function(xhr,errmsg, err) {
+                console.log(xhr.status + ": " + xhr.responseText);
+            }
+        });
+
+    });
+
+    // hidden by default when the page loads
+    $('#dialog-massbank').hide()
+    // $('#massbank_str').hide()
+
+    function copyToClipboard(element) {
+        var $temp = $("<textarea>");
+        $("body").append($temp);
+        $temp.val($(element).text()).select();
+        document.execCommand("copy");
+        $temp.remove();
+    }
+
 	</script>
 
 
