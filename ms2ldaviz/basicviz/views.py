@@ -107,7 +107,7 @@ def register(request):
 
 def get_individual_names(request,mf_id):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
-    links = MultiLink.objects.filter(multifileexperiment = mfe)
+    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment__name')
     individuals = [l.experiment for l in links]
     individual_names = [i.name for i in individuals]
     return HttpResponse(json.dumps(individual_names),content_type = 'application/json')
@@ -119,7 +119,7 @@ def get_alpha_matrix(request,mf_id):
 
         if not mfe.alpha_matrix:
 
-            links = MultiLink.objects.filter(multifileexperiment = mfe)
+            links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment__name')
             individuals = [l.experiment for l in links]
             motifs = Mass2Motif.objects.filter(experiment = individuals[0])
             
@@ -172,7 +172,7 @@ def get_degree_matrix(request,mf_id):
     if request.is_ajax():
         mfe = MultiFileExperiment.objects.get(id = mf_id)
         if not mfe.degree_matrix:
-            links = MultiLink.objects.filter(multifileexperiment = mfe)
+            links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment__name')
             individuals = [l.experiment for l in links]
             motifs = Mass2Motif.objects.filter(experiment = individuals[0])
             deg_vals = []
@@ -284,7 +284,7 @@ def wipe_cache(request,mf_id):
 
 def get_doc_table(request,mf_id,motif_name):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
-    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment')
+    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment__name')
     individuals = [l.experiment for l in links]
 
     individual_motifs = {}
@@ -620,7 +620,7 @@ def view_multi_m2m(request,mf_id,motif_name):
 
 def get_alphas(request,mf_id,motif_name):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
-    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment')
+    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment__name')
     individuals = [l.experiment for l in links]
     alps = []
     for individual in individuals:
@@ -639,7 +639,7 @@ def get_alphas(request,mf_id,motif_name):
 
 def get_degrees(request,mf_id,motif_name):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
-    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment')
+    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment__name')
     individuals = [l.experiment for l in links]
     degs = []
     for individual in individuals:
@@ -687,7 +687,7 @@ def alpha_pca(request,mf_id):
 def multi_alphas(request,mf_id):
     mfe = MultiFileExperiment.objects.get(id = mf_id)
     context_dict = {'mfe':mfe}
-    links = MultiLink.objects.filter(multifileexperiment = mfe)
+    links = MultiLink.objects.filter(multifileexperiment = mfe).order_by('experiment__name')
     individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
     context_dict['individuals'] = individuals
 
@@ -777,7 +777,7 @@ def get_alpha_correlation_graph(request,acviz_id):
     from itertools import combinations
     acviz = AlphaCorrOptions.objects.get(id = acviz_id)
     mfe = acviz.multifileexperiment
-    links = mfe.multilink_set.all()
+    links = mfe.multilink_set.all().order_by('experiment__name')
     individuals = [l.experiment for l in links]
     an_experiment = links[0].experiment
     motifs = Mass2Motif.objects.filter(experiment = an_experiment).order_by('name')
@@ -1441,7 +1441,7 @@ def generate_massbank_multi_m2m(request):
 
         first_m2m = Mass2Motif.objects.get(id=first_motif_id)
         mfe = MultiFileExperiment.objects.get(id=mf_id)
-        links = MultiLink.objects.filter(multifileexperiment=mfe).order_by('experiment')
+        links = MultiLink.objects.filter(multifileexperiment=mfe).order_by('experiment__name')
         individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
 
         for individual in individuals:
@@ -2466,7 +2466,7 @@ def edit_experiment_option(request,option_id):
 
 def view_mf_experiment_options(request,mfe_id):
     mfe = MultiFileExperiment.objects.get(id = mfe_id)
-    links = mfe.multilink_set.all()
+    links = mfe.multilink_set.all().order_by('experiment__name')
     individuals = [l.experiment for l in links]
     first_experiment = individuals[0]
 
@@ -2485,7 +2485,7 @@ def add_mf_experiment_option(request,mfe_id):
     context_dict = {}
     context_dict['mfe'] = mfe
     context_dict['available'] = AVAILABLE_OPTIONS
-    links = mfe.multilink_set.all()
+    links = mfe.multilink_set.all().order_by('experiment__name')
     individuals = [l.experiment for l in links]
 
     if request.method == 'POST':
@@ -2516,7 +2516,7 @@ def delete_mf_experiment_option(request,option_id):
     experiment = option.experiment
     link = experiment.multilink_set.all()
     mfe = link[0].multifileexperiment
-    links = mfe.multilink_set.all()
+    links = mfe.multilink_set.all().order_by('experiment__name')
     individuals = [l.experiment for l in links]
     key = option.key
     for experiment in individuals:
@@ -2534,7 +2534,7 @@ def edit_mf_experiment_option(request,option_id):
     context_dict['mfe'] = mfe
     context_dict['option'] = option
     context_dict['available'] = AVAILABLE_OPTIONS
-    links = mfe.multilink_set.all()
+    links = mfe.multilink_set.all().order_by('experiment__name')
     individuals = [l.experiment for l in links]
     if request.method == 'POST':
         option_form = SystemOptionsForm(request.POST)
@@ -2557,7 +2557,7 @@ def edit_mf_experiment_option(request,option_id):
 def alpha_de(request,mfe_id):
     mfe = MultiFileExperiment.objects.get(id = mfe_id)
     context_dict = {'mfe':mfe}
-    links = mfe.multilink_set.all()
+    links = mfe.multilink_set.all().order_by('experiment__name')
     individuals = [l.experiment for l in links]
     tu = zip(individuals,individuals)
     tu = sorted(tu,key = lambda x: x[0].name)
@@ -2607,7 +2607,7 @@ def alpha_de(request,mfe_id):
 
 def get_multifile_mass2motif_metadata(request,mf_id,motif_name):
     mfe = MultiFileExperiment.objects.get(id=mf_id)
-    links = mfe.multilink_set.all()
+    links = mfe.multilink_set.all().order_by('experiment__name')
     individuals = [l.experiment for l in links]
     first_experiment = individuals[0]
     mass2motif = Mass2Motif.objects.get(experiment = first_experiment,name = motif_name)
