@@ -9,6 +9,7 @@ class Mass2MotifMetadataForm(forms.Form):
 
 class Mass2MotifMassbankForm(forms.Form):
     motif_id = forms.CharField(widget=forms.HiddenInput(attrs={'id':'motif_id'}))
+    mf_id = forms.CharField(widget=forms.HiddenInput(attrs={'id':'mf_id'}))
     accession = forms.CharField(label='ACCESSION', required=True, widget=forms.TextInput(
         attrs={'id':'accession', 'required':'true', 'size':'50', 'title':'Identifier of the MassBank Record. Two or three letters site code, followed by record id.'})
     )

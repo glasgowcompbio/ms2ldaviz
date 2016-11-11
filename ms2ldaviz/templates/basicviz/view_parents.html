@@ -114,7 +114,7 @@
         </form>
         <div style="margin: 20px">
             <div id="status">Result goes here: </div><textarea name="massbank_str" id="massbank_str" rows="10" cols="100"></textarea>
-            <button id="copy_button" onclick="copyToClipboard('#massbank_str')" disabled>Copy</button>
+            <button id="copy_button" onclick="copyToClipboard('#massbank_str')">Copy</button>
         </div>
     </div>
 
@@ -191,7 +191,7 @@
         var action = $form.attr('action');
         event.preventDefault();
 
-        $('#status').text('Processing ...');
+        $('#status').text('Processing ... please wait.');
         $.ajax({
             url : action,
             type : "POST",
@@ -223,7 +223,7 @@
                 $('#massbank_str').text(massbank_str);
                 console.log(status);
                 console.log(massbank_str);
-                $("#copy_button").removeAttr("disabled");
+                $("#copy_button").show();
                 
             },
 
@@ -237,6 +237,7 @@
     // hidden by default when the page loads
     $('#dialog-massbank').hide()
     // $('#massbank_str').hide()
+    $("#copy_button").hide();
 
     function copyToClipboard(element) {
         var $temp = $("<textarea>");

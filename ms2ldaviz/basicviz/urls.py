@@ -57,4 +57,5 @@ urlpatterns = patterns('',
     url(r'^edit_mf_experiment_option/(?P<option_id>\w+)/$',views.edit_mf_experiment_option,name = 'edit_mf_experiment_option'),
     url(r'^alpha_de/(?P<mfe_id>\w+)/$',views.alpha_de,name = 'alpha_de'),
     url(r'^generate_massbank/$', views.generate_massbank, name='generate_massbank'),
+    url(r'^generate_massbank_multi_m2m/$', views.generate_massbank_multi_m2m, name='generate_massbank_multi_m2m'),
 )

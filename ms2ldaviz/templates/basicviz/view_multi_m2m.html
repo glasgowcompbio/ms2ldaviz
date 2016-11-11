@@ -18,6 +18,17 @@
 			font-family: sans-serif;
 			font-size: 11px;
 		}
+
+        /* for massbank dialog */
+        .required:after {
+            content:" *";
+            color:#FF0000;
+        }
+        .massbank-form { padding:20px; }
+        .massbank-form .field { padding: 4px; margin:1px; background: #eee; }
+        .massbank-form .field label { display:inline-block; width:200px; margin-left:5px; }
+        .massbank-form .field input { display:inline-block; }
+
 	</style>
 	<link rel="stylesheet" type="text/css" href="{% static "css/basicviz.css" %}">
 
@@ -97,7 +108,31 @@
 	</div>
 </div>
 
+<div id="dialog-massbank" title="Generate Massbank Record">
+    <form class="massbank-form" id="mass2motifmassbank_form" method="post" action="/basicviz/generate_massbank_multi_m2m/">
+        {% for hidden in massbank_form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+        {% for field in massbank_form.visible_fields %}
+            {% if field.field.required %}
+                <div class="field required">
+                    {{ field.errors }}
+                    {{ field.label_tag }} {{ field }}
+                </div>
+            {% else %}
+                <div class="field">
+                    {{ field.errors }}
+                    {{ field.label_tag }} {{ field }}
+                </div>
+            {% endif %}
 
+        {% endfor %}
+    </form>
+    <div style="margin: 20px" id="massbank_output">
+        <div id="status">Result goes here: </div><textarea name="massbank_str" id="massbank_str" rows="10" cols="100"></textarea>
+        <button id="copy_button" onclick="copyToClipboard('#massbank_str')">Copy</button>
+    </div>
+</div>
 
 
 {% endblock %}
@@ -124,8 +159,28 @@
 $(document).ready(function() {
 	$('#featuretable').DataTable({
 		dom: 'Bfrtip',
-		buttons: [
-        'csv',
+        buttons: [
+            'csv',
+            {
+                text: 'MassBank Record',
+                action: function ( e, dt, node, config ) {
+                    $( "#dialog-massbank" ).dialog({
+                        resizable: false,
+                        height: "auto",
+                        width: 800,
+                        buttons: {
+                            'Generate': function () {
+                                $('#mass2motifmassbank_form').submit()
+                                // $(this).dialog('close');
+                            },
+                                'Close': function () {
+                                $(this).dialog('close');
+                            }
+                        }
+                        }).css({height:"600px", overflow:"auto"})
+
+                }
+            }
         ],
         "order": [[ 1, "desc" ]],
     });
@@ -136,8 +191,71 @@ $(document).ready(function() {
     	],
     	"order": [[2,"desc"]],
     });
-   
+
+    $('#mass2motifmassbank_form').on('submit', function(event){
+
+        $form = $(this);
+        var action = $form.attr('action');
+        event.preventDefault();
+
+        $('#status').text('Processing ... please wait.');
+        $.ajax({
+            url : action,
+            type : "POST",
+            data : {
+                'csrfmiddlewaretoken': '{{csrf_token}}',
+                'mf_id' : $('#mf_id').val(),
+                'motif_id' : $('#motif_id').val(),
+                'accession' : $('#accession').val(),
+                'authors' : $('#authors').val(),
+                'comments' : $('#comments').val(),
+                'ch_name' : $('#ch_name').val(),
+                'ch_compound_class' : $('#ch_compound_class').val(),
+                'ch_formula' : $('#ch_formula').val(),
+                'ch_exact_mass' : $('#ch_exact_mass').val(),
+                'ch_smiles' : $('#ch_smiles').val(),
+                'ch_iupac' : $('#ch_iupac').val(),
+                'ch_link' : $('#ch_link').val(),
+                'ac_instrument' : $('#ac_instrument').val(),
+                'ac_instrument_type' : $('#ac_instrument_type').val(),
+                'ac_mass_spectrometry_ion_mode' : $('#ac_mass_spectrometry_ion_mode').val(),
+                'min_rel_int' : $('#min_rel_int').val(),
+
+            },
+
+            success : function(json) {
+
+                var massbank_str = json['massbank_str'];
+                var status = json['status'];
+                $('#status').text(status);
+                $('#massbank_str').text(massbank_str);
+                console.log(status);
+                console.log(massbank_str);
+                $("#copy_button").show();
+
+            },
+
+            error : function(xhr,errmsg, err) {
+                console.log(xhr.status + ": " + xhr.responseText);
+            }
+        });
+
+    });
+
 });
+
+// hidden by default when the page loads
+$('#dialog-massbank').hide()
+// $('#massbank_str').hide()
+$("#copy_button").hide();
+
+function copyToClipboard(element) {
+    var $temp = $("<textarea>");
+    $("body").append($temp);
+    $temp.val($(element).text()).select();
+    document.execCommand("copy");
+    $temp.remove();
+}
 
 
 bar_plot('/basicviz/get_alphas/{{mfe.id}}/{{motif_name}}/','barplot')
