@@ -1,6 +1,7 @@
 from django.contrib import admin
-from basicviz.models import Experiment,Document,Mass2Motif,Feature,FeatureMass2MotifInstance,VizOptions,UserExperiment,ExtraUsers,MultiFileExperiment,MultiLink,Alpha,PeakSet,IntensityInstance,SystemOptions
 
+from basicviz.models import Experiment, Document, Mass2Motif, Feature, FeatureMass2MotifInstance, VizOptions, \
+    UserExperiment, ExtraUsers, MultiFileExperiment, MultiLink, Alpha, PeakSet, IntensityInstance, SystemOptions
 
 admin.site.register(Experiment)
 admin.site.register(Document)

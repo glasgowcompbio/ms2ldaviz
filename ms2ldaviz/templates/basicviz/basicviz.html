@@ -47,11 +47,11 @@
                     {% for exp in mf.multilink_set.all|sort_by:'experiment__name' %}
                         <tr>
                             <td>{{exp.experiment}}</td>
-                            <td><a href="/basicviz/show_docs/{{exp.experiment.id}}" class="btn btn btn-xs btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a></td>
+                            <td><a href="/basicviz/show_docs/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a></td>
                             <td><a href="/basicviz/view_mass2motifs/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a></td>
-                            <td><a href="/basicviz/start_viz/{{exp.experiment.id}}" class="btn btn btn-xs btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a></td>
-                            <td><a href="/basicviz/topic_table/{{exp.experiment.id}}" class="btn btn btn-xs btn-default"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a></td>
-                            <td><a href="/basicviz/rate_by_conserved_motif_rating/{{exp.experiment.id}}" class="btn btn btn-xs btn-default"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a></td>
+                            <td><a href="/basicviz/start_viz/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a></td>
+                            <td><a href="/basicviz/topic_table/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a></td>
+                            <td><a href="/basicviz/rate_by_conserved_motif_rating/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a></td>
                         </tr>
                     {% endfor %}
                 </table>

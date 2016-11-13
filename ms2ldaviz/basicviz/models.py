@@ -1,25 +1,26 @@
-from django.db import models
-from django.contrib.auth.models import User
 import jsonpickle
+from django.contrib.auth.models import User
+from django.db import models
+
 
 # Create your models here.
 class MultiFileExperiment(models.Model):
-    name = models.CharField(max_length=128,unique=True)
-    description = models.CharField(max_length=1024,null=True)
-    status = models.CharField(max_length=128,null=True)
-    pca = models.TextField(null = True)
+    name = models.CharField(max_length=128, unique=True)
+    description = models.CharField(max_length=1024, null=True)
+    status = models.CharField(max_length=128, null=True)
+    pca = models.TextField(null=True)
     alpha_matrix = models.TextField(null=True)
     degree_matrix = models.TextField(null=True)
+
     def __unicode__(self):
         return self.name
 
 
-
-
 class Experiment(models.Model):
-    name = models.CharField(max_length=128,unique=True)
-    description = models.CharField(max_length=1024,null=True)
-    status = models.CharField(max_length=128,null=True)
+    name = models.CharField(max_length=128, unique=True)
+    description = models.CharField(max_length=1024, null=True)
+    status = models.CharField(max_length=128, null=True)
+
     def __unicode__(self):
         return self.name
 
@@ -29,11 +30,9 @@ class MultiLink(models.Model):
     experiment = models.ForeignKey(Experiment)
 
 
-
-
-
 class ExtraUsers(models.Model):
     user = models.ForeignKey(User)
+
 
 class UserExperiment(models.Model):
     user = models.ForeignKey(User)
@@ -43,7 +42,7 @@ class UserExperiment(models.Model):
 class Document(models.Model):
     name = models.CharField(max_length=32)
     experiment = models.ForeignKey(Experiment)
-    metadata = models.CharField(max_length=2048,null=True)
+    metadata = models.CharField(max_length=2048, null=True)
 
     def get_annotation(self):
         md = jsonpickle.decode(self.metadata)
@@ -109,12 +108,14 @@ class Document(models.Model):
     def __unicode__(self):
         return self.name
 
+
 class Feature(models.Model):
     name = models.CharField(max_length=64)
     experiment = models.ForeignKey(Experiment)
 
     def __unicode__(self):
         return self.name
+
 
 class FeatureInstance(models.Model):
     document = models.ForeignKey(Document)
@@ -124,10 +125,11 @@ class FeatureInstance(models.Model):
     def __unicode__(self):
         return str(self.intensity)
 
+
 class Mass2Motif(models.Model):
     name = models.CharField(max_length=32)
     experiment = models.ForeignKey(Experiment)
-    metadata = models.CharField(max_length=1024*1024,null=True)
+    metadata = models.CharField(max_length=1024 * 1024, null=True)
 
     def get_annotation(self):
         md = jsonpickle.decode(self.metadata)
@@ -137,11 +139,11 @@ class Mass2Motif(models.Model):
             return None
 
     def get_short_annotation(self):
-    	md = jsonpickle.decode(self.metadata)
-    	if 'short_annotation' in md:
-    		return md['short_annotation']
-    	else:
-    		return None
+        md = jsonpickle.decode(self.metadata)
+        if 'short_annotation' in md:
+            return md['short_annotation']
+        else:
+            return None
 
     def get_massbank_dict(self):
         md = jsonpickle.decode(self.metadata)
@@ -171,6 +173,7 @@ class Mass2MotifInstance(models.Model):
     def __unicode__(self):
         return str(self.probability)
 
+
 class DocumentMass2Motif(models.Model):
     document = models.ForeignKey(Document)
     mass2motif = models.ForeignKey(Mass2Motif)
@@ -181,6 +184,7 @@ class DocumentMass2Motif(models.Model):
     def __unicode__(self):
         return str(self.probability)
 
+
 class FeatureMass2MotifInstance(models.Model):
     featureinstance = models.ForeignKey(FeatureInstance)
     mass2motif = models.ForeignKey(Mass2Motif)
@@ -189,47 +193,52 @@ class FeatureMass2MotifInstance(models.Model):
     def __unicode__(self):
         return str(self.probability)
 
+
 class VizOptions(models.Model):
     experiment = models.ForeignKey(Experiment)
-    edge_thresh = models.FloatField(null = False)
-    min_degree = models.IntegerField(null = False)
-    just_annotated_docs = models.BooleanField(null = False)
-    colour_by_logfc = models.BooleanField(null = False)
-    discrete_colour = models.BooleanField(null = False)
-    upper_colour_perc = models.IntegerField(null = False)
-    lower_colour_perc = models.IntegerField(null = False)
-    colour_topic_by_score = models.BooleanField(null = False)
-    random_seed = models.CharField(null = False,max_length = 128)
-    edge_choice = models.CharField(null = False,max_length = 128)
+    edge_thresh = models.FloatField(null=False)
+    min_degree = models.IntegerField(null=False)
+    just_annotated_docs = models.BooleanField(null=False)
+    colour_by_logfc = models.BooleanField(null=False)
+    discrete_colour = models.BooleanField(null=False)
+    upper_colour_perc = models.IntegerField(null=False)
+    lower_colour_perc = models.IntegerField(null=False)
+    colour_topic_by_score = models.BooleanField(null=False)
+    random_seed = models.CharField(null=False, max_length=128)
+    edge_choice = models.CharField(null=False, max_length=128)
+
 
 class AlphaCorrOptions(models.Model):
     multifileexperiment = models.ForeignKey(MultiFileExperiment)
-    edge_thresh = models.FloatField(null = False)
-    distance_score = models.CharField(null = False,max_length=24)
+    edge_thresh = models.FloatField(null=False)
+    distance_score = models.CharField(null=False, max_length=24)
     normalise_alphas = models.BooleanField(null=False)
-    max_edges = models.IntegerField(null = False)
-    just_annotated = models.BooleanField(null = False)
+    max_edges = models.IntegerField(null=False)
+    just_annotated = models.BooleanField(null=False)
 
 
 class PeakSet(models.Model):
     multifileexperiment = models.ForeignKey(MultiFileExperiment)
-    original_file = models.CharField(max_length = 124,null=True)
-    original_id = models.IntegerField(null = True)
-    mz = models.FloatField(null = False)
-    rt = models.FloatField(null = False)
+    original_file = models.CharField(max_length=124, null=True)
+    original_id = models.IntegerField(null=True)
+    mz = models.FloatField(null=False)
+    rt = models.FloatField(null=False)
+
 
 class IntensityInstance(models.Model):
     peakset = models.ForeignKey(PeakSet)
-    intensity = models.FloatField(null = True)
-    experiment = models.ForeignKey(Experiment,null=True)
-    document = models.ForeignKey(Document,null=True)
+    intensity = models.FloatField(null=True)
+    experiment = models.ForeignKey(Experiment, null=True)
+    document = models.ForeignKey(Document, null=True)
 
 
 class SystemOptions(models.Model):
-    key = models.CharField(null = False,max_length = 124)
-    value = models.CharField(null = False,max_length = 124)
-    experiment = models.ForeignKey(Experiment,null=True)
+    key = models.CharField(null=False, max_length=124)
+    value = models.CharField(null=False, max_length=124)
+    experiment = models.ForeignKey(Experiment, null=True)
+
     class Meta:
         unique_together = ('key', 'experiment',)
+
     def __unicode__(self):
-        return "{}  =  {}".format(self.key,self.value)
+        return "{}  =  {}".format(self.key, self.value)
