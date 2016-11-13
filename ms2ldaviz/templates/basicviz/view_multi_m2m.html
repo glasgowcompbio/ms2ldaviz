@@ -39,18 +39,11 @@
 
 <form id="mass2motifmetadata_form" method="post" action="/basicviz/view_multi_m2m/{{mfe.id}}/{{motif_name}}/">
 	{% csrf_token %}
-	{% for hidden in metadata_form.hidden_fields %}
-	 	{{ hidden }}
-	{% endfor %}
-
-	{% for field in metadata_form.visible_fields %}
-		{{ field.errors }}
-		{{ field }}
-	{% endfor %}
+    {{ metadata_form.as_p }}
 	<input type="submit" name="submit" value="Modify metadata" />
 </form>
 
-
+<hr/>
 <h4>Variance: {{alpha_variance}}</h4>
 <p>Return to <a href="/basicviz/multi_alphas/{{mfe.id}}/">alpha page</a></p>
 <h4>Features:</h4>

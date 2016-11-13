@@ -6,8 +6,8 @@ from basicviz.models import SystemOptions
 
 
 class Mass2MotifMetadataForm(forms.Form):
-    metadata = forms.CharField(max_length=256, required=False, widget=forms.TextInput(attrs={'size': '80'}))
-    short_annotation = forms.CharField(max_length=256, required=False, widget=forms.TextInput(attrs={'size': '80'}))
+    metadata = forms.CharField(max_length=256, required=False, label='Annotation', widget=forms.TextInput(attrs={'size': '80'}))
+    short_annotation = forms.CharField(max_length=256, required=False, label='Short Annotation', widget=forms.TextInput(attrs={'size': '80'}))
 
 
 class Mass2MotifMassbankForm(forms.Form):
