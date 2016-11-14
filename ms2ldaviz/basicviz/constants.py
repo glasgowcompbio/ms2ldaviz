@@ -4,7 +4,8 @@ AVAILABLE_OPTIONS = [('doc_m2m_threshold', 'Probability threshold for showing do
                      ('heatmap_minimum_display_count',
                       'Minimum number of instances in a peakset to display it in the heatmap'),
                      ('default_doc_m2m_score',
-                      'Default score to use when extracting document <-> mass2motif matches. Use either "probability" or "overlap_score", or "both"')]
+                      'Default score to use when extracting document <-> mass2motif matches. Use either "probability" or "overlap_score", or "both"'),
+                     ('heatmap_normalisation','how to normalise the rows in the heatmap: none, standard, max')]
 
 DEFAULT_MASSBANK_AUTHORS = "van der Hooft, J. J. J., Wandy J., Rogers, S., University of Glasgow"
 DEFAULT_MASSBANK_SPLASH = 'http://splash.fiehnlab.ucdavis.edu/splash/it'

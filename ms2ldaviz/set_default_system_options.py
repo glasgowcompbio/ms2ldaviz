@@ -40,3 +40,7 @@ if __name__ == '__main__':
 	s = SystemOptions.objects.get_or_create(key = 'default_doc_m2m_score',experiment = None)[0]
 	s.value = 'probability'
 	s.save()
+
+	s = SystemOptions.objects.get_or_create(key = 'heatmap_normalisation',experiment = None)[0]
+	s.value = 'standard'
+	s.save()

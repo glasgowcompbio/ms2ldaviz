@@ -277,20 +277,31 @@ def get_doc_table(request, mf_id, motif_name):
     final_peaksets = []
     final_peakset_masses = []
 
-    min_count_options = SystemOptions.objects.filter(key='heatmap_minimum_display_count')
+
+    min_count_options = get_option('heatmap_minimum_display_count',experiment = individuals[0])
+    # min_count_options = SystemOptions.objects.filter(key='heatmap_minimum_display_count')
     if len(min_count_options) > 0:
-        min_count = int(min_count_options[0].value)
+        min_count = int(min_count_options)
     else:
         min_count = 5
 
-    log_peakset_intensities = True
-    log_intensities_options = SystemOptions.objects.filter(key='log_peakset_intensities')
+    log_intensities_options = get_option('log_peakset_intensities',experiment = individuals[0])
+    # log_intensities_options = SystemOptions.objects.filter(key='log_peakset_intensities')
     if len(log_intensities_options) > 0:
-        val = log_intensities_options[0].value
+        val = log_intensities_options
         if val == 'true':
             log_peakset_intensities = True
         else:
             log_peakset_intensities = False
+    else:
+        log_peakset_intensities = True
+
+    
+    normalise_heatmap_options = get_option('heatmap_normalisation',experiment = individuals[0])
+    if len(normalise_heatmap_options) == 0:
+        normalise_heatmap_options = 'none'
+
+
 
     for peakset in peaksets:
         new_row = []
@@ -305,7 +316,21 @@ def get_doc_table(request, mf_id, motif_name):
             me = sum(nz_vals) / (1.0 * len(nz_vals))
             va = sum([v ** 2 for v in nz_vals]) / len(nz_vals) - me ** 2
             va = math.sqrt(va)
-            if va > 0:  # if variance is zero, skip...
+            maxval = max(nz_vals)
+
+            if normalise_heatmap_options == 'none':
+                intensity_table.append(new_row)
+                unnormalised_intensity_table.append(new_row)
+                counts.append(count)
+                final_peaksets.append(peakset)
+            elif normalise_heatmap_options == 'max':
+                new_row_n = [v/maxval for v in new_row]
+                intensity_table.append(new_row_n)
+                unnormalised_intensity_table.append(new_row)
+                counts.append(count)
+                final_peaksets.append(peakset)
+            elif normalise_heatmap_options == 'standard' and va > 0:
+                # if variance is zero, skip...
                 unnormalised_intensity_table.append(new_row)
                 new_row_n = [(v - me) / va if v > 0 else 0 for v in new_row]
                 intensity_table.append(new_row_n)
@@ -544,7 +569,6 @@ def get_degrees(request, mf_id, motif_name):
     individuals = [l.experiment for l in links]
     degs = []
     for individual in individuals:
-        doc_m2m_threshold = get_option
         m2m = Mass2Motif.objects.get(name=motif_name, experiment=individual)
         # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
         # if doc_m2m_threshold:
