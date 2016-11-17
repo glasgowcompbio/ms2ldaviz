@@ -1,31 +1,17 @@
-import csv
-import math
-
-import json
-import jsonpickle
-import networkx as nx
-import numpy as np
 import datetime
+import json
 
+import jsonpickle
+import numpy as np
 import requests
-import pprint
-
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.shortcuts import render
-from networkx.readwrite import json_graph
-from scipy.stats import ttest_ind
-from sklearn.decomposition import PCA
+from django.http import HttpResponse
 from numpy import interp
+from requests import RequestException
 
-from basicviz.constants import AVAILABLE_OPTIONS, DEFAULT_MASSBANK_AUTHORS, DEFAULT_MASSBANK_SPLASH, \
+from basicviz.constants import DEFAULT_MASSBANK_AUTHORS, DEFAULT_MASSBANK_SPLASH, \
     DEFAULT_AC_INSTRUMENT, DEFAULT_AC_INSTRUMENT_TYPE, DEFAULT_LICENSE, DEFAULT_IONISATION
-from basicviz.forms import Mass2MotifMetadataForm, Mass2MotifMassbankForm, DocFilterForm, ValidationForm, VizForm, \
-    UserForm, TopicScoringForm, AlphaCorrelationForm, SystemOptionsForm, AlphaDEForm
-from basicviz.models import Feature, Experiment, Document, FeatureInstance, DocumentMass2Motif, \
-    FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment, ExtraUsers, \
-    MultiFileExperiment, MultiLink, Alpha, AlphaCorrOptions, SystemOptions
+from basicviz.forms import Mass2MotifMassbankForm
+from basicviz.models import Mass2Motif, Mass2MotifInstance, MultiFileExperiment, MultiLink
 
 
 def get_description(motif):
@@ -185,11 +171,14 @@ def get_splash(peaks):
             splash_data['ions'].append(ion)
     splash_data = json.dumps(splash_data)
 
-    url = DEFAULT_MASSBANK_SPLASH
-    print splash_data, url
-    headers = {'Content-type': 'application/json'}
-    response = requests.post(url, headers=headers, data=splash_data)
-    hash = response.text
+    try:
+        url = DEFAULT_MASSBANK_SPLASH
+        print splash_data, url
+        headers = {'Content-type': 'application/json'}
+        response = requests.post(url, headers=headers, data=splash_data)
+        hash = response.text
+    except RequestException, e:
+        hash = str(e)
     return hash
 
 
