@@ -799,3 +799,23 @@ class MultiFileVariationalLDAPlotter_dict(object):
     def get_dict(self):
         return self.m_lda
 
+def plot_document(document):
+    plotly.offline.init_notebook_mode()
+
+    data = []
+    for word in document:
+        if word.startswith('fragment'):
+            mass = float(word.split('_')[1])
+            intensity = document[word]
+            data.append(
+                Scatter(
+                    x = [mass,mass],
+                    y = [0,intensity],
+                    mode = 'lines',
+                    showlegend = False,
+                    line = dict(
+                        color = 'rgb(0.6,0.6,0.6)',
+                        ),
+                    )
+                )
+    plotly.offline.iplot({'data':data})
