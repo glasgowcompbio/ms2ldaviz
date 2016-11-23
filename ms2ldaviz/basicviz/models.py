@@ -112,6 +112,8 @@ class Document(models.Model):
 class Feature(models.Model):
     name = models.CharField(max_length=64)
     experiment = models.ForeignKey(Experiment)
+    min_mz = models.FloatField(null = True)
+    max_mz = models.FloatField(null = True)
 
     def __unicode__(self):
         return self.name

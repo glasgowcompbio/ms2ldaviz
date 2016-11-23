@@ -11,6 +11,21 @@ import jsonpickle
 
 from basicviz.models import Experiment,Document,Feature,FeatureInstance,Mass2Motif,Mass2MotifInstance,DocumentMass2Motif,FeatureMass2MotifInstance
 
+def add_all_features(experiment,features):
+	# Used when we have a dictionary of features with their min and max mz values
+	nfeatures = len(features)
+	ndone = 0
+	for feature in features:
+		mz_vals = features[feature]
+		f = add_feature(feature,experiment)
+		f.min_mz = mz_vals[0]
+		f.max_mz = mz_vals[1]
+		f.save()
+		ndone += 1
+		if ndone % 100 == 0:
+			print "Done {} of {}".format(ndone,nfeatures)
+
+
 def add_document(name,experiment,metadata):
 	d = Document.objects.get_or_create(name = name,experiment = experiment,metadata = metadata)[0]
 	return d
@@ -72,6 +87,11 @@ if __name__ == '__main__':
 	experiment = Experiment.objects.get_or_create(name=experiment_name)[0]
 	experiment.status = 'loading'
 	experiment.save()
+
+	if 'features' in lda_dict:
+		print "Explicit feature object: loading them all at once"
+		add_all_features(experiment,lda_dict['features'])
+
 	print "Loading corpus"
 	n_done = 0
 	to_do = len(lda_dict['corpus'])
