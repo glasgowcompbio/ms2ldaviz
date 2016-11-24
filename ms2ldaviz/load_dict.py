@@ -51,6 +51,8 @@ def add_topic(topic,experiment,metadata,lda_dict):
 	for word in lda_dict['beta'][topic]:
 		feature = Feature.objects.get(name = word,experiment=experiment)
 		Mass2MotifInstance.objects.get_or_create(feature = feature,mass2motif = m2m,probability = lda_dict['beta'][topic][word])[0]
+	topic_pos = lda_dict['topic_index'][topic]
+	alp = Alpha.objects.get_or_create(mass2motif = m2m,value = lda_dict['alpha'][topic_pos])
 
 def add_theta(doc_name,experiment,lda_dict):
 	document = Document.objects.get(name = doc_name,experiment=experiment)

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}MS2LDA Annotation Engine {% endblock %}
+
+{% block body_block %}
+
+<h2>Annotate your spectra</h2>
+
+<p>You have chosen to annotate against <b>{{experiment.name}}</b></p>
+
+{% if annotation_form %}
+    <p>You must enter the mass of the parent ion and the spectrum. Spectrum should be entered as pairs of mass:intensity values, separated by spaces.</p>
+    <form id="annotation_form" method="post" action="/annotation/start_annotation/{{experiment.id}}/">
+        {% csrf_token %}
+        {% for hidden in annotation_form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+
+        {% for field in annotation_form.visible_fields %}
+            <p>{{ field.errors }}</p>
+            <p>{{ field }}
+            {{ field.label }}</p>
+        {% endfor %}
+        <input type="submit" name="submit" value="Decompose spectrum" />
+     </form>
+{% endif %}
+
+
+{% if motif_theta_overlap %}
+    <h2>Annotations</h2>
+    <table class="table" id='motiftable'>
+        <thead>
+            <tr><th>Motif</th><th>Probability</th><th>Overlap</th><th>Annotation</th></tr>
+        </thead>
+        <tbody>
+            {% for mt in motif_theta_overlap %}
+                <tr>
+                    <td><a href="/basicviz/view_parents/{{mt.0.id}}">{{mt.0.name}}</a></td><td>{{mt.1}}</td><td>{{mt.2}}</td><td>{{mt.0.annotation}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
+<div id="spectra" border="20" padding="20"></div>
+
+
+{% if document %}
+    <h2>Your document</h2>
+    <table class="table" id='doctable'>
+    <thead><th>Feature</th><th>Intensity</th></thead>
+    <tbody>
+        {% for word in document %}
+        <tr><td>{{word.0.name}}</td><td>{{word.1}}</td></tr>
+        {% endfor %}
+    </tbody>
+    </table>
+{% endif %}
+
+
+{% endblock %}
+
+{% block js_block %}
+
+    <script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+    <script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+    <link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $('#motiftable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+            'csv',
+            ],
+            "order": [[1,"desc"]],
+        });   
+        $('#doctable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+            'csv',
+            ],
+            "order": [[1,"desc"]],
+        });   
+
+    });
+    </script>
+
+
+
+    <script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
+    <script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
+    <script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
+    <script type="text/javascript">
+        plotdata = {{plotdata|safe}};
+        current_pos = 0
+        key = plotdata[0]
+        plot_parent(plotdata[1],"");
+    </script>
+{% endblock %}
