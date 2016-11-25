@@ -608,6 +608,7 @@ class VariationalLDA(object):
 		lda_dict['doc_metadata'] = metadata
 		lda_dict['topic_index'] = self.topic_index
 		lda_dict['topic_metadata'] = self.topic_metadata
+		
 
 		# Create the inverse indexes
 		wi = []

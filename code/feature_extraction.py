@@ -82,6 +82,7 @@ class CorpusMaker(object):
 			self.corpus[file_name] = {}
 		self.n_words = 0
 		self.word_counts = {}
+		self.word_mz_range = {}
 		self.loss_kde = self.make_kde(self.loss_array,loss_ppm,stop_thresh)
 		self.loss_groups,self.loss_group_list = self.process_kde(self.loss_kde,self.loss_array,loss_ppm,ef_polarity = 'none',formulas = self.formulas)
 		self.update_corpus(self.loss_array,self.loss_kde,self.loss_meta,self.loss_groups,self.loss_group_list,'loss')
@@ -98,7 +99,6 @@ class CorpusMaker(object):
 		print "Finished fragments, total words now: {}".format(len(self.word_counts))
 
 
-	# THERE IS A PROBLEM WITH FEATURE NAMES..check the group making
 	def update_corpus(self,masses,kde,meta,groups,group_list,prefix):
 		# Loop over the groups
 		for group in group_list:
@@ -106,6 +106,8 @@ class CorpusMaker(object):
 			group_mz = group[1]
 			group_formula = group[2]
 			pos = np.where(groups == group_id)[0]
+			min_mz = 100000.0
+			max_mz = 0.0
 			if len(pos) > 0:
 				feature_name = str(group_mz)
 				feature_name = prefix + '_' + feature_name
@@ -116,6 +118,11 @@ class CorpusMaker(object):
 
 				for p in pos:
 					this_meta = meta[p]
+					this_mz = this_meta[0]
+					if this_mz <= min_mz:
+						min_mz = this_mz
+					if this_mz >= max_mz:
+						max_mz = this_mz
 					intensity = this_meta[2]
 					doc_name = this_meta[3].name
 					this_file = this_meta[4]
@@ -131,6 +138,7 @@ class CorpusMaker(object):
 						self.corpus[this_file][doc_name][feature_name] = newval
 
 				self.word_counts[feature_name] = len(pos)
+				self.word_mz_range[feature_name] = (min_mz,max_mz)
 				
 
 	def process_kde(self,kde,masses,ppm,ef_polarity,formulas = None,formula_ppm = 10):
@@ -164,10 +172,6 @@ class CorpusMaker(object):
 		verbose = False
 		while True:
 			biggest_pos = kde_copy.argmax()
-			if biggest_pos == 1298:
-				verbose = True
-			else:
-				verbose = False
 			peak_values = [biggest_pos]
 			this_mass = masses[biggest_pos]
 			ss = ((ppm*(this_mass/1e6))/3.0)**2
