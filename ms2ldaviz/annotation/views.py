@@ -1,5 +1,6 @@
 import json
 from django.shortcuts import render
+
 from basicviz.models import Experiment
 from annotation.forms import AnnotationForm
 from lda_methods import annotate
@@ -15,6 +16,7 @@ def index(request):
 	context_dict = {'experiments':subset_of_experiments}
 	return render(request,'annotation/index.html',context_dict)
 
+@login_required(login_url = '/basicviz/login/')
 def start_annotation(request,basicviz_experiment_id):
 	# Starts the annotation. User uploads a spectrum	
 	experiment = Experiment.objects.get(id = basicviz_experiment_id)
