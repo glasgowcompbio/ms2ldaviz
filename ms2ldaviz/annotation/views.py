@@ -1,19 +1,24 @@
 import json
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
-from basicviz.models import Experiment
+from basicviz.models import Experiment,UserExperiment
 from annotation.forms import AnnotationForm
 from lda_methods import annotate
 
 
-
+@login_required(login_url = '/basicviz/login/')
 def index(request):
-	exp = Experiment.objects.all()
+	ue = UserExperiment.objects.filter(user = request.user)
+	experiments = [u.experiment for u in ue]
 
-	# Hack to just extract the ones that can be used for annotation
-	subset_of_experiments = [e for e in exp if e.name.endswith('annotation')]
-
-	context_dict = {'experiments':subset_of_experiments}
+	tokeep = []
+	for e in experiments:
+		links = e.multilink_set.all()
+		if len(links) == 0:
+			tokeep.append(e)
+	
+	context_dict = {'experiments':tokeep}
 	return render(request,'annotation/index.html',context_dict)
 
 @login_required(login_url = '/basicviz/login/')
