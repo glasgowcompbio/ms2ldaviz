@@ -8,21 +8,23 @@
 <h2>Single-file LDA Experiments</h2>
 <p>Once an experiment is selected, you can use the arrow keys to navigate to other experiments. Press <b>Enter</b> to open or close an experiment.</p>
 <div id="accordion">
-{% for experiment in experiments|dictsort:"name" %}
-    <h3><b>{{experiment.name}}</b> ({{experiment.description}})</h3>
+{% for experiment in experiments %}
+    <h3><b>{{experiment.0.name}}</b> ({{experiment.0.description}}) ({{experiment.1}})</h3>
     <div>
-        <a href="/basicviz/show_docs/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a>
-        <a href="/basicviz/view_mass2motifs/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a>
-        <a href="/basicviz/start_viz/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a>
+        <a href="/basicviz/show_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a>
+        <a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a>
+        <a href="/basicviz/start_viz/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a>
+        {% if experiment.1 == 'edit' %}
+        <a href="/basicviz/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View experiment options</a>
+        {% endif %}
         {% if extra_user %}
-            <a href="/basicviz/validation/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate for Justin</a>
-            <!-- a href="/basicviz/document_pca/{{experiment.id}}" class="btn btn-block btn-success">Document PCA</a -->
-            <a href="/basicviz/topic_pca/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-eye-open"></span> Topic PCA</a>
-            <a href="/basicviz/topic_table/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a>
-            <a href="/basicviz/extract_docs/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-folder-close"></span> Extract Documents</a>
-            <a href="/basicviz/compute_topic_scores/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-sort-by-order"></span> Compute Topic Scores</a>
-            <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a>
-            <a href="/basicviz/view_experiment_options/{{experiment.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View experiment options</a>
+            <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate</a>
+            <!-- a href="/basicviz/document_pca/{{experiment.0.id}}" class="btn btn-block btn-success">Document PCA</a -->
+            <a href="/basicviz/topic_pca/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-eye-open"></span> Topic PCA</a>
+            <a href="/basicviz/topic_table/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a>
+            <a href="/basicviz/extract_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-folder-close"></span> Extract Documents</a>
+            <a href="/basicviz/compute_topic_scores/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-sort-by-order"></span> Compute Topic Scores</a>
+            <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a>
         {% endif %}
     </div>
 {% endfor %}

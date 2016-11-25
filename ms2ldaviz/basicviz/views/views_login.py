@@ -15,6 +15,8 @@ def index(request):
     for ue in userexperiments:
         experiments.append(ue.experiment)
 
+
+
     # Remove those that are multi ones
     exclude_individuals = []
 
@@ -23,15 +25,25 @@ def index(request):
         if len(links) > 0:
             exclude_individuals += [l.experiment for l in links]
 
-    print exclude_individuals
     for e in exclude_individuals:
         del experiments[experiments.index(e)]
 
+
+    
     experiments = list(set(experiments))
+
+    permissions = []
+    for e in experiments:
+        ue = UserExperiment.objects.get(user = request.user,experiment = e)
+        print experiment,ue.permission
+        permissions.append(ue.permission)
+
+    experiments = zip(experiments,permissions)
 
     # experiments = Experiment.objects.all()
     context_dict = {'experiments': experiments}
     context_dict['user'] = request.user
+
     eu = ExtraUsers.objects.filter(user=request.user)
 
     mfe = MultiFileExperiment.objects.all()

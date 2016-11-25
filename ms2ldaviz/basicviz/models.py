@@ -37,7 +37,7 @@ class ExtraUsers(models.Model):
 class UserExperiment(models.Model):
     user = models.ForeignKey(User)
     experiment = models.ForeignKey(Experiment)
-    
+    permission = models.CharField(max_length=24,null=False)
 
 
 class Document(models.Model):
