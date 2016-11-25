@@ -209,9 +209,9 @@ def compute_topic_scores(request, experiment_id):
 
 @login_required(login_url='/basicviz/login/')
 def show_docs(request, experiment_id):
-    if not check_user(request,experient_id):
-        return HttpResponse("You don't have permission to access this page")
     experiment = Experiment.objects.get(id=experiment_id)
+    if not check_user(request,experiment):
+        return HttpResponse("You don't have permission to access this page")
     documents = Document.objects.filter(experiment=experiment)
     context_dict = {}
     context_dict['experiment'] = experiment
