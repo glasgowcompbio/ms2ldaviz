@@ -37,6 +37,7 @@ class ExtraUsers(models.Model):
 class UserExperiment(models.Model):
     user = models.ForeignKey(User)
     experiment = models.ForeignKey(Experiment)
+    
 
 
 class Document(models.Model):
