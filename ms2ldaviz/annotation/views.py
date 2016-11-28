@@ -74,6 +74,19 @@ def start_annotation(request,basicviz_experiment_id):
             context_dict['document'] = document
             context_dict['plotdata'] = json.dumps(plotdata)
 
+            # Make the data for the scatter plot
+            scatter_data = []
+            for m,t,o in motif_theta_overlap:
+                text = m.name
+                if m.short_annotation:
+                    text += ": " + m.short_annotation
+                elif m.annotation:
+                    text += ": " + m.annotation
+                scatter_data.append((t,o,text))
+
+
+            context_dict['scatter_data'] = json.dumps(scatter_data)
+
 
         else:
             context_dict['annotation_form'] = form

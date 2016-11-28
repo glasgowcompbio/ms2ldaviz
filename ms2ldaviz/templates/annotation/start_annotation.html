@@ -4,6 +4,26 @@
 
 {% block title %}MS2LDA Annotation Engine {% endblock %}
 
+
+{% block head_block %}
+    <style>
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: black;
+        shape-rendering: crispEdges;
+    }
+    .axis text {
+        font-family: sans-serif;
+        font-size: 11px;
+    }
+    .axis-label {
+      font-family: sans-serif;
+      font-size: 14px;
+    }
+    </style>
+{% endblock %}
+
 {% block body_block %}
 
 <h2>Annotate your spectra</h2>
@@ -45,7 +65,7 @@
 {% endif %}
 
 <div id="spectra" border="20" padding="20"></div>
-
+<div id="scatter_div" border="20" padding="20"></dic>
 
 {% if document %}
     <h2>Your document</h2>
@@ -98,10 +118,15 @@
     <script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
     <script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
     <script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
+    <script type='text/javascript' src="{% static "js/annotation-scatterplot.js" %}"></script>
     <script type="text/javascript">
         plotdata = {{plotdata|safe}};
         current_pos = 0
         key = plotdata[0]
         plot_parent(plotdata[1],"");
+
+        // scatter_data = [[0.1,0.2,"hello"],[0.3,0.4,"hi"]];
+        scatter_data = {{scatter_data|safe}}
+        scatter_plot(scatter_data)
     </script>
 {% endblock %}
