@@ -21,6 +21,6 @@ from basicviz.models import MultiFileExperiment,Experiment,Document,PeakSet,Inte
 if __name__ == '__main__':
 	multifile_experiment_name = sys.argv[1]
 	mfe = MultiFileExperiment.objects.get(name = multifile_experiment_name)
-	links = mfe.multilink_set.all()
+	links = mfe.multilink_set.all().order_by('experiment')
 	for link in links:
 		print link.experiment
