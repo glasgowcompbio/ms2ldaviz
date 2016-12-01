@@ -73,7 +73,7 @@ if __name__ == '__main__':
 		# s = head.split('_')
 		# new_name = s[0] + '_' + s[1] + '_' + s[2]
 		short_heads.append(head) # Use the full name from the file
-		match = [e for e in experiments if new_name in e.name]
+		match = [e for e in experiments if head in e.name]
 		experiment_match[new_name] = match[0]
 
 	
