@@ -75,6 +75,82 @@ class LoadEmma(Loader):
 
         return ms1,ms2,metadata
 
+class LoadGNPSSeperateCollisions(Loader):
+    def __init__(self,min_intensity = 0.0):
+        self.min_intensity = min_intensity
+
+    def load_spectra(self,input_set):
+        # Define dummy files object
+        files = ['gnps']
+        self.ms1 = []
+        self.ms2 = []
+        self.metadata = {}
+        ms1_id = 0
+        ms2_id = 0
+        for input_file in input_set:
+            with open(input_file,'r') as f:
+                in_doc = False
+                doc_name_prefix = input_file.split('/')[-1]
+                temp_metadata = {}
+                current_collision = None
+                temp_ms2 = []
+                for line in f:
+                    rline = line.rstrip()
+                    if len(rline) > 0:
+                        if rline.startswith('>'):
+                            # This is some kind of metadata
+                            if not rline.startswith('>collision'):
+                                keyval = rline[1:].split()
+                                key = keyval[0]
+                                val = keyval[1]
+                                temp_metadata[key] = val
+                                if key == 'compound':
+                                    temp_metadata['annotation'] = val
+                                elif key == 'parentmass':
+                                    temp_metadata['parentmass'] = float(val)
+                            else:
+                                # This is a new peak block that should be made into a new document
+                                
+                                if in_doc:
+                                    # If we are in a document, we need to save it
+                                    doc_name = doc_name_prefix + '_collision_' + current_collision
+                                    temp_metadata['collision'] = current_collision
+                                    self.metadata[doc_name] = temp_metadata.copy()                            
+                                    new_ms1 = MS1(ms1_id,temp_metadata['parentmass'],None,None,'gnps')
+                                    new_ms1.name = doc_name
+                                    ms1_id += 1
+                                    self.ms1.append(new_ms1)
+                                    for peak in temp_ms2:
+                                        self.ms2.append((peak[0],0.0,peak[1],new_ms1,'gnps',float(ms2_id)))
+                                        ms2_id += 1
+                                temp_ms2 = []
+                                in_doc = True
+                                current_collision = rline.split()[1]
+                        else:
+                            # its a peak
+                            mzi = rline.split()
+                            temp_ms2.append((float(mzi[0]),float(mzi[1])))
+                # Got to the end of the file
+                if len(temp_ms2) > 0:
+                    # We have a document to make
+                    doc_name = doc_name_prefix + '_collision_' + current_collision
+                    new_ms1 = MS1(ms1_id,temp_metadata['parentmass'],None,None,'gnps')
+                    self.ms1.append(new_ms1)
+                    temp_metadata['collision'] = current_collision
+                    self.metadata[doc_name] = temp_metadata.copy()
+                    new_ms1.name = doc_name
+                    for peak in temp_ms2:
+                        self.ms2.append((peak[0],0.0,peak[1],new_ms1,'gnps',float(ms2_id)))
+                        ms2_id += 1
+        return self.ms1,self.ms2,self.metadata
+
+
+
+
+
+
+
+
 
 class LoadGNPS(Loader):
     def __init__(self,merge_energies = True,merge_ppm = 2,replace = 'sum',min_intensity = 0.0):
