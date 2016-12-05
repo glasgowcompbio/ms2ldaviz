@@ -3,9 +3,37 @@
 {% block body_block %}
 <h3>Welcome to MS2LDA.org</h3>
 <div class="well well-sm">
-    <p>MS2LDA allows you to browse through the characterised patterns of fragment and neutral losses (Mass2Motifs) that we have found, in an unsupervised manner, from various complex LC-MS-MS datasets. Click <b>Menu > Experiments</b> to start.</p>
-    <p>Soon you'd be able to submit your own spectra for analysis too!</p>
-    <p>Link to publications: <a href='#'>xxx</a>.</p>
+    <p>
+        <a href="/basicviz" class="btn btn-primary">Go to Experiments</a>
+        <a href="/annotation" class="btn btn-danger">Annotate Your Spectra (Experimental)</a>
+    </p>
+    <p>
+        <b>Significance Statement</b>
+    </p>
+    <blockquote>
+    <p>
+        Tandem MS is a technique for compound identification in untargeted metabolomics
+        experiments. Because of a lack of reference spectra, most molecules cannot be identified, and many
+        spectra cannot be used. We present MS2LDA, an unsupervised method (inspired by text-mining) that
+        extracts common patterns of mass fragments and neutral losses—Mass2Motifs—from collections of
+        fragmentation spectra. Structurally characterized Mass2Motifs can be used to annotate molecules
+        for which no reference spectra exist and expose biochemical relationships between molecules.
+        For four beer extracts, without training data, we show that, with 30 structurally characterized
+        Mass2Motifs, we can annotate approximately three times as many molecules as with library matching.
+        These Mass2Motifs were validated in reference spectra from Global Natural Products Social Molecular
+        Networking (GNPS) and MassBank.
+    </p>
+    </blockquote>
+    <p>
+        Link to publication: <a href='http://www.pnas.org/content/113/48/13738.abstract'>Topic modeling for untargeted substructure exploration in metabolomics</a>.
+    </p>
+    <p>
+        <b>How does it work?</b> In MS2LDA, discrete fragment and neutral loss features are extracted from fragmentation spectra. Related features that tend to co-occur are detected using the <a href="https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation">Latent Dirichlet Allocation</a> model.
+        The figure below shows the analogy between LDA for text and MS2LDA for fragment and neutral loss features. LDA finds topics interpreted as ‘football related’, ‘business-related’ and ‘environment related’. MS2LDA finds sets of concurring mass fragments or losses (Mass2Motifs) that can be interpreted as ‘Asparagine-related’, ‘Hexose-related’ and ‘Adenine-related’.
+    </p>
+    <p>
+        <img src="https://www.dropbox.com/s/z596zldoam24n22/text2frags.png?raw=1" alt="My image"/>
+    </p>
 </div>
 
 {% endblock %}
