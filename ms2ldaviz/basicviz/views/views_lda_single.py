@@ -406,6 +406,16 @@ def get_parents_no_vo(request, motif_id):
         parent_data.append(get_doc_for_plot(document.id, motif_id))
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
 
+def get_parents_metadata(request, motif_id):
+    motif = Mass2Motif.objects.get(id=motif_id)
+    docm2m = get_docm2m(motif)
+    documents = [d.document for d in docm2m]
+    parent_data = []
+    for dm in docm2m:
+        document = dm.document
+        parent_data.append(document.metadata)
+    return HttpResponse(json.dumps(parent_data), content_type='application/json')
+
 
 # def get_annotated_parents(request,motif_id):
 #     motif = Mass2Motif.objects.get(id=motif_id)
