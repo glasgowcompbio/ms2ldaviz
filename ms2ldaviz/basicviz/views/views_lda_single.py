@@ -414,7 +414,7 @@ def get_all_parents_metadata(request,experiment_id):
     parent_data = []
     for document in documents:
         parent_data.append(document.metadata)
-    return HttpResponse(json.dumps(parent_data), content_type('application/json'))
+    return HttpResponse(json.dumps(parent_data), content_type =  'application/json')
 
 
 def get_parents_metadata(request, motif_id):
