@@ -16,6 +16,7 @@ lda_single_patterns = [
     url(r'^get_parents/(?P<motif_id>\w+)/(?P<vo_id>\w+)/$', views.get_parents, name='get_parents'),
     url(r'^get_parents/(?P<motif_id>\w+)/$', views.get_parents_no_vo, name='get_parents_no_vo'),
     url(r'^get_parents_metadata/(?P<motif_id>\w+)/$', views.get_parents_metadata, name='get_parents_metadata'),
+    url(r'^get_all_parents_metadata/(?P<experiment_id>\w+)/$', views.get_all_parents_metadata, name='get_all_parents_metadata'),
     # url(r'^get_annotated_parents/(?P<motif_id>\w+)/$',views.get_annotated_parents,name='get_annotated_parents'),
     url(r'^view_mass2motifs/(?P<experiment_id>\w+)/$', views.view_mass2motifs,
         name='view_mass2motifs'),

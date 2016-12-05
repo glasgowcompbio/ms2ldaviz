@@ -406,6 +406,17 @@ def get_parents_no_vo(request, motif_id):
         parent_data.append(get_doc_for_plot(document.id, motif_id))
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
 
+# Method to get the metadata for all parent ions in an experiment
+# Returns a json object
+def get_all_parents_metadata(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    documents = Document.objects.filter(experiment = experiment)
+    parent_data = []
+    for document in documents:
+        parent_data.append(document.metadata)
+    return HttpResponse(json.dumps(parent_data), contect_type('application/json'))
+
+
 def get_parents_metadata(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     docm2m = get_docm2m(motif)
