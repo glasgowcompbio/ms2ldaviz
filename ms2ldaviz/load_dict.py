@@ -9,7 +9,7 @@ django.setup()
 
 import jsonpickle
 
-from basicviz.models import Experiment,Document,Feature,FeatureInstance,Mass2Motif,Mass2MotifInstance,DocumentMass2Motif,FeatureMass2MotifInstance
+from basicviz.models import Experiment,Document,Feature,FeatureInstance,Mass2Motif,Mass2MotifInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Alpha
 
 def add_all_features(experiment,features):
 	# Used when we have a dictionary of features with their min and max mz values
