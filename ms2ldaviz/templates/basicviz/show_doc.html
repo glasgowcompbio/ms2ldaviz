@@ -39,8 +39,11 @@
 	{% endif %}
 
 	{% if features %}
-		<table class="table">
+		<table class="table" id="parenttable">
+		<thead>
 		<tr><th>Name</th><th>Intensity</th><th>Topics</th></tr>
+		</thead>
+		<tbody>
 		{% for feature,m2minstances in fm2m %}
 			<tr><td>{{feature.feature.name}}</td><td>{{feature.intensity}}</td>
 			<td>
@@ -50,6 +53,7 @@
 			</td>
 			</tr>
 		{% endfor %}
+		</tbody>
 		</table>
 	{% endif %}
 	<a href="/basicviz/show_docs/{{experiment.id}}">return to parent list for {{experiment.name}}</a>
@@ -58,11 +62,40 @@
 {% endblock %}
 
 {% block js_block %}
+	
 	<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
 	<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
 	<script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
+
+
+
+	<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+	<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+	<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+	<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
+
 	<script type="text/javascript">
+
+		$('#parenttable').DataTable({
+			dom: 'Bfrtip',
+			buttons: [
+		        'csv',
+	        ],
+	        "order": [[ 2, "desc" ]],
+	    });
+
 		load_parent('/basicviz/get_doc_topics/{{document.id}}');
 	</script>
+
+
+
+
+
 {% endblock %}
 
