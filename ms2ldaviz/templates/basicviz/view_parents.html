@@ -135,7 +135,7 @@
     {% if substituent_terms %}
         <h3>Classyfire Substituent Terms</h3>
         <ul>
-            {% for term_instance in substituents_terms %}
+            {% for term_instance in substituent_terms %}
                 <li>{{term_instance.subterm.name}},{{term_instance.probability}}
             {% endfor %}
         </ul>
