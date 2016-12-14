@@ -18,7 +18,7 @@
 		{% for term_instance in taxa_instances %}
 			<tr>
 				<td>{{term_instance.taxterm.name}}</td>
-				<td><a href="/basicviz/show_parents/{{term_instance.motif.id}}">{{term_instance.motif.name}}</a></td>
+				<td><a href="/basicviz/view_parents/{{term_instance.motif.id}}">{{term_instance.motif.name}}</a></td>
 				<td>{{term_instance.probability}}</td>
 			</tr>
 		{% endfor %}
