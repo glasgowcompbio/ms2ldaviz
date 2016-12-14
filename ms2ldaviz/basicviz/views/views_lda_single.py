@@ -282,6 +282,15 @@ def view_parents(request, motif_id):
     context_dict['motif_features'] = motif_features
     context_dict['total_prob'] = total_prob
 
+    # Get the taxa or substituent terms (if there are any)
+    taxa_terms = motif.taxainstance_set.all().order_by('-probability')
+    substituent_terms = motif.substituentinstance_set.all().order_by('-probability')
+
+    if len(taxa_terms) > 0:
+        context_dict['taxa_terms'] = taxa_terms
+    if len(substituent_terms) > 0:
+        context_dict['substituent_terms'] = substituent_terms
+
     # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = motif.experiment)
     # if doc_m2m_threshold:
     #     doc_m2m_threshold = float(doc_m2m_threshold)

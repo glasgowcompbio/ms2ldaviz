@@ -120,6 +120,29 @@
         </div>
     </div>
 
+
+
+    <!-- Classyfire terms for this motif, if they exist -->
+    {% if taxa_terms %}
+        <h3>Classyfire Taxa Terms</h3>
+        <ul>
+            {% for term in taxa_terms %}
+                <li>{{term.name}},{{term.probability}}
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if substituent_terms %}
+        <h3>Classyfire Substituent Terms</h3>
+        <ul>
+            {% for term in substituents_terms %}
+                <li>{{term.name}},{{term.probability}}
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+
+
 {% endblock %}
 
 {% block js_block %}
