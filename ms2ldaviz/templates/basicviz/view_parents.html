@@ -126,8 +126,8 @@
     {% if taxa_terms %}
         <h3>Classyfire Taxa Terms</h3>
         <ul>
-            {% for term in taxa_terms %}
-                <li>{{term.name}},{{term.probability}}
+            {% for term_instance in taxa_terms %}
+                <li>{{term_instance.taxterm.name}},{{term_instance.probability}}
             {% endfor %}
         </ul>
     {% endif %}
@@ -135,8 +135,8 @@
     {% if substituent_terms %}
         <h3>Classyfire Substituent Terms</h3>
         <ul>
-            {% for term in substituents_terms %}
-                <li>{{term.name}},{{term.probability}}
+            {% for term_instance in substituents_terms %}
+                <li>{{term_instance.subterm.name}},{{term_instance.probability}}
             {% endfor %}
         </ul>
     {% endif %}
