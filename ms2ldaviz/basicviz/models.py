@@ -66,6 +66,31 @@ class Document(models.Model):
         else:
             return None
 
+    def get_image_url(self):
+        md = jsonpickle.decode(self.metadata)
+        if 'csid' in md:
+            # If this doc already has a csid, make the url
+            return 'http://www.chemspider.com/ImagesHandler.ashx?id=' + str(self.csid)
+        elif 'InChIKey' in md:
+            # If it doesnt but it does have an InChIKey get the csid and make the image url
+            from chemspipy import ChemSpider
+            cs = ChemSpider('b07b7eb2-0ba7-40db-abc3-2a77a7544a3d')
+            results = cs.search(md['InChIKey'])
+            if results:
+                # Return the image_url and also save the csid 
+                csid = results[0].csid
+                md['csid'] = csid                
+                self.metadata = jsonpickle.encode(md)
+                self.save()
+                return results[0].get_image_url
+            else:
+                return None
+        else:
+            # If it has neither, no image!
+            return None
+
+
+
     def get_mass(self):
         md = jsonpickle.decode(self.metadata)
         if 'parentmass' in md:
@@ -105,6 +130,7 @@ class Document(models.Model):
     inchikey = property(get_inchi)
     annotation = property(get_annotation)
     display_name = property(get_display_name)
+    image_url = property(get_image_url)
 
     def __unicode__(self):
         return self.name

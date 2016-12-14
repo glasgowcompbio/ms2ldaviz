@@ -253,15 +253,17 @@ def show_doc(request, doc_id):
     feature_mass2motif_instances = sorted(feature_mass2motif_instances, key=lambda x: x[0].intensity, reverse=True)
 
     if document.csid:
-        context_dict['image_url'] = 'http://www.chemspider.com/ImagesHandler.ashx?id=' + str(document.csid)
         context_dict['csid'] = document.csid
-    elif document.inchikey:
-        from chemspipy import ChemSpider
-        cs = ChemSpider('b07b7eb2-0ba7-40db-abc3-2a77a7544a3d')
-        results = cs.search(document.inchikey)
-        if results:
-            context_dict['image_url'] = results[0].image_url
-            context_dict['csid'] = results[0].csid
+        # context_dict['image_url'] = 'http://www.chemspider.com/ImagesHandler.ashx?id=' + str(document.csid)
+    if document.image_url:
+        context_dict['image_url'] = document.image_url
+    # elif document.inchikey:
+    #     from chemspipy import ChemSpider
+    #     cs = ChemSpider('b07b7eb2-0ba7-40db-abc3-2a77a7544a3d')
+    #     results = cs.search(document.inchikey)
+    #     if results:
+    #         context_dict['image_url'] = results[0].image_url
+    #         context_dict['csid'] = results[0].csid
 
     context_dict['fm2m'] = feature_mass2motif_instances
     return render(request, 'basicviz/show_doc.html', context_dict)
