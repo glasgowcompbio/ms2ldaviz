@@ -27,6 +27,22 @@
 
 <h3>Substituents</h3>
 
+<table class='table' id='taxatable'>
+	<thead>
+		<tr><th>Term</th><th>Motif</th><th>Probability</th></tr>
+	</thead>
+	<tbody>
+		{% for term_instance in substituent_instances %}
+			<tr>
+				<td>{{term_instance.subterm.name}}</td>
+				<td><a href="/basicviz/view_parents/{{term_instance.motif.id}}">{{term_instance.motif.name}}</a></td>
+				<td>{{term_instance.probability}}</td>
+			</tr>
+		{% endfor %}
+	</tbody>
+</table>
+
+
 {% endblock %}
 
 {% block js_block %}
