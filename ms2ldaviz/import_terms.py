@@ -11,7 +11,7 @@ django.setup()
 import jsonpickle
 
 from basicviz.models import Experiment,Mass2Motif
-from annotation.models import TaxaTerm,SubstituentTerm
+from annotation.models import TaxaTerm,SubstituentTerm,TaxaInstance,SubstituentInstance
 
 if __name__ == '__main__':
 	experiment_name = sys.argv[1]
