@@ -1316,7 +1316,7 @@ def high_classyfire(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
     motifs = Mass2Motif.objects.filter(experiment = experiment)
     taxa_instances = TaxaInstance.objects.filter(motif__in = motifs,probability__gte = 0.2)
-    substituent_instances = SubstituentInstance.objects.filter(motif_in = motifs,probability__gte = 0.2)
+    substituent_instances = SubstituentInstance.objects.filter(motif__in = motifs,probability__gte = 0.2)
     context_dict = {}
     context_dict['taxa_instances'] = taxa_instances
     context_dict['substituent_instances'] = substituent_instances
