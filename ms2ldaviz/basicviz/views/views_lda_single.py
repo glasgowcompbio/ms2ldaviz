@@ -17,6 +17,7 @@ from basicviz.forms import Mass2MotifMetadataForm, DocFilterForm, ValidationForm
     TopicScoringForm
 from basicviz.models import Feature, Experiment, Document, FeatureInstance, DocumentMass2Motif, \
     FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment
+from annotation.models import TaxaInstance,SubstituentInstance
 from views_massbank import get_massbank_form
 from views_options import get_option
 
@@ -1309,3 +1310,13 @@ def rate_by_conserved_motif_rating(request, experiment_id):
     context_dict['motif_scores'] = motif_scores
 
     return render(request, 'basicviz/rate_by_conserved_motif.html', context_dict)
+
+@login_required(login_url='/basicviz/login/')
+def high_classyfire(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    motifs = Mass2Motif.objects.filter(experiment = experiment)
+    taxa_instances = TaxaInstance.objects.filter(motif__in = motifs,probability__gte = 0.2)
+    context_dict = {}
+    context_dict['taxa_instances'] = taxa_instances
+    context_dict['experiment'] = experiment
+    return render(request,'basicviz/high_classyfire.html',context_dict)

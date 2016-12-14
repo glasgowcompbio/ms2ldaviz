@@ -44,6 +44,8 @@ lda_single_patterns = [
     url(r'^extract_docs/(?P<experiment_id>\w+)/$', views.extract_docs, name='extract_docs'),
     url(r'^compute_topic_scores/(?P<experiment_id>\w+)/$', views.compute_topic_scores,
         name='compute_topic_scores'),
+    url(r'^high_classyfire/(?P<experiment_id>\w+)/$', views.high_classyfire,
+        name='high_classyfire'),    
 ]
 
 # for multi-file LDA experiments
