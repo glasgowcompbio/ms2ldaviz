@@ -82,7 +82,7 @@ class Document(models.Model):
                 md['csid'] = csid                
                 self.metadata = jsonpickle.encode(md)
                 self.save()
-                return results[0].get_image_url
+                return results[0].image_url
             else:
                 return None
         else:
