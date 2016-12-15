@@ -2,6 +2,7 @@
 import numpy as np
 from scipy.special import psi as psi
 from basicviz.models import Experiment,Feature,Mass2Motif,Alpha,Mass2MotifInstance
+from annotation.models import TaxaInstance,SubstituentInstance
 
 def annotate(spectrum,basicviz_experiment_id):
     parentmass = spectrum[0]
@@ -12,7 +13,43 @@ def annotate(spectrum,basicviz_experiment_id):
     doc_list = zip(document.keys(),document.values())
     doc_list = sorted(doc_list,key = lambda x: x[1],reverse = True)
 
-    return doc_list,motif_theta_overlap,plotdata
+    high_motifs = {}
+    for m,t,o in motif_theta_overlap:
+        if t > 0.01:
+            high_motifs[m] = t
+
+    taxa_term_probs = get_taxa_term_probs(high_motifs)
+    sub_term_probs = get_sub_term_probs(high_motifs)
+
+    return doc_list,motif_theta_overlap,plotdata,taxa_term_probs,sub_term_probs
+
+def get_sub_term_probs (high_motifs):
+    motifs = high_motifs.keys()
+    print [m.name for m in motifs]
+    sub_instances = SubstituentInstance.objects.filter(motif__in = motifs)
+    sub_term_probs = {}
+    for t in sub_instances:
+        if not t.subterm in sub_term_probs:
+            sub_term_probs[t.subterm] = 0.0
+        sub_term_probs[t.subterm] += high_motifs[t.motif]*t.probability
+    ttp = zip(sub_term_probs.keys(),sub_term_probs.values())
+    ttp = sorted(ttp,key = lambda x: x[1],reverse = True)
+    ttp = filter(lambda x: x[1] > 0.01,ttp)
+    return ttp
+
+def get_taxa_term_probs(high_motifs):
+    motifs = high_motifs.keys()
+    print [m.name for m in motifs]
+    taxa_instances = TaxaInstance.objects.filter(motif__in = motifs)
+    taxa_term_probs = {}
+    for t in taxa_instances:
+        if not t.taxterm in taxa_term_probs:
+            taxa_term_probs[t.taxterm] = 0.0
+        taxa_term_probs[t.taxterm] += high_motifs[t.motif]*t.probability
+    ttp = zip(taxa_term_probs.keys(),taxa_term_probs.values())
+    ttp = sorted(ttp,key = lambda x: x[1],reverse = True)
+    ttp = filter(lambda x: x[1] > 0.01,ttp)
+    return ttp
 
 
 

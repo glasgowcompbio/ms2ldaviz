@@ -69,10 +69,12 @@ def start_annotation(request,basicviz_experiment_id):
             spectrum = (parentmass,peaks)
             context_dict['spectrum'] = spectrum
             # Do the annotation
-            document,motif_theta_overlap,plotdata = annotate(spectrum,basicviz_experiment_id)
+            document,motif_theta_overlap,plotdata,taxa_term_probs,sub_term_probs = annotate(spectrum,basicviz_experiment_id)
             context_dict['motif_theta_overlap'] = motif_theta_overlap
             context_dict['document'] = document
             context_dict['plotdata'] = json.dumps(plotdata)
+            context_dict['taxa_term_probs'] = taxa_term_probs
+            context_dict['sub_term_probs'] = sub_term_probs
 
             # Make the data for the scatter plot
             scatter_data = []

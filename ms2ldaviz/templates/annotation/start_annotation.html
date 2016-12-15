@@ -68,6 +68,26 @@
     </table>
 {% endif %}
 
+{% if taxa_term_probs %}
+    <h3>Taxa term probs</h3>
+    <ul>
+        {% for t in taxa_term_probs %}
+        <li>{{t.0}},{{t.1}}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% if sub_term_probs %}
+    <h3>Substituent term probs</h3>
+    <ul>
+        {% for t in sub_term_probs %}
+        <li>{{t.0}},{{t.1}}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+
+
 <div id="spectra" border="20" padding="20"></div>
 <div id="scatter_div" border="20" padding="20"></dic>
 
