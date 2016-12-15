@@ -8,7 +8,6 @@ AVAILABLE_OPTIONS = [('doc_m2m_threshold', 'Probability threshold for showing do
                      ('heatmap_normalisation','how to normalise the rows in the heatmap: none, standard, max')]
 
 DEFAULT_MASSBANK_AUTHORS = "van der Hooft, J. J. J., Wandy J., Rogers, S., University of Glasgow"
-DEFAULT_MASSBANK_SPLASH = 'http://splash.fiehnlab.ucdavis.edu/splash/it'
 DEFAULT_AC_INSTRUMENT = 'Q-Exactive (Thermo Fisher Scientific)'
 DEFAULT_AC_INSTRUMENT_TYPE = 'LC-ESI-Orbitrap-MS'
 DEFAULT_LICENSE = 'CC BY-SA'
