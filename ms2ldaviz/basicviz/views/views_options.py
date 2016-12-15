@@ -19,7 +19,7 @@ from scipy.stats import ttest_ind
 from sklearn.decomposition import PCA
 from numpy import interp
 
-from basicviz.constants import AVAILABLE_OPTIONS, DEFAULT_MASSBANK_AUTHORS, DEFAULT_MASSBANK_SPLASH, \
+from basicviz.constants import AVAILABLE_OPTIONS, DEFAULT_MASSBANK_AUTHORS, \
     DEFAULT_AC_INSTRUMENT, DEFAULT_AC_INSTRUMENT_TYPE, DEFAULT_LICENSE, DEFAULT_IONISATION
 from basicviz.forms import Mass2MotifMetadataForm, Mass2MotifMassbankForm, DocFilterForm, ValidationForm, VizForm, \
     UserForm, TopicScoringForm, AlphaCorrelationForm, SystemOptionsForm, AlphaDEForm
