@@ -8,11 +8,13 @@ from django.http import HttpResponse
 from numpy import interp
 from requests import RequestException
 
-from basicviz.constants import DEFAULT_MASSBANK_AUTHORS, DEFAULT_MASSBANK_SPLASH, \
-    DEFAULT_AC_INSTRUMENT, DEFAULT_AC_INSTRUMENT_TYPE, DEFAULT_LICENSE, DEFAULT_IONISATION
+from basicviz.constants import DEFAULT_MASSBANK_AUTHORS, \
+    DEFAULT_AC_INSTRUMENT, DEFAULT_AC_INSTRUMENT_TYPE, \
+    DEFAULT_LICENSE, DEFAULT_IONISATION
 from basicviz.forms import Mass2MotifMassbankForm
 from basicviz.models import Mass2Motif, Mass2MotifInstance, MultiFileExperiment, MultiLink
 
+from splash import Spectrum, SpectrumType, Splash
 
 def get_description(motif):
     exp_desc = motif.experiment.description
@@ -160,27 +162,17 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
 
 
 def get_splash(peaks):
-    # get splash hash of the spectra
-    splash_data = {'ions': [], 'type': 'MS'}
+
+    peak_data = []
     for peak in peaks:
-        mz = '%.4f' % peak[0]
-        abs_intensity = '%.3f' % peak[1]
-        rel_intensity = '%d' % peak[2]
-        if peak[0] > 0:  # excluding negative m/z values for now !!
-            ion = {'mass': mz, 'intensity': abs_intensity}
-            splash_data['ions'].append(ion)
-    splash_data = json.dumps(splash_data)
+        row = (peak[0], peak[1]) # mz, intensity
+        print row
+        peak_data.append(row)
 
-    try:
-        url = DEFAULT_MASSBANK_SPLASH
-        print splash_data, url
-        headers = {'Content-type': 'application/json'}
-        response = requests.post(url, headers=headers, data=splash_data)
-        hash = response.text
-    except RequestException, e:
-        hash = str(e)
+    spectrum = Spectrum(peak_data, SpectrumType.MS)
+    hash = Splash().splash(spectrum)
+    print hash
     return hash
-
 
 def get_massbank_str(massbank_dict):
     print 'keys'
