@@ -1322,3 +1322,14 @@ def high_classyfire(request,experiment_id):
     context_dict['substituent_instances'] = substituent_instances
     context_dict['experiment'] = experiment
     return render(request,'basicviz/high_classyfire.html',context_dict)
+
+def get_features(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    features = Feature.objects.filter(experiment = experiment)
+    output_features = [(f.name,f.min_mz,f.max_mz) for f in features]
+    return HttpResponse(json.dumps(output_features), content_type='application/json')
+
+
+
+
+
