@@ -46,7 +46,7 @@ lda_single_patterns = [
         name='compute_topic_scores'),
     url(r'^high_classyfire/(?P<experiment_id>\w+)/$', views.high_classyfire,
         name='high_classyfire'),    
-    url(r'^get_features/(?P<experiment_id)>\w+)/$',views.get_features,name = 'get_features'),
+    url(r'^get_features/(?P<experiment_id>\w+)/$',views.get_features,name = 'get_features'),
 ]
 
 # for multi-file LDA experiments
