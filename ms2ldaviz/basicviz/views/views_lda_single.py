@@ -1329,7 +1329,26 @@ def get_features(request,experiment_id):
     output_features = [(f.name,f.min_mz,f.max_mz) for f in features]
     return HttpResponse(json.dumps(output_features), content_type='application/json')
 
+def get_annotated_topics(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    motifs = Mass2Motif.objects.filter(experiment = experiment)
+    output_motifs = []
+    for motif in motifs:
+        if motif.annotation:
+            output_motifs.append(motif)
+
+    output_metadata = []
+    output_beta = []
+    for motif in output_motifs:
+        output_metadata.append((motif.name,motif.annotation))
+        betas = []
+        beta_vals = motif.mass2motifinstance_set.all()
+        for b in beta_vals:
+            betas.append((b.feature.name,b.probability))
+        output_beta.append((motif.name,betas))
+
+    output = (output_metadata,output_beta)
 
 
-
+    return HttpResponse(json.dumps(output),content_type = 'application/json')
 
