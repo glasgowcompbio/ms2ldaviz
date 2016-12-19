@@ -23,7 +23,7 @@ def annotate(spectrum,basicviz_experiment_id):
 
     return doc_list,motif_theta_overlap,plotdata,taxa_term_probs,sub_term_probs
 
-def get_sub_term_probs (high_motifs):
+def get_sub_term_probs(high_motifs):
     motifs = high_motifs.keys()
     print [m.name for m in motifs]
     sub_instances = SubstituentInstance.objects.filter(motif__in = motifs)
@@ -34,7 +34,7 @@ def get_sub_term_probs (high_motifs):
         sub_term_probs[t.subterm] += high_motifs[t.motif]*t.probability
     ttp = zip(sub_term_probs.keys(),sub_term_probs.values())
     ttp = sorted(ttp,key = lambda x: x[1],reverse = True)
-    ttp = filter(lambda x: x[1] > 0.01,ttp)
+    ttp = filter(lambda x: x[1] > 0.05,ttp)
     return ttp
 
 def get_taxa_term_probs(high_motifs):
@@ -48,7 +48,7 @@ def get_taxa_term_probs(high_motifs):
         taxa_term_probs[t.taxterm] += high_motifs[t.motif]*t.probability
     ttp = zip(taxa_term_probs.keys(),taxa_term_probs.values())
     ttp = sorted(ttp,key = lambda x: x[1],reverse = True)
-    ttp = filter(lambda x: x[1] > 0.01,ttp)
+    ttp = filter(lambda x: x[1] > 0.05,ttp)
     return ttp
 
 
