@@ -180,6 +180,90 @@ class LoadCSV(Loader):
         return self.ms1,self.ms2,self.metadata
 
 
+# A class to load mzml files
+# Will ultimately be able to do method 3
+
+# This method finds each ms2 spectrum in the file and then looks back at the last ms1 scan to find the most
+# intense ms1 peak within the isolation window. If nothing is found, no document is created
+# If it is found, a document is created
+class LoadMZML(Loader):
+    def __init__(self,min_intensity = 0.0,peaklist = None,isolation_window = 1.0,mz_tol = 10,rt_tol=0.5):
+        self.min_intensity = min_intensity
+        self.peaklist = peaklist
+        self.isolation_window = isolation_window
+        self.mz_tol = mz_tol
+        self.rt_tol = rt_tol
+    def __str__(self):
+        return "mzML loader"
+    def load_spectra(self,input_set):
+        import pymzml
+        import bisect
+
+        ms1 = []
+        ms2 = []
+        metadata = {}
+        nc = 0
+        ms2_id = 0
+        ms1_id = 0
+
+
+        for input_file in input_set:
+            current_ms1_scan_mz = None
+            current_ms1_scan_intensity = None
+            current_ms1_scan_rt = None
+            run = pymzml.run.Reader(input_file, MS1_Precision=5e-6)
+            file_name = input_file.split('/')[-1]
+            for spectrum in run:
+                if spectrum['ms level'] == 1:
+                    current_ms1_scan_rt = spectrum['scan start time']
+                    current_ms1_scan_mz,current_ms1_scan_intensity = zip(*spectrum.peaks)
+                elif spectrum['ms level'] == 2:
+                    precursor_mz = spectrum['precursors'][0]['mz']
+                    precursor_index_ish = bisect.bisect_right(current_ms1_scan_mz,precursor_mz)
+                    
+
+                    # Move left and right within the precursor window and pick the most intense parent_scan_number
+                    pos = precursor_index_ish
+                    max_intensity = 0.0
+                    max_intensity_pos = None
+                    while abs(precursor_mz - current_ms1_scan_mz[pos]) < self.isolation_window:
+                        if current_ms1_scan_intensity[pos] >= max_intensity:
+                            max_intensity = current_ms1_scan_intensity[pos]
+                            max_intensity_pos = pos
+                        pos -= 1
+                        if pos < 0:
+                            break
+                    pos = precursor_index_ish + 1
+                    if pos < len(current_ms1_scan_mz):
+                        while abs(precursor_mz - current_ms1_scan_mz[pos]) < self.isolation_window:
+                            if current_ms1_scan_intensity[pos] >= max_intensity:
+                                max_intensity = current_ms1_scan_intensity[pos]
+                                max_intensity_pos = pos
+                            pos += 1
+                            if pos > len(current_ms1_scan_mz)-1:
+                                break
+
+                    # Make the new MS1 object
+                    if max_intensity_pos:
+                    # mz,rt,intensity,file_name,scan_number = None):
+                        new_ms1 = MS1(ms1_id,current_ms1_scan_mz[max_intensity_pos],
+                                      current_ms1_scan_rt,max_intensity,file_name,scan_number = nc)
+                        metadata[new_ms1.name] = {'parentmass':current_ms1_scan_mz[max_intensity_pos],
+                                                  'parentrt':current_ms1_scan_rt,'scan_number':nc,
+                                                  'precursor_mass':precursor_mz}
+
+                        ms1.append(new_ms1)
+                        # Make the ms2 objects:
+                        for mz,intensity in spectrum.peaks:
+                            ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id)))
+                            ms1_id += 1
+
+# Note to JOE: I envisage the method three things happening here. I.e. load a peak list and then match them to the ms1 objects
+# Keep track of the ms1 objects that get matched and then make new ms1, ms2, and metadata objects that just include the matched ones
+
+        return ms1,ms2,metadata
+
+
 
 
 # A class to load Emma's data
