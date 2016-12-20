@@ -14,12 +14,13 @@ import sys
 #  3. Making the corpus object
 
 class MS1(object):
-    def __init__(self,id,mz,rt,intensity,file_name):
+    def __init__(self,id,mz,rt,intensity,file_name,scan_number = None):
         self.id = id
         self.mz = mz
         self.rt = rt
         self.intensity = intensity
         self.file_name = file_name
+        self.scan_number = scan_number
         self.name = "{}_{}".format(self.mz,self.rt)
 
     def __str__(self):
@@ -183,9 +184,15 @@ class LoadCSV(Loader):
 
 # A class to load Emma's data
 # This is very rough
+# pass cid as spectrum_choice for collision-induced dissociation
+# pass hcid for beam-type collision-induced dissociation
 class LoadEmma(Loader):
-    def __init__(self,min_intensity = 0.0):
+    def __init__(self,min_intensity = 0.0,spectrum_choice = 'cid',peaklist = None,mz_tol = 10,rt_tol = 0.5):
+        self.spectrum_choice = spectrum_choice # choices are cid and hcid
         self.min_intensity = min_intensity
+        self.peaklist = peaklist
+        self.mz_tol = mz_tol
+        self.rt_tol = rt_tol
     def __str__(self):
         return "Loader for Emma data format"
     def load_spectra(self,input_set):
@@ -194,37 +201,130 @@ class LoadEmma(Loader):
         ms1 = []
         ms2 = []
         metadata = {}
-        nspec = 0
         nc = 0
         ms2_id = 0
+
+
+        if self.peaklist:
+            ms1_peak_list = self._load_peak_list()
+            peak_list_pos = 0
+        else:
+            ms1_peak_list = None
+
+
 
         for input_file in input_set:
 
             # Load the mzml object
             run = pymzml.run.Reader(input_file, MS1_Precision=5e-6)
-
-
+            nspec = 0
+            nmatch = 0
+            parent_scan_number = None
             file_name = input_file.split('/')[-1]
 
             for spectrum in run:
                 if 'collision-induced dissociation' in spectrum:
-                    parentmass = spectrum['precursors'][0]['mz']
-                    parentrt = spectrum['scan start time']
-                    nc += 1
-                    newms1 = MS1(nc,parentmass,parentrt,None,file_name)
-                    ms1.append(newms1)
-                    metadata[newms1.name] = {'parentmass':parentmass,'parentrt':parentrt}
-                    for mz,intensity in spectrum.peaks:
-                        if intensity > self.min_intensity:
-                            ms2.append((mz,parentrt,intensity,ms1[-1],file_name,float(ms2_id)))
-                            ms2_id += 1
+                    if self.spectrum_choice == 'cid':
+                        parentmass = spectrum['precursors'][0]['mz']
+                        parentrt = spectrum['scan start time']
+                        nc += 1
+                        newms1 = MS1(nc,parentmass,parentrt,None,file_name,scan_number = parent_scan_number)
+                        ms1.append(newms1)
+                        metadata[newms1.name] = {'parentmass':parentmass,'parentrt':parentrt}
+                        for mz,intensity in spectrum.peaks:
+                            if intensity > self.min_intensity:
+                                ms2.append((mz,parentrt,intensity,ms1[-1],file_name,float(ms2_id)))
+                                ms2_id += 1
                 elif 'beam-type collision-induced dissociation' in spectrum:
-                    pass
+                    if self.spectrum_choice == 'hcid':
+                        parentmass = spectrum['precursors'][0]['mz']
+                        parentrt = spectrum['scan start time']
+                        nc += 1
+                        newms1 = MS1(nc,parentmass,parentrt,None,file_name,scan_number = parent_scan_number)
+                        ms1.append(newms1)
+                        metadata[newms1.name] = {'parentmass':parentmass,'parentrt':parentrt}
+                        for mz,intensity in spectrum.peaks:
+                            if intensity > self.min_intensity:
+                                ms2.append((mz,parentrt,intensity,ms1[-1],file_name,float(ms2_id)))
+                                ms2_id += 1
                 else:
-                    pass
+                    # This is an MS1 scan update our parent scan number
+                    parent_scan_number = nspec + 1
                 nspec += 1
 
+
+        if ms1_peak_list:
+            print "Filtering based on peak list"
+            filtered_ms1_list = []
+            # A peak list has been loaded so we need to filter the MS1 peaks
+            ms1 = sorted(ms1,key = lambda x: x.mz)
+            for i,peak in enumerate(ms1_peak_list):
+                mz = peak[1]
+                rt = peak[2]
+                pos = 0
+                hits = []
+                for ms in ms1:
+                    m = self._peak_mass_match(mz,ms.mz)
+                    if m == True:
+                        if self._peak_rt_match(rt,ms.rt):
+                            hits.append((ms,abs(mz-ms.mz)/mz))
+                    else:
+                        if 1e6*(ms.mz-mz)/mz > self.mz_tol:
+                            # Gone too far, break from the loop
+                            break
+                if len(hits) > 0:
+                    hits = sorted(hits,key = lambda x: x[1])
+                    top_hit = hits[0][0]
+                    filtered_ms1_list.append(top_hit)
+            print "Filtering results in {} hits".format(len(filtered_ms1_list))
+
+            filtered_ms2_list = []
+            for m in ms2:
+                if m[3] in filtered_ms1_list:
+                    filtered_ms2_list.append(m)
+
+            print "Filtering results in {} ms2 peaks".format(len(filtered_ms2_list))
+
+            ms1 = filtered_ms1_list
+            ms2 = filtered_ms2_list
+
+
         return ms1,ms2,metadata
+
+
+    def _peak_mass_match(self,mz1,mz2):
+        if 1e6*abs(mz1-mz2)/mz1 < self.mz_tol:
+            return True
+        else:
+            return False
+
+            
+
+    def _peak_rt_match(self,rt1,rt2):
+        if abs(rt1-rt2) < self.rt_tol:
+            return True
+        else:
+            return False
+
+    def _load_peak_list(self):
+        ms1_peak_list = []
+        with open(self.peaklist,'r') as f:
+            heads = f.readline().split('\t')
+            try:
+                mz_pos = heads.index('Centroid m/z')
+                rt_pos = heads.index('RT (min.)')
+                scan_pos = heads.index('Scan Number')
+                start_scan = heads.index('Start Scan Number')
+                end_scan = heads.index('End Scan Number')
+                for line in f:
+                    tokens = line.split()
+                    ms1_peak_list.append((int(tokens[scan_pos]),float(tokens[mz_pos]),float(tokens[rt_pos]),int(tokens[start_scan]),int(tokens[end_scan])))
+                ms1_peak_list = sorted(ms1_peak_list,key = lambda x: x[1]) # Sort by mass
+                print "Loaded {} peaks from peak list".format(len(ms1_peak_list))
+                return ms1_peak_list
+            except:
+                print "Can't load peaklist, using none"
+                return None
 
 # A class to load GNPS / MASSBANK style CSI spectra that treats the different
 # collision energies as different documents
@@ -453,6 +553,106 @@ class MakeFeatures(object):
     def make_features(self,ms2):
         raise NotImplementedError("make features method must be implemented")
 
+# Class to make features by binning with width bin_width
+class MakeBinnedFeatures(MakeFeatures):
+
+    def __str__(self):
+        return "Binning feature creator with bin_width = {}".format(self.bin_width)
+
+    def __init__(self,min_frag = 0.0,max_frag = 1000.0,
+                          min_loss = 10.0,max_loss = 200.0,
+                          min_intensity = 0.0,bin_width = 0.005):
+        self.min_frag = min_frag
+        self.max_frag = max_frag
+        self.min_loss = min_loss
+        self.max_loss = max_loss
+        self.min_intensity = min_intensity
+        self.bin_width = bin_width
+
+    def make_features(self,ms2):
+        self.word_mz_range = {}
+        self.word_counts = {}
+        self.fragment_words = []
+        self.loss_words = []
+        self.corpus = {}
+
+        self._make_words(self.min_loss,self.max_loss,self.loss_words,'loss')
+        self._make_words(self.min_frag,self.max_frag,self.fragment_words,'fragment')
+
+        for word in self.fragment_words:
+            self.word_counts[word] = 0
+        for word in self.loss_words:
+            self.word_counts[word] = 0
+
+
+        # make a list of the lower edges
+        frag_lower = [self.word_mz_range[word][0] for word in self.fragment_words]
+        loss_lower = [self.word_mz_range[word][0] for word in self.loss_words]
+
+        import bisect
+
+
+        for peak in ms2:
+            # MS2 objects are ((mz,rt,intensity,parent,file_name,id))
+            # TODO: make the search more efficients
+            mz = peak[0]
+            loss_mz = peak[3].mz - mz
+            intensity = peak[2]
+            if intensity >= self.min_intensity:
+                doc_name = peak[3].name
+                file_name = peak[4]
+                if mz > self.min_frag and mz < self.max_frag:
+                    pos = bisect.bisect_left(frag_lower,mz)
+                    word = self.fragment_words[pos-1]
+                    if not file_name in self.corpus:
+                        self.corpus[file_name] = {}
+                    if not doc_name in self.corpus[file_name]:
+                        self.corpus[file_name][doc_name] = {}
+                    word = self.fragment_words[pos]
+                    self.corpus[file_name][doc_name][word] = intensity
+                    self.word_counts[word] += 1
+
+                if loss_mz > self.min_loss and loss_mz < self.max_loss:
+                    pos = bisect.bisect_left(loss_lower,loss_mz)
+                    word = self.loss_words[pos-1]
+                    if not file_name in self.corpus:
+                        self.corpus[file_name] = {}
+                    if not doc_name in self.corpus[file_name]:
+                        self.corpus[file_name][doc_name] = {}
+                    word = self.loss_words[pos]
+                    self.corpus[file_name][doc_name][word] = intensity
+                    self.word_counts[word] += 1
+
+        # TODO: Test code to remove blank words!!!!!
+        to_remove = []
+        for word in self.word_mz_range:
+            if self.word_counts[word] == 0:
+                to_remove.append(word)
+
+        for word in to_remove:
+            del self.word_mz_range[word]
+
+
+        print "After removing empty words, {} words left".format(len(self.word_mz_range))
+        return self.corpus,self.word_mz_range
+
+    def _make_words(self,min_mz,max_mz,word_list,prefix):
+        # Bin the ranges to make the words
+        min_word = float(min_mz)
+        max_word = min_word + self.bin_width
+        while min_word < max_mz:
+            up_edge = min(max_mz,max_word)
+            word_mean = 0.5*(min_word + up_edge)
+            new_word = '{}_{}'.format(prefix,word_mean)
+            word_list.append(new_word)
+            self.word_mz_range[new_word] = (min_word,up_edge)
+            min_word += self.bin_width
+            max_word += self.bin_width
+
+
+
+
+
 
 # Class to make the metfamily features.
 # This class does almost nnothing as the corpus is already defined in the data matrix.
@@ -551,7 +751,7 @@ class MakeKDEFeatures(MakeFeatures):
     def make_features(self,ms2):
         self.fragment_queue,self.loss_queue = self._make_queues(ms2)
         self._make_kde_corpus()
-        return self.corpusesus,self.word_mz_range
+        return self.corpus,self.word_mz_range
 
 
 
@@ -918,11 +1118,11 @@ class MS2LDAFeatureExtractor(object):
         print self.loader
         self.feature_maker = feature_maker
         print self.feature_maker
-
         print "Loading spectra"
         self.ms1,self.ms2,self.metadata = self.loader.load_spectra(self.input_set)
         print "Creating corpus"
         self.corpus,self.word_mz_range = self.feature_maker.make_features(self.ms2)
+
     def get_first_corpus(self):
         first_file_name = self.corpus.keys()[0]
         return self.corpus[first_file_name]

@@ -467,24 +467,28 @@ class VariationalLDA(object):
 
 	# Newton-Raphson procedure for updating alpha
 	def alpha_nr(self,maxit=20,init_alpha=[]):
-		M,K = self.gamma_matrix.shape
-		if not len(init_alpha) > 0:
-			init_alpha = self.gamma_matrix.mean(axis=0)/K
-		alpha = init_alpha.copy()
-		alphap = init_alpha.copy()
-		g_term = (psi(self.gamma_matrix) - psi(self.gamma_matrix.sum(axis=1))[:,None]).sum(axis=0)
-		for it in range(maxit):
-			grad = M *(psi(alpha.sum()) - psi(alpha)) + g_term
-			H = -M*np.diag(pg(1,alpha)) + M*pg(1,alpha.sum())
-			alpha_new = alpha - np.dot(np.linalg.inv(H),grad)
-			if (alpha_new < 0).sum() > 0:
-				init_alpha /= 10.0
-				return self.alpha_nr(maxit=maxit,init_alpha = init_alpha)
+		old_alpha = self.alpha.copy()
+		try:
+			M,K = self.gamma_matrix.shape
+			if not len(init_alpha) > 0:
+				init_alpha = self.gamma_matrix.mean(axis=0)/K
+			alpha = init_alpha.copy()
+			alphap = init_alpha.copy()
+			g_term = (psi(self.gamma_matrix) - psi(self.gamma_matrix.sum(axis=1))[:,None]).sum(axis=0)
+			for it in range(maxit):
+				grad = M *(psi(alpha.sum()) - psi(alpha)) + g_term
+				H = -M*np.diag(pg(1,alpha)) + M*pg(1,alpha.sum())
+				alpha_new = alpha - np.dot(np.linalg.inv(H),grad)
+				if (alpha_new < 0).sum() > 0:
+					init_alpha /= 10.0
+					return self.alpha_nr(maxit=maxit,init_alpha = init_alpha)
 
-			diff = np.sum(np.abs(alpha-alpha_new))
-			alpha = alpha_new
-			if diff < 1e-6 and it > 1:
-				return alpha
+				diff = np.sum(np.abs(alpha-alpha_new))
+				alpha = alpha_new
+				if diff < 1e-6 and it > 1:
+					return alpha
+		except:
+			alpha = old_alpha
 		return alpha
 
 	# TODO: tidy up and comment this function
@@ -588,7 +592,7 @@ class VariationalLDA(object):
 
 	def make_dictionary(self,metadata=None,min_prob_to_keep_beta = 1e-3,
 		min_prob_to_keep_phi = 1e-2,min_prob_to_keep_theta = 1e-2,
-		filename = None):
+		filename = None,features = None):
 
 		if metadata == None:
 			if self.doc_metadata == None:
@@ -609,6 +613,14 @@ class VariationalLDA(object):
 		lda_dict['topic_index'] = self.topic_index
 		lda_dict['topic_metadata'] = self.topic_metadata
 		
+		pure_gamma = []
+		for gamma in self.gamma_matrix:
+			pure_gamma.append(list(gamma))
+
+		lda_dict['gamma'] = gamma
+
+		if features:
+			lda_dict['features'] = features
 
 		# Create the inverse indexes
 		wi = []
