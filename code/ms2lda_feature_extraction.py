@@ -184,10 +184,14 @@ class LoadCSV(Loader):
 # Will ultimately be able to do method 3
 
 # This method finds each ms2 spectrum in the file and then looks back at the last ms1 scan to find the most
-# intense ms1 peak within the isolation window. If nothing is found, no document is created
+# intense ms1 peak within plus and minus the isolation window. If nothing is found, no document is created
 # If it is found, a document is created
+
+# If a peak list is provided it then tries to match the peaks in the peaklist to the ms1 objects, just
+# keeping the ms1 objects that can be matched. The matching is done with plus and minus the mz_tol (ppm) 
+# and plus and minus the rt_tol
 class LoadMZML(Loader):
-    def __init__(self,min_intensity = 0.0,peaklist = None,isolation_window = 1.0,mz_tol = 10,rt_tol=0.5):
+    def __init__(self,min_intensity = 0.0,peaklist = None,isolation_window = 1.0,mz_tol = 5,rt_tol=5.0):
         self.min_intensity = min_intensity
         self.peaklist = peaklist
         self.isolation_window = isolation_window
@@ -208,6 +212,7 @@ class LoadMZML(Loader):
 
 
         for input_file in input_set:
+            print "Loading spectra from {}".format(input_file)
             current_ms1_scan_mz = None
             current_ms1_scan_intensity = None
             current_ms1_scan_rt = None
@@ -258,12 +263,86 @@ class LoadMZML(Loader):
                             ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id)))
                             ms1_id += 1
 
-# Note to JOE: I envisage the method three things happening here. I.e. load a peak list and then match them to the ms1 objects
-# Keep track of the ms1 objects that get matched and then make new ms1, ms2, and metadata objects that just include the matched ones
+        print "Found {} ms2 spectra, and {} individual ms2 objects".format(len(ms1),len(ms2))
+
+
+        if self.peaklist:
+            ms1_peaks = self._load_peak_list()
+            ms1 = sorted(ms1,key = lambda x: x.mz)
+            new_ms1_list = []
+            new_ms2_list = []
+            new_metadata = {}
+            # ms1_mz = [x.mz for z in ms1]
+            n_peaks_checked = 0
+            for n_peaks_checked,peak in enumerate(self.ms1_peaks):
+                if n_peaks_checked % 500 == 0:
+                    print n_peaks_checked
+                n_peaks_checked += 1
+                peak_mz = peak[0]
+                peak_rt = peak[1]
+                peak_intensity = peak[2]
+
+                ms1_mz = [m.mz for m in ms1]
+                min_mz = peak_mz - self.mz_tol*peak_mz/1e6
+                max_mz = peak_mz + self.mz_tol*peak_mz/1e6
+                min_rt = peak_rt - self.rt_tol
+                max_rt = peak_rt + self.rt_tol
+
+                
+                ms1_hits = filter(lambda x: x.mz >= min_mz and x.mz <= max_mz and x.rt >= min_rt and x.rt <= max_rt,ms1)
+
+                if len(ms1_hits) == 1:
+                    # Found one hit, easy
+                    old_ms1 = ms1_hits[0]
+                elif len(ms1_hits) > 1:
+                    # Find the one with the most intense MS2 peak
+                    best_ms1 = None
+                    best_intensity = 0.0
+                    for frag_peak in ms2:
+                        if frag_peak[3] in ms1_hits:
+                            if frag_peak[2] > best_intensity:
+                                best_intensity = frag_peak[2]
+                                best_ms1 = frag_peak[3]
+                    old_ms1 = best_ms1
+                else:
+                    # Didn't find any
+                    continue
+
+                # make a new ms1 object
+                new_ms1 = MS1(old_ms1.id,peak_mz,peak_rt,peak_intensity,old_ms1.file_name,old_ms1.scan_number)
+                new_ms1_list.append(new_ms1)
+                new_metadata[new_ms1.name] = metadata[old_ms1.name]
+
+                # Delete the old one so it can't be picked again
+                pos = ms1.index(old_ms1)
+                del ms1[pos]
+
+                # Change the reference in the ms2 objects to the new ms1 object
+                ms2_objects = filter(lambda x: x[3] == old_ms1,ms2)
+                for frag_peak in ms2_objects:
+                    new_frag_peak = (frag_peak[0],peak_rt,frag_peak[2],new_ms1,frag_peak[4],frag_peak[5])
+                    new_ms2_list.append(new_frag_peak)
+
+            # replace the ms1,ms2 and metadata with the new versions
+            ms1 = new_ms1_list
+            ms2 = new_ms2_list
+            metadata = new_metadata
+            print "Peaklist filtering results in {} documents".format(len(ms1))
 
         return ms1,ms2,metadata
 
+    def _load_peak_list(self):
+        self.ms1_peaks = []
+        with open(self.peaklist,'r') as f:
+            heads = f.readline()
+            for line in f:
+                tokens = line.split(',')
+                # get mx,rt,intensity
+                self.ms1_peaks.append((float(tokens[1]),float(tokens[2]),float(tokens[3])))
 
+        # sort them by mass
+        self.ms1_peaks = sorted(self.ms1_peaks,key = lambda x: x[0])
+        print "Loaded {} ms1 peaks from {}".format(len(self.ms1_peaks),self.peaklist)
 
 
 # A class to load Emma's data
