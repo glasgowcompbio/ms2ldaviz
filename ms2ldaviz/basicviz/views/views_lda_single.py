@@ -595,7 +595,11 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False):
     elif 'mz' in metadata:
         parent_mass = float(metadata['mz'])
     elif '_' in document.name:
-        parent_mass = float(document.name.split('_')[0])
+        try:
+            parent_mass = float(document.name.split('_')[0])
+        except:
+            # in case the name isnt that format
+            parent_mass = 0.0
     else:
         parent_mass = 0.0
     probability = "na"
