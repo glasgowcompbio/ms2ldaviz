@@ -681,7 +681,10 @@ class LoadMSP(Loader):
                             in_doc = True
                             new_ms1 = MS1(ms1_id,parentmass,parentrt,None,file_name)
                             ms1_id += 1
-                            doc_name = 'document_{}'.format(ms1_id)
+                            if 'Name' in temp_metadata:
+                                doc_name = temp_metadata['Name']
+                            else:
+                                doc_name = 'document_{}'.format(ms1_id)
                             metadata[doc_name] = temp_metadata.copy()
                             new_ms1.name = doc_name
                             ms1.append(new_ms1)
