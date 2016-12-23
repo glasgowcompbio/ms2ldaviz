@@ -664,10 +664,19 @@ class LoadMSP(Loader):
                     else:
                         tokens = rline.split()
                         if in_doc:
-                            mz = float(tokens[0])
-                            intensity = float(tokens[1])
-                            ms2.append((mz,0.0,intensity,new_ms1,file_name,float(ms2_id)))
-                            ms2_id += 1
+                            if len(tokens) == 2:
+                                # One tuple per line
+                                mz = float(tokens[0])
+                                intensity = float(tokens[1])
+                                ms2.append((mz,0.0,intensity,new_ms1,file_name,float(ms2_id)))
+                                ms2_id += 1
+                            else:
+                                for pos in range(0,len(tokens),2):
+                                    mz = float(tokens[pos])
+                                    intensity = float(tokens[pos+1])
+                                    ms2.append((mz,0.0,intensity,new_ms1,file_name,float(ms2_id)))
+                                    ms2_id += 1
+
                         elif rline.startswith('Num Peaks'):
                             in_doc = True
                             new_ms1 = MS1(ms1_id,parentmass,parentrt,None,file_name)
@@ -756,10 +765,17 @@ class MakeBinnedFeatures(MakeFeatures):
 
 
         for peak in ms2:
+
             # MS2 objects are ((mz,rt,intensity,parent,file_name,id))
             # TODO: make the search more efficients
             mz = peak[0]
-            loss_mz = peak[3].mz - mz
+            if peak[3].mz == None:
+                # There isnt a precursor mz so we cant do losses
+                do_losses = False
+                loss_mz = 0.0
+            else:
+                do_losses = True
+                loss_mz = peak[3].mz - mz
             intensity = peak[2]
             if intensity >= self.min_intensity:
                 doc_name = peak[3].name
@@ -775,7 +791,7 @@ class MakeBinnedFeatures(MakeFeatures):
                     self.corpus[file_name][doc_name][word] = intensity
                     self.word_counts[word] += 1
 
-                if loss_mz > self.min_loss and loss_mz < self.max_loss:
+                if do_losses and loss_mz > self.min_loss and loss_mz < self.max_loss:
                     pos = bisect.bisect_left(loss_lower,loss_mz)
                     word = self.loss_words[pos-1]
                     if not file_name in self.corpus:
@@ -795,7 +811,11 @@ class MakeBinnedFeatures(MakeFeatures):
         for word in to_remove:
             del self.word_mz_range[word]
 
+        n_docs = 0
+        for c in self.corpus:
+            n_docs += len(self.corpus[c])
 
+        print "{} documents".format(n_docs)
         print "After removing empty words, {} words left".format(len(self.word_mz_range))
         return self.corpus,self.word_mz_range
 
