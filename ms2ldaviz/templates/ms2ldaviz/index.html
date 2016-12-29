@@ -1,7 +1,12 @@
 {% extends 'base.html' %}
 
+{% load staticfiles %}
+
 {% block body_block %}
-<h3>Welcome to MS2LDA.org</h3>
+<h3>Welcome!</h3>
+<p>
+    <img src="{% static 'images/banner.png' %}" alt="Banner" width="100%"/>
+</p>
 <div class="well well-sm">
     <p>
         <a href="/basicviz" class="btn btn-primary">Go to Experiments</a>
@@ -25,14 +30,24 @@
     </p>
     </blockquote>
     <p>
-        Link to publication: <a href='http://www.pnas.org/content/113/48/13738.abstract'>Topic modeling for untargeted substructure exploration in metabolomics</a>.
+        <b>Links</b>
+    </p>
+    <p>
+        PNAS Publication: <a href='http://www.pnas.org/content/113/48/13738.abstract'>Topic modeling for untargeted substructure exploration in metabolomics</a>.
+        The data and codes for the paper can be found at <a href="http://dx.doi.org/10.5525/gla.researchdata.313">http://dx.doi.org/10.5525/gla.researchdata.313</a>.
+    </p>
+    <p>
+        An improved code for MS2LDA that allows for topics (i.e. Mass2Motifs) to be inferred across multiple document collections (i.e. fragmentation files) at once
+        can be found at <a href="http://github.com/sdrogers/lda">http://github.com/sdrogers/lda</a>.
+        The rest of the pipeline codes to process and load fragmentation data into the pipeline can also be found there.
+        The codes for this website itself, alongside various visualisation modules, can be found at <a href="http://github.com/sdrogers/ms2ldaviz">http://github.com/sdrogers/ms2ldaviz</a>
     </p>
     <p>
         <b>How does it work?</b> In MS2LDA, discrete fragment and neutral loss features are extracted from fragmentation spectra. Related features that tend to co-occur are detected using the <a href="https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation">Latent Dirichlet Allocation</a> model.
         The figure below shows the analogy between LDA for text and MS2LDA for fragment and neutral loss features. LDA finds topics interpreted as ‘football related’, ‘business-related’ and ‘environment related’. MS2LDA finds sets of concurring mass fragments or losses (Mass2Motifs) that can be interpreted as ‘Asparagine-related’, ‘Hexose-related’ and ‘Adenine-related’.
     </p>
     <p>
-        <img src="https://www.dropbox.com/s/z596zldoam24n22/text2frags.png?raw=1" alt="My image"/>
+        <img src="{% static 'images/text2frags.png' %}" alt="Text2Frags" width="80%"/>
     </p>
 </div>
 
