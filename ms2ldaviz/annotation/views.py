@@ -1,6 +1,10 @@
 import json
+import jsonpickle
+
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from basicviz.models import Experiment,UserExperiment
 from annotation.forms import AnnotationForm
@@ -97,3 +101,48 @@ def start_annotation(request,basicviz_experiment_id):
         context_dict['annotation_form'] = form
 
     return render(request,'annotation/start_annotation.html',context_dict)
+
+@csrf_exempt
+def query_annotation(request, basicviz_experiment_id):
+
+    experiment = Experiment.objects.get(id=basicviz_experiment_id)
+    response_data = {'status': 'OK'}
+
+    if request.method == "POST":
+
+        form = AnnotationForm(request.POST)
+        if form.is_valid():
+
+            parentmass = form.cleaned_data['parentmass']
+            spectrum_json = form.cleaned_data['spectrum']
+            peaks = json.loads(spectrum_json)
+
+            spectrum = (parentmass, peaks)
+            print spectrum
+            document, motif_theta_overlap, plotdata, taxa_term_probs, sub_term_probs = \
+                annotate(spectrum, basicviz_experiment_id)
+
+            taxa_terms = []
+            for taxa, prob in taxa_term_probs:
+                taxa_terms.append((taxa.name, prob))
+            response_data['taxa_term_probs'] = taxa_terms
+
+            sub_terms = []
+            for sub, prob in sub_term_probs:
+                sub_terms.append((sub.name, prob))
+            response_data['sub_term_probs'] = sub_terms
+
+            mto = []
+            for motif, theta, overlap in motif_theta_overlap:
+                mto.append((motif.name, motif.annotation, theta, overlap))
+            response_data['motif_theta_overlap'] = mto
+
+        else: # form validation failed
+            field_errors = [(field.label, field.errors) for field in form]
+            response_data['status'] = 'ERROR: %s' % field_errors
+
+    else: # GET request
+        experiment = Experiment.objects.get(id=basicviz_experiment_id)
+        response_data['experiment_name'] = experiment.name
+
+    return JsonResponse(response_data)
