@@ -26,7 +26,9 @@ def annotate(spectrum,basicviz_experiment_id):
 def get_sub_term_probs(high_motifs):
     motifs = high_motifs.keys()
     print [m.name for m in motifs]
-    sub_instances = SubstituentInstance.objects.filter(motif__in = motifs)
+    sub_instances = SubstituentInstance.objects.filter(motif__in = motifs) \
+        .select_related('subterm') \
+        .select_related('motif')
     sub_term_probs = {}
     for t in sub_instances:
         if not t.subterm in sub_term_probs:
@@ -40,7 +42,9 @@ def get_sub_term_probs(high_motifs):
 def get_taxa_term_probs(high_motifs):
     motifs = high_motifs.keys()
     print [m.name for m in motifs]
-    taxa_instances = TaxaInstance.objects.filter(motif__in = motifs)
+    taxa_instances = TaxaInstance.objects.filter(motif__in = motifs) \
+        .select_related('taxterm') \
+        .select_related('motif')
     taxa_term_probs = {}
     for t in taxa_instances:
         if not t.taxterm in taxa_term_probs:
@@ -113,7 +117,6 @@ def do_e_steps(parentmass,document,basicviz_experiment_id,nsteps = 500):
     motifs = Mass2Motif.objects.filter(experiment = experiment).order_by('name')
     K = len(motifs) # The number of motifs
     features = document.keys()
-    sub_beta = np.zeros((len(motifs),len(features)))
     alpha = []
     for motif in motifs:
         alpha.append(Alpha.objects.get(mass2motif = motif).value)
@@ -124,35 +127,43 @@ def do_e_steps(parentmass,document,basicviz_experiment_id,nsteps = 500):
     print "Got {} alphas".format(len(alpha))
     print "Got {} features".format(len(features))
 
+    sub_beta = np.zeros((len(motifs),len(features)))
     word_index = {}
+
+    # a lot of queries, slow
+    # for i,motif in enumerate(motifs):
+    #     for j,feature in enumerate(features):
+    #         word_index[feature] = j
+    #         try:
+    #             mi = Mass2MotifInstance.objects.get(mass2motif = motif,feature = feature)
+    #             print motif,feature
+    #             sub_beta[i,j] = mi.probability
+    #         except:
+    #             sub_beta[i,j] = 0.0 # Small value to avoid numerical errors
+    # print sub_beta.sum(axis=0)
+
+    # single query, faster
+    mis = Mass2MotifInstance.objects.filter(mass2motif__in=motifs, feature__in=features)
+    lookup = {}
+    for mi in mis:
+        lookup[(mi.mass2motif, mi.feature)] = mi
     for i,motif in enumerate(motifs):
-        if motif.name == 'motif_10':
-            pos10 = i
-        if motif.name == 'motif_88':
-            pos88 = i
         for j,feature in enumerate(features):
             word_index[feature] = j
             try:
-                mi = Mass2MotifInstance.objects.get(mass2motif = motif,feature = feature)
-                print motif,feature
-                sub_beta[i,j] = mi.probability
+                mi = lookup[motif, feature]
+                sub_beta[i, j] = mi.probability
             except:
-                sub_beta[i,j] = 0.0 # Small value to avoid numerical errors
+                sub_beta[i, j] = 0.0
     print sub_beta.sum(axis=0)
-
 
     gamma = np.ones(K)
     phi = {}
     for word in document:
         phi[word] = np.zeros(K)
 
-
-    print sub_beta[pos10,:]
-    print sub_beta[pos88,:]
-    print alpha[pos10],alpha[pos88]
-
     for step in range(nsteps):
-        print step
+        print 'E-step', step
         temp_gamma = np.zeros(K) + alpha
         for word in document:
             word_pos = word_index[word]
@@ -162,7 +173,6 @@ def do_e_steps(parentmass,document,basicviz_experiment_id,nsteps = 500):
                 phi[word] /= s
             temp_gamma += phi[word]*document[word]
         gamma = temp_gamma.copy()
-
 
     theta = gamma/gamma.sum()
     theta_float = [float(t) for t in theta]
