@@ -16,7 +16,8 @@ def annotate(spectrum,basicviz_experiment_id):
     high_motifs = {}
     for m,t,o in motif_theta_overlap:
         if t > 0.01:
-            high_motifs[m] = t
+            # high_motifs[m] = t
+            high_motifs[m] = o
 
     taxa_term_probs = get_taxa_term_probs(high_motifs)
     sub_term_probs = get_sub_term_probs(high_motifs)
