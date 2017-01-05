@@ -37,7 +37,7 @@ def get_sub_term_probs(high_motifs):
         sub_term_probs[t.subterm] += high_motifs[t.motif]*t.probability
     ttp = zip(sub_term_probs.keys(),sub_term_probs.values())
     ttp = sorted(ttp,key = lambda x: x[1],reverse = True)
-    ttp = filter(lambda x: x[1] > 0.05,ttp)
+    ttp = filter(lambda x: x[1] > 0.0,ttp)
     return ttp
 
 def get_taxa_term_probs(high_motifs):
