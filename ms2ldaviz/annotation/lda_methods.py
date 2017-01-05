@@ -6,7 +6,7 @@ from annotation.models import TaxaInstance,SubstituentInstance
 
 def annotate(spectrum,basicviz_experiment_id):
     parentmass = spectrum[0]
-    document = create_document_dictionary(spectrum,basicviz_experiment_id)
+    document,matches_count = create_document_dictionary(spectrum,basicviz_experiment_id)
     document = normalise_document(document,max_intensity = 1000.0)
     motif_theta_overlap,plotdata = do_e_steps(parentmass,document,basicviz_experiment_id)
 
@@ -21,7 +21,7 @@ def annotate(spectrum,basicviz_experiment_id):
     taxa_term_probs = get_taxa_term_probs(high_motifs)
     sub_term_probs = get_sub_term_probs(high_motifs)
 
-    return doc_list,motif_theta_overlap,plotdata,taxa_term_probs,sub_term_probs
+    return doc_list,motif_theta_overlap,plotdata,taxa_term_probs,sub_term_probs,matches_count
 
 def get_sub_term_probs(high_motifs):
     motifs = high_motifs.keys()
@@ -71,6 +71,8 @@ def create_document_dictionary(spectrum,basicviz_experiment_id):
 
     document = {}
 
+    fragment_match = 0
+    loss_match = 0
     for p in peaks:
         print "Searching for {}".format(p[0])
         pos = 0
@@ -79,6 +81,7 @@ def create_document_dictionary(spectrum,basicviz_experiment_id):
             if fragment_mass >= fragments[pos].min_mz and fragment_mass <= fragments[pos].max_mz:
                 document[fragments[pos]] = p[1]
                 print "\tFound fragment"
+                fragment_match += 1
                 break
             pos += 1
             if pos >= len(fragments):
@@ -92,14 +95,23 @@ def create_document_dictionary(spectrum,basicviz_experiment_id):
             if loss_mass >= losses[pos].min_mz and loss_mass <= losses[pos].max_mz:
                 document[losses[pos]] = p[1]
                 print "\tFound loss"
+                loss_match += 1
                 break
             pos += 1
             if pos >= len(losses):
                 break
             if loss_mass < losses[pos].min_mz:
                 break
+
+    matches_count = {
+        'fragment' : fragment_match,
+        'loss' : loss_match
+    }
+
+    print matches_count
     print document
-    return document
+
+    return document, matches_count
 
 
 def normalise_document(document,max_intensity = 1000.0):

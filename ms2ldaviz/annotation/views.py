@@ -73,7 +73,8 @@ def start_annotation(request,basicviz_experiment_id):
             spectrum = (parentmass,peaks)
             context_dict['spectrum'] = spectrum
             # Do the annotation
-            document,motif_theta_overlap,plotdata,taxa_term_probs,sub_term_probs = annotate(spectrum,basicviz_experiment_id)
+            document,motif_theta_overlap,plotdata,taxa_term_probs,sub_term_probs,matches_count =\
+                annotate(spectrum,basicviz_experiment_id)
             context_dict['motif_theta_overlap'] = motif_theta_overlap
             context_dict['document'] = document
             context_dict['plotdata'] = json.dumps(plotdata)
@@ -119,7 +120,7 @@ def query_annotation(request, basicviz_experiment_id):
 
             spectrum = (parentmass, peaks)
             print spectrum
-            document, motif_theta_overlap, plotdata, taxa_term_probs, sub_term_probs = \
+            document, motif_theta_overlap, plotdata, taxa_term_probs, sub_term_probs, matches_count = \
                 annotate(spectrum, basicviz_experiment_id)
 
             taxa_terms = []
@@ -136,6 +137,9 @@ def query_annotation(request, basicviz_experiment_id):
             for motif, theta, overlap in motif_theta_overlap:
                 mto.append((motif.name, motif.annotation, theta, overlap))
             response_data['motif_theta_overlap'] = mto
+
+            response_data['fragment_match'] = matches_count['fragment']
+            response_data['loss_match'] = matches_count['loss']
 
         else: # form validation failed
             field_errors = [(field.label, field.errors) for field in form]
