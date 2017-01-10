@@ -259,7 +259,7 @@ class LoadMZML(Loader):
 
                         ms1.append(new_ms1)
                         # Make the ms2 objects:
-                        for mz,intensity in spectrum.peaks:
+                        for mz,intensity in spectrum.centroidedPeaks:
                             ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id)))
                             ms1_id += 1
 
@@ -727,6 +727,37 @@ class LoadMSP(Loader):
 class MakeFeatures(object):
     def make_features(self,ms2):
         raise NotImplementedError("make features method must be implemented")
+
+# Class to make non-processed features
+# i.e. no feature matching, just the raw value
+class MakeRawFeatures(MakeFeatures):
+    def __str__(self):
+        return 'raw feature maker'
+    def __init__(self):
+        pass
+    def make_features(self,ms2):
+        self.word_mz_range = {}
+        self.corpus = {}
+
+        for peak in ms2:
+            frag_mz = peak[0]
+            frag_intensity = peak[2]
+            parent = peak[3]
+            doc_name = parent.name
+            file_name = peak[4]
+
+            if not file_name in self.corpus:
+                self.corpus[file_name] = {}
+            if not doc_name in self.corpus[file_name]:
+                self.corpus[file_name][doc_name] = {}
+
+            feature_name = 'fragment_{}'.format(frag_mz)
+            self.corpus[file_name][doc_name][feature_name] = frag_intensity
+            self.word_mz_range[feature_name] = (frag_mz,frag_mz)
+
+        return self.corpus,self.word_mz_range
+
+
 
 # Class to make features by binning with width bin_width
 class MakeBinnedFeatures(MakeFeatures):
