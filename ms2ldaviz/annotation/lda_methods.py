@@ -74,15 +74,22 @@ def create_document_dictionary(spectrum,basicviz_experiment_id):
 
     fragment_match = 0
     loss_match = 0
+    fragment_intensity_match = 0.0
+    total_fragment_intensity = 0.0
+    loss_intensity_match = 0.0
+    total_loss_intensity = 0.0
+
     for p in peaks:
         print "Searching for {}".format(p[0])
         pos = 0
         fragment_mass = p[0]
+        total_fragment_intensity += p[1]
         while True:
             if fragment_mass >= fragments[pos].min_mz and fragment_mass <= fragments[pos].max_mz:
                 document[fragments[pos]] = p[1]
                 print "\tFound fragment"
                 fragment_match += 1
+                fragment_intensity_match += p[1]
                 break
             pos += 1
             if pos >= len(fragments):
@@ -92,11 +99,13 @@ def create_document_dictionary(spectrum,basicviz_experiment_id):
 
         pos = 0
         loss_mass = parentmass - p[0]
+        total_loss_intensity += p[1]
         while True:
             if loss_mass >= losses[pos].min_mz and loss_mass <= losses[pos].max_mz:
                 document[losses[pos]] = p[1]
                 print "\tFound loss"
                 loss_match += 1
+                loss_intensity_match += p[1]
                 break
             pos += 1
             if pos >= len(losses):
@@ -106,7 +115,9 @@ def create_document_dictionary(spectrum,basicviz_experiment_id):
 
     matches_count = {
         'fragment' : fragment_match,
-        'loss' : loss_match
+        'loss' : loss_match,
+        'fragment_intensity' : fragment_intensity_match / total_fragment_intensity,
+        'loss_intensity' : loss_intensity_match / total_loss_intensity,
     }
 
     print matches_count

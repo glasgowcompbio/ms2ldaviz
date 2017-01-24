@@ -140,6 +140,8 @@ def query_annotation(request, basicviz_experiment_id):
 
             response_data['fragment_match'] = matches_count['fragment']
             response_data['loss_match'] = matches_count['loss']
+            response_data['fragment_intensity_match'] = matches_count['fragment_intensity']
+            response_data['loss_intensity_match'] = matches_count['loss_intensity']
 
         else: # form validation failed
             field_errors = [(field.label, field.errors) for field in form]
