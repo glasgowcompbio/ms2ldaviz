@@ -8,9 +8,7 @@ from django.http import HttpResponse
 from numpy import interp
 from requests import RequestException
 
-from basicviz.constants import DEFAULT_MASSBANK_AUTHORS, \
-    DEFAULT_AC_INSTRUMENT, DEFAULT_AC_INSTRUMENT_TYPE, \
-    DEFAULT_LICENSE, DEFAULT_IONISATION
+import basicviz.constants as constants
 from basicviz.forms import Mass2MotifMassbankForm
 from basicviz.models import Mass2Motif, Mass2MotifInstance, MultiFileExperiment, MultiLink
 
@@ -53,10 +51,6 @@ def get_massbank_form(motif, motif_features, mf_id=None):
         'comments': '\n'.join(mb_dict['comments']),
         'ch_name': '\n'.join(mb_dict['ch_name']),
         'ch_compound_class': mb_dict['ch_compound_class'],
-        'ch_formula': mb_dict['ch_formula'],
-        'ch_exact_mass': mb_dict['ch_exact_mass'],
-        'ch_smiles': mb_dict['ch_smiles'],
-        'ch_iupac': mb_dict['ch_iupac'],
         'ch_link': '\n'.join(mb_dict['ch_link']),
         'ac_instrument': mb_dict['ac_instrument'],
         'ac_instrument_type': mb_dict['ac_instrument_type'],
@@ -119,43 +113,40 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
     peaks = peaks[pos, :]
     hash = get_splash(peaks)
 
-    ch_names = data.get('ch_name', motif.annotation)
-    if ch_names is None:
-        ch_names = ['']
-    else:
-        ch_names = ch_names.splitlines()  # convert from string with \n into list
-
+    ch_name = motif.get_short_annotation()
     comments = data.get('comments', '').splitlines()
-    ch_exact_mass = data.get('ch_exact_mass', '0')
     ch_links = data.get('ch_link', '').splitlines()
 
     massbank_dict = {}
     massbank_dict['accession'] = accession
     massbank_dict['record_date'] = datetime.date.today().strftime('%Y.%m.%d')
-    massbank_dict['authors'] = data.get('authors', DEFAULT_MASSBANK_AUTHORS)
-    massbank_dict['license'] = DEFAULT_LICENSE
-    massbank_dict['ch_name'] = ch_names
-    massbank_dict['ac_instrument'] = data.get('ac_instrument', DEFAULT_AC_INSTRUMENT)
-    massbank_dict['ac_instrument_type'] = data.get('ac_instrument_type', DEFAULT_AC_INSTRUMENT_TYPE)
+    massbank_dict['authors'] = data.get('authors', constants.MASSBANK_AUTHORS)
+    massbank_dict['license'] = constants.MASSBANK_LICENSE
+    massbank_dict['copyright'] = constants.MASSBANK_COPYRIGHT
+    massbank_dict['publication'] = constants.MASSBANK_PUBLICATION
+    massbank_dict['ch_name'] = ch_name
+    massbank_dict['ac_instrument'] = data.get('ac_instrument', constants.MASSBANK_AC_INSTRUMENT)
+    massbank_dict['ac_instrument_type'] = data.get('ac_instrument_type', constants.MASSBANK_AC_INSTRUMENT_TYPE)
     massbank_dict['ms_type'] = ms_type
     massbank_dict['comments'] = comments
     massbank_dict['ch_link'] = ch_links
     massbank_dict['ac_mass_spectrometry_ion_mode'] = ion_mode
-    massbank_dict['ac_ionisation'] = DEFAULT_IONISATION
+    massbank_dict['ac_ionisation'] = constants.MASSBANK_IONISATION
+    massbank_dict['ms_data_processing'] = constants.MASSBANK_MS_DATA_PROCESSING
     massbank_dict['hash'] = hash
     massbank_dict['peaks'] = peaks
 
     tokens = [
-        massbank_dict['ch_name'][0],
+        massbank_dict['ch_name'],
         massbank_dict['ac_instrument_type'],
         massbank_dict['ms_type']
     ]
     massbank_dict['record_title'] = ';'.join(tokens)
-
-    # everything else, just copy
-    to_copy = ['ch_compound_class', 'ch_formula', 'ch_smiles', 'ch_iupac', 'ch_exact_mass']
-    for key in to_copy:
-        massbank_dict[key] = data.get(key, '')
+    massbank_dict['ch_compound_class'] = data.get('ch_compound_class', '')
+    massbank_dict['ch_formula'] = 'NA'
+    massbank_dict['ch_smiles'] = 'NA'
+    massbank_dict['ch_iupac'] = 'NA'
+    massbank_dict['ch_exact_mass'] = 'NA'
     massbank_dict['min_rel_int'] = min_rel_int
 
     return massbank_dict
@@ -185,10 +176,11 @@ def get_massbank_str(massbank_dict):
     output.append('DATE: %s' % massbank_dict['record_date'])
     output.append('AUTHORS: %s' % massbank_dict['authors'])
     output.append('LICENSE: %s' % massbank_dict['license'])
+    output.append('COPYRIGHT: %s' % massbank_dict['copyright'])
+    output.append('PUBLICATION: %s' % massbank_dict['publication'])
     for comment in massbank_dict['comments']:
         output.append('COMMENT: %s' % comment)
-    for name in massbank_dict['ch_name']:
-        output.append('CH$NAME: %s' % name)
+    output.append('CH$NAME: %s' % massbank_dict['ch_name'])
     output.append('CH$COMPOUND_CLASS: %s' % massbank_dict['ch_compound_class'])
     output.append('CH$FORMULA: %s' % massbank_dict['ch_formula'])
     output.append('CH$EXACT_MASS: %s' % massbank_dict['ch_exact_mass'])
@@ -202,6 +194,7 @@ def get_massbank_str(massbank_dict):
     output.append('AC$MASS_SPECTROMETRY: MS_TYPE %s' % massbank_dict['ms_type'])
     output.append('AC$MASS_SPECTROMETRY: ION_MODE %s' % massbank_dict['ac_mass_spectrometry_ion_mode'])
     output.append('AC$MASS_SPECTROMETRY: IONIZATION %s' % massbank_dict['ac_ionisation'])
+    output.append('MS$DATA_PROCESSING: %s' % massbank_dict['ms_data_processing'])
 
     peaks = massbank_dict['peaks']
     output.append('PK$SPLASH: %s' % massbank_dict['hash'])
@@ -225,7 +218,7 @@ def generate_massbank(request):
         data = {}
         keys = [
             'motif_id', 'accession', 'authors', 'comments',
-            'ch_name', 'ch_compound_class', 'ch_formula', 'ch_exact_mass',
+            'ch_compound_class',
             'ch_smiles', 'ch_iupac', 'ch_link',
             'ac_instrument', 'ac_instrument_type', 'ac_mass_spectrometry_ion_mode',
             'min_rel_int'
@@ -271,7 +264,7 @@ def generate_massbank_multi_m2m(request):
         data = {}
         keys = [
             'mf_id', 'motif_id', 'accession', 'authors', 'comments',
-            'ch_name', 'ch_compound_class', 'ch_formula', 'ch_exact_mass',
+            'ch_compound_class',
             'ch_smiles', 'ch_iupac', 'ch_link',
             'ac_instrument', 'ac_instrument_type', 'ac_mass_spectrometry_ion_mode',
             'min_rel_int'
