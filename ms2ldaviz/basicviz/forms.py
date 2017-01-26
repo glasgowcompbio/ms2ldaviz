@@ -26,10 +26,8 @@ class Mass2MotifMassbankForm(forms.Form):
                'rows': '3', 'cols': '50',
                'title': 'In MassBank, COMMENT fields are often used to show the relations of the present record with other MassBank records and with data files.'})
     )
-    ch_name = forms.CharField(label='CH$NAME', required=True, widget=forms.Textarea(
-        attrs={'id': 'ch_name',
-               'rows': '3', 'cols': '50',
-               'title': 'Name of the chemical compound analysed.'})
+    ch_name = forms.CharField(label='CH$NAME', required=True, widget=forms.TextInput(
+        attrs={'id': 'ch_name', 'required': 'true', 'size': '50', 'title': 'Name of the chemical compound analysed.'})
     )
     ch_compound_class = forms.CharField(label='CH$COMPOUND_CLASS', required=True, widget=forms.TextInput(
         attrs={'id': 'ch_compound_class', 'required': 'true', 'size': '50', 'title': 'Category of chemical compound.'})
