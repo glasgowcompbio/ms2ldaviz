@@ -49,7 +49,7 @@ def get_massbank_form(motif, motif_features, mf_id=None):
         'accession': mb_dict['accession'],
         'authors': mb_dict['authors'],
         'comments': '\n'.join(mb_dict['comments']),
-        'ch_name': '\n'.join(mb_dict['ch_name']),
+        'ch_name': mb_dict['ch_name'],
         'ch_compound_class': mb_dict['ch_compound_class'],
         'ch_link': '\n'.join(mb_dict['ch_link']),
         'ac_instrument': mb_dict['ac_instrument'],
