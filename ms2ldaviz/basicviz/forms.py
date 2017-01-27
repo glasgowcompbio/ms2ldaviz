@@ -32,6 +32,21 @@ class Mass2MotifMassbankForm(forms.Form):
     ch_compound_class = forms.CharField(label='CH$COMPOUND_CLASS', required=True, widget=forms.TextInput(
         attrs={'id': 'ch_compound_class', 'required': 'true', 'size': '50', 'title': 'Category of chemical compound.'})
     )
+    ch_formula = forms.CharField(label='CH$FORMULA', required=True, widget=forms.TextInput(
+        attrs={'id': 'ch_formula', 'required': 'true', 'size': '50',
+               'title': 'Molecular formula of chemical compound.'})
+    )
+    ch_exact_mass = forms.CharField(label='CH$EXACT_MASS', required=True, widget=forms.TextInput(
+        attrs={'id': 'ch_exact_mass', 'required': 'true', 'size': '12',
+               'title': 'Monoisotopic mass of chemical compound.'})
+    )
+    ch_smiles = forms.CharField(label='CH$SMILES', required=True, widget=forms.TextInput(
+        attrs={'id': 'ch_smiles', 'required': 'true', 'size': '50', 'title': 'SMILES string.'})
+    )
+    ch_iupac = forms.CharField(label='CH$IUPAC', required=True, widget=forms.TextInput(
+        attrs={'id': 'ch_iupac', 'required': 'true', 'size': '50',
+               'title': 'IUPAC International Chemical Identifier (InChI Code).'})
+    )
     ch_link = forms.CharField(label='CH$LINK', required=False, widget=forms.Textarea(
         attrs={'id': 'ch_link',
                'rows': '3', 'cols': '50',

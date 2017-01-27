@@ -117,6 +117,7 @@
         <div style="margin: 20px">
             <div id="status">Result goes here: </div><textarea name="massbank_str" id="massbank_str" rows="10" cols="100"></textarea>
             <button id="copy_button" onclick="copyToClipboard('#massbank_str')">Copy</button>
+            <button id="download_button" onclick="saveTextAsFile('massbank_str')">Download</button>
         </div>
     </div>
 
@@ -189,7 +190,7 @@
                                         $('#mass2motifmassbank_form').submit()
                                         // $(this).dialog('close');
                                     },
-                                        'Close': function () {
+                                    'Close': function () {
                                         $(this).dialog('close');
                                     }
                                 }
@@ -249,7 +250,8 @@
                 console.log(status);
                 console.log(massbank_str);
                 $("#copy_button").show();
-                
+                $("#download_button").show();
+
             },
 
             error : function(xhr,errmsg, err) {
@@ -263,6 +265,7 @@
     $('#dialog-massbank').hide()
     // $('#massbank_str').hide()
     $("#copy_button").hide();
+    $("#download_button").hide();
 
     function copyToClipboard(element) {
         var $temp = $("<textarea>");
@@ -272,7 +275,31 @@
         $temp.remove();
     }
 
-	</script>
+    // see http://stackoverflow.com/questions/35148578/download-a-text-file-from-textarea-on-button-click
+   function saveTextAsFile(element_id) {
 
+        var textToWrite = document.getElementById(element_id).value;
+        var accession = document.getElementById('accession').value;
+        var textFileAsBlob = new Blob([textToWrite], { type: 'text/plain' });
+        var fileNameToSaveAs = accession + '.txt';
+
+        var downloadLink = document.createElement("a");
+        downloadLink.download = fileNameToSaveAs;
+        downloadLink.innerHTML = "My Hidden Link";
+        window.URL = window.URL || window.webkitURL;
+        downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+        downloadLink.onclick = destroyClickedElement;
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+
+        downloadLink.click();
+
+    }
+
+    function destroyClickedElement(event) {
+        document.body.removeChild(event.target);
+    }
+
+	</script>
 
 {% endblock %}

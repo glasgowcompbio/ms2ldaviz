@@ -51,6 +51,10 @@ def get_massbank_form(motif, motif_features, mf_id=None):
         'comments': '\n'.join(mb_dict['comments']),
         'ch_name': mb_dict['ch_name'],
         'ch_compound_class': mb_dict['ch_compound_class'],
+        'ch_formula': 'NA' if is_new else mb_dict['ch_formula'],
+        'ch_exact_mass': 'NA' if is_new else mb_dict['ch_exact_mass'],
+        'ch_smiles': 'NA' if is_new else mb_dict['ch_smiles'],
+        'ch_iupac': 'NA' if is_new else mb_dict['ch_iupac'],
         'ch_link': '\n'.join(mb_dict['ch_link']),
         'ac_instrument': mb_dict['ac_instrument'],
         'ac_instrument_type': mb_dict['ac_instrument_type'],
@@ -114,7 +118,10 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
     hash = get_splash(peaks)
 
     ch_name = motif.get_short_annotation()
+    if ch_name is None:
+        ch_name = ''
     comments = data.get('comments', '').splitlines()
+    ch_exact_mass = data.get('ch_exact_mass', '0')
     ch_links = data.get('ch_link', '').splitlines()
 
     massbank_dict = {}
@@ -143,10 +150,10 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
     ]
     massbank_dict['record_title'] = ';'.join(tokens)
     massbank_dict['ch_compound_class'] = data.get('ch_compound_class', '')
-    massbank_dict['ch_formula'] = 'NA'
-    massbank_dict['ch_smiles'] = 'NA'
-    massbank_dict['ch_iupac'] = 'NA'
-    massbank_dict['ch_exact_mass'] = 'NA'
+    massbank_dict['ch_formula'] = data.get('ch_formula', 'NA')
+    massbank_dict['ch_smiles'] = data.get('ch_smiles', 'NA')
+    massbank_dict['ch_iupac'] = data.get('ch_iupac', 'NA')
+    massbank_dict['ch_exact_mass'] = data.get('ch_exact_mass', 'NA')
     massbank_dict['min_rel_int'] = min_rel_int
 
     return massbank_dict
@@ -172,7 +179,7 @@ def get_massbank_str(massbank_dict):
 
     output = []
     output.append('ACCESSION: %s' % massbank_dict['accession'])
-    output.append('RECORD TITLE: %s' % massbank_dict['record_title'])
+    output.append('RECORD_TITLE: %s' % massbank_dict['record_title'])
     output.append('DATE: %s' % massbank_dict['record_date'])
     output.append('AUTHORS: %s' % massbank_dict['authors'])
     output.append('LICENSE: %s' % massbank_dict['license'])
@@ -202,7 +209,7 @@ def get_massbank_str(massbank_dict):
     output.append('PK$PEAK: m/z int. rel.int.')
     for peak in peaks:
         mz = '%.4f' % peak[0]
-        abs_intensity = '%.4f' % peak[1]
+        abs_intensity = '%d' % peak[1]
         rel_intensity = '%d' % peak[2]
         output.append('%s %s %s' % (mz, abs_intensity, rel_intensity))
 
@@ -218,7 +225,7 @@ def generate_massbank(request):
         data = {}
         keys = [
             'motif_id', 'accession', 'authors', 'comments',
-            'ch_compound_class',
+            'ch_name', 'ch_compound_class', 'ch_formula', 'ch_exact_mass',
             'ch_smiles', 'ch_iupac', 'ch_link',
             'ac_instrument', 'ac_instrument_type', 'ac_mass_spectrometry_ion_mode',
             'min_rel_int'
