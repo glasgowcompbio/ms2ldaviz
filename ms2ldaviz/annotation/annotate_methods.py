@@ -21,8 +21,8 @@ def annotate(parentmass, spectrum, experiment_id):
 
 def batch_annotate(spectra, db_name):
 
-    # url = 'http://ms2lda.org/annotation/batch_query/%s/' % db_name
-    url = 'http://localhost:8001/annotation/batch_query/%s/' % db_name
+    url = 'http://ms2lda.org/annotation/batch_query/%s/' % db_name
+    # url = 'http://localhost:8001/annotation/batch_query/%s/' % db_name
 
     params = {
         'spectra': json.dumps(spectra)
