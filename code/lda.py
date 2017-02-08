@@ -2,6 +2,7 @@
 import multiprocessing
 import pickle
 import time
+import sys
 
 from scipy.special import polygamma as pg
 from scipy.special import psi as psi
@@ -479,7 +480,17 @@ class VariationalLDA(object):
 			for it in range(maxit):
 				grad = M *(psi(alpha.sum()) - psi(alpha)) + g_term
 				H = -M*np.diag(pg(1,alpha)) + M*pg(1,alpha.sum())
-				alpha_new = alpha - np.dot(np.linalg.inv(H),grad)
+
+
+				# playing here....
+				z = M*pg(1,alpha.sum())
+				h = -M*pg(1,alpha)
+				c = ((grad/h).sum())/((1.0/z) + (1.0/h).sum())
+				alpha_change = (grad - c)/h
+
+
+				# alpha_new = alpha - np.dot(np.linalg.inv(H),grad)
+				alpha_new = alpha - alpha_change
 
 				pos = np.where(alpha_new <= SMALL_NUMBER)[0]
 				alpha_new[pos] = SMALL_NUMBER
