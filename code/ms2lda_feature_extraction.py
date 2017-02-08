@@ -224,6 +224,9 @@ class LoadMZML(Loader):
                     current_ms1_scan_mz,current_ms1_scan_intensity = zip(*spectrum.peaks)
                 elif spectrum['ms level'] == 2:
                     precursor_mz = spectrum['precursors'][0]['mz']
+
+                    # This finds the insertion position for the precursor mz (i.e. the position one to the right
+                    # of the first element it is greater than)
                     precursor_index_ish = bisect.bisect_right(current_ms1_scan_mz,precursor_mz)
                     
 
@@ -231,6 +234,8 @@ class LoadMZML(Loader):
                     pos = precursor_index_ish
                     max_intensity = 0.0
                     max_intensity_pos = None
+                    if pos > len(current_ms1_scan_mz)-1:
+                        pos -= 1
                     while abs(precursor_mz - current_ms1_scan_mz[pos]) < self.isolation_window:
                         if current_ms1_scan_intensity[pos] >= max_intensity:
                             max_intensity = current_ms1_scan_intensity[pos]
@@ -815,24 +820,22 @@ class MakeBinnedFeatures(MakeFeatures):
                 doc_name = peak[3].name
                 file_name = peak[4]
                 if mz > self.min_frag and mz < self.max_frag:
-                    pos = bisect.bisect_left(frag_lower,mz)
+                    pos = bisect.bisect_right(frag_lower,mz)
                     word = self.fragment_words[pos-1]
                     if not file_name in self.corpus:
                         self.corpus[file_name] = {}
                     if not doc_name in self.corpus[file_name]:
                         self.corpus[file_name][doc_name] = {}
-                    word = self.fragment_words[pos]
                     self.corpus[file_name][doc_name][word] = intensity
                     self.word_counts[word] += 1
 
                 if do_losses and loss_mz > self.min_loss and loss_mz < self.max_loss:
-                    pos = bisect.bisect_left(loss_lower,loss_mz)
+                    pos = bisect.bisect_right(loss_lower,loss_mz)
                     word = self.loss_words[pos-1]
                     if not file_name in self.corpus:
                         self.corpus[file_name] = {}
                     if not doc_name in self.corpus[file_name]:
                         self.corpus[file_name][doc_name] = {}
-                    word = self.loss_words[pos]
                     self.corpus[file_name][doc_name][word] = intensity
                     self.word_counts[word] += 1
 
