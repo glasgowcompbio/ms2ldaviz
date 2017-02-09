@@ -224,6 +224,9 @@ class LoadMZML(Loader):
                     current_ms1_scan_mz,current_ms1_scan_intensity = zip(*spectrum.peaks)
                 elif spectrum['ms level'] == 2:
                     precursor_mz = spectrum['precursors'][0]['mz']
+
+                    # This finds the insertion position for the precursor mz (i.e. the position one to the right
+                    # of the first element it is greater than)
                     precursor_index_ish = bisect.bisect_right(current_ms1_scan_mz,precursor_mz)
 
 
@@ -231,6 +234,8 @@ class LoadMZML(Loader):
                     pos = precursor_index_ish
                     max_intensity = 0.0
                     max_intensity_pos = None
+                    if pos > len(current_ms1_scan_mz)-1:
+                        pos -= 1
                     while abs(precursor_mz - current_ms1_scan_mz[pos]) < self.isolation_window:
                         if current_ms1_scan_intensity[pos] >= max_intensity:
                             max_intensity = current_ms1_scan_intensity[pos]
@@ -261,7 +266,7 @@ class LoadMZML(Loader):
                         ms1_id += 1
 
                         # Make the ms2 objects:
-                        for mz,intensity in spectrum.peaks:
+                        for mz,intensity in spectrum.centroidedPeaks:
                             ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id)))
                             ms2_id += 1
 
@@ -683,7 +688,10 @@ class LoadMSP(Loader):
                             in_doc = True
                             new_ms1 = MS1(ms1_id,parentmass,parentrt,None,file_name)
                             ms1_id += 1
-                            doc_name = 'document_{}'.format(ms1_id)
+                            if 'Name' in temp_metadata:
+                                doc_name = temp_metadata['Name']
+                            else:
+                                doc_name = 'document_{}'.format(ms1_id)
                             metadata[doc_name] = temp_metadata.copy()
                             new_ms1.name = doc_name
                             ms1.append(new_ms1)
@@ -726,6 +734,37 @@ class LoadMSP(Loader):
 class MakeFeatures(object):
     def make_features(self,ms2):
         raise NotImplementedError("make features method must be implemented")
+
+# Class to make non-processed features
+# i.e. no feature matching, just the raw value
+class MakeRawFeatures(MakeFeatures):
+    def __str__(self):
+        return 'raw feature maker'
+    def __init__(self):
+        pass
+    def make_features(self,ms2):
+        self.word_mz_range = {}
+        self.corpus = {}
+
+        for peak in ms2:
+            frag_mz = peak[0]
+            frag_intensity = peak[2]
+            parent = peak[3]
+            doc_name = parent.name
+            file_name = peak[4]
+
+            if not file_name in self.corpus:
+                self.corpus[file_name] = {}
+            if not doc_name in self.corpus[file_name]:
+                self.corpus[file_name][doc_name] = {}
+
+            feature_name = 'fragment_{}'.format(frag_mz)
+            self.corpus[file_name][doc_name][feature_name] = frag_intensity
+            self.word_mz_range[feature_name] = (frag_mz,frag_mz)
+
+        return self.corpus,self.word_mz_range
+
+
 
 # Class to make features by binning with width bin_width
 class MakeBinnedFeatures(MakeFeatures):
@@ -783,25 +822,27 @@ class MakeBinnedFeatures(MakeFeatures):
                 doc_name = peak[3].name
                 file_name = peak[4]
                 if mz > self.min_frag and mz < self.max_frag:
-                    pos = bisect.bisect_left(frag_lower,mz)
+                    pos = bisect.bisect_right(frag_lower,mz)
                     word = self.fragment_words[pos-1]
                     if not file_name in self.corpus:
                         self.corpus[file_name] = {}
                     if not doc_name in self.corpus[file_name]:
                         self.corpus[file_name][doc_name] = {}
-                    word = self.fragment_words[pos]
-                    self.corpus[file_name][doc_name][word] = intensity
+                    if not word in self.corpus[file_name][doc_name]:
+                        self.corpus[file_name][doc_name][word] = 0.0
+                    self.corpus[file_name][doc_name][word] += intensity
                     self.word_counts[word] += 1
 
                 if do_losses and loss_mz > self.min_loss and loss_mz < self.max_loss:
-                    pos = bisect.bisect_left(loss_lower,loss_mz)
+                    pos = bisect.bisect_right(loss_lower,loss_mz)
                     word = self.loss_words[pos-1]
                     if not file_name in self.corpus:
                         self.corpus[file_name] = {}
                     if not doc_name in self.corpus[file_name]:
                         self.corpus[file_name][doc_name] = {}
-                    word = self.loss_words[pos]
-                    self.corpus[file_name][doc_name][word] = intensity
+                    if not word in self.corpus[file_name][doc_name]:
+                        self.corpus[file_name][doc_name][word] = 0.0
+                    self.corpus[file_name][doc_name][word] += intensity
                     self.word_counts[word] += 1
 
         # TODO: Test code to remove blank words!!!!!
