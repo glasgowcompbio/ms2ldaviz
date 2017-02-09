@@ -1,6 +1,7 @@
 import pickle
 import sys
 import jsonpickle
+import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 
 from basicviz.models import Experiment,Mass2Motif
