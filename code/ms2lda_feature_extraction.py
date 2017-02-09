@@ -826,7 +826,9 @@ class MakeBinnedFeatures(MakeFeatures):
                         self.corpus[file_name] = {}
                     if not doc_name in self.corpus[file_name]:
                         self.corpus[file_name][doc_name] = {}
-                    self.corpus[file_name][doc_name][word] = intensity
+                    if not word in self.corpus[file_name][doc_name]:
+                        self.corpus[file_name][doc_name][word] = 0.0
+                    self.corpus[file_name][doc_name][word] += intensity
                     self.word_counts[word] += 1
 
                 if do_losses and loss_mz > self.min_loss and loss_mz < self.max_loss:
@@ -836,7 +838,9 @@ class MakeBinnedFeatures(MakeFeatures):
                         self.corpus[file_name] = {}
                     if not doc_name in self.corpus[file_name]:
                         self.corpus[file_name][doc_name] = {}
-                    self.corpus[file_name][doc_name][word] = intensity
+                    if not word in self.corpus[file_name][doc_name]:
+                        self.corpus[file_name][doc_name][word] = 0.0
+                    self.corpus[file_name][doc_name][word] += intensity
                     self.word_counts[word] += 1
 
         # TODO: Test code to remove blank words!!!!!
