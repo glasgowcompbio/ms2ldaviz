@@ -14,7 +14,7 @@ if __name__ == '__main__':
 	input_file = sys.argv[2]
 	with open(input_file,'r') as f:
 		input_dict = pickle.load(f)
-	motif_metadata = input_dict['motif_metadata']
+	motif_metadata = input_dict['topic_metadata']
 
 	experiment = Experiment.objects.get(name = experiment_name)
 
