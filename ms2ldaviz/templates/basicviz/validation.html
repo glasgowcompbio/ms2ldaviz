@@ -35,7 +35,7 @@
 			<table class="table">
 			<tr><th>Name</th><th>Probability</th><th>Overlap score</th><th width=200px>Annotation</th><th>Image</th><th>link</th><th>Validated?</th><th>View in ms2ldaviz</th></tr>
 				{% for doc in all_dm2m %}
-					<!-- {% if doc.probability > p_thresh %} -->
+					
 
 					{% if not just_annotated or doc.document.annotation %}
 					<tr><td>{{doc.document.name}}</td><td>{{doc.probability}}</td><td>{{doc.overlap_score}}</td><td>{{doc.document.display_name}}</td>
@@ -62,7 +62,6 @@
 					<td><a href="/basicviz/show_doc/{{doc.document.id}}" target=new>Show doc</a></td>
 					</tr>
 					{% endif %}
-					<!-- {% endif %} -->
 			{% endfor %}
 			</table>
 		</div>
