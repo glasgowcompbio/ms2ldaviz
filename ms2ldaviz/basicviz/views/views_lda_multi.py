@@ -9,7 +9,8 @@ from django.shortcuts import render
 from networkx.readwrite import json_graph
 from scipy.stats import ttest_ind
 
-from basicviz.forms import Mass2MotifMetadataForm, AlphaCorrelationForm, AlphaDEForm
+from basicviz.forms import AlphaCorrelationForm, AlphaDEForm
+from massbank.forms import Mass2MotifMetadataForm
 from basicviz.models import Experiment, Mass2Motif, Mass2MotifInstance, MultiFileExperiment, MultiLink, Alpha, \
     AlphaCorrOptions
 from massbank.views import get_massbank_form

@@ -11,8 +11,9 @@ from networkx.readwrite import json_graph
 from sklearn.decomposition import PCA
 
 from annotation.models import TaxaInstance,SubstituentInstance
-from basicviz.forms import Mass2MotifMetadataForm, DocFilterForm, ValidationForm, VizForm, \
+from basicviz.forms import DocFilterForm, ValidationForm, VizForm, \
     TopicScoringForm
+from massbank.forms import Mass2MotifMetadataForm
 from basicviz.models import Feature, Experiment, Document, FeatureInstance, DocumentMass2Motif, \
     FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment
 from massbank.views import get_massbank_form
@@ -27,6 +28,7 @@ def check_user(request,experiment):
     except: 
         # User can't see this one
         return None
+
 
 def topic_table(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
