@@ -36,11 +36,11 @@ if __name__ == '__main__':
 			print "Found match for {}".format(document.name)
 			n_found += 1
 			to_document = to_document[0]
-			to_metadata = jsonpickle.decode(to_document.metadata)
+			to_metadata = {}
 			from_metadata = jsonpickle.decode(document.metadata)
 			for key,value in from_metadata.items():
 				to_metadata[key] = value
-			to_document.metadata = to_metadata
+			to_document.metadata = jsonpickle.encode(to_metadata)
 			to_document.save()
 	print "Found {} matches".format(n_found)
 
