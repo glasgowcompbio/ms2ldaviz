@@ -12,7 +12,7 @@ from .helpers import deprecated
 from .constants import ANNOTATE_DATABASES
 
 
-@login_required(login_url = '/basicviz/login/')
+@login_required(login_url = '/registration/login/')
 def index(request):
     ue = UserExperiment.objects.filter(user = request.user)
     experiments = [u.experiment for u in ue]
@@ -56,7 +56,7 @@ def parse_spectrum_string(spectrum_string):
     return peaks
 
 
-@login_required(login_url = '/basicviz/login/')
+@login_required(login_url = '/registration/login/')
 def start_annotation(request,basicviz_experiment_id):
     # Starts the annotation. User uploads a spectrum    
     experiment = Experiment.objects.get(id = basicviz_experiment_id)

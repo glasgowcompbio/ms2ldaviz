@@ -20,7 +20,7 @@
 				<tr>
 					<td>{{option.key}}</td>
 					<td>{{option.value}}</td>
-					<td><a href="/basicviz/delete_experiment_option/{{option.id}}">Delete</a>&nbsp;&nbsp;&nbsp;<a href="/basicviz/edit_experiment_option/{{option.id}}">Edit</a>
+					<td><a href="/options/delete_experiment_option/{{option.id}}">Delete</a>&nbsp;&nbsp;&nbsp;<a href="/options/edit_experiment_option/{{option.id}}">Edit</a>
 				</tr>
 			{% endfor %}
 		</tbody>		
@@ -28,7 +28,7 @@
 	{% else %}
 	<p>No experiment-specific options set</p>
 	{% endif %}
-	<a href="/basicviz/add_experiment_option/{{experiment.id}}">Add a new option</a>
+	<a href="/options/add_experiment_option/{{experiment.id}}">Add a new option</a>
 
 	<h3>Global options - cannot be edited</h3>
 	<table class="table">

@@ -10,7 +10,7 @@
 
 	<h3>Add a new option for {{mfe.name}}</h3>
 
-	<form id="option_form" method="post" action="/basicviz/add_mf_experiment_option/{{mfe.id}}/">
+	<form id="option_form" method="post" action="/options/add_mf_experiment_option/{{mfe.id}}/">
 	{% csrf_token %}
 	{% for hidden in option_form.hidden_fields %}
 	 	{{ hidden }}

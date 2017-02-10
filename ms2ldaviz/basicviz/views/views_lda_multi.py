@@ -11,11 +11,12 @@ from scipy.stats import ttest_ind
 
 from basicviz.forms import Mass2MotifMetadataForm, AlphaCorrelationForm, AlphaDEForm
 from basicviz.models import Experiment, Mass2Motif, Mass2MotifInstance, MultiFileExperiment, MultiLink, Alpha, \
-    AlphaCorrOptions, SystemOptions
-from views_login import index
-from views_massbank import get_massbank_form
-from views_options import get_option
+    AlphaCorrOptions
+from massbank.views import get_massbank_form
+from options.views import get_option
+from views_index import index
 from views_lda_single import get_docm2m
+
 
 def get_individual_names(request, mf_id):
     mfe = MultiFileExperiment.objects.get(id=mf_id)
@@ -26,7 +27,6 @@ def get_individual_names(request, mf_id):
 
 
 def get_alpha_matrix(request, mf_id):
-    # if request.is_ajax():
     if True:
         mfe = MultiFileExperiment.objects.get(id=mf_id)
 
@@ -35,30 +35,6 @@ def get_alpha_matrix(request, mf_id):
             links = MultiLink.objects.filter(multifileexperiment=mfe).order_by('experiment__name')
             individuals = [l.experiment for l in links]
             motifs = Mass2Motif.objects.filter(experiment=individuals[0])
-
-            # OLD CODE
-            # t0 = time.time()
-            # alp_vals = []
-            # for motif in motifs:
-            #     new_row = [motif.name,motif.annotation]
-            #     tot = 0.0
-            #     tot2 = 0.0
-            #     for individual in individuals:
-            #         motif_here = Mass2Motif.objects.get(name = motif.name,experiment = individual)
-            #         # alp = Alpha.objects.get(mass2motif = motif_here)
-            #         alp = motif_here.alpha_set.all()[0]
-            #         new_row.append(alp.value)
-            #         tot += alp.value
-            #         tot2 += alp.value**2
-
-            #     mu = tot/len(individuals)
-            #     va = (tot2/len(individuals)) - mu**2
-            #     new_row.append(va)
-            #     alp_vals.append(new_row)
-
-            # t1 = time.time()
-            # print "TIME: {}".format(t1-t0)
-
 
             alp_vals = []
             for individual in individuals:
@@ -87,19 +63,7 @@ def get_degree_matrix(request, mf_id):
         if not mfe.degree_matrix:
             links = MultiLink.objects.filter(multifileexperiment=mfe).order_by('experiment__name')
             individuals = [l.experiment for l in links]
-            motifs = Mass2Motif.objects.filter(experiment=individuals[0])
             deg_vals = []
-
-            # OLD CODE
-            # for motif in motifs:
-            #     new_row = [motif.name,motif.annotation]
-            #     for individual in individuals:
-            #         motif_here = Mass2Motif.objects.get(name = motif.name,experiment = individual)
-            #         docs = DocumentMass2Motif.objects.filter(mass2motif = motif_here)
-            #         new_row.append(len(docs))
-
-            #     deg_vals.append(new_row)
-
 
             for individual in individuals:
 
@@ -152,38 +116,6 @@ def make_alpha_matrix(individuals, normalise=True):
             new_alp_vals.append(nav)
         alp_vals = new_alp_vals
 
-    # for motif in motifs:
-    #     new_row = []
-    #     deg_row = []
-    #     tot = 0.0
-    #     tot2 = 0.0
-    #     for individual in individuals:
-    #         thismotif = Mass2Motif.objects.get(name = motif.name,experiment = individual)
-    #         alp = Alpha.objects.get(mass2motif = thismotif)
-    #         new_row.append(alp.value)
-    #         tot += alp.value
-    #         tot2 += alp.value**2
-    #         # docs = DocumentMass2Motif.objects.filter(mass2motif = thismotif)
-    #         # deg_row.append(len(docs))
-    #         deg_row.append(0)
-    #     mu = tot / len(individuals)
-    #     ss = (tot2)/len(individuals) - mu**2
-    #     if normalise:
-    #         new_row = [n/tot for n in new_row]
-    #         tot = 1.0
-    #         tot2 = sum([n**2 for n in new_row])
-    #         mu = tot / len(individuals)
-    #         ss = tot2/len(individuals) - mu**2
-    #     if variances:
-    #         new_row.append(ss)
-    #     if add_motif:
-    #         alp_vals.append((motif,new_row))
-    #         degrees.append((motif,deg_row))
-    #     else:
-    #         alp_vals.append(new_row)
-    #         degrees.append(deg_row)
-
-
     return alp_vals
 
 
@@ -211,19 +143,7 @@ def get_doc_table(request, mf_id, motif_name):
     peakset_list = []
     peakset_masses = []
     for i, individual in enumerate(individuals):
-        # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
-        # if doc_m2m_threshold:
-        #     doc_m2m_threshold = float(doc_m2m_threshold)
-        # else:
-        #     doc_m2m_threshold = 0.0 # Default value
         individual_names.append(individual.name)
-        # default_score = get_option('default_doc_m2m_score',experiment = individual)
-        # if not default_score:
-        #     default_score = 'probability'
-        # if default_score == 'probability':
-        #     docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual],probability__gte = doc_m2m_threshold)
-        # else:
-        #     docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual],overlap_score__gte = doc_m2m_threshold)
         docs = get_docm2m(individual_motifs[individual])
         for doc in docs:
             peakset_index = -1
@@ -256,7 +176,8 @@ def get_doc_table(request, mf_id, motif_name):
 
             doc_table.append([rt, mz, i, doc.probability, peakset_index])
 
-    # Add the peaks to the peakset object that are not linked to a document (i.e. the MS1 peak is present, but it wasn't fragmented)
+    # Add the peaks to the peakset object that are not linked to a document
+    # (i.e. the MS1 peak is present, but it wasn't fragmented)
     for ps in peaksets:
         # Grab the intensity instances for this peakset
         intensity_instances = ps.intensityinstance_set.all()
@@ -275,8 +196,6 @@ def get_doc_table(request, mf_id, motif_name):
     unnormalised_intensity_table = []
     counts = []
     final_peaksets = []
-    final_peakset_masses = []
-
 
     min_count_options = get_option('heatmap_minimum_display_count',experiment = individuals[0])
     # min_count_options = SystemOptions.objects.filter(key='heatmap_minimum_display_count')
@@ -295,13 +214,10 @@ def get_doc_table(request, mf_id, motif_name):
             log_peakset_intensities = False
     else:
         log_peakset_intensities = True
-
     
     normalise_heatmap_options = get_option('heatmap_normalisation',experiment = individuals[0])
     if len(normalise_heatmap_options) == 0:
         normalise_heatmap_options = 'none'
-
-
 
     for peakset in peaksets:
         new_row = []
@@ -420,110 +336,9 @@ def view_multi_m2m(request, mf_id, motif_name):
     peakset_masses = []
     for i, individual in enumerate(individuals):
         alpha = Alpha.objects.get(mass2motif=individual_motifs[individual])
-        # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
-        # if doc_m2m_threshold:
-        #     doc_m2m_threshold = float(doc_m2m_threshold)
-        # else:
-        #     doc_m2m_threshold = 0.0 # default
-        # default_score = get_option('default_doc_m2m_score',experiment = individual)
-        # if not default_score:
-        #     default_score = 'probability'
-        # if default_score == 'probability':
-        #     docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual],probability__gte = doc_m2m_threshold)
-        # else:
-        #     docs = DocumentMass2Motif.objects.filter(mass2motif = individual_motifs[individual],overlap_score__gte = doc_m2m_threshold)
         docs = get_docm2m(individual_motifs[individual])
         individual_m2m.append([individual, individual_motifs[individual], alpha, len(docs)])
         alps.append(alpha.value)
-
-        # for doc in docs:
-        #     peakset_index = -1
-        #     ii = doc.document.intensityinstance_set.all()
-        #     if len(ii) > 0:
-        #         ii = ii[0]
-        #         ps = ii.peakset
-        #         if not ps in peaksets:
-        #             peaksets[ps] = {}
-        #             peakset_list.append(ps)
-        #             peakset_masses.append(ps.mz)
-        #         peakset_index = peakset_list.index(ps)
-        #         peaksets[ps][individual] = ii.intensity
-
-        #     mz = 0
-        #     rt = 0
-        #     md = jsonpickle.decode(doc.document.metadata)
-        #     if 'parentmass' in md:
-        #         mz = md['parentmass']
-        #     elif 'mz' in md:
-        #         mz = md['mz']
-        #     elif '_' in doc.document.name:
-        #         split_name = doc.document.name.split('_')
-        #         mz = float(split_name[0])
-        #     if 'rt' in md:
-        #         rt = md['rt']
-        #     elif '_' in doc.document.name:
-        #         split_name = doc.document.name.split('_')
-        #         rt = float(split_name[1])
-
-
-        #     doc_table.append([rt,mz,i,doc.probability,peakset_index])
-        # individual_names.append(individual.name)
-
-    # intensity_table = []
-    # counts = []
-    # final_peaksets = []
-    # final_peakset_masses = []
-
-    # min_count_options = SystemOptions.objects.filter(key = 'heatmap_minimum_display_count')
-    # if len(min_count_options) > 0:
-    #     min_count = int(min_count_options[0].value)
-    # else:
-    #     min_count = 5
-
-    # log_peakset_intensities = True
-    # log_intensities_options = SystemOptions.objects.filter(key = 'log_peakset_intensities')
-    # if len(log_intensities_options) > 0:
-    #     val = log_intensities_options[0].value
-    #     if val == 'true':
-    #         log_peakset_intensities = True
-    #     else:
-    #         log_peakset_intensities = False
-
-    # for peakset in peaksets:
-    #     new_row = []
-    #     for individual in individuals:
-    #         new_row.append(peaksets[peakset].get(individual,0))
-    #     count = sum([1 for i in new_row if i > 0])
-    #     if min_count >= 5:
-    #         nz_vals = [v for v in new_row if v > 0]
-    #         if log_peakset_intensities:
-    #             nz_vals = [np.log(v) for v in nz_vals]
-    #         me = sum(nz_vals)/len(nz_vals)
-    #         va = sum([v**2 for v in nz_vals])/len(nz_vals) - me**2
-    #         va = math.sqrt(va)
-    #         if va > 0: # if variance is zero, skip...
-    #             new_row_n = [(v - me)/va if v > 0 else 0 for v in new_row]
-    #             intensity_table.append(new_row_n)
-    #             counts.append(count)
-    #             final_peaksets.append(peakset)
-    # for row in doc_table:
-    #     old_ps_index = row[-1]
-    #     if old_ps_index > -1:
-    #         old_ps = peakset_list[old_ps_index]
-    #         if old_ps in final_peaksets:
-    #             new_ps_index = final_peaksets.index(old_ps)
-    #         else:
-    #             new_ps_index = -1
-    #         row[-1] = new_ps_index
-
-
-    # final_peakset_masses = [p.mz for p in final_peaksets]
-    # final_peakset_rt = [p.rt for p in final_peaksets]
-
-    # temp = zip(counts,intensity_table)
-    # temp = sorted(temp,key = lambda x:x[0],reverse = True)
-    # counts,intensity_table = zip(*temp)
-    # intensity_table = list(intensity_table)
 
     # Compute the mean and variance
     tot_alps = sum(alps)
@@ -533,13 +348,6 @@ def view_multi_m2m(request, mf_id, motif_name):
     context_dict['alpha_variance'] = var
     context_dict['alphas'] = zip([i.name for i in individuals], alps)
     context_dict['individual_m2m'] = individual_m2m
-    # context_dict['doc_table'] = doc_table
-    # context_dict['individual_names'] = json.dumps(individual_names)
-    # context_dict['intensity_table'] = intensity_table
-    # context_dict['peakset_masses'] = final_peakset_masses
-    # context_dict['peakset_rt'] = final_peakset_rt
-
-
     return render(request, 'basicviz/view_multi_m2m.html', context_dict)
 
 
@@ -554,12 +362,7 @@ def get_alphas(request, mf_id, motif_name):
         alps.append(alpha.value)
 
     alps = [[individuals[i].name, a] for i, a in enumerate(alps)]
-    # alps = zip([i.name for i in individuals],alps)
-
-    # alps = [0] + alps
-
     json_alps = json.dumps(alps)
-
     return HttpResponse(json_alps, content_type='application/json')
 
 
@@ -570,28 +373,11 @@ def get_degrees(request, mf_id, motif_name):
     degs = []
     for individual in individuals:
         m2m = Mass2Motif.objects.get(name=motif_name, experiment=individual)
-        # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = individual)
-        # if doc_m2m_threshold:
-        #     doc_m2m_threshold = float(doc_m2m_threshold)
-        # else:
-        #     doc_m2m_threshold = 0.0 # Default value
-
-        # default_score = get_option('default_doc_m2m_score',experiment = individual)
-        # if not default_score:
-        #     default_score = 'probability'
-        # if default_score == 'probability':
-        #     docs = DocumentMass2Motif.objects.filter(mass2motif = m2m,probability__gte = doc_m2m_threshold)
-        # else:
-        #     docs = DocumentMass2Motif.objects.filter(mass2motif = m2m,overlap_score__gte = doc_m2m_threshold)
         docs = get_docm2m(m2m)
         degs.append(len(docs))
 
     degs = zip([i.name for i in individuals], degs)
-
-    # degs = [0] + degs
-
     json_degs = json.dumps(degs)
-
     return HttpResponse(json_degs, content_type='application/json')
 
 
@@ -599,7 +385,6 @@ def alpha_pca(request, mf_id):
     # Returns a json object to be rendered into a pca plot
     # PCA is pre-computed
     mfe = MultiFileExperiment.objects.get(id=mf_id)
-
     if mfe.pca:
         pca_data = jsonpickle.decode(mfe.pca)
     else:
@@ -614,10 +399,6 @@ def multi_alphas(request, mf_id):
     individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
     context_dict['individuals'] = individuals
 
-    motifs = Mass2Motif.objects.filter(experiment=individuals[0])
-    motif_names = [m.name for m in motifs]
-
-    # alp_vals,degrees = make_alpha_matrix(motifs,individuals,normalise=False,variances=True,add_motif=True)
     alp_vals = []
     degrees = []
     context_dict['alp_vals'] = alp_vals
@@ -673,9 +454,6 @@ def get_alpha_correlation_graph(request, acviz_id):
     else:
         alp_vals = make_alpha_matrix(individuals, normalise=True)
 
-    threshold = 0.98
-    max_score = 0.0
-    n_edges = 0
     motif_index = []
     an_motifs = []
     if acviz.just_annotated:
@@ -686,6 +464,7 @@ def get_alpha_correlation_graph(request, acviz_id):
         motifs = an_motifs
     else:
         motif_index = range(len(motifs))
+
     # Add motifs as nodes
     G = nx.Graph()
     motif_names = []
@@ -699,14 +478,7 @@ def get_alpha_correlation_graph(request, acviz_id):
         else:
             G.add_node(motif.name, name=display_name, col='#333333')
 
-
-            # (topic.name,group=2,name=name,
-            #         size=topic_scale_factor * topics[topic],
-            #         special = True, in_degree = topics[topic],
-            #         score = 1,node_id = topic.id,is_topic = True,
-            #         highlight_colour = highlight_colour)
     # add edges where the score is > thresh
-
     scores = []
     for i, j in combinations(range(len(motifs)), 2):
         a1 = np.array(alp_vals[motif_index[i]])

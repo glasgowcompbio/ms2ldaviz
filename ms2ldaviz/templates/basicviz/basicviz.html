@@ -15,7 +15,7 @@
         <a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a>
         <a href="/basicviz/start_viz/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a>
         {% if experiment.1 == 'edit' %}
-        <a href="/basicviz/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View experiment options</a>
+        <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View experiment options</a>
         {% endif %}
         {% if extra_user %}
             <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate</a>
@@ -43,7 +43,7 @@
                     <A href="/basicviz/multi_alphas/{{mf.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-signal"></span> Explore alphas</A>
                     <A href="/basicviz/alpha_correlation/{{mf.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-tasks"></span> Alpha correlation</A>
                     <A href="/basicviz/alpha_de/{{mf.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-object-align-bottom"></span> Alpha Differential Expression</A>
-                    <A href="/basicviz/view_mf_experiment_options/{{mf.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View options</A>
+                    <A href="/options/view_mf_experiment_options/{{mf.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View options</A>
                     <A href="/basicviz/wipe_cache/{{mf.id}}" class="btn btn-block btn-default" title="(force recomputation of alpha tables when, e.g. annotations have been added)"><span class="glyphicon glyphicon-exclamation-sign"></span> Wipe Cache</A>
                 </p>
                 <table class="table">

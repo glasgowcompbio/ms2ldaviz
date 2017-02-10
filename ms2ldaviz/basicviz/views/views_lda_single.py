@@ -4,23 +4,19 @@ import json
 import jsonpickle
 import networkx as nx
 import numpy as np
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render
-
-from django.contrib.auth.decorators import login_required
-
-
 from networkx.readwrite import json_graph
 from sklearn.decomposition import PCA
 
+from annotation.models import TaxaInstance,SubstituentInstance
 from basicviz.forms import Mass2MotifMetadataForm, DocFilterForm, ValidationForm, VizForm, \
     TopicScoringForm
 from basicviz.models import Feature, Experiment, Document, FeatureInstance, DocumentMass2Motif, \
     FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment
-from annotation.models import TaxaInstance,SubstituentInstance
-from views_massbank import get_massbank_form
-from views_options import get_option
-
+from massbank.views import get_massbank_form
+from options.views import get_option
 
 
 def check_user(request,experiment):
@@ -208,7 +204,7 @@ def compute_topic_scores(request, experiment_id):
 
     return render(request, 'basicviz/compute_topic_scores.html', context_dict)
 
-@login_required(login_url='/basicviz/login/')
+@login_required(login_url='/registration/login/')
 def show_docs(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     if not check_user(request,experiment):
@@ -220,7 +216,7 @@ def show_docs(request, experiment_id):
     context_dict['n_docs'] = len(documents)
     return render(request, 'basicviz/show_docs.html', context_dict)
 
-@login_required(login_url='/basicviz/login/')
+@login_required(login_url='/registration/login/')
 def show_doc(request, doc_id):
     document = Document.objects.get(id=doc_id)
     features = FeatureInstance.objects.filter(document=document)
@@ -269,7 +265,7 @@ def show_doc(request, doc_id):
     context_dict['fm2m'] = feature_mass2motif_instances
     return render(request, 'basicviz/show_doc.html', context_dict)
 
-@login_required(login_url='/basicviz/login/')
+@login_required(login_url='/registration/login/')
 def view_parents(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     experiment = motif.experiment
@@ -340,7 +336,7 @@ def view_parents(request, motif_id):
 
     return render(request, 'basicviz/view_parents.html', context_dict)
 
-@login_required(login_url='/basicviz/login/')
+@login_required(login_url='/registration/login/')
 def mass2motif_feature(request, fm2m_id):
     mass2motif_feature = Mass2MotifInstance.objects.get(id=fm2m_id)
     context_dict = {}
@@ -563,7 +559,7 @@ def get_intensity(request, motif_id, vo_id):
     data_for_json.append(features_list)
     return HttpResponse(json.dumps(data_for_json), content_type='application/json')
 
-@login_required(login_url='/basicviz/login/')
+@login_required(login_url='/registration/login/')
 def view_intensity(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     context_dict = {'mass2motif': motif}
@@ -571,7 +567,7 @@ def view_intensity(request, motif_id):
     context_dict['motif_features'] = motif_features
     return render(request, 'basicviz/view_intensity.html', context_dict)
 
-@login_required(login_url='/basicviz/login/')
+@login_required(login_url='/registration/login/')
 def view_mass2motifs(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     if not check_user(request,experiment):
@@ -694,7 +690,7 @@ def get_doc_topics(request, doc_id):
     plot_fragments = [get_doc_for_plot(doc_id, get_key=True)]
     return HttpResponse(json.dumps(plot_fragments), content_type='application/json')
 
-@login_required(login_url = '/basicviz/login/')
+@login_required(login_url = '/registration/login/')
 def start_viz(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     if not check_user(request,experiment):
@@ -741,7 +737,7 @@ def start_viz(request, experiment_id):
         context_dict['initial_motif'] = initial_motif
         return render(request, 'basicviz/graph.html', context_dict)
 
-@login_required(login_url = '/basicviz/login/')
+@login_required(login_url = '/registration/login/')
 def start_annotated_viz(request, experiment_id):
     # Is this function ever called??
     experiment = Experiment.objects.get(id=experiment_id)
@@ -917,7 +913,7 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
     print "Third"
     return G
 
-@login_required(login_url='/basicviz/login/')
+@login_required(login_url='/registration/login/')
 def topic_pca(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     if not check_user(request,experiment):
@@ -927,7 +923,7 @@ def topic_pca(request, experiment_id):
     context_dict['url'] = url
     return render(request, 'basicviz/pca.html', context_dict)
 
-@login_required(login_url='/basicviz/login/')
+@login_required(login_url='/registration/login/')
 def document_pca(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     if not check_user(request,experiment):
@@ -1052,7 +1048,7 @@ def get_pca_data(request, experiment_id):
     # pca_data = []
     return HttpResponse(json.dumps(pca_data), content_type='application/json')
 
-@login_required(login_url='/basicviz/login/')
+@login_required(login_url='/registration/login/')
 def validation(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     if not check_user(request,experiment):
@@ -1225,7 +1221,7 @@ def get_docm2m_bydoc(document, default_score=None, doc_m2m_threshold=None):
                                                  overlap_score__gte=doc_m2m_threshold).order_by('-probability')
     return dm2m
 
-@login_required(login_url='/basicviz/login/')
+@login_required(login_url='/registration/login/')
 def extract_docs(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     if not check_user(request,experiment):
@@ -1289,7 +1285,7 @@ def compute_overlap_score(mass2motif, document):
             score += feature_mass2motif_instance.probability * m2m_feature[0].probability
     return score
 
-@login_required(login_url='/basicviz/login/')
+@login_required(login_url='/registration/login/')
 def rate_by_conserved_motif_rating(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     if not check_user(request,experiment):
@@ -1317,7 +1313,7 @@ def rate_by_conserved_motif_rating(request, experiment_id):
 
     return render(request, 'basicviz/rate_by_conserved_motif.html', context_dict)
 
-@login_required(login_url='/basicviz/login/')
+@login_required(login_url='/registration/login/')
 def high_classyfire(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
     motifs = Mass2Motif.objects.filter(experiment = experiment)

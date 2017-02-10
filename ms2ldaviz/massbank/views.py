@@ -3,16 +3,14 @@ import json
 
 import jsonpickle
 import numpy as np
-import requests
 from django.http import HttpResponse
 from numpy import interp
-from requests import RequestException
 
-import basicviz.constants as constants
-from basicviz.forms import Mass2MotifMassbankForm
+import massbank.constants as constants
 from basicviz.models import Mass2Motif, Mass2MotifInstance, MultiFileExperiment, MultiLink
-
+from massbank.forms import Mass2MotifMassbankForm
 from splash import Spectrum, SpectrumType, Splash
+
 
 def get_description(motif):
     exp_desc = motif.experiment.description
@@ -63,6 +61,7 @@ def get_massbank_form(motif, motif_features, mf_id=None):
         'mf_id': mf_id if mf_id is not None else ''
     })
     return massbank_form
+
 
 def get_massbank_dict(data, motif, motif_features, min_rel_int):
     default_accession = 'GP%06d' % int(data['motif_id'])
@@ -171,6 +170,7 @@ def get_splash(peaks):
     hash = Splash().splash(spectrum)
     print hash
     return hash
+
 
 def get_massbank_str(massbank_dict):
     print 'keys'

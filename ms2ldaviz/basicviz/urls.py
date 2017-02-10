@@ -9,15 +9,12 @@ lda_single_patterns = [
     url(r'^start_annotated_viz/(?P<experiment_id>\w+)/$', views.start_annotated_viz,
         name='start_annotated_viz'),
     url(r'^get_graph/(?P<vo_id>\w+)/$', views.get_graph, name='get_graph'),
-    # url(r'^get_annotated_graph/(?P<experiment_id>\w+)/$',views.get_annotated_graph,name='get_annotated_graph'),
-    # url(r'^get_doc/(?P<doc_id>\w+)/$',views.get_doc,name='get_doc'),
     url(r'^get_doc_topics/(?P<doc_id>\w+)/$', views.get_doc_topics, name='get_doc_topics'),
     url(r'^view_parents/(?P<motif_id>\w+)/$', views.view_parents, name='get_parents'),
     url(r'^get_parents/(?P<motif_id>\w+)/(?P<vo_id>\w+)/$', views.get_parents, name='get_parents'),
     url(r'^get_parents/(?P<motif_id>\w+)/$', views.get_parents_no_vo, name='get_parents_no_vo'),
     url(r'^get_parents_metadata/(?P<motif_id>\w+)/$', views.get_parents_metadata, name='get_parents_metadata'),
     url(r'^get_all_parents_metadata/(?P<experiment_id>\w+)/$', views.get_all_parents_metadata, name='get_all_parents_metadata'),
-    # url(r'^get_annotated_parents/(?P<motif_id>\w+)/$',views.get_annotated_parents,name='get_annotated_parents'),
     url(r'^view_mass2motifs/(?P<experiment_id>\w+)/$', views.view_mass2motifs,
         name='view_mass2motifs'),
     url(r'^topic_table/(?P<experiment_id>\w+)/$', views.topic_table, name='topic_table'),
@@ -75,45 +72,8 @@ lda_multi_patterns = [
         views.get_multifile_mass2motif_metadata, name='get_multifile_mass2motif_metadata'),
 ]
 
-# for login
-login_patterns = [
-    url(r'^register/$', views.register, name='register'),
-    url(r'^login/$', views.user_login, name='login'),
-    url(r'^logout/$', views.user_logout, name='logout'),
-]
-
-# for experiment options
-options_patterns = [
-    url(r'^view_experiment_options/(?P<experiment_id>\w+)/$', views.view_experiment_options,
-        name='view_experiment_options'),
-    url(r'^view_mf_experiment_options/(?P<mfe_id>\w+)/$', views.view_mf_experiment_options,
-        name='view_mf_experiment_options'),
-    url(r'^add_experiment_option/(?P<experiment_id>\w+)/$', views.add_experiment_option,
-        name='add_experiment_option'),
-    url(r'^delete_experiment_option/(?P<option_id>\w+)/$', views.delete_experiment_option,
-        name='delete_experiment_option'),
-    url(r'^edit_experiment_option/(?P<option_id>\w+)/$', views.edit_experiment_option,
-        name='edit_experiment_option'),
-    url(r'^add_mf_experiment_option/(?P<mfe_id>\w+)/$', views.add_mf_experiment_option,
-        name='add_mf_experiment_option'),
-    url(r'^delete_mf_experiment_option/(?P<option_id>\w+)/$', views.delete_mf_experiment_option,
-        name='delete_mf_experiment_option'),
-    url(r'^edit_mf_experiment_option/(?P<option_id>\w+)/$', views.edit_mf_experiment_option,
-        name='edit_mf_experiment_option'),
-]
-
-# for massbank stuff
-massbank_patterns = [
-    url(r'^generate_massbank/$', views.generate_massbank, name='generate_massbank'),
-    url(r'^generate_massbank_multi_m2m/$', views.generate_massbank_multi_m2m,
-        name='generate_massbank_multi_m2m'),
-]
-
 urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^', include(lda_single_patterns)),
     url(r'^', include(lda_multi_patterns)),
-    url(r'^', include(login_patterns)),
-    url(r'^', include(options_patterns)),
-    url(r'^', include(massbank_patterns)),
 ]

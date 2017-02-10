@@ -1,30 +1,8 @@
-import csv
-import math
-
-import json
-import jsonpickle
-import networkx as nx
-import numpy as np
-import datetime
-
-import requests
-import pprint
-
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render
-from networkx.readwrite import json_graph
-from scipy.stats import ttest_ind
-from sklearn.decomposition import PCA
-from numpy import interp
 
-from basicviz.constants import AVAILABLE_OPTIONS
-from basicviz.forms import Mass2MotifMetadataForm, Mass2MotifMassbankForm, DocFilterForm, ValidationForm, VizForm, \
-    UserForm, TopicScoringForm, AlphaCorrelationForm, SystemOptionsForm, AlphaDEForm
-from basicviz.models import Feature, Experiment, Document, FeatureInstance, DocumentMass2Motif, \
-    FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment, ExtraUsers, \
-    MultiFileExperiment, MultiLink, Alpha, AlphaCorrOptions, SystemOptions
+from basicviz.models import Experiment, MultiFileExperiment, SystemOptions
+from options.constants import AVAILABLE_OPTIONS
+from options.forms import SystemOptionsForm
 
 
 def get_option(key, experiment=None):
@@ -50,7 +28,7 @@ def view_experiment_options(request, experiment_id):
     specific_options = SystemOptions.objects.filter(experiment=experiment)
     context_dict['specific_options'] = specific_options
 
-    return render(request, 'basicviz/view_experiment_options.html', context_dict)
+    return render(request, 'options/view_experiment_options.html', context_dict)
 
 
 def add_experiment_option(request, experiment_id):
@@ -73,7 +51,7 @@ def add_experiment_option(request, experiment_id):
         option_form = SystemOptionsForm()
         context_dict['option_form'] = option_form
 
-    return render(request, 'basicviz/add_experiment_option.html', context_dict)
+    return render(request, 'options/add_experiment_option.html', context_dict)
 
 
 def delete_experiment_option(request, option_id):
@@ -93,6 +71,7 @@ def edit_experiment_option(request, option_id):
             option_form.save()
             return view_experiment_options(request, experiment.id)
         else:
+            context_dict = {}
             context_dict['option_form'] = option_form
     else:
         option_form = SystemOptionsForm(instance=option)
@@ -101,7 +80,7 @@ def edit_experiment_option(request, option_id):
         context_dict['option_form'] = option_form
         context_dict['option'] = option
         context_dict['available'] = AVAILABLE_OPTIONS
-    return render(request, 'basicviz/edit_experiment_option.html', context_dict)
+    return render(request, 'options/edit_experiment_option.html', context_dict)
 
 
 def view_mf_experiment_options(request, mfe_id):
@@ -118,7 +97,7 @@ def view_mf_experiment_options(request, mfe_id):
     context_dict['global_options'] = global_options
     context_dict['specific_options'] = specific_options
 
-    return render(request, 'basicviz/view_mf_experiment_options.html', context_dict)
+    return render(request, 'options/view_mf_experiment_options.html', context_dict)
 
 
 def add_mf_experiment_option(request, mfe_id):
@@ -147,7 +126,7 @@ def add_mf_experiment_option(request, mfe_id):
         option_form = SystemOptionsForm()
         context_dict['option_form'] = option_form
 
-    return render(request, 'basicviz/add_mf_experiment_option.html', context_dict)
+    return render(request, 'options/add_mf_experiment_option.html', context_dict)
 
 
 def delete_mf_experiment_option(request, option_id):
@@ -192,5 +171,5 @@ def edit_mf_experiment_option(request, option_id):
         option_form = SystemOptionsForm(instance=option)
         context_dict['option_form'] = option_form
 
-    return render(request, 'basicviz/edit_mf_experiment_option.html', context_dict)
+    return render(request, 'options/edit_mf_experiment_option.html', context_dict)
 

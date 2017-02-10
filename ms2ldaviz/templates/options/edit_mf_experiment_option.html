@@ -8,9 +8,9 @@
 
 {% block body_block %}
 
-	<h3>Add a new option for {{experiment.name}}</h3>
+	<h3>Edit existing option for {{mfe.name}}</h3>
 
-	<form id="option_form" method="post" action="/basicviz/edit_experiment_option/{{option.id}}/">
+	<form id="option_form" method="post" action="/options/edit_mf_experiment_option/{{option.id}}/">
 	{% csrf_token %}
 	{% for hidden in option_form.hidden_fields %}
 	 	{{ hidden }}
