@@ -1085,6 +1085,7 @@ def validation(request, experiment_id):
                                 val += 1
                     counts.append((tot, val))
                     all_dm2ms.append(dm2ms)
+                    print dm2ms
             annotated_mass2motifs = zip(annotated_mass2motifs, counts, all_dm2ms)
             context_dict['annotated_mass2motifs'] = annotated_mass2motifs
             context_dict['counts'] = counts
