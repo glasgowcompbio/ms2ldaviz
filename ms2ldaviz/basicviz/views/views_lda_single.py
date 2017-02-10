@@ -1157,7 +1157,7 @@ def dump_topic_molecules(request, m2m_id):
     response['Content-Disposition'] = 'attachment; filename="topic_molecules_{}.csv"'.format(mass2motif.id)
     writer = csv.writer(response)
     writer.writerow(
-        ['m2m_id', 'm2m_name', 'm2m_annotation', 'doc_id', 'doc_annotation', 'valid', 'probability', 'doc_csid',
+        ['m2m_id', 'm2m_name', 'm2m_annotation', 'doc_id', 'doc_annotation', 'valid', 'probability', 'overlap_score', 'doc_csid',
          'doc_inchi'])
 
     dm2ms = get_docm2m(mass2motif)
@@ -1167,7 +1167,7 @@ def dump_topic_molecules(request, m2m_id):
         doc_name = '"' + dm2m.document.display_name + '"'
         annotation = '"' + mass2motif.annotation + '"'
         writer.writerow([mass2motif.id, mass2motif.name, mass2motif.annotation.encode('utf8'), dm2m.document.id,
-                         doc_name.encode('utf8'), dm2m.validated, dm2m.probability, dm2m.document.csid,
+                         doc_name.encode('utf8'), dm2m.validated, dm2m.probability, dm2m.overlap_score, dm2m.document.csid,
                          dm2m.document.inchikey])
 
     return response
