@@ -1071,6 +1071,7 @@ def validation(request, experiment_id):
             #     default_score = 'probability'
 
             counts = []
+            all_dm2ms = []
             for mass2motif in mass2motifs:
                 if mass2motif.annotation:
                     annotated_mass2motifs.append(mass2motif)
@@ -1087,7 +1088,8 @@ def validation(request, experiment_id):
                             if d.validated:
                                 val += 1
                     counts.append((tot, val))
-            annotated_mass2motifs = zip(annotated_mass2motifs, counts)
+                    all_dm2ms.append(dm2ms)
+            annotated_mass2motifs = zip(annotated_mass2motifs, counts, all_dm2ms)
             context_dict['annotated_mass2motifs'] = annotated_mass2motifs
             context_dict['counts'] = counts
             context_dict['p_thresh'] = p_thresh

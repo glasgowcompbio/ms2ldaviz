@@ -25,7 +25,7 @@
 {% else %}
 	<a href="/basicviz/dump_validations/{{experiment.id}}">Dump current validations to a .csv file</a>
 
-	{% for m2m,count in annotated_mass2motifs %}
+	{% for m2m,count,all_dm2m in annotated_mass2motifs %}
 		<h3>{{m2m.name}}: {{m2m.annotation}} <a href="/basicviz/view_parents/{{m2m.id}}" target=new>Show in ms2ldaviz</a></h3>
 		<h4><span id='c{{m2m.id}}'>{{count.1}}</span> validated out of {{count.0}}</h4>
 		<a href="/basicviz/dump_topic_molecules/{{m2m.id}}" class="btn btn-xs btn-warning" role="button">Dump molecules</a>
@@ -34,8 +34,8 @@
 		<div id="{{m2m.id}}" class="collapse">
 			<table class="table">
 			<tr><th>Name</th><th>Probability</th><th>Overlap score</th><th width=200px>Annotation</th><th>Image</th><th>link</th><th>Validated?</th><th>View in ms2ldaviz</th></tr>
-				{% for doc in m2m.documentmass2motif_set.all %}
-					{% if doc.probability > p_thresh %}
+				{% for doc in all_dm2m %}
+					<!-- {% if doc.probability > p_thresh %} -->
 
 					{% if not just_annotated or doc.document.annotation %}
 					<tr><td>{{doc.document.name}}</td><td>{{doc.probability}}</td><td>{{doc.overlap_score}}</td><td>{{doc.document.display_name}}</td>
@@ -62,7 +62,7 @@
 					<td><a href="/basicviz/show_doc/{{doc.document.id}}" target=new>Show doc</a></td>
 					</tr>
 					{% endif %}
-					{% endif %}
+					<!-- {% endif %} -->
 			{% endfor %}
 			</table>
 		</div>
