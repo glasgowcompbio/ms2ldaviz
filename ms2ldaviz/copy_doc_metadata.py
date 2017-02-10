@@ -31,7 +31,7 @@ if __name__ == '__main__':
 	print "Extracted {} documents from from_experiment".format(len(from_documents))
 	n_found = 0
 	for document in from_documents:
-		to_document = Documents.filter(experiment = to_experiment,name = document.name)
+		to_document = Document.filter(experiment = to_experiment,name = document.name)
 		if len(to_document) == 1:
 			print "Found match for {}".format(document.name)
 			n_found += 1
