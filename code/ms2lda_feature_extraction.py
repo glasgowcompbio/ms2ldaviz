@@ -863,7 +863,7 @@ class MakeBinnedFeatures(MakeFeatures):
         print "{} documents".format(n_docs)
         print "After removing empty words, {} words left".format(len(self.word_mz_range))
 
-        if min_intensity_perc > 0:
+        if self.min_intensity_perc > 0:
             # Remove words that are smaller than a certain percentage of the highest feature
             for c in self.corpus:
                 for doc in self.corpus[c]:
@@ -873,7 +873,7 @@ class MakeBinnedFeatures(MakeFeatures):
                             max_intensity = intensity
                     to_remove = []
                     for word,intensity in self.corpus[c][doc]:
-                        if intensity < max_intensity * min_intensity_perc:
+                        if intensity < max_intensity * self.min_intensity_perc:
                             to_remove.append(word)
                     for word in to_remove:
                         del self.corpus[c][doc][word]
@@ -885,6 +885,7 @@ class MakeBinnedFeatures(MakeFeatures):
                     to_remove.append(word)
             for word in to_remove:
                 del self.word_mz_range[word]
+            print "After applying min_intensity_perc filter, {} words left".format(len(self.word_mz_range))
 
 
         return self.corpus,self.word_mz_range
