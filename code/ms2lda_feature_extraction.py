@@ -781,6 +781,7 @@ class MakeBinnedFeatures(MakeFeatures):
         self.max_loss = max_loss
         self.min_intensity = min_intensity
         self.bin_width = bin_width
+        self.min_intensity_perc = min_intensity_perc
 
     def make_features(self,ms2):
         self.word_mz_range = {}
