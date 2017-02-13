@@ -868,11 +868,13 @@ class MakeBinnedFeatures(MakeFeatures):
             for c in self.corpus:
                 for doc in self.corpus[c]:
                     max_intensity = 0.0
-                    for word,inensity in self.corpus[c][doc]:
+                    for word in self.corpus[c][doc]:
+                        intensity = self.corpus[c][doc][word]
                         if intensity > max_intensity:
                             max_intensity = intensity
                     to_remove = []
-                    for word,intensity in self.corpus[c][doc]:
+                    for word in self.corpus[c][doc]:
+                        intensity = self.corpus[c][doc][word]
                         if intensity < max_intensity * self.min_intensity_perc:
                             to_remove.append(word)
                     for word in to_remove:
