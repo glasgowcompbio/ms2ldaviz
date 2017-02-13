@@ -80,14 +80,14 @@ class LoadMetfamily(Loader):
                 if feat.startswith('-'):
                     feature_names.append('loss_{}'.format(feat[1:]))
                 else:
-                    feature_names.append('fragment_{}'.format(feat)) 
+                    feature_names.append('fragment_{}'.format(feat))
 
             # Create some useful objects.
             # Note that the word range is None,None as we cant reverse engineer this
             for feat in feature_names:
                 self.word_counts[feat] = 0
                 self.word_mz_range[feat] = (None,None)
-            
+
             max_metadata_pos = 16 # This should be checked if ever loading a different file.
 
 
@@ -108,7 +108,7 @@ class LoadMetfamily(Loader):
                     key = heads[i]
                     value = tokens[i]
                     self.metadata[doc_name][key] = value
-                
+
                 # Add the intensities
                 self.metadata[doc_name]['intensities'] = dict(zip(sample_names,[float(i) for i in tokens[17:23]]))
                 feats = [(index,intensity) for index,intensity in enumerate(tokens[23:]) if len(intensity) > 0]
@@ -116,7 +116,7 @@ class LoadMetfamily(Loader):
                     self.corpus['metfamily'][doc_name][feature_names[index]] = float(intensity)
                     self.word_counts[feature_names[index]] += 1
 
-        # Return the corpus and word range in place of the ms2 list                
+        # Return the corpus and word range in place of the ms2 list
         return self.ms1,(self.corpus,self.word_mz_range),self.metadata
 
 
@@ -170,12 +170,12 @@ class LoadCSV(Loader):
                     tokens = line.split(',')
                     rt = float(tokens[rt_pos])
                     mz = float(tokens[mz_pos])
-                    intensity = float(tokens[intensity_pos])                    
+                    intensity = float(tokens[intensity_pos])
                     id = tokens[peak_id_pos]
                     parent_id = tokens[parent_id_pos]
                     parent = self.ms1_index[parent_id]
                     self.ms2.append((mz,rt,intensity,parent,file_name,id))
-                
+
                 print "\t loaded {} ms2 peaks".format(len(self.ms2))
         return self.ms1,self.ms2,self.metadata
 
@@ -188,7 +188,7 @@ class LoadCSV(Loader):
 # If it is found, a document is created
 
 # If a peak list is provided it then tries to match the peaks in the peaklist to the ms1 objects, just
-# keeping the ms1 objects that can be matched. The matching is done with plus and minus the mz_tol (ppm) 
+# keeping the ms1 objects that can be matched. The matching is done with plus and minus the mz_tol (ppm)
 # and plus and minus the rt_tol
 class LoadMZML(Loader):
     def __init__(self,min_intensity = 0.0,peaklist = None,isolation_window = 1.0,mz_tol = 5,rt_tol=5.0):
@@ -228,7 +228,7 @@ class LoadMZML(Loader):
                     # This finds the insertion position for the precursor mz (i.e. the position one to the right
                     # of the first element it is greater than)
                     precursor_index_ish = bisect.bisect_right(current_ms1_scan_mz,precursor_mz)
-                    
+
 
                     # Move left and right within the precursor window and pick the most intense parent_scan_number
                     pos = precursor_index_ish
@@ -263,10 +263,12 @@ class LoadMZML(Loader):
                                                   'precursor_mass':precursor_mz}
 
                         ms1.append(new_ms1)
+                        ms1_id += 1
+
                         # Make the ms2 objects:
                         for mz,intensity in spectrum.centroidedPeaks:
                             ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id)))
-                            ms1_id += 1
+                            ms2_id += 1
 
         print "Found {} ms2 spectra, and {} individual ms2 objects".format(len(ms1),len(ms2))
 
@@ -293,7 +295,7 @@ class LoadMZML(Loader):
                 min_rt = peak_rt - self.rt_tol
                 max_rt = peak_rt + self.rt_tol
 
-                
+
                 ms1_hits = filter(lambda x: x.mz >= min_mz and x.mz <= max_mz and x.rt >= min_rt and x.rt <= max_rt,ms1)
 
                 if len(ms1_hits) == 1:
@@ -466,7 +468,7 @@ class LoadEmma(Loader):
         else:
             return False
 
-            
+
 
     def _peak_rt_match(self,rt1,rt2):
         if abs(rt1-rt2) < self.rt_tol:
@@ -531,12 +533,12 @@ class LoadGNPSSeperateCollisions(Loader):
                                     temp_metadata['parentmass'] = float(val)
                             else:
                                 # This is a new peak block that should be made into a new document
-                                
+
                                 if in_doc:
                                     # If we are in a document, we need to save it
                                     doc_name = doc_name_prefix + '_collision_' + current_collision
                                     temp_metadata['collision'] = current_collision
-                                    self.metadata[doc_name] = temp_metadata.copy()                            
+                                    self.metadata[doc_name] = temp_metadata.copy()
                                     new_ms1 = MS1(ms1_id,temp_metadata['parentmass'],None,None,'gnps')
                                     new_ms1.name = doc_name
                                     ms1_id += 1
@@ -1028,7 +1030,7 @@ class MakeKDEFeatures(MakeFeatures):
 
         # Set the kde paramaters
         stop_thresh = 5
-        
+
         self.corpus = {}
         self.n_words = 0
         self.word_counts = {}
@@ -1170,7 +1172,7 @@ class MakeKDEFeatures(MakeFeatures):
             else:
                 # Singleton peak
                 peak_values = [biggest_pos]
-                
+
             if len(peak_values) > 0:
                 kde_copy[peak_values] = 0.0
                 groups[peak_values] = current_group
@@ -1231,7 +1233,7 @@ class MakeKDEFeatures(MakeFeatures):
 
                 self.word_counts[feature_name] = len(pos)
                 self.word_mz_range[feature_name] = (min_mz,max_mz)
-                
+
 
     def _make_queues(self,ms2):
 
@@ -1307,7 +1309,7 @@ class MakeQueueFeatures(MakeFeatures):
                         self.corpus[file_name][doc_name][word_name] += intensity
 
                 self.word_mz_range[word_name] = (min_mass,max_mass)
-                
+
                 temp_peaks = [new_item]
                 current_mz = new_mz
 
@@ -1347,7 +1349,7 @@ def corpusToMatrix(corpus,word_list,just_fragments = True):
             continue
         word_index[word] = pos
         pos += 1
-    
+
     import numpy as np
 
     mat = np.zeros((len(doc_index),len(word_index)))
