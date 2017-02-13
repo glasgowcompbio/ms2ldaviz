@@ -772,7 +772,7 @@ class MakeBinnedFeatures(MakeFeatures):
 
     def __init__(self,min_frag = 0.0,max_frag = 1000.0,
                           min_loss = 10.0,max_loss = 200.0,
-                          min_intensity = 0.0,bin_width = 0.005):
+                          min_intensity = 0.0,min_intensity_perc = 0.0,bin_width = 0.005):
         self.min_frag = min_frag
         self.max_frag = max_frag
         self.min_loss = min_loss
@@ -828,8 +828,8 @@ class MakeBinnedFeatures(MakeFeatures):
                         self.corpus[file_name][doc_name] = {}
                     if not word in self.corpus[file_name][doc_name]:
                         self.corpus[file_name][doc_name][word] = 0.0
+                        self.word_counts[word] += 1
                     self.corpus[file_name][doc_name][word] += intensity
-                    self.word_counts[word] += 1
 
                 if do_losses and loss_mz > self.min_loss and loss_mz < self.max_loss:
                     pos = bisect.bisect_right(loss_lower,loss_mz)
@@ -840,8 +840,9 @@ class MakeBinnedFeatures(MakeFeatures):
                         self.corpus[file_name][doc_name] = {}
                     if not word in self.corpus[file_name][doc_name]:
                         self.corpus[file_name][doc_name][word] = 0.0
+                        self.word_counts[word] += 1
                     self.corpus[file_name][doc_name][word] += intensity
-                    self.word_counts[word] += 1
+                    
 
         # TODO: Test code to remove blank words!!!!!
         to_remove = []
@@ -858,6 +859,31 @@ class MakeBinnedFeatures(MakeFeatures):
 
         print "{} documents".format(n_docs)
         print "After removing empty words, {} words left".format(len(self.word_mz_range))
+
+        if min_intensity_perc > 0:
+            # Remove words that are smaller than a certain percentage of the highest feature
+            for c in self.corpus:
+                for doc in self.corpus[c]:
+                    max_intensity = 0.0
+                    for word,inensity in self.corpus[c][doc]:
+                        if intensity > max_intensity:
+                            max_intensity = intensity
+                    to_remove = []
+                    for word,intensity in self.corpus[c][doc]:
+                        if intensity < max_intensity * min_intensity_perc:
+                            to_remove.append(word)
+                    for word in to_remove:
+                        del self.corpus[c][doc][word]
+                        self.word_counts[word] -= 1
+            # Remove any words that are now empty
+            to_remove = []
+            for word in self.word_mz_range:
+                if self.word_counts[word] == 0:
+                    to_remove.append(word)
+            for word in to_remove:
+                del self.word_mz_range[word]
+
+
         return self.corpus,self.word_mz_range
 
     def _make_words(self,min_mz,max_mz,word_list,prefix):
