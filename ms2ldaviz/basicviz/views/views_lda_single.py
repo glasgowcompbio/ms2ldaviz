@@ -385,9 +385,9 @@ def get_parents(request, motif_id, vo_id):
     for dm in docm2m:
         document = dm.document
         if viz_options.just_annotated_docs and document.annotation:
-            parent_data.append(get_doc_for_plot(document.id, motif_id))
+            parent_data.append(get_doc_for_plot(document.id, motif_id,score_type = edge_choice))
         elif not viz_options.just_annotated_docs:
-            parent_data.append(get_doc_for_plot(document.id, motif_id))
+            parent_data.append(get_doc_for_plot(document.id, motif_id,score_type = edge_choice))
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
 
 
@@ -580,7 +580,7 @@ def view_mass2motifs(request, experiment_id):
     return render(request, 'basicviz/view_mass2motifs.html', context_dict)
 
 
-def get_doc_for_plot(doc_id, motif_id=None, get_key=False):
+def get_doc_for_plot(doc_id, motif_id=None, get_key=False,score_type = None):
     colours = ['red', 'green', 'black', 'yellow']
     document = Document.objects.get(id=doc_id)
     features = FeatureInstance.objects.filter(document=document)
@@ -609,10 +609,16 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False):
     if not motif_id == None:
         m2m = Mass2Motif.objects.get(id=motif_id)
         dm2m = DocumentMass2Motif.objects.get(mass2motif=m2m, document=document)
-        if default_score == 'probability':
-            probability = dm2m.probability
+        if not score_type:
+            if default_score == 'probability':
+                probability = dm2m.probability
+            else:
+                probability = dm2m.overlap_score
         else:
-            probability = dm2m.overlap_score
+            if score_type = 'probability':
+                probability = dm2m.probability
+            else:
+                probability = dm2m.overlap_score
 
     parent_data = (parent_mass, 100.0, document.display_name, document.annotation, probability)
     plot_fragments.append(parent_data)
