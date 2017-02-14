@@ -615,7 +615,7 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False,score_type = None):
             else:
                 probability = dm2m.overlap_score
         else:
-            if score_type = 'probability':
+            if score_type == 'probability':
                 probability = dm2m.probability
             else:
                 probability = dm2m.overlap_score
