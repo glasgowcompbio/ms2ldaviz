@@ -17,6 +17,9 @@ if __name__ == '__main__':
 
 	for motif in motifs:
 		metadata = jsonpickle.decode(motif.metadata)
-		print metadata
-		break
+		if 'common_name' in metadata:
+			metadata['annotation'] = metadata['common_name']
+		motif.metadata = jsonpickle.encode(metadata)
+		motif.save()
+		
 
