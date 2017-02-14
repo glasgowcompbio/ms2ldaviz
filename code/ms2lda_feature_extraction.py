@@ -229,14 +229,11 @@ class LoadMZML(Loader):
                     # This finds the insertion position for the precursor mz (i.e. the position one to the right
                     # of the first element it is greater than)
                     precursor_index_ish = bisect.bisect_right(current_ms1_scan_mz,precursor_mz)
-
+                    pos = precursor_index_ish - 1 # pos is now the largest value smaller than ours
 
                     # Move left and right within the precursor window and pick the most intense parent_scan_number
-                    pos = precursor_index_ish
                     max_intensity = 0.0
                     max_intensity_pos = None
-                    if pos > len(current_ms1_scan_mz)-1:
-                        pos -= 1
                     while abs(precursor_mz - current_ms1_scan_mz[pos]) < self.isolation_window:
                         if current_ms1_scan_intensity[pos] >= max_intensity:
                             max_intensity = current_ms1_scan_intensity[pos]
@@ -244,7 +241,7 @@ class LoadMZML(Loader):
                         pos -= 1
                         if pos < 0:
                             break
-                    pos = precursor_index_ish + 1
+                    pos = precursor_index_ish
                     if pos < len(current_ms1_scan_mz):
                         while abs(precursor_mz - current_ms1_scan_mz[pos]) < self.isolation_window:
                             if current_ms1_scan_intensity[pos] >= max_intensity:
@@ -253,7 +250,7 @@ class LoadMZML(Loader):
                             pos += 1
                             if pos > len(current_ms1_scan_mz)-1:
                                 break
-
+                        # print current_ms1_scan_mz[max_intensity_pos],current_ms1_scan_rt
                     # Make the new MS1 object
                     if max_intensity_pos:
                     # mz,rt,intensity,file_name,scan_number = None):
