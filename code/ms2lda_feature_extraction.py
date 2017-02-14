@@ -134,6 +134,7 @@ class LoadCSV(Loader):
         self.ms1_index = {}
         self.ms2 = []
         self.metadata = {}
+        self.input_set = input_set
         for input in self.input_set:
             file_name = input[0].split('/')[-1].split('_ms1')[0]
             self.files.append(file_name)

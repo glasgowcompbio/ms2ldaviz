@@ -515,16 +515,21 @@ class VariationalLDA(object):
 			temp_gamma = np.zeros(self.K) + self.alpha
 			for word in self.corpus[doc]:
 				w = self.word_index[word]
-				self.phi_matrix[doc][word] = self.beta_matrix[:,w]*np.exp(psi(self.gamma_matrix[d,:])).T
+				log_phi_matrix = np.log(self.beta_matrix[:,w]) + psi(self.gamma_matrix[d,:]).T
+				# self.phi_matrix[doc][word] = self.beta_matrix[:,w]*np.exp(psi(self.gamma_matrix[d,:])).T
 				# for k in range(self.K):
 				# 	self.phi_matrix[doc][word][k] = self.beta_matrix[k,w]*np.exp(scipy.special.psi(self.gamma_matrix[d,k]))
-				self.phi_matrix[doc][word] /= self.phi_matrix[doc][word].sum()
+				log_phi_matrix = np.exp(log_phi_matrix - log_phi_matrix.max())
+				self.phi_matrix[doc][word] = log_phi_matrix/log_phi_matrix.sum()
+				# self.phi_matrix[doc][word] /= self.phi_matrix[doc][word].sum()
 				temp_gamma += self.phi_matrix[doc][word]*self.corpus[doc][word]
 				temp_beta[:,w] += self.phi_matrix[doc][word] * self.corpus[doc][word]
 			# self.phi_matrix[d,:,:] = (self.beta_matrix * self.word_matrix[d,:][None,:] * (np.exp(scipy.special.psi(self.gamma_matrix[d,:]))[:,None])).T
 			# self.phi_matrix[d,:,:] /= self.phi_matrix[d,:,:].sum(axis=1)[:,None]
 			# self.gamma_matrix[d,:] = self.alpha + self.phi_matrix[d,:,:].sum(axis=0)
 			self.gamma_matrix[d,:] = temp_gamma
+			pos = np.where(self.gamma_matrix[d,:]<SMALL_NUMBER)[0]
+			self.gamma_matrix[d,pos] = SMALL_NUMBER
 		return temp_beta
 
 	# Function to find the unique words in the corpus and assign them to indices
