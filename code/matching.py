@@ -6,17 +6,17 @@ from scipy.sparse import lil_matrix
 
 class MatchFeature(object):
 
-    def __init__(self, mz, rt, intensity, origin):
+    def __init__(self, mz, rt, intensity, metadata):
 
         self.mz = mz
         self.intensity = intensity
         self.rt = rt
         self.matched = False
-        self.origin = origin
+        self.metadata = metadata
 
     def __repr__(self):
 
-        return "mz=%f, rt=%f, intensity=%f origin=%s" % (self.mz, self.rt, self.intensity, self.origin)
+        return "mz=%f, rt=%f, intensity=%f metadata=%s" % (self.mz, self.rt, self.intensity, self.metadata)
 
 class SimpleMatching:
 
@@ -42,8 +42,8 @@ class SimpleMatching:
             results.append(set([item]))
 
         print '%d matched feature pairs' % len(matches)
-        print '%d unmatched features from the first' % len(unmatched_1)
-        print '%d unmatched features from the second' % len(unmatched_2)
+        print '%d unmatched features from feature_list_1' % len(unmatched_1)
+        print '%d unmatched features from feature_list_2' % len(unmatched_2)
 
         return results
 
