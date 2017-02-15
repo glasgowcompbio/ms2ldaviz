@@ -225,7 +225,6 @@ class LoadMZML(Loader):
                     current_ms1_scan_mz,current_ms1_scan_intensity = zip(*spectrum.peaks)
                 elif spectrum['ms level'] == 2:
                     precursor_mz = spectrum['precursors'][0]['mz']
-
                     # This finds the insertion position for the precursor mz (i.e. the position one to the right
                     # of the first element it is greater than)
                     precursor_index_ish = bisect.bisect_right(current_ms1_scan_mz,precursor_mz)
@@ -252,7 +251,7 @@ class LoadMZML(Loader):
                                 break
                         # print current_ms1_scan_mz[max_intensity_pos],current_ms1_scan_rt
                     # Make the new MS1 object
-                    if max_intensity_pos:
+                    if not max_intensity_pos == None:
                     # mz,rt,intensity,file_name,scan_number = None):
                         new_ms1 = MS1(ms1_id,current_ms1_scan_mz[max_intensity_pos],
                                       current_ms1_scan_rt,max_intensity,file_name,scan_number = nc)
@@ -282,12 +281,10 @@ class LoadMZML(Loader):
             for n_peaks_checked,peak in enumerate(self.ms1_peaks):
                 if n_peaks_checked % 500 == 0:
                     print n_peaks_checked
-                n_peaks_checked += 1
                 peak_mz = peak[0]
                 peak_rt = peak[1]
                 peak_intensity = peak[2]
 
-                ms1_mz = [m.mz for m in ms1]
                 min_mz = peak_mz - self.mz_tol*peak_mz/1e6
                 max_mz = peak_mz + self.mz_tol*peak_mz/1e6
                 min_rt = peak_rt - self.rt_tol
@@ -318,9 +315,9 @@ class LoadMZML(Loader):
                 new_ms1_list.append(new_ms1)
                 new_metadata[new_ms1.name] = metadata[old_ms1.name]
 
-                # Delete the old one so it can't be picked again
-                pos = ms1.index(old_ms1)
-                del ms1[pos]
+                # Delete the old one so it can't be picked again - removed this, maybe it's not a good idea?
+                # pos = ms1.index(old_ms1)
+                # del ms1[pos]
 
                 # Change the reference in the ms2 objects to the new ms1 object
                 ms2_objects = filter(lambda x: x[3] == old_ms1,ms2)
