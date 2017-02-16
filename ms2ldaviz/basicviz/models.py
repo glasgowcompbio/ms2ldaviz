@@ -2,6 +2,8 @@ import jsonpickle
 from django.contrib.auth.models import User
 from django.db import models
 
+from .constants import EXPERIMENT_STATUS_CODE
+
 
 # Create your models here.
 class MultiFileExperiment(models.Model):
@@ -19,7 +21,9 @@ class MultiFileExperiment(models.Model):
 class Experiment(models.Model):
     name = models.CharField(max_length=128, unique=True)
     description = models.CharField(max_length=1024, null=True)
-    status = models.CharField(max_length=128, null=True)
+    ready_code, ready_msg = EXPERIMENT_STATUS_CODE[1]
+    status = models.CharField(max_length=128, choices=EXPERIMENT_STATUS_CODE,
+                              null=True, default=ready_code)
 
     def __unicode__(self):
         return self.name

@@ -6,7 +6,21 @@
 {% block body_block %}
 
 <h2>Single-file LDA Experiments</h2>
-<p>Once an experiment is selected, you can use the arrow keys to navigate to other experiments. Press <b>Enter</b> to open or close an experiment.</p>
+<p>
+    <a href="/uploads/create_experiment" class="btn btn-primary">Create Experiment</a>
+</p>
+{% if show_pending %}
+    <h3>Pending Experiments</h3>
+    <p>The following experiments have been uploaded and are still being processed. Once finished, it will appear in the list of ready experiments.</p>
+    <ul>
+    {% for experiment in pending_experiments %}
+        <li><b>{{experiment.name}}</b> ({{experiment.description}})</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+<h3>Ready Experiments</h3>
+<p>The following experiments are ready for analysis. After clicking on an experiment, you use the arrow keys to navigate to other experiments in the list. Press <b>Enter</b> to open or close an experiment.</p>
 <div id="accordion">
 {% for experiment in experiments %}
     <h3><b>{{experiment.0.name}}</b> ({{experiment.0.description}}) ({{experiment.1}})</h3>
@@ -34,7 +48,7 @@
 {% if extra_user %}
 	<hr />
 	<h2>Multi-file LDA Experiments</h2>
-    <p>Once an experiment is selected, you can use the arrow keys to navigate to other experiments. Press <b>Enter</b> to open or close an experiment.</p>
+    <p>The following experiments are ready for analysis. After clicking on an experiment, you use the arrow keys to navigate to other experiments in the list. Press <b>Enter</b> to open or close an experiment.</p>
     <div id="accordion2">
         {% for mf in mfe|sort_by:'name' %}
             <h3><b>{{mf.name}}</b> ({{mf.description}})</h3>

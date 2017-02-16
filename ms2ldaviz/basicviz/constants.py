@@ -7,6 +7,11 @@ AVAILABLE_OPTIONS = [('doc_m2m_threshold', 'Probability threshold for showing do
                       'Default score to use when extracting document <-> mass2motif matches. Use either "probability" or "overlap_score", or "both"'),
                      ('heatmap_normalisation','how to normalise the rows in the heatmap: none, standard, max')]
 
+EXPERIMENT_STATUS_CODE = [
+    ('0', 'Pending'),
+    ('1', 'Ready')
+]
+
 MASSBANK_AUTHORS = "van der Hooft, J. J. J., Wandy J., Rogers, S., University of Glasgow"
 MASSBANK_LICENSE = 'CC BY'
 MASSBANK_PUBLICATION = "van der Hooft, J. J. J., Wandy, J., Barrett, M, P., Burgess, K. E. V. & Rogers, S. (2016). Topic modeling for untargeted substructure exploration in metabolomics. Proceedings of the National Academy of Sciences. 113(48), 13738-13743. http://doi.org/10.1073/pnas.1608041113"

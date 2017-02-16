@@ -11,4 +11,5 @@ urlpatterns = patterns('',
     url(r'^massbank/', include('massbank.urls')),
     url(r'^options/', include('options.urls')),
     url(r'^registration/', include('registration.urls')),
+    url(r'^uploads/', include('uploads.urls')),
 )
