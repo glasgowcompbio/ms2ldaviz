@@ -450,8 +450,14 @@ def get_parents_metadata(request, motif_id):
 #                 parent_data.append(get_doc_for_plot(document.id,motif_id))
 #     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
-def get_word_graph(request, motif_id, vo_id):
+def get_word_graph(request, motif_id, vo_id, experiment_id = None):
     motif = Mass2Motif.objects.get(id=motif_id)
+    
+    if not experiment_id == None:
+        experiment = Experiment.objects.get(id = experiment_id)
+    else:
+        experiment = motif.experiment
+
 
     if not vo_id == 'nan':
         viz_options = VizOptions.objects.get(id=vo_id)
@@ -473,6 +479,7 @@ def get_word_graph(request, motif_id, vo_id):
         m2mdocs = DocumentMass2Motif.objects.filter(mass2motif=motif, probability__gte=edge_thresh)
     else:
         m2mdocs = DocumentMass2Motif.objects.filter(mass2motif=motif, overlap_score__gte=edge_thresh)
+
 
     colours = '#404080'
     features_data = {}
@@ -515,13 +522,19 @@ def view_word_graph(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     context_dict = {'mass2motif': motif}
     motif_features = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by('-probability')
+
+
     context_dict['motif_features'] = motif_features
     return render(request, 'basicviz/view_word_graph.html', context_dict)
 
 
 def get_intensity(request, motif_id, vo_id):
     motif = Mass2Motif.objects.get(id=motif_id)
+
+    experiment = motif.experiment
+
     features_m2m = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01)
+
     features = [f.feature for f in features_m2m]
     colours = ['#404080', '#0080C0']
     total_intensity = {}
@@ -564,8 +577,12 @@ def get_intensity(request, motif_id, vo_id):
 @login_required(login_url='/registration/login/')
 def view_intensity(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
+
+    experiment = motif.experiment
+
     context_dict = {'mass2motif': motif}
     motif_features = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by('-probability')
+
     context_dict['motif_features'] = motif_features
     return render(request, 'basicviz/view_intensity.html', context_dict)
 
@@ -793,6 +810,8 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
             docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=edge_thresh)
         else:
             docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, overlap_score__gte=edge_thresh)
+
+
         for d in docm2ms:
             if just_annotated_docs and d.document.annotation:
                 topics[mass2motif] += 1
@@ -1202,6 +1221,7 @@ def get_docm2m(mass2motif, default_score=None, doc_m2m_threshold=None):
     else:
         dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=doc_m2m_threshold,
                                                  overlap_score__gte=doc_m2m_threshold).order_by('-probability')
+
 
     return dm2m
 
