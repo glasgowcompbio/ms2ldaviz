@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'options',
     'registration',
     'uploads',
-    'decomposition'
+    'decomposition',
+    'jfu'
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -68,6 +69,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.core.context_processors.request',
+                'django.core.context_processors.static'
             ],
         },
     },
@@ -81,6 +84,7 @@ WSGI_APPLICATION = 'ms2ldaviz.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
+# for the digital ocean server
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -124,10 +128,14 @@ USE_L10N = True
 
 USE_TZ = True
 
+MEDIA_ROOT = os.path.abspath(os.path.join(BASE_DIR, 'media'))
+MEDIA_URL = '/media/'
+print 'MEDIA_ROOT is', MEDIA_ROOT
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 STATIC_PATH = os.path.join(BASE_DIR,'static')
+STATIC_ROOT = os.path.join(BASE_DIR,'assets')
 
 STATIC_URL = '/static/'
 
