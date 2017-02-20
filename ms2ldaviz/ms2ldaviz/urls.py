@@ -1,10 +1,13 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 from django.contrib import admin
+from django.conf.urls.static import static
+from django.conf import settings
+import views
 
 
-urlpatterns = patterns('',
-    url(r'^$', 'ms2ldaviz.views.home', name='home'),
-    url(r'^people/', 'ms2ldaviz.views.people', name='people'),
+urlpatterns = [
+    url(r'^$', views.home, name='home'),
+    url(r'^people/', views.people, name='people'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^basicviz/', include('basicviz.urls')),
     url(r'^annotation/', include('annotation.urls')),
@@ -12,4 +15,4 @@ urlpatterns = patterns('',
     url(r'^options/', include('options.urls')),
     url(r'^registration/', include('registration.urls')),
     url(r'^uploads/', include('uploads.urls')),
-)
+]
