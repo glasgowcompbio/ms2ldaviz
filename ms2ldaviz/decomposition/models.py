@@ -23,6 +23,10 @@ class GlobalFeature(models.Model):
 	min_mz = models.FloatField(null = False)
 	max_mz = models.FloatField(null = False)
 	featureset = models.ForeignKey(FeatureSet)
+	def __unicode__(self):
+		return self.name
+	def __str__(self):
+		return self.name
 
 # Stores the link between features here and those in basicviz
 class FeatureMap(models.Model):
@@ -44,7 +48,7 @@ class GlobalMotif(models.Model):
 class DocumentGlobalFeature(models.Model):
 	document = models.ForeignKey(Document, null = False)
 	feature = models.ForeignKey(GlobalFeature, null = False)
-	intensity = models.FloatField(null = False)
+	intensity = models.FloatField(null = True)
 
 class Beta(models.Model):
 	experiment = models.ForeignKey(Experiment,unique=True)
@@ -56,5 +60,5 @@ class Beta(models.Model):
 class DocumentGlobalMass2Motif(models.Model):
 	document = models.ForeignKey(Document)
 	mass2motif = models.ForeignKey(GlobalMotif)
-	probability = models.FloatField()
-	overlap_score = models.FloatField()
+	probability = models.FloatField(null = True)
+	overlap_score = models.FloatField(null = True)

@@ -3,9 +3,9 @@ import bisect
 import jsonpickle
 from scipy.special import psi as psi
 
-from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif
+from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif,DocumentGlobalMass2Motif
 
-def decompose(documents,betaobject,normalise = 1000.0):
+def decompose(documents,betaobject,normalise = 1000.0,store_threshold = 0.01):
     # Load the beta objects
     print "Loading and unpickling beta"
     beta = jsonpickle.decode(betaobject.beta)
@@ -46,12 +46,13 @@ def decompose(documents,betaobject,normalise = 1000.0):
             for word in doc_dict:
                 doc_dict[word] = int(normalise*doc_dict[word]/maxi)
 
+        # Do the e-steps for this document
         phi_matrix = {}
         for word in doc_dict:
             phi_matrix[word] = None
         gamma = np.ones(K)
-        for i in range(10): # do 100 iterations
-            print "Iteration {}".format(i)
+        for i in range(100): # do 100 iterations
+            # print "Iteration {}".format(i)
             temp_gamma = np.zeros(K) + alpha_matrix
             for word,intensity in doc_dict.items():
                 # Find the word position in beta
@@ -64,13 +65,35 @@ def decompose(documents,betaobject,normalise = 1000.0):
 
             gamma = temp_gamma.copy()
 
-        # normalise the gamma
+        
+        
+        # normalise the gamma to get probabilities
         theta = gamma/gamma.sum()
         theta = list(theta)
 
         theta_motif = zip(theta,motif_list)
         theta_motif = sorted(theta_motif,key = lambda x : x[0],reverse = True)
         theta,motif = zip(*theta_motif)
-        for i in range(20):
-            print theta[i],motif[i].originalmotif.name,motif[i].originalmotif.annotation
+        tot_prob = 0.0
+        for i in range(K):
+            if theta[i] < store_threshold:
+                break
+            motif_pos = motif_index[motif[i]]
+            overlap_score = compute_overlap(phi_matrix,motif_pos,beta_matrix[motif_pos,:],word_index)
+            print theta[i],overlap_score,motif[i].originalmotif.name,motif[i].originalmotif.annotation
+            dgm2m,status = DocumentGlobalMass2Motif.objects.get_or_create(document = document,mass2motif = motif[i])
+            dgm2m.probability = theta[i]
+            dgm2m.overlap_score = overlap_score
+            dgm2m.save()
 
+
+
+def compute_overlap(phi_matrix,motif_pos,beta_row,word_index):
+    overlap_score = 0.0
+    for word in phi_matrix:
+        word_pos = word_index[word]
+        if phi_matrix[word] == None:
+            continue
+        else:
+            overlap_score += phi_matrix[word][motif_pos]*beta_row[word_pos]
+    return overlap_score

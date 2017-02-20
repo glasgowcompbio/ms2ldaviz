@@ -2,7 +2,7 @@ import jsonpickle
 from django.contrib.auth.models import User
 from django.db import models
 
-from .constants import EXPERIMENT_STATUS_CODE
+from .constants import EXPERIMENT_STATUS_CODE,EXPERIMENT_TYPE
 
 
 # Create your models here.
@@ -24,6 +24,9 @@ class Experiment(models.Model):
     ready_code, ready_msg = EXPERIMENT_STATUS_CODE[1]
     status = models.CharField(max_length=128, choices=EXPERIMENT_STATUS_CODE,
                               null=True, default=ready_code)
+    ms2lda_code,ms2lda_msg = EXPERIMENT_TYPE[0]
+    experiment_type = models.CharField(max_length=128, choices=EXPERIMENT_TYPE,
+                              null=True, default=ms2lda_code)
 
     def __unicode__(self):
         return self.name
