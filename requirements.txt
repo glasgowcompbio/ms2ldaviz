@@ -1,5 +1,6 @@
-django==1.9.12
-numpy
-jsonpickle
-networkx
-chemspipy
+django==1.10.5
+numpy==1.12.0
+jsonpickle==0.9.4
+networkx==1.11
+ChemSpiPy==1.0.4
+django-jfu==2.0.9
