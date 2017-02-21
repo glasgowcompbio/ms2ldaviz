@@ -18,8 +18,8 @@ from basicviz.models import Feature, Experiment, Document, FeatureInstance, Docu
     FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment
 from massbank.views import get_massbank_form
 from options.views import get_option
-from decomposition.models import DocumentGlobalMass2Motif
-
+from decomposition.models import DocumentGlobalMass2Motif,GlobalMotif
+from decomposition.decomposition_functions import get_parents_decomposition,get_parent_for_plot_decomp,get_decomp_doc_context_dict
 
 def check_user(request,experiment):
     user = request.user
@@ -223,26 +223,37 @@ def show_docs(request, experiment_id):
 @login_required(login_url='/registration/login/')
 def show_doc(request, doc_id):
     document = Document.objects.get(id=doc_id)
-    features = FeatureInstance.objects.filter(document=document)
-    # features = sorted(features,key=lambda x:x.intensity,reverse=True)
-    context_dict = {'document': document, 'features': features}
     experiment = document.experiment
+
     if not check_user(request,experiment):
         return index(request)
+    print document.experiment.experiment_type
+    if document.experiment.experiment_type == '0':
+        context_dict = get_doc_context_dict(document)
+    elif document.experiment.experiment_type == '1':
+        context_dict = get_decomp_doc_context_dict(document)
+    else:
+        context_dict = {}
+    print context_dict
+    context_dict['document'] = document
     context_dict['experiment'] = experiment
-    doc_m2m_threshold = get_option('doc_m2m_threshold', experiment=experiment)
-    # if doc_m2m_threshold:
-    #     doc_m2m_threshold = float(doc_m2m_threshold)
-    # else:
-    #     doc_m2m_threshold = 0.00 # Default value
-    # default_score = get_option('default_doc_m2m_score',experiment = experiment)
-    # if not default_score:
-    #     default_score = 'probability'
 
-    # if default_score == 'probability':
-    #     mass2motif_instances = DocumentMass2Motif.objects.filter(document = document,probability__gte = doc_m2m_threshold).order_by('-probability')
-    # else:
-    #     mass2motif_instances = DocumentMass2Motif.objects.filter(document = document,overlap_score__gte = doc_m2m_threshold).order_by('-overlap_score')
+    if document.csid:
+        context_dict['csid'] = document.csid
+        
+    if document.image_url:
+        context_dict['image_url'] = document.image_url
+
+    return render(request, 'basicviz/show_doc.html', context_dict)
+
+
+def get_doc_context_dict(document):
+    features = FeatureInstance.objects.filter(document=document)
+    context_dict = {}
+    context_dict['features'] = features
+    experiment = document.experiment
+    doc_m2m_threshold = get_option('doc_m2m_threshold', experiment=experiment)
+    
     mass2motif_instances = get_docm2m_bydoc(document)
     context_dict['mass2motifs'] = mass2motif_instances
     feature_mass2motif_instances = []
@@ -252,22 +263,8 @@ def show_doc(request, doc_id):
                 (feature, FeatureMass2MotifInstance.objects.filter(featureinstance=feature)))
 
     feature_mass2motif_instances = sorted(feature_mass2motif_instances, key=lambda x: x[0].intensity, reverse=True)
-
-    if document.csid:
-        context_dict['csid'] = document.csid
-        # context_dict['image_url'] = 'http://www.chemspider.com/ImagesHandler.ashx?id=' + str(document.csid)
-    if document.image_url:
-        context_dict['image_url'] = document.image_url
-    # elif document.inchikey:
-    #     from chemspipy import ChemSpider
-    #     cs = ChemSpider('b07b7eb2-0ba7-40db-abc3-2a77a7544a3d')
-    #     results = cs.search(document.inchikey)
-    #     if results:
-    #         context_dict['image_url'] = results[0].image_url
-    #         context_dict['csid'] = results[0].csid
-
     context_dict['fm2m'] = feature_mass2motif_instances
-    return render(request, 'basicviz/show_doc.html', context_dict)
+    return context_dict
 
 @login_required(login_url='/registration/login/')
 def view_parents(request, motif_id):
@@ -371,26 +368,31 @@ def mass2motif_feature(request, fm2m_id):
 
 
 def get_parents(request, motif_id, vo_id):
-    motif = Mass2Motif.objects.get(id=motif_id)
-    vo = VizOptions.objects.all()
     viz_options = VizOptions.objects.get(id=vo_id)
-    edge_choice = viz_options.edge_choice
-    if edge_choice == 'probability':
-        docm2m = DocumentMass2Motif.objects.filter(mass2motif=motif, probability__gte=viz_options.edge_thresh).order_by(
-            '-probability')
-    else:
-        docm2m = DocumentMass2Motif.objects.filter(mass2motif=motif,
-                                                   overlap_score__gte=viz_options.edge_thresh).order_by(
-            '-overlap_score')
-    documents = [d.document for d in docm2m]
-    parent_data = []
-    for dm in docm2m:
-        document = dm.document
-        if viz_options.just_annotated_docs and document.annotation:
-            parent_data.append(get_doc_for_plot(document.id, motif_id,score_type = edge_choice))
-        elif not viz_options.just_annotated_docs:
-            parent_data.append(get_doc_for_plot(document.id, motif_id,score_type = edge_choice))
+    experiment = viz_options.experiment
+    if experiment.experiment_type == '0': #ms2lda
+        motif = Mass2Motif.objects.get(id=motif_id)
+        edge_choice = viz_options.edge_choice
+        if edge_choice == 'probability':
+            docm2m = DocumentMass2Motif.objects.filter(mass2motif=motif, probability__gte=viz_options.edge_thresh).order_by(
+                '-probability')
+        else:
+            docm2m = DocumentMass2Motif.objects.filter(mass2motif=motif,
+                                                       overlap_score__gte=viz_options.edge_thresh).order_by(
+                '-overlap_score')
+        documents = [d.document for d in docm2m]
+        parent_data = []
+        for dm in docm2m:
+            document = dm.document
+            if viz_options.just_annotated_docs and document.annotation:
+                parent_data.append(get_doc_for_plot(document.id, motif_id,score_type = edge_choice))
+            elif not viz_options.just_annotated_docs:
+                parent_data.append(get_doc_for_plot(document.id, motif_id,score_type = edge_choice))
+    else: # decomposition
+        parent_data = get_parents_decomposition(motif_id,vo_id)
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
+
+
 
 
 def get_parents_no_vo(request, motif_id):
@@ -453,70 +455,71 @@ def get_parents_metadata(request, motif_id):
 #     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
 def get_word_graph(request, motif_id, vo_id, experiment_id = None):
-    motif = Mass2Motif.objects.get(id=motif_id)
+    # motif = Mass2Motif.objects.get(id=motif_id)
     
-    if not experiment_id == None:
-        experiment = Experiment.objects.get(id = experiment_id)
-    else:
-        experiment = motif.experiment
+    # if not experiment_id == None:
+    #     experiment = Experiment.objects.get(id = experiment_id)
+    # else:
+    #     experiment = motif.experiment
 
 
-    if not vo_id == 'nan':
-        viz_options = VizOptions.objects.get(id=vo_id)
-        edge_thresh = viz_options.edge_thresh
-        default_score = viz_options.edge_choice
-    else:
-        edge_thresh = get_option('doc_m2m_threshold', experiment=motif.experiment)
-        if edge_thresh:
-            edge_thresh = float(edge_thresh)
-        else:
-            edge_thresh = 0.0
-        default_score = get_option('default_doc_m2m_score', experiment=motif.experiment)
-        if not default_score:
-            default_score = 'probability'
+    # if not vo_id == 'nan':
+    #     viz_options = VizOptions.objects.get(id=vo_id)
+    #     edge_thresh = viz_options.edge_thresh
+    #     default_score = viz_options.edge_choice
+    # else:
+    #     edge_thresh = get_option('doc_m2m_threshold', experiment=motif.experiment)
+    #     if edge_thresh:
+    #         edge_thresh = float(edge_thresh)
+    #     else:
+    #         edge_thresh = 0.0
+    #     default_score = get_option('default_doc_m2m_score', experiment=motif.experiment)
+    #     if not default_score:
+    #         default_score = 'probability'
 
-    m2mIns = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01)
+    # m2mIns = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01)
 
-    if default_score == 'probability':
-        m2mdocs = DocumentMass2Motif.objects.filter(mass2motif=motif, probability__gte=edge_thresh)
-    else:
-        m2mdocs = DocumentMass2Motif.objects.filter(mass2motif=motif, overlap_score__gte=edge_thresh)
+    # if default_score == 'probability':
+    #     m2mdocs = DocumentMass2Motif.objects.filter(mass2motif=motif, probability__gte=edge_thresh)
+    # else:
+    #     m2mdocs = DocumentMass2Motif.objects.filter(mass2motif=motif, overlap_score__gte=edge_thresh)
 
 
-    colours = '#404080'
-    features_data = {}
-    for feat in m2mIns:
-        features_data[feat.feature] = 0
+    # colours = '#404080'
+    # features_data = {}
+    # for feat in m2mIns:
+    #     features_data[feat.feature] = 0
 
-    for doc in m2mdocs:
-        feature_instances = FeatureInstance.objects.filter(document=doc.document)
-        for ft in feature_instances:
-            if ft.feature in features_data:
-                features_data[ft.feature] += 1
+    # for doc in m2mdocs:
+    #     feature_instances = FeatureInstance.objects.filter(document=doc.document)
+    #     for ft in feature_instances:
+    #         if ft.feature in features_data:
+    #             features_data[ft.feature] += 1
 
+    # data_for_json = []
+    # data_for_json.append(len(m2mdocs))
+    # sorted_feature_list = []
+
+    # for feature in features_data:
+    #     if '.' in feature.name:
+    #         split_name = feature.name.split('.')
+    #         short_name = split_name[0]
+    #         if len(split_name[1]) < 5:
+    #             short_name += '.' + split_name[1]
+    #         else:
+    #             short_name += '.' + split_name[1][:5]
+    #     else:
+    #         short_name = feature.name
+    #     sorted_feature_list.append([short_name, features_data[feature], colours])
+    # sorted_feature_list = sorted(sorted_feature_list, key=lambda x: x[1], reverse=True)
+
+    # feature_list_full = []
+    # for feature in sorted_feature_list:
+    #     feature_list_full.append(feature)
+    #     # feature_list_full.append(["", 0, ""])
+
+    # data_for_json.append(feature_list_full)
     data_for_json = []
-    data_for_json.append(len(m2mdocs))
-    sorted_feature_list = []
-
-    for feature in features_data:
-        if '.' in feature.name:
-            split_name = feature.name.split('.')
-            short_name = split_name[0]
-            if len(split_name[1]) < 5:
-                short_name += '.' + split_name[1]
-            else:
-                short_name += '.' + split_name[1][:5]
-        else:
-            short_name = feature.name
-        sorted_feature_list.append([short_name, features_data[feature], colours])
-    sorted_feature_list = sorted(sorted_feature_list, key=lambda x: x[1], reverse=True)
-
-    feature_list_full = []
-    for feature in sorted_feature_list:
-        feature_list_full.append(feature)
-        # feature_list_full.append(["", 0, ""])
-
-    data_for_json.append(feature_list_full)
     return HttpResponse(json.dumps(data_for_json), content_type='application/json')
 
 
@@ -531,49 +534,50 @@ def view_word_graph(request, motif_id):
 
 
 def get_intensity(request, motif_id, vo_id):
-    motif = Mass2Motif.objects.get(id=motif_id)
+    # motif = Mass2Motif.objects.get(id=motif_id)
 
-    experiment = motif.experiment
+    # experiment = motif.experiment
 
-    features_m2m = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01)
+    # features_m2m = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01)
 
-    features = [f.feature for f in features_m2m]
-    colours = ['#404080', '#0080C0']
-    total_intensity = {}
-    mass2motif_intensity = {}
+    # features = [f.feature for f in features_m2m]
+    # colours = ['#404080', '#0080C0']
+    # total_intensity = {}
+    # mass2motif_intensity = {}
 
-    # getting the total intensities of each feature
-    for feature in features:
-        feature_instances = FeatureInstance.objects.filter(feature=feature)
-        total_intensity[feature] = 0.0
-        mass2motif_intensity[feature] = 0.0
-        for instance in feature_instances:
-            total_intensity[feature] += instance.intensity
-            fm2m = FeatureMass2MotifInstance.objects.filter(featureinstance=instance, mass2motif=motif)
-            if len(fm2m) > 0:
-                mass2motif_intensity[feature] += fm2m[0].probability * instance.intensity
+    # # getting the total intensities of each feature
+    # for feature in features:
+    #     feature_instances = FeatureInstance.objects.filter(feature=feature)
+    #     total_intensity[feature] = 0.0
+    #     mass2motif_intensity[feature] = 0.0
+    #     for instance in feature_instances:
+    #         total_intensity[feature] += instance.intensity
+    #         fm2m = FeatureMass2MotifInstance.objects.filter(featureinstance=instance, mass2motif=motif)
+    #         if len(fm2m) > 0:
+    #             mass2motif_intensity[feature] += fm2m[0].probability * instance.intensity
+    # data_for_json = []
+    # features_list = []
+    # highest_intensity = 0;
+    # for feature in features:
+    #     if mass2motif_intensity[feature] > 0:
+    #         if '.' in feature.name:
+    #             split_name = feature.name.split('.')
+    #             short_name = split_name[0]
+    #             if len(split_name[1]) < 5:
+    #                 short_name += '.' + split_name[1]
+    #             else:
+    #                 short_name += '.' + split_name[1][:5]
+    #         else:
+    #             short_name = feature.name
+    #         features_list.append((short_name, total_intensity[feature], colours[0]))
+    #         features_list.append(('', mass2motif_intensity[feature], colours[1]))
+    #         if total_intensity[feature] > highest_intensity:
+    #             highest_intensity = total_intensity[feature]
+    #         features_list.append(('', 0, ''))
+
+    # data_for_json.append(highest_intensity)
+    # data_for_json.append(features_list)
     data_for_json = []
-    features_list = []
-    highest_intensity = 0;
-    for feature in features:
-        if mass2motif_intensity[feature] > 0:
-            if '.' in feature.name:
-                split_name = feature.name.split('.')
-                short_name = split_name[0]
-                if len(split_name[1]) < 5:
-                    short_name += '.' + split_name[1]
-                else:
-                    short_name += '.' + split_name[1][:5]
-            else:
-                short_name = feature.name
-            features_list.append((short_name, total_intensity[feature], colours[0]))
-            features_list.append(('', mass2motif_intensity[feature], colours[1]))
-            if total_intensity[feature] > highest_intensity:
-                highest_intensity = total_intensity[feature]
-            features_list.append(('', 0, ''))
-
-    data_for_json.append(highest_intensity)
-    data_for_json.append(features_list)
     return HttpResponse(json.dumps(data_for_json), content_type='application/json')
 
 @login_required(login_url='/registration/login/')
@@ -593,10 +597,18 @@ def view_mass2motifs(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     if not check_user(request,experiment):
         return HttpResponse("You do not have permission to access this page")
-    mass2motifs = Mass2Motif.objects.filter(experiment=experiment).order_by('name')
-    context_dict = {'mass2motifs': mass2motifs}
-    context_dict['experiment'] = experiment
-    return render(request, 'basicviz/view_mass2motifs.html', context_dict)
+    if experiment.experiment_type == '0':
+        mass2motifs = Mass2Motif.objects.filter(experiment=experiment).order_by('name')
+        context_dict = {'mass2motifs': mass2motifs}
+        context_dict['experiment'] = experiment
+        return render(request, 'basicviz/view_mass2motifs.html', context_dict)
+    elif experiment.experiment_type == '1': #decomp
+        documents = Document.objects.filter(experiment = experiment)
+        dm2m = DocumentGlobalMass2Motif.objects.filter(document__in = documents)
+        mass2motifs = list(set([d.mass2motif for d in dm2m]))
+        context_dict = {'mass2motifs':mass2motifs,'experiment':experiment}
+        return render(request, 'decomposition/view_mass2motifs.html',context_dict)
+
 
 
 def get_doc_for_plot(doc_id, motif_id=None, get_key=False,score_type = None):
@@ -714,7 +726,16 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False,score_type = None):
 
 
 def get_doc_topics(request, doc_id):
-    plot_fragments = [get_doc_for_plot(doc_id, get_key=True)]
+    document = Document.objects.get(id = doc_id)
+    if document.experiment.experiment_type == '0':
+        plot_fragments = [get_doc_for_plot(doc_id, get_key=True)]
+    elif document.experiment.experiment_type == '1': # decomposition
+        score_type = get_option('default_doc_m2m_score',experiment = document.experiment)
+        if not score_type:
+            score_type = 'probability'
+        plot_fragments = [get_parent_for_plot_decomp(document,score_type=score_type,get_key = True)]
+    else:
+        plot_fragments = []
     return HttpResponse(json.dumps(plot_fragments), content_type='application/json')
 
 @login_required(login_url = '/registration/login/')
@@ -787,7 +808,7 @@ def get_graph(request, vo_id):
     viz_options = VizOptions.objects.get(id=vo_id)
     experiment = viz_options.experiment
 
-    if not experiment.experiment_type == "1":
+    if experiment.experiment_type == "0":
         G = make_graph(experiment, min_degree=viz_options.min_degree,
                        edge_thresh=viz_options.edge_thresh,
                        just_annotated_docs=viz_options.just_annotated_docs,

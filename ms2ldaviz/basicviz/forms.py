@@ -31,7 +31,7 @@ class VizForm(forms.Form):
     upper_colour_perc = forms.IntegerField(required=True, initial=75, label='upper colour percentile')
     random_seed = forms.CharField(required=True, initial='hello', label='seed for network visualisation')
     edge_choice = forms.MultipleChoiceField(required=True, initial='probability',
-                                            choices=(('probability', 'probability'), ('overlap', 'overlap')),
+                                            choices=(('probability', 'probability'), ('overlap_score', 'overlap_score')),
                                             label='filter edges by probability or overlap score')
 
 

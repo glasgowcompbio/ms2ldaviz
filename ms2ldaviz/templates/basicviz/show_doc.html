@@ -26,11 +26,21 @@
 	{% endif %}
 
 	{% if mass2motifs %}
-		<ul>
+		<table class="table" id="motiftable">
+			<thead>
+				<tr><th>Motif</th><th>Probability</th><th>Overlap Score</th><th>Annotation</th></tr>
+			</thead>
+		<tbody>
 			{% for mass2motif in mass2motifs %}
-			<li>{{mass2motif.mass2motif.name}}, {{mass2motif.probability}}, {{mass2motif.mass2motif.annotation}}</li>
+			<tr>
+				<td>{{mass2motif.mass2motif.name}}</td>
+				<td>{{mass2motif.probability}}</td>
+				<td>{{mass2motif.overlap_score}}</td>
+				<td>{{mass2motif.mass2motif.annotation}}</td>
+			</tr>
 			{% endfor %}
-		</ul>
+		</tbody>
+		</table>
 	{% endif %}
 
 	{% if image_url %}
@@ -87,7 +97,14 @@
 			buttons: [
 		        'csv',
 	        ],
-	        "order": [[ 2, "desc" ]],
+	        "order": [[ 1, "desc" ]],
+	    });
+	    $('#motiftable').DataTable({
+	    	dom: 'Bfrtip',
+	    	buttons: [
+	    		'csv',
+	    	],
+	    	"order": [[1, "desc"]],
 	    });
 
 		load_parent('/basicviz/get_doc_topics/{{document.id}}');

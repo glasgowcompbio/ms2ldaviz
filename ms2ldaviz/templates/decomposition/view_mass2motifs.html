@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_block %}
+<h2>Experiment: {{experiment.name}}</h2>
+<a href="/basicviz">return to experiment list</a>
+<table class="table" id='m2mtable'>
+<thead>
+	<tr><th>Original Name</th><th>Original Experiment</th><th>Original Annotation</th><th>Actions</th></tr>
+</thead>
+<tbody>
+{% for mass2motif in mass2motifs %}
+	<tr><td>{{mass2motif.name}}</td>
+	<td>{{mass2motif.originalmotif.experiment}}</td><td>{{mass2motif.annotation}}</td><td><a class = "btn btn-xs btn-default" role="button" href="/decomposition/view_parents/{{experiment.id}}/{{mass2motif.id}}">view parents</a></td>
+	</tr>
+	<!-- &nbsp;<a href="/basicviz/show_docs/{{experiment.id}}">show parents</a>&nbsp;<a href="/basicviz/start_viz/{{experiment.id}}">start viz</a>&nbsp;<a href="/basicviz/view_mass2motifs/{{experiment.id}}">show mass2motifs</a></li> -->
+{% endfor %}
+</tbody>
+</table>
+
+</ul>
+
+{% endblock %}
+
+{% block js_block %}
+
+<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$('#m2mtable').DataTable({
+		dom: 'Bfrtip',
+		buttons: [
+        'csv',
+        ],
+    });   
+});
+</script>
+
+
+{% endblock %}

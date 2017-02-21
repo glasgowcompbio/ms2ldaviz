@@ -42,6 +42,13 @@ class DecompositionFeatureInstance(models.Model):
 # A motif object here. Links to the original basicviz motif
 class GlobalMotif(models.Model):
 	originalmotif = models.ForeignKey(Mass2Motif,null = False)
+	def get_name(self):
+		return self.originalmotif.name
+	def get_annotation(self):
+		return self.originalmotif.annotation
+
+	name = property(get_name) 
+	annotation = property(get_annotation)
 
 
 # Document <-> feature link here
@@ -62,3 +69,12 @@ class DocumentGlobalMass2Motif(models.Model):
 	mass2motif = models.ForeignKey(GlobalMotif)
 	probability = models.FloatField(null = True)
 	overlap_score = models.FloatField(null = True)
+
+class DocumentFeatureMass2Motif(models.Model):
+	docm2m = models.ForeignKey(DocumentGlobalMass2Motif)
+	feature = models.ForeignKey(GlobalFeature)
+	probability = models.FloatField(null = True)
+	def get_original_mass2motif(self):
+		return self.docm2m.mass2motif.originalmotif
+
+	mass2motif = property(get_original_mass2motif)
