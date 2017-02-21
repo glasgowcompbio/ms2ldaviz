@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.conf import settings
 
-from .constants import EXPERIMENT_STATUS_CODE
+from .constants import EXPERIMENT_STATUS_CODE,EXPERIMENT_TYPE
 
 
 # Create your models here.
@@ -31,9 +31,15 @@ def get_upload_folder(instance, filename):
 class Experiment(models.Model):
     name = models.CharField(max_length=128, unique=True)
     description = models.CharField(max_length=1024, null=True)
+
     ready_code, ready_msg = EXPERIMENT_STATUS_CODE[1]
     status = models.CharField(max_length=128, choices=EXPERIMENT_STATUS_CODE,
                               null=True, default=ready_code)
+
+    ms2lda_code,ms2lda_msg = EXPERIMENT_TYPE[0]
+    experiment_type = models.CharField(max_length=128, choices=EXPERIMENT_TYPE,
+                              null=True, default=ms2lda_code)
+
     csv_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
     mzml_file = models.FileField(null=True, upload_to=get_upload_folder)
 
@@ -115,9 +121,9 @@ class Document(models.Model):
             cs = ChemSpider('b07b7eb2-0ba7-40db-abc3-2a77a7544a3d')
             results = cs.search(md['InChIKey'])
             if results:
-                # Return the image_url and also save the csid 
+                # Return the image_url and also save the csid
                 csid = results[0].csid
-                md['csid'] = csid                
+                md['csid'] = csid
                 self.metadata = jsonpickle.encode(md)
                 self.save()
                 return results[0].image_url

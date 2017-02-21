@@ -9,7 +9,12 @@ AVAILABLE_OPTIONS = [('doc_m2m_threshold', 'Probability threshold for showing do
 
 EXPERIMENT_STATUS_CODE = [
     ('0', 'Pending'),
-    ('1', 'Ready')
+    ('1', 'Ready'),
+]
+
+EXPERIMENT_TYPE = [
+	('0','MS2LDA'),
+	('1','Decomposition'),
 ]
 
 MASSBANK_AUTHORS = "van der Hooft, J. J. J., Wandy J., Rogers, S., University of Glasgow"

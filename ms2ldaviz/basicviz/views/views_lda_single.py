@@ -18,6 +18,7 @@ from basicviz.models import Feature, Experiment, Document, FeatureInstance, Docu
     FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment
 from massbank.views import get_massbank_form
 from options.views import get_option
+from decomposition.models import DocumentGlobalMass2Motif
 
 
 def check_user(request,experiment):
@@ -212,6 +213,7 @@ def show_docs(request, experiment_id):
     if not check_user(request,experiment):
         return HttpResponse("You don't have permission to access this page")
     documents = Document.objects.filter(experiment=experiment)
+    print len(documents)
     context_dict = {}
     context_dict['experiment'] = experiment
     context_dict['documents'] = documents
@@ -758,8 +760,8 @@ def start_viz(request, experiment_id):
     if 'viz_form' in context_dict:
         return render(request, 'basicviz/viz_form.html', context_dict)
     else:
-        initial_motif = Mass2Motif.objects.filter(experiment=experiment)[0]
-        context_dict['initial_motif'] = initial_motif
+        # initial_motif = Mass2Motif.objects.filter(experiment=experiment)[0]
+        # context_dict['initial_motif'] = initial_motif
         return render(request, 'basicviz/graph.html', context_dict)
 
 @login_required(login_url = '/registration/login/')
@@ -784,17 +786,84 @@ def start_annotated_viz(request, experiment_id):
 def get_graph(request, vo_id):
     viz_options = VizOptions.objects.get(id=vo_id)
     experiment = viz_options.experiment
-    G = make_graph(experiment, min_degree=viz_options.min_degree,
-                   edge_thresh=viz_options.edge_thresh,
-                   just_annotated_docs=viz_options.just_annotated_docs,
-                   colour_by_logfc=viz_options.colour_by_logfc,
-                   discrete_colour=viz_options.discrete_colour,
-                   lower_colour_perc=viz_options.lower_colour_perc,
-                   upper_colour_perc=viz_options.upper_colour_perc,
-                   colour_topic_by_score=viz_options.colour_topic_by_score,
-                   edge_choice=viz_options.edge_choice)
+
+    if not experiment.experiment_type == "1":
+        G = make_graph(experiment, min_degree=viz_options.min_degree,
+                       edge_thresh=viz_options.edge_thresh,
+                       just_annotated_docs=viz_options.just_annotated_docs,
+                       colour_by_logfc=viz_options.colour_by_logfc,
+                       discrete_colour=viz_options.discrete_colour,
+                       lower_colour_perc=viz_options.lower_colour_perc,
+                       upper_colour_perc=viz_options.upper_colour_perc,
+                       colour_topic_by_score=viz_options.colour_topic_by_score,
+                       edge_choice=viz_options.edge_choice)
+    else:
+        G = make_decomposition_graph(experiment, min_degree=viz_options.min_degree,
+                       edge_thresh=viz_options.edge_thresh,
+                       edge_choice=viz_options.edge_choice)
     d = json_graph.node_link_data(G)
     return HttpResponse(json.dumps(d), content_type='application/json')
+
+
+def make_decomposition_graph(experiment,min_degree = 5,edge_thresh = 0.5,
+                                edge_choice = 'probability',topic_scale_factor = 5, edge_scale_factor = 5):
+    # This is the graph maker for a decomposition experiment
+    documents = Document.objects.filter(experiment = experiment)
+    doc_motif = DocumentGlobalMass2Motif.objects.filter(document__in = documents)
+    G = nx.Graph()
+    motif_degrees = {}
+    for dm in doc_motif:
+        if edge_choice == 'probability':
+            edge_score = dm.probability
+        else:
+            edge_score = dm.overlap_score
+        if edge_score >= edge_thresh:
+            if not dm.mass2motif in motif_degrees:
+                motif_degrees[dm.mass2motif] = 1
+            else:
+                motif_degrees[dm.mass2motif] += 1
+    used_motifs = []
+    for motif,degree in motif_degrees.items():
+        if degree >= min_degree:
+            # add to the graph
+            used_motifs.append(motif)
+            metadata = jsonpickle.decode(motif.originalmotif.metadata)
+            if 'annotation' in metadata:
+                G.add_node(motif.originalmotif.name, group=2, name=metadata['annotation'],
+                           size=topic_scale_factor * degree,
+                           special=True, in_degree = degree,
+                           score=1, node_id=motif.id, is_topic=True)
+            else:
+                G.add_node(motif.originalmotif.name, group=2, name=motif.originalmotif.name,
+                           size=topic_scale_factor * degree,
+                           special=False, in_degree=degree,
+                           score=1, node_id=motif.id, is_topic=True)
+    used_docs = []
+    for dm in doc_motif:
+        if dm.mass2motif in used_motifs:
+            # add the edge
+            if not dm.document in used_docs:
+                # add the document node
+                metadata = jsonpickle.decode(dm.document.metadata)
+                if 'compound' in metadata:
+                    name = metadata['compound']
+                elif 'annotation' in metadata:
+                    name = metadata['annotation']
+                else:
+                    name = dm.document.name
+
+                G.add_node(dm.document.name, group=1, name=name, size=20,
+                           type='square', peakid=dm.document.name, special=False,
+                           in_degree=0, score=0, is_topic=False)
+                used_docs.append(dm.document)
+            if edge_choice == 'probability':
+                weight = edge_scale_factor * dm.probability
+            else:
+                weight = edge_scale_factor * dm.overlap_score
+            G.add_edge(dm.mass2motif.originalmotif.name, dm.document.name, weight=weight)
+
+
+    return G
 
 
 def make_graph(experiment, edge_thresh=0.05, min_degree=5,
