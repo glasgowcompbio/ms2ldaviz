@@ -4,3 +4,4 @@ jsonpickle==0.9.4
 networkx==1.11
 ChemSpiPy==1.0.4
 celery==4.0.2
+pymzml==0.7.7
