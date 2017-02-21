@@ -82,7 +82,7 @@ class UserExperiment(models.Model):
 
 
 class Document(models.Model):
-    name = models.CharField(max_length=32)
+    name = models.CharField(max_length=64)
     experiment = models.ForeignKey(Experiment)
     metadata = models.CharField(max_length=2048, null=True)
 
