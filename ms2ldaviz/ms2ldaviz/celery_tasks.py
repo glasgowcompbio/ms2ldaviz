@@ -1,4 +1,5 @@
 # see http://docs.celeryproject.org/en/latest/django/first-steps-with-django.html
+# also see http://stackoverflow.com/questions/19926750/django-importerror-cannot-import-name-celery-possible-circular-import
 
 from __future__ import absolute_import, unicode_literals
 import os

@@ -4,7 +4,7 @@ from basicviz.constants import EXPERIMENT_STATUS_CODE
 from basicviz.models import Document, Experiment
 from decomposition.decomposition_functions import load_mzml_and_make_documents,decompose
 from decomposition.models import Beta
-from ms2ldaviz.celery import app
+from ms2ldaviz.celery_tasks import app
 
 
 @app.task
