@@ -217,7 +217,7 @@ def get_parent_for_plot_decomp(document,motif = None,score_type = 'probability',
     
     return plot_data
 
-
+# Get the context dictionary for displaying a document
 def get_decomp_doc_context_dict(document):
     context_dict = {}
     features = DocumentGlobalFeature.objects.filter(document = document)
@@ -235,3 +235,7 @@ def get_decomp_doc_context_dict(document):
                                                 reverse = True)
     context_dict['fm2m'] = feature_mass2motif_instances
     return context_dict
+
+def load_mzml_and_make_documents(experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    
