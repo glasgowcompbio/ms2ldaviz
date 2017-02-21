@@ -3,9 +3,12 @@ import bisect
 import jsonpickle
 from scipy.special import psi as psi
 
-from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif,DocumentGlobalMass2Motif,DocumentFeatureMass2Motif
-from basicviz.models import VizOptions
+from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif,DocumentGlobalMass2Motif,DocumentFeatureMass2Motif,FeatureSet
+from basicviz.models import VizOptions,Experiment,Document
 
+import sys
+sys.path.append('../lda/code')
+from ms2lda_feature_extraction import LoadMZML
 
 def decompose(documents,betaobject,normalise = 1000.0,store_threshold = 0.01):
     # Load the beta objects
@@ -125,10 +128,10 @@ def get_parents_decomposition(motif_id,vo_id):
 
     return parent_data
 
-def get_parent_for_plot_decomp(document,motif = None,score_type = 'probability',get_key = False):
+def get_parent_for_plot_decomp(document,motif = None,edge_choice = 'probability',get_key = False):
     plot_data = []
     colours = ['red', 'green', 'black', 'yellow']
-    docm2m = DocumentGlobalMass2Motif.objects.filter(document = document).order_by('-'+score_type)
+    docm2m = DocumentGlobalMass2Motif.objects.filter(document = document).order_by('-'+edge_choice)
     docfeatures = DocumentGlobalFeature.objects.filter(document = document)
     # Add the parent data
     score = "na"
@@ -136,7 +139,7 @@ def get_parent_for_plot_decomp(document,motif = None,score_type = 'probability',
     if not motif == None:
         topdm2m = DocumentGlobalMass2Motif.objects.get(document = document,mass2motif = motif)
         top_motifs.append(topdm2m.mass2motif)
-        if score_type == 'probability':
+        if edge_choice == 'probability':
             score = topdm2m.probability
         else:
             score = topdm2m.overlap_score
@@ -236,6 +239,73 @@ def get_decomp_doc_context_dict(document):
     context_dict['fm2m'] = feature_mass2motif_instances
     return context_dict
 
-def load_mzml_and_make_documents(experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
+def load_mzml_and_make_documents(experiment):
     
+    if not experiment.mzml_file:
+        print "NO MZML FILE"
+        return
+
+    peaklist = None
+    if experiment.csv_file:
+        peaklist = experiment.csv_file.path
+
+    loader = LoadMZML(isolation_window = 0.5,mz_tol = 5,rt_tol = 10,peaklist = peaklist)
+    print "Loading peaks from {} using peaklist {}".format(experiment.mzml_file.path,peaklist)
+    ms1,ms2,metadata = loader.load_spectra([experiment.mzml_file.path])
+    print "Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1),len(ms2))
+
+
+    # feature set and original experiment hardcoded for now
+    fs = FeatureSet.objects.get(name = 'binned_005')
+    original_experiment = Experiment.objects.get(name='massbank_binned_005')
+
+    features = GlobalFeature.objects.filter(featureset = fs).order_by('min_mz')
+
+    fragment_features = [f for f in features if f.name.startswith('fragment')]
+    loss_features = [f for f in features if f.name.startswith('loss')]
+    min_frag_mz = [f.min_mz for f in fragment_features]
+    max_frag_mz = [f.max_mz for f in fragment_features]
+    min_loss_mz = [f.min_mz for f in loss_features]
+    max_loss_mz = [f.max_mz for f in loss_features]
+
+    # Delete any already existing docs (mainly for debugging)
+    docs = Document.objects.filter(experiment = experiment)
+    print "Found {} documents to delete".format(len(docs))
+    for doc in docs:
+        doc.delete()
+
+    # Add the documents to the database
+    n_done = 0
+    for molecule in ms1:
+        ms2_features = filter(lambda x:x[3]==molecule,ms2)
+        if len(ms2_features) == 0:
+            continue
+        name = molecule.name + '_decomp'
+        new_doc,status = Document.objects.get_or_create(experiment = experiment,name = name)
+        doc_metadata = {}
+        doc_metadata['parentmass'] = molecule.mz
+        doc_metadata['parentrt'] = molecule.rt
+        new_doc.metadata = jsonpickle.encode(doc_metadata)
+        new_doc.save()
+        for f in ms2_features:
+            fragment_mz = f[0]
+            intensity = f[2]
+            frag_pos = bisect.bisect_right(min_frag_mz,fragment_mz)-1
+            if fragment_mz <= max_frag_mz[frag_pos]:
+                feat = fragment_features[frag_pos]
+                df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = feat)[0]
+                df.intensity = intensity
+                df.save()
+                
+            loss_mz = molecule.mz - fragment_mz
+            if loss_mz >= min_loss_mz[0] and loss_mz <= max_loss_mz[-1]:
+                loss_pos = bisect.bisect_right(min_loss_mz,loss_mz)-1
+                if loss_mz <= max_loss_mz[loss_pos]:
+                    feat = loss_features[loss_pos]
+                    df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature  = feat)[0]
+                    df.intensity = intensity
+                    df.save()
+        n_done += 1
+        if n_done % 100 == 0:
+            print "Done {} documents".format(n_done)
+        

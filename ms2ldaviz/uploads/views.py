@@ -7,8 +7,11 @@ from basicviz.models import Experiment, MultiFileExperiment, UserExperiment
 from django.shortcuts import render
 
 from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_TYPE
-from basicviz.models import Experiment, UserExperiment
+from basicviz.models import Experiment, UserExperiment, Document
 from .forms import CreateExperimentForm
+
+from decomposition.decomposition_functions import load_mzml_and_make_documents,decompose
+from decomposition.models import Beta
 
 @login_required(login_url='/registration/login/')
 def create_experiment(request):
@@ -60,6 +63,7 @@ def process_experiment(exp):
 
         # finished
         exp.status = ready
+        exp.save()
 
 
 def lda_pipeline(exp):
@@ -70,3 +74,9 @@ def lda_pipeline(exp):
 def decomposition_pipeline(exp):
     print 'Running decomposition pipeline'
     print exp.csv_file, exp.mzml_file
+    load_mzml_and_make_documents(exp)
+    beta = Beta.objects.all()[0]
+    documents = Document.objects.filter(experiment = exp)
+    decompose(documents,beta)
+    exp.status = "1"
+    exp.save()
