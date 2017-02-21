@@ -18,7 +18,7 @@ from basicviz.models import Feature, Experiment, Document, FeatureInstance, Docu
     FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment
 from massbank.views import get_massbank_form
 from options.views import get_option
-from decomposition.models import DocumentGlobalMass2Motif,GlobalMotif
+from decomposition.models import DocumentGlobalMass2Motif,GlobalMotif,DocumentGlobalFeature,FeatureMap
 from decomposition.decomposition_functions import get_parents_decomposition,get_parent_for_plot_decomp,get_decomp_doc_context_dict
 
 def check_user(request,experiment):
@@ -455,6 +455,69 @@ def get_parents_metadata(request, motif_id):
 #     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
 def get_word_graph(request, motif_id, vo_id, experiment_id = None):
+    viz_options = VizOptions.objects.get(id = vo_id)
+    experiment = viz_options.experiment
+    edge_thresh = viz_options.edge_thresh
+    edge_choice = viz_options.edge_choice
+
+
+    if experiment.experiment_type == "0": # standard LDA
+        motif = Mass2Motif.objects.get(id = motif_id)
+        m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte = 0.01)
+        if edge_choice == 'probability':
+            docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
+        else:
+            docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh)
+        data_for_json = []
+        data_for_json.append(len(docm2ms))
+        feat_counts = {}
+        for feature in m2mIns:
+            feat_counts[feature.feature] = 0
+        for dm2m in docm2ms:
+            fi = FeatureInstance.objects.filter(document = dm2m.document)
+            for ft in fi:
+                if ft.feature in feat_counts:
+                    feat_counts[ft.feature] += 1
+        colours = '#404080'
+        feat_list = []
+        for feature in feat_counts:
+            feat_type = feature.name.split('_')[0]
+            feat_mz = feature.name.split('_')[1]
+            short_name = "{}_{:.4f}".format(feat_type,float(feat_mz))
+            feat_list.append([short_name,feat_counts[feature],colours])
+        feat_list = sorted(feat_list,key = lambda x: x[1],reverse = True)
+        data_for_json.append(feat_list)
+    elif experiment.experiment_type == "1": # decomp
+        data_for_json = []
+        motif = GlobalMotif.objects.get(id = motif_id)
+        originalmotif = motif.originalmotif
+        originalfeatures = Mass2MotifInstance.objects.filter(mass2motif = originalmotif,probability__gte = 0.1)
+        globalfeatures = FeatureMap.objects.filter(localfeature__in = [o.feature for o in originalfeatures])
+        globalfeatures = [g.globalfeature for g in globalfeatures]
+        if edge_choice == 'probability':
+            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
+        else:
+            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh)
+        data_for_json.append(len(docm2ms))
+        feat_counts = {}
+        for feature in globalfeatures:
+            feat_counts[feature] = 0
+        for dm2m in docm2ms:
+            fi = DocumentGlobalFeature.objects.filter(document = dm2m.document)
+            for ft in fi:
+                if ft.feature in feat_counts:
+                    feat_counts[ft.feature] += 1
+        colours = '#404080'
+        feat_list = []
+        for feature in feat_counts:
+            feat_type = feature.name.split('_')[0]
+            feat_mz = feature.name.split('_')[1]
+            short_name = "{}_{:.4f}".format(feat_type,float(feat_mz))
+            feat_list.append([short_name,feat_counts[feature],colours])
+        feat_list = sorted(feat_list,key = lambda x: x[1],reverse = True)
+        data_for_json.append(feat_list)
+    else:
+        data_for_json = []
     # motif = Mass2Motif.objects.get(id=motif_id)
     
     # if not experiment_id == None:
@@ -519,7 +582,6 @@ def get_word_graph(request, motif_id, vo_id, experiment_id = None):
     #     # feature_list_full.append(["", 0, ""])
 
     # data_for_json.append(feature_list_full)
-    data_for_json = []
     return HttpResponse(json.dumps(data_for_json), content_type='application/json')
 
 
@@ -577,7 +639,92 @@ def get_intensity(request, motif_id, vo_id):
 
     # data_for_json.append(highest_intensity)
     # data_for_json.append(features_list)
-    data_for_json = []
+    viz_options = VizOptions.objects.get(id = vo_id)
+    experiment = viz_options.experiment
+    edge_thresh = viz_options.edge_thresh
+    edge_choice = viz_options.edge_choice
+    colours = ['#404080', '#0080C0']
+    colours = ['red','blue']
+
+
+    if experiment.experiment_type == "0": # standard LDA
+        motif = Mass2Motif.objects.get(id = motif_id)
+        m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte = 0.01)
+        if edge_choice == 'probability':
+            docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
+        else:
+            docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh)
+        documents = [d.document for d in docm2ms]
+        data_for_json = []
+        feat_total_intensity = {}
+        feat_motif_intensity = {}
+        features = [m.feature for m in m2mIns]
+        for feature in features:
+            feat_total_intensity[feature] = 0.0
+            feat_motif_intensity[feature] = 0.0
+        for feature in features:
+            fi = FeatureInstance.objects.filter(feature = feature)
+            for ft in fi:
+                feat_total_intensity[feature] += ft.intensity
+                if ft.document in documents:
+                    feat_motif_intensity[feature] += ft.intensity
+
+        feat_list = []
+        feat_tot_intensity = zip(feat_total_intensity.keys(),feat_total_intensity.values())
+        feat_tot_intensity = sorted(feat_tot_intensity,key = lambda x: x[1],reverse = True)
+        for feature,tot_intensity in feat_tot_intensity:
+            feat_type = feature.name.split('_')[0]
+            feat_mz = feature.name.split('_')[1]
+            short_name = "{}_{:.4f}".format(feat_type,float(feat_mz))
+            feat_list.append([short_name,feat_total_intensity[feature],colours[0]])
+            feat_list.append(['',feat_motif_intensity[feature],colours[1]])
+            feat_list.append(('', 0, ''))
+        data_for_json.append(feat_tot_intensity[0][1])
+        data_for_json.append(feat_list)
+
+
+    elif experiment.experiment_type == "1": # decomp
+        data_for_json = []
+        motif = GlobalMotif.objects.get(id = motif_id)
+        originalmotif = motif.originalmotif
+        originalfeatures = Mass2MotifInstance.objects.filter(mass2motif = originalmotif,probability__gte = 0.1)
+        globalfeatures = FeatureMap.objects.filter(localfeature__in = [o.feature for o in originalfeatures])
+        globalfeatures = [g.globalfeature for g in globalfeatures]
+        if edge_choice == 'probability':
+            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
+        else:
+            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh)
+        documents = [d.document for d in docm2ms]
+        
+        feat_total_intensity = {}
+        feat_motif_intensity = {}
+        for feature in globalfeatures:
+            feat_total_intensity[feature] = 0.0
+            feat_motif_intensity[feature] = 0.0
+        for feature in globalfeatures:
+            fi = DocumentGlobalFeature.objects.filter(document__experiment = experiment,feature = feature)
+            for ft in fi:
+                feat_total_intensity[feature] += ft.intensity
+                if ft.document in documents:
+                    feat_motif_intensity[feature] += ft.intensity
+        
+
+        feat_list = []
+        feat_tot_intensity = zip(feat_total_intensity.keys(),feat_total_intensity.values())
+        feat_tot_intensity = sorted(feat_tot_intensity,key = lambda x: x[1],reverse = True)
+        for feature,tot_intensity in feat_tot_intensity:
+            feat_type = feature.name.split('_')[0]
+            feat_mz = feature.name.split('_')[1]
+            short_name = "{}_{:.4f}".format(feat_type,float(feat_mz))
+            feat_list.append([short_name,feat_total_intensity[feature],colours[0]])
+            feat_list.append(['',feat_motif_intensity[feature],colours[1]])
+            feat_list.append(('', 0, ''))
+        data_for_json.append(feat_tot_intensity[0][1])
+        data_for_json.append(feat_list)
+
+    else:
+        data_for_json = []
+
     return HttpResponse(json.dumps(data_for_json), content_type='application/json')
 
 @login_required(login_url='/registration/login/')
