@@ -8,6 +8,15 @@
 {% block body_block %}
 
 	<h3>Add a new experiment</h3>
+    <p>
+        You can choose either to decompose your spectra in a completely
+        unsupervised manner without any fixed motifs (experiment type 'MS2LDA') or with respect to Mass2Motifs that we have annotated
+        (experiment type 'Decomposition').
+    </p>
+    <p>
+        If the MS1 CSV file is provided, it will be used to seed the precursor peaks during the extraction of fragmentation spectra.
+        The uploaded MS2 file has to be in mzML format for now.
+    </p>
 
     <form id="experiment_form" method="post" action="/uploads/create_experiment/" enctype="multipart/form-data">
         {% csrf_token %}
