@@ -3,79 +3,95 @@
 
 {% block title %}Select an experiment{% endblock %}
 
+{% block head_block %}
+    <style>
+    </style>
+{% endblock %}
+
 {% block body_block %}
 
-<h2>Single-file LDA Experiments</h2>
-<p>
-    <a href="/uploads/create_experiment" class="btn btn-primary">Create Experiment</a>
-</p>
-{% if show_pending %}
-    <h3>Pending Experiments</h3>
-    <p>The following experiments have been uploaded and are still being processed. Once finished, it will appear in the list of ready experiments.</p>
-    <ul>
-    {% for experiment in pending_experiments %}
-        <li><b>{{experiment.name}}</b> ({{experiment.description}})</li>
-    {% endfor %}
-    </ul>
-{% endif %}
-
-<h3>Ready Experiments</h3>
-<p>The following experiments are ready for analysis. After clicking on an experiment, you use the arrow keys to navigate to other experiments in the list. Press <b>Enter</b> to open or close an experiment.</p>
-<div id="accordion">
-{% for experiment in experiments %}
-    <h3><b>{{experiment.0.name}}</b> ({{experiment.0.description}}) ({{experiment.1}})</h3>
-    <div>
-        <a href="/basicviz/show_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a>
-        <a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a>
-        <a href="/basicviz/start_viz/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a>
-        {% if experiment.1 == 'edit' %}
-        <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View experiment options</a>
-        {% endif %}
-        {% if extra_user %}
-            <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate</a>
-            <!-- a href="/basicviz/document_pca/{{experiment.0.id}}" class="btn btn-block btn-success">Document PCA</a -->
-            <a href="/basicviz/topic_pca/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-eye-open"></span> Topic PCA</a>
-            <a href="/basicviz/topic_table/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a>
-            <a href="/basicviz/extract_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-folder-close"></span> Extract Documents</a>
-            <a href="/basicviz/compute_topic_scores/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-sort-by-order"></span> Compute Topic Scores</a>
-            <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a>
-            <a href="/basicviz/high_classyfire/{{experiment.0.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> High classyfire scores</a>
-        {% endif %}
-    </div>
-{% endfor %}
-</div>
-
-{% if extra_user %}
-	<hr />
-	<h2>Multi-file LDA Experiments</h2>
-    <p>The following experiments are ready for analysis. After clicking on an experiment, you use the arrow keys to navigate to other experiments in the list. Press <b>Enter</b> to open or close an experiment.</p>
-    <div id="accordion2">
-        {% for mf in mfe|sort_by:'name' %}
-            <h3><b>{{mf.name}}</b> ({{mf.description}})</h3>
-            <div>
-                <p>
-                    <A href="/basicviz/multi_alphas/{{mf.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-signal"></span> Explore alphas</A>
-                    <A href="/basicviz/alpha_correlation/{{mf.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-tasks"></span> Alpha correlation</A>
-                    <A href="/basicviz/alpha_de/{{mf.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-object-align-bottom"></span> Alpha Differential Expression</A>
-                    <A href="/options/view_mf_experiment_options/{{mf.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View options</A>
-                    <A href="/basicviz/wipe_cache/{{mf.id}}" class="btn btn-block btn-default" title="(force recomputation of alpha tables when, e.g. annotations have been added)"><span class="glyphicon glyphicon-exclamation-sign"></span> Wipe Cache</A>
-                </p>
-                <table class="table">
-                    {% for exp in mf.multilink_set.all|sort_by:'experiment__name' %}
-                        <tr>
-                            <td>{{exp.experiment}}</td>
-                            <td><a href="/basicviz/show_docs/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a></td>
-                            <td><a href="/basicviz/view_mass2motifs/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a></td>
-                            <td><a href="/basicviz/start_viz/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a></td>
-                            <td><a href="/basicviz/topic_table/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a></td>
-                            <td><a href="/basicviz/rate_by_conserved_motif_rating/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a></td>
-                        </tr>
-                    {% endfor %}
-                </table>
-            </div>
+<div id="tabs">
+  <ul>
+    <li><a href="#tabs-1">Single-file LDA Experiments</a></li>
+    <li><a href="#tabs-2">Multi-file LDA Experiments</a></li>
+  </ul>
+  <div id="tabs-1">
+    <h3>Create Experiments</h3>
+    <p>
+        Create your experiment by uploading your MS2 fragmentation file (in mzML format) by clicking the button below.
+    </p>
+    <p>
+        <a href="/uploads/create_experiment" class="btn btn-default">Create Experiment</a>
+    </p>
+    {% if show_pending %}
+        <h3>Pending Experiments</h3>
+        <p>The following experiments have been created but are still being processed.
+        {% for experiment in pending_experiments %}
+            <li><b>{{experiment.name}}</b> ({{experiment.description}})</li>
         {% endfor %}
+        </ul>
+    {% endif %}
+
+    <h3>Ready Experiments</h3>
+    <p>The following experiments are ready for analysis. After clicking on an experiment, you use the arrow keys to navigate to other experiments in the list. Press <b>Enter</b> to open or close an experiment.</p>
+    <div id="accordion">
+    {% for experiment in experiments %}
+        <h3><b>{{experiment.0.name}}</b> ({{experiment.0.description}}) ({{experiment.1}})</h3>
+        <div>
+            <a href="/basicviz/show_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a>
+            <a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a>
+            <a href="/basicviz/start_viz/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a>
+            {% if experiment.1 == 'edit' %}
+            <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View experiment options</a>
+            {% endif %}
+            {% if extra_user %}
+                <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate</a>
+                <!-- a href="/basicviz/document_pca/{{experiment.0.id}}" class="btn btn-block btn-success">Document PCA</a -->
+                <a href="/basicviz/topic_pca/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-eye-open"></span> Topic PCA</a>
+                <a href="/basicviz/topic_table/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a>
+                <a href="/basicviz/extract_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-folder-close"></span> Extract Documents</a>
+                <a href="/basicviz/compute_topic_scores/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-sort-by-order"></span> Compute Topic Scores</a>
+                <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a>
+                <a href="/basicviz/high_classyfire/{{experiment.0.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> High classyfire scores</a>
+            {% endif %}
+        </div>
+    {% endfor %}
     </div>
-{% endif %}
+  </div>
+  <div id="tabs-2">
+    {% if extra_user %}
+        <p>The following experiments are ready for analysis. After clicking on an experiment, you use the arrow keys to navigate to other experiments in the list. Press <b>Enter</b> to open or close an experiment.</p>
+        <div id="accordion2">
+            {% for mf in mfe|sort_by:'name' %}
+                <h3><b>{{mf.name}}</b> ({{mf.description}})</h3>
+                <div>
+                    <p>
+                        <A href="/basicviz/multi_alphas/{{mf.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-signal"></span> Explore alphas</A>
+                        <A href="/basicviz/alpha_correlation/{{mf.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-tasks"></span> Alpha correlation</A>
+                        <A href="/basicviz/alpha_de/{{mf.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-object-align-bottom"></span> Alpha Differential Expression</A>
+                        <A href="/options/view_mf_experiment_options/{{mf.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View options</A>
+                        <A href="/basicviz/wipe_cache/{{mf.id}}" class="btn btn-block btn-default" title="(force recomputation of alpha tables when, e.g. annotations have been added)"><span class="glyphicon glyphicon-exclamation-sign"></span> Wipe Cache</A>
+                    </p>
+                    <table class="table">
+                        {% for exp in mf.multilink_set.all|sort_by:'experiment__name' %}
+                            <tr>
+                                <td>{{exp.experiment}}</td>
+                                <td><a href="/basicviz/show_docs/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a></td>
+                                <td><a href="/basicviz/view_mass2motifs/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a></td>
+                                <td><a href="/basicviz/start_viz/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a></td>
+                                <td><a href="/basicviz/topic_table/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a></td>
+                                <td><a href="/basicviz/rate_by_conserved_motif_rating/{{exp.experiment.id}}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a></td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <h2>Multi-file LDA Experiments</h2>
+        <p>You do not have access to this functionality yet.</p>
+    {% endif %}
+    </div>
 
 {% endblock %}
 
@@ -95,6 +111,9 @@
             heightStyle: "content",
             active: false
         });
+    } );
+    $( function() {
+        $( "#tabs" ).tabs();
     } );
 </script>
 

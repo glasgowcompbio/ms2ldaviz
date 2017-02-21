@@ -3,21 +3,35 @@
 {% load static %}
 
 {% block head_block %}
-
 {% endblock %}
 
 {% block body_block %}
 
 	<h3>Add a new experiment</h3>
+    <p>
+        You can choose either to decompose your spectra in a completely
+        unsupervised manner without any fixed motifs (experiment type 'MS2LDA') or with respect to Mass2Motifs that we have annotated
+        (experiment type 'Decomposition').
+    </p>
+    <p>
+        If the MS1 CSV file is provided, it will be used to seed the precursor peaks during the extraction of fragmentation spectra.
+        The uploaded MS2 file has to be in mzML format for now.
+    </p>
 
-	<form id="experiment_form" method="post" action="/uploads/create_experiment/">
-	{% csrf_token %}
-    {{ experiment_form.as_p }}
-	<input type="submit" name="submit" value="Submit" />
-</form>
+    <form id="experiment_form" method="post" action="/uploads/create_experiment/" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for hidden in experiment_form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+
+        {% for field in experiment_form.visible_fields %}
+            <p>{{ field.errors }}</p>
+            <p>  {{field.label}} {% if field.field.required %} * {% endif %} {{ field }}</p>
+        {% endfor %}
+        <input type="submit" name="submit" value="Submit" />
+    </form>
 
 {% endblock %}
 
 {% block js_block %}
-
 {% endblock %}
