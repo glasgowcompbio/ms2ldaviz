@@ -1,6 +1,8 @@
+import os
 import jsonpickle
 from django.contrib.auth.models import User
 from django.db import models
+from django.conf import settings
 
 from .constants import EXPERIMENT_STATUS_CODE
 
@@ -18,15 +20,47 @@ class MultiFileExperiment(models.Model):
         return self.name
 
 
+def upload_path_handler(instance, filename):
+    return os.path.join(settings.MEDIA_ROOT, filename)
+
+
+def get_upload_folder(instance, filename):
+    return "experiment_%s/%s" %(instance.pk, filename)
+
+
 class Experiment(models.Model):
     name = models.CharField(max_length=128, unique=True)
     description = models.CharField(max_length=1024, null=True)
     ready_code, ready_msg = EXPERIMENT_STATUS_CODE[1]
     status = models.CharField(max_length=128, choices=EXPERIMENT_STATUS_CODE,
                               null=True, default=ready_code)
+    csv_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
+    mzml_file = models.FileField(null=True, upload_to=get_upload_folder)
 
     def __unicode__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+
+        # we want to separate the uploaded files into folders by experiment id
+        # but initially there's no id yet ...
+        if self.pk is None:
+
+            # temporarily unset the uploaded files
+            uploaded_csv_file = self.csv_file
+            uploaded_mzml_file = self.mzml_file
+            self.csv_file = None
+            self.mzml_file = None
+
+            # save first to get the id
+            super(Experiment, self).save(*args, **kwargs)
+
+            # set the uploaded files back
+            self.csv_file = uploaded_csv_file
+            self.mzml_file = uploaded_mzml_file
+
+        # actually does the saving here
+        super(Experiment, self).save(*args, **kwargs)
 
 
 class MultiLink(models.Model):

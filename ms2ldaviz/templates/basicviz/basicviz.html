@@ -14,7 +14,11 @@
     <p>The following experiments have been uploaded and are still being processed. Once finished, it will appear in the list of ready experiments.</p>
     <ul>
     {% for experiment in pending_experiments %}
-        <li><b>{{experiment.name}}</b> ({{experiment.description}})</li>
+        {% if experiment.csv_file %}
+            <li><b>{{experiment.name}}</b> ({{experiment.description}}) containing {{experiment.csv_file}} and {{experiment.mzml_file}}</li>
+        {% else %}
+            <li><b>{{experiment.name}}</b> ({{experiment.description}}) containing {{experiment.mzml_file}}</li>
+        {% endif %}
     {% endfor %}
     </ul>
 {% endif %}
