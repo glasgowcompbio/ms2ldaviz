@@ -1,17 +1,13 @@
-import json
-
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect
-from basicviz.models import Experiment, MultiFileExperiment, UserExperiment
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
 from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_TYPE
-from basicviz.models import Experiment, UserExperiment, Document
+from basicviz.models import UserExperiment
 from .forms import CreateExperimentForm
+from .tasks import ms2lda_task, decomposition_task
 
-from decomposition.decomposition_functions import load_mzml_and_make_documents,decompose
-from decomposition.models import Beta
 
 @login_required(login_url='/registration/login/')
 def create_experiment(request):
@@ -53,30 +49,10 @@ def process_experiment(exp):
         ms2lda, desc = EXPERIMENT_TYPE[0]
         decomposition, desc = EXPERIMENT_TYPE[1]
         pipelines = {
-            ms2lda: lda_pipeline,
-            decomposition: decomposition_pipeline
+            ms2lda: ms2lda_task,
+            decomposition: decomposition_task
         }
-        pipeline = pipelines[exp.experiment_type] # this is a function
 
         # runs the correct pipeline based on the experiment type
-        pipeline(exp)
-
-        # finished
-        exp.status = ready
-        exp.save()
-
-
-def lda_pipeline(exp):
-    print 'Running LDA pipeline'
-    print exp.csv_file, exp.mzml_file
-
-
-def decomposition_pipeline(exp):
-    print 'Running decomposition pipeline'
-    print exp.csv_file, exp.mzml_file
-    load_mzml_and_make_documents(exp)
-    beta = Beta.objects.all()[0]
-    documents = Document.objects.filter(experiment = exp)
-    decompose(documents,beta)
-    exp.status = "1"
-    exp.save()
+        pipeline = pipelines[exp.experiment_type]
+        pipeline.delay(exp.id)
