@@ -15,6 +15,7 @@ if __name__ == '__main__':
     # Match all of the features in massbank to this experiment
     massbank_experiment = Experiment.objects.get(name = 'massbank_binned_005')
     massbank_features = Feature.objects.filter(experiment = massbank_experiment)
+    fs = FeatureSet.objects.get_or_create(name='binned_005')[0]
 
     n_done = 0
     for localfeature in massbank_features:
