@@ -20,12 +20,9 @@ class MultiFileExperiment(models.Model):
         return self.name
 
 
-def upload_path_handler(instance, filename):
-    return os.path.join(settings.MEDIA_ROOT, filename)
-
-
 def get_upload_folder(instance, filename):
-    return "experiment_%s/%s" %(instance.pk, filename)
+    upload_folder = "experiment_%s" % instance.pk
+    return os.path.abspath(os.path.join(settings.MEDIA_ROOT, upload_folder, filename))
 
 
 class Experiment(models.Model):
