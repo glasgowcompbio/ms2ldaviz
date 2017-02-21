@@ -254,6 +254,13 @@ def load_mzml_and_make_documents(experiment):
     ms1,ms2,metadata = loader.load_spectra([experiment.mzml_file.path])
     print "Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1),len(ms2))
 
+    # need these parameters in a form
+    min_ms1_rt = 3*60
+    max_ms1_rt = 21*60
+    min_ms2_intensity = 5000
+    ms1 = filter(lambda x: x.rt>min_ms1_rt and x.rt <max_ms1_rt,ms1)
+    ms2 = filter(lambda x: x[3].rt > min_ms1_rt and x[3].rt < max_ms1_rt,ms2)
+    ms2 = filter(lambda x: x[2]>min_ms2_intensity,ms2)
 
     # feature set and original experiment hardcoded for now
     fs = FeatureSet.objects.get(name = 'binned_005')
