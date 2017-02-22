@@ -8,6 +8,7 @@ from basicviz.models import Mass2MotifInstance,Experiment
 from options.views import get_option
 
 from decomposition_functions import get_parents_decomposition
+from basicviz.views import views_lda_single
 # Create your views here.
 def view_parents(request,mass2motif_id,experiment_id):
     context_dict = {}
@@ -21,9 +22,9 @@ def view_parents(request,mass2motif_id,experiment_id):
     edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
 
     if edge_choice == 'probability':
-        dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, probability__gte = edge_thresh).order_by('-probability')
+        dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, probability__gte = edge_thresh,document__experiment = experiment).order_by('-probability')
     else:
-        dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, overlap_score__gte = edge_thresh).order_by('-overlap_score')
+        dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, overlap_score__gte = edge_thresh, document__experiment = experiment).order_by('-overlap_score')
 
     originalfeatures = Mass2MotifInstance.objects.filter(mass2motif = mass2motif.originalmotif)
 
@@ -36,3 +37,9 @@ def get_parents(request,experiment_id,mass2motif_id):
     parent_data = get_parents_decomposition(mass2motif_id,vo_id = None,experiment = experiment)
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
 
+def get_word_graph(request,mass2motif_id,vo_id,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    return views_lda_single.get_word_graph(request,mass2motif_id,vo_id,experiment = experiment)
+def get_intensity(request,mass2motif_id,vo_id,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    return views_lda_single.get_intensity(request,mass2motif_id,vo_id,experiment = experiment)
