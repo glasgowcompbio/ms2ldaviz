@@ -283,7 +283,7 @@ def get_doc_table(request, mf_id, motif_name):
 def view_multi_m2m(request, mf_id, motif_name):
     mfe = MultiFileExperiment.objects.get(id=mf_id)
     links = MultiLink.objects.filter(multifileexperiment=mfe).order_by('experiment__name')
-    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
+    individuals = [l.experiment for l in links if l.experiment.status == "1"]
     context_dict = {'mfe': mfe}
     context_dict['motif_name'] = motif_name
 
@@ -397,7 +397,7 @@ def multi_alphas(request, mf_id):
     mfe = MultiFileExperiment.objects.get(id=mf_id)
     context_dict = {'mfe': mfe}
     links = MultiLink.objects.filter(multifileexperiment=mfe).order_by('experiment__name')
-    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
+    individuals = [l.experiment for l in links if l.experiment.status == "1"]
     context_dict['individuals'] = individuals
 
     alp_vals = []
