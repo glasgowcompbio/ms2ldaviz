@@ -455,10 +455,17 @@ def get_parents_metadata(request, motif_id):
 #     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
 def get_word_graph(request, motif_id, vo_id, experiment_id = None):
-    viz_options = VizOptions.objects.get(id = vo_id)
-    experiment = viz_options.experiment
-    edge_thresh = viz_options.edge_thresh
-    edge_choice = viz_options.edge_choice
+    if vo_id:
+        viz_options = VizOptions.objects.get(id = vo_id)
+        experiment = viz_options.experiment
+        edge_thresh = viz_options.edge_thresh
+        edge_choice = viz_options.edge_choice
+    elif experiment:
+        edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
+        edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
+    else:
+        edge_choice = 'probability'
+        edge_thresh = 0.05
 
 
     if experiment.experiment_type == "0": # standard LDA
@@ -495,9 +502,9 @@ def get_word_graph(request, motif_id, vo_id, experiment_id = None):
         globalfeatures = FeatureMap.objects.filter(localfeature__in = [o.feature for o in originalfeatures])
         globalfeatures = [g.globalfeature for g in globalfeatures]
         if edge_choice == 'probability':
-            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
+            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,document__experiment = experiment)
         else:
-            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh)
+            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,document__experiment = experiment)
         data_for_json.append(len(docm2ms))
         feat_counts = {}
         for feature in globalfeatures:
@@ -595,7 +602,7 @@ def view_word_graph(request, motif_id):
     return render(request, 'basicviz/view_word_graph.html', context_dict)
 
 
-def get_intensity(request, motif_id, vo_id):
+def get_intensity(request, motif_id, vo_id, experiment = None):
     # motif = Mass2Motif.objects.get(id=motif_id)
 
     # experiment = motif.experiment
@@ -639,10 +646,18 @@ def get_intensity(request, motif_id, vo_id):
 
     # data_for_json.append(highest_intensity)
     # data_for_json.append(features_list)
-    viz_options = VizOptions.objects.get(id = vo_id)
-    experiment = viz_options.experiment
-    edge_thresh = viz_options.edge_thresh
-    edge_choice = viz_options.edge_choice
+    if vo_id:
+        viz_options = VizOptions.objects.get(id = vo_id)
+        experiment = viz_options.experiment
+        edge_thresh = viz_options.edge_thresh
+        edge_choice = viz_options.edge_choice
+    elif experiment:
+        edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
+        edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
+    else:
+        edge_choice = 'probability'
+        edge_thresh = 0.05
+
     colours = ['#404080', '#0080C0']
     colours = ['red','blue']
 
@@ -691,9 +706,9 @@ def get_intensity(request, motif_id, vo_id):
         globalfeatures = FeatureMap.objects.filter(localfeature__in = [o.feature for o in originalfeatures])
         globalfeatures = [g.globalfeature for g in globalfeatures]
         if edge_choice == 'probability':
-            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
+            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,document__experiment = experiment)
         else:
-            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh)
+            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,document__experiment = experiment)
         documents = [d.document for d in docm2ms]
         
         feat_total_intensity = {}
