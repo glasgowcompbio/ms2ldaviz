@@ -880,7 +880,7 @@ def get_doc_topics(request, doc_id):
         score_type = get_option('default_doc_m2m_score',experiment = document.experiment)
         if not score_type:
             score_type = 'probability'
-        plot_fragments = [get_parent_for_plot_decomp(document,edge_type=score_type,get_key = True)]
+        plot_fragments = [get_parent_for_plot_decomp(document,edge_choice=score_type,get_key = True)]
     else:
         plot_fragments = []
     return HttpResponse(json.dumps(plot_fragments), content_type='application/json')
