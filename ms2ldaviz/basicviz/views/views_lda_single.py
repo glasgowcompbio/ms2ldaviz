@@ -389,7 +389,7 @@ def get_parents(request, motif_id, vo_id):
             elif not viz_options.just_annotated_docs:
                 parent_data.append(get_doc_for_plot(document.id, motif_id,score_type = edge_choice))
     else: # decomposition
-        parent_data = get_parents_decomposition(motif_id,vo_id)
+        parent_data = get_parents_decomposition(motif_id,vo_id = vo_id,experiment = experiment)
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
 
 

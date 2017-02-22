@@ -6,6 +6,8 @@ from scipy.special import psi as psi
 from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif,DocumentGlobalMass2Motif,DocumentFeatureMass2Motif,FeatureSet
 from basicviz.models import VizOptions,Experiment,Document
 
+from options.views import get_option
+
 import sys
 sys.path.append('../lda/code')
 from ms2lda_feature_extraction import LoadMZML
@@ -85,7 +87,6 @@ def decompose(documents,betaobject,normalise = 1000.0,store_threshold = 0.01):
                 break
             motif_pos = motif_index[motif[i]]
             overlap_score = compute_overlap(phi_matrix,motif_pos,beta_matrix[motif_pos,:],word_index)
-            print theta[i],overlap_score,motif[i].originalmotif.name,motif[i].originalmotif.annotation
             dgm2m,status = DocumentGlobalMass2Motif.objects.get_or_create(document = document,mass2motif = motif[i])
             dgm2m.probability = theta[i]
             dgm2m.overlap_score = overlap_score
@@ -113,15 +114,23 @@ def compute_overlap(phi_matrix,motif_pos,beta_row,word_index):
             overlap_score += phi_matrix[word][motif_pos]*beta_row[word_pos]
     return overlap_score
 
-def get_parents_decomposition(motif_id,vo_id):
-    viz_options = VizOptions.objects.get(id = vo_id)
+def get_parents_decomposition(motif_id,vo_id = None,experiment = None):
+    if vo_id:
+        viz_options = VizOptions.objects.get(id = vo_id)
+        edge_choice = viz_options.edge_choice
+        edge_thresh = viz_options.edge_thresh
+    elif experiment:
+        edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
+        edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
+    else:
+        edge_choice = 'probability'
+        edge_thresh = 0.05
     motif = GlobalMotif.objects.get(id = motif_id)
     parent_data = []
-    edge_choice = viz_options.edge_choice
     if edge_choice == 'probability':
-        docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = viz_options.edge_thresh).order_by('-probability')
+        docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh).order_by('-probability')
     else:
-        docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = viz_options.edge_thresh).order_by('-overlap_score')
+        docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh).order_by('-overlap_score')
     for dm in docm2m:
         document = dm.document
         parent_data.append(get_parent_for_plot_decomp(document,motif = motif,edge_choice = edge_choice))

@@ -1,3 +1,22 @@
+function load_parents_decomposition(mass2motif_id,experiment_id) {
+    current_pos = 0
+
+    //clear the existing svg (if it exists)
+    d3.select('#load_text').remove()
+    d3.select("#frag_graph_titlebar_svg").remove();
+    d3.select("#frag_graph_svg").remove();
+    d3.select('#frag_graph_svg').remove()
+
+    var url = '/decomposition/get_parents/' + experiment_id + '/' + mass2motif_id + '/';
+    console.log(url);
+
+    d3.json(url,function(error,total_dataset) {
+        if (error) throw error;
+        key = null
+        plot_parent(total_dataset,motif_name)
+    }); 
+}
+
 function load_parents(mass2motif_id,motif_name,vo_id) {
 
     current_pos = 0
@@ -10,7 +29,7 @@ function load_parents(mass2motif_id,motif_name,vo_id) {
 
     if(vo_id > -1) {
         var url = '/basicviz/get_parents/' + mass2motif_id + '/' + vo_id + '/';
-    }else {
+    }else{ 
         var url = '/basicviz/get_parents/' + mass2motif_id + '/';
     }
     console.log(url);

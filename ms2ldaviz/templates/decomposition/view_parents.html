@@ -167,7 +167,8 @@
 		var current_pos = 0;
 		var motif_name = '{{mass2motif.name}}';
 		var motif_id = '{{mass2motif.id}}';
-		load_parents(motif_id, motif_name,-1);
+        var experiment_id = '{{experiment.id}}';
+		load_parents_decomposition(motif_id,experiment_id);
 		var url = '/basicviz/get_word_graph/{{mass2motif.id}}/nan/';
 		plot_word_graph(url,motif_id,motif_name);
 		url = '/basicviz/get_intensity/{{mass2motif.id}}/nan/';
