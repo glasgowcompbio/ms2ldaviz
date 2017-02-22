@@ -454,8 +454,8 @@ def get_parents_metadata(request, motif_id):
 #                 parent_data.append(get_doc_for_plot(document.id,motif_id))
 #     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
-def get_word_graph(request, motif_id, vo_id, experiment_id = None):
-    if vo_id:
+def get_word_graph(request, motif_id, vo_id, experiment = None):
+    if not vo_id == 'nan':
         viz_options = VizOptions.objects.get(id = vo_id)
         experiment = viz_options.experiment
         edge_thresh = viz_options.edge_thresh
@@ -646,7 +646,7 @@ def get_intensity(request, motif_id, vo_id, experiment = None):
 
     # data_for_json.append(highest_intensity)
     # data_for_json.append(features_list)
-    if vo_id:
+    if not vo_id == 'nan':
         viz_options = VizOptions.objects.get(id = vo_id)
         experiment = viz_options.experiment
         edge_thresh = viz_options.edge_thresh
