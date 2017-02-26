@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.conf import settings
 
-from .constants import EXPERIMENT_STATUS_CODE,EXPERIMENT_TYPE
+from .constants import EXPERIMENT_STATUS_CODE,EXPERIMENT_TYPE, EXPERIMENT_DECOMPOSITION_SOURCE
 
 
 # Create your models here.
@@ -29,16 +29,29 @@ class Experiment(models.Model):
     name = models.CharField(max_length=128, unique=True)
     description = models.CharField(max_length=1024, null=True)
 
-    ready_code, ready_msg = EXPERIMENT_STATUS_CODE[1]
+    ready_code, _ = EXPERIMENT_STATUS_CODE[1]
     status = models.CharField(max_length=128, choices=EXPERIMENT_STATUS_CODE,
                               null=True, default=ready_code)
 
-    ms2lda_code,ms2lda_msg = EXPERIMENT_TYPE[0]
+    ms2lda_code, _ = EXPERIMENT_TYPE[0]
     experiment_type = models.CharField(max_length=128, choices=EXPERIMENT_TYPE,
                               null=True, default=ms2lda_code)
 
     csv_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
-    mzml_file = models.FileField(null=True, upload_to=get_upload_folder)
+    mzml_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
+
+    no, _ = EXPERIMENT_DECOMPOSITION_SOURCE[0]
+    decomposition_source = models.CharField(max_length=1, choices=EXPERIMENT_DECOMPOSITION_SOURCE,
+                              null=False, default=no)
+
+    # perhaps these parameters should be moved to a separate table?
+    isolation_window = models.FloatField(null=True, default=0.5)
+    mz_tol = models.FloatField(null=True, default=5)
+    rt_tol = models.FloatField(null=True, default=10) # seconds
+    min_ms1_rt = models.FloatField(null=True, default=3) # minutes
+    max_ms1_rt = models.FloatField(null=True, default=21) # minutes
+    min_ms2_intensity = models.FloatField(null=True, default=5000)
+    K = models.IntegerField(null=True, default=300)
 
     def __unicode__(self):
         return self.name

@@ -13,8 +13,13 @@ EXPERIMENT_STATUS_CODE = [
 ]
 
 EXPERIMENT_TYPE = [
-	('0','MS2LDA'),
-	('1','Decomposition'),
+    ('0', 'LDA'),
+    ('1', 'Decomposition'),
+]
+
+EXPERIMENT_DECOMPOSITION_SOURCE = [
+    ('N', 'No'),
+    ('Y', 'Yes'),
 ]
 
 MASSBANK_AUTHORS = "van der Hooft, J. J. J., Wandy J., Rogers, S., University of Glasgow"

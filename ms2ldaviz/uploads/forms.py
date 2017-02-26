@@ -1,9 +1,19 @@
 from django import forms
 
 from basicviz.models import Experiment
+from basicviz.constants import EXPERIMENT_DECOMPOSITION_SOURCE
 
 
 class CreateExperimentForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(CreateExperimentForm, self).__init__(*args, **kwargs)
+        yes, _ = EXPERIMENT_DECOMPOSITION_SOURCE[1]
+        self.fields['decompose_from'] = forms.ModelChoiceField(
+            queryset=Experiment.objects.filter(decomposition_source=yes),
+            label='Decompose using Mass2Motifs in'
+        )
+        self.fields['mzml_file'].required = True
 
     class Meta:
         model = Experiment
@@ -14,7 +24,21 @@ class CreateExperimentForm(forms.ModelForm):
             'mzml_file': forms.ClearableFileInput()
         }
         labels = {
-            'csv_file': 'MS1 File (CSV)',
-            'mzml_file': 'MS2 File (mzML)'
+            'csv_file': 'MS1 file (CSV)',
+            'mzml_file': 'MS2 file (mzML)',
+            'isolation_window': 'Isolation window when linking MS1-MS2 peaks (Da)',
+            'mz_tol': 'Mass tolerance when linking MS1-MS2 peaks (ppm)',
+            'rt_tol': 'Retention time tolerance when linking MS1-MS2 peaks (seconds)',
+            'min_ms1_rt': 'Minimum retention time of MS1 peaks to keep (seconds)',
+            'max_ms1_rt': 'Maximum retention time of MS1 peaks to keep (seconds)',
+            'min_ms2_intensity': 'Minimum intensity of MS2 peaks to keep',
+            'K': 'Number of Mass2Motifs',
+            'decomposition_source': 'Use for decomposition in the future?',
         }
+        fields = [
+            'name', 'description',
+            'experiment_type', 'csv_file', 'mzml_file',
+            'isolation_window', 'mz_tol', 'rt_tol', 'min_ms1_rt', 'max_ms1_rt', 'min_ms2_intensity',
+            'K', 'decomposition_source',
+        ]
         exclude = ('status',)
