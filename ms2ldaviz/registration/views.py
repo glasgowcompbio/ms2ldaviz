@@ -6,7 +6,6 @@ from django.shortcuts import render
 from registration.forms import UserForm
 
 
-@login_required(login_url='/registration/login/')
 def user_logout(request):
     logout(request)
     return HttpResponseRedirect('/')

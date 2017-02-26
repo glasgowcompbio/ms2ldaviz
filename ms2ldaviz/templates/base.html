@@ -51,9 +51,11 @@
             <li><a href="/annotation"><strong>Annotate</strong></a></li>
             <li role="separator" class="divider"></li>
             <li><a href="/people"><strong>People</strong></a></li>
-            <li>
-                <a href="/registration/logout" class="pull-right"><strong>Logout</strong></a>
-            </li>
+            {% if user.is_authenticated %}
+                <li>
+                    <a href="/registration/logout" class="pull-right"><strong>Logout</strong></a>
+                </li>
+            {% endif %}
           </ul>
         </div><!--/.nav-collapse -->
       </div>
