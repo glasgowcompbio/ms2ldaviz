@@ -12,6 +12,7 @@ import sys
 sys.path.append('../lda/code')
 from ms2lda_feature_extraction import LoadMZML
 
+
 def decompose(documents,betaobject,normalise = 1000.0,store_threshold = 0.01):
     # Load the beta objects
     print "Loading and unpickling beta"
@@ -101,9 +102,6 @@ def decompose(documents,betaobject,normalise = 1000.0,store_threshold = 0.01):
                         dfm.save()
 
 
-
-
-
 def compute_overlap(phi_matrix,motif_pos,beta_row,word_index):
     overlap_score = 0.0
     for word in phi_matrix:
@@ -113,6 +111,7 @@ def compute_overlap(phi_matrix,motif_pos,beta_row,word_index):
         else:
             overlap_score += phi_matrix[word][motif_pos]*beta_row[word_pos]
     return overlap_score
+
 
 def get_parents_decomposition(motif_id,vo_id = None,experiment = None):
     if vo_id:
@@ -136,6 +135,7 @@ def get_parents_decomposition(motif_id,vo_id = None,experiment = None):
         parent_data.append(get_parent_for_plot_decomp(document,motif = motif,edge_choice = edge_choice))
 
     return parent_data
+
 
 def get_parent_for_plot_decomp(document,motif = None,edge_choice = 'probability',get_key = False):
     plot_data = []
@@ -229,6 +229,7 @@ def get_parent_for_plot_decomp(document,motif = None,edge_choice = 'probability'
     
     return plot_data
 
+
 # Get the context dictionary for displaying a document
 def get_decomp_doc_context_dict(document):
     context_dict = {}
@@ -248,34 +249,35 @@ def get_decomp_doc_context_dict(document):
     context_dict['fm2m'] = feature_mass2motif_instances
     return context_dict
 
-def load_mzml_and_make_documents(experiment):
-    
-    if not experiment.mzml_file:
-        print "NO MZML FILE"
-        return
 
+def load_mzml_and_make_documents(experiment, decompose_from):
+
+    assert experiment.mzml_file
     peaklist = None
     if experiment.csv_file:
         peaklist = experiment.csv_file.path
 
-    loader = LoadMZML(isolation_window = 0.5,mz_tol = 5,rt_tol = 10,peaklist = peaklist)
+    loader = LoadMZML(isolation_window=experiment.isolation_window, mz_tol=experiment.mz_tol,
+                      rt_tol=experiment.rt_tol, peaklist=peaklist)
     print "Loading peaks from {} using peaklist {}".format(experiment.mzml_file.path,peaklist)
     ms1,ms2,metadata = loader.load_spectra([experiment.mzml_file.path])
     print "Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1),len(ms2))
 
-    # need these parameters in a form
-    min_ms1_rt = 3*60
-    max_ms1_rt = 21*60
-    min_ms2_intensity = 5000
+    min_ms1_rt = experiment.min_ms1_rt*60 # seconds
+    max_ms1_rt = experiment.max_ms1_rt*60 # seconds
+    min_ms2_intensity = experiment.min_ms2_intensity
     ms1 = filter(lambda x: x.rt>min_ms1_rt and x.rt <max_ms1_rt,ms1)
     ms2 = filter(lambda x: x[3].rt > min_ms1_rt and x[3].rt < max_ms1_rt,ms2)
     ms2 = filter(lambda x: x[2]>min_ms2_intensity,ms2)
 
     # feature set and original experiment hardcoded for now
     fs = FeatureSet.objects.get(name = 'binned_005')
-    original_experiment = Experiment.objects.get(name='massbank_binned_005')
 
-    features = GlobalFeature.objects.filter(featureset = fs).order_by('min_mz')
+    # decompose_from is the original experiment name, e.g. 'massbank_binned_005'
+    # TODO: what to do with this?
+    original_experiment = Experiment.objects.get(name=decompose_from)
+
+    features = GlobalFeature.objects.filter(featureset=fs).order_by('min_mz')
 
     fragment_features = [f for f in features if f.name.startswith('fragment')]
     loss_features = [f for f in features if f.name.startswith('loss')]

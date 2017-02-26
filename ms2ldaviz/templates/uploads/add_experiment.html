@@ -10,11 +10,12 @@
 	<h3>Add a new experiment</h3>
     <p>
         You can choose either to decompose your spectra in a completely
-        unsupervised manner without any fixed motifs (experiment type 'MS2LDA') or with respect to Mass2Motifs that we have annotated
-        (experiment type 'Decomposition').
+        unsupervised manner (experiment type <strong>LDA</strong>) or with respect to
+        existing Mass2Motifs that we have annotated
+        (experiment type <strong>Decomposition</strong>).
     </p>
     <p>
-        If the MS1 CSV file is provided, it will be used to seed the precursor peaks during the extraction of fragmentation spectra.
+        If an MS1 CSV file is provided, it will be used to seed the precursor peaks during the extraction of fragmentation spectra.
         The uploaded MS2 file has to be in mzML format for now.
     </p>
 
@@ -28,10 +29,32 @@
             <p>{{ field.errors }}</p>
             <p>  {{field.label}} {% if field.field.required %} * {% endif %} {{ field }}</p>
         {% endfor %}
-        <input type="submit" name="submit" value="Submit" />
+        <input type="submit" name="submit" value="Submit Your Experiment" class="btn btn-primary" />
     </form>
 
 {% endblock %}
 
 {% block js_block %}
+    <script type='text/javascript'>
+
+        $('#id_experiment_type').on('change', function() {
+            var a = $(this).val();
+
+            if (a === '0') { // ms2lda
+                $('#id_decomposition_source').parent().show();
+                $('#id_K').parent().show();
+                $('#id_decompose_from').parent().hide();
+
+            } else { // decomposition
+                $('#id_decomposition_source').parent().hide();
+                $('#id_K').parent().hide();
+                $('#id_decompose_from').parent().show();
+            }
+
+        });
+
+        // initial state
+        $('#id_decompose_from').parent().hide();
+
+    </script>
 {% endblock %}

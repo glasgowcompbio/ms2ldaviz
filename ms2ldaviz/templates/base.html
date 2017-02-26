@@ -11,10 +11,14 @@
 
     <!-- Bootstrap and jquery -->
     <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
-    <link href="{% static 'css/bootstrap-theme.css' %}" rel="stylesheet">
+    <!-- link href="{% static 'css/bootstrap-theme.css' %}" rel="stylesheet" -->
     <link href="{% static 'css/jquery-ui.css' %}" rel="stylesheet">
     <link href="{% static 'css/jquery-ui.structure.css' %}" rel="stylesheet">
     <link href="{% static 'css/jquery-ui.theme.css' %}" rel="stylesheet">
+    <link href="{% static 'css/flat-ui.css' %}" rel="stylesheet">
+
+    <!-- Google web fonts -->
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Tangerine">
 
     <!-- Any other additional things you want to include .. -->
     {% block head_block %}
@@ -66,6 +70,7 @@
     <script type='text/javascript' src='{% static "js/jquery-2.2.2.min.js" %}'></script>
     <script type='text/javascript' src='{% static "js/jquery-ui.min.js" %}'> </script>
     <script type='text/javascript' src='{% static "js/bootstrap.min.js" %}'></script>
+    <script type='text/javascript' src='{% static "js/flat-ui.js" %}'></script>
     {% block js_block %}
     {% endblock %}
 

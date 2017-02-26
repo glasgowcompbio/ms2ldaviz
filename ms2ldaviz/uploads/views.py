@@ -6,7 +6,7 @@ from django.shortcuts import render
 from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_TYPE
 from basicviz.models import UserExperiment
 from .forms import CreateExperimentForm
-from .tasks import ms2lda_task, decomposition_task
+from .tasks import lda_task, decomposition_task
 
 
 @login_required(login_url='/registration/login/')
@@ -27,7 +27,7 @@ def create_experiment(request):
             user = request.user
             UserExperiment.objects.create(user=user, experiment=new_experiment, permission='edit')
 
-            process_experiment(new_experiment)
+            process_experiment(new_experiment, experiment_form.cleaned_data)
             return HttpResponseRedirect(reverse('index'))
 
         else:
@@ -39,20 +39,23 @@ def create_experiment(request):
     return render(request, 'uploads/add_experiment.html', context_dict)
 
 
-def process_experiment(exp):
+def process_experiment(exp, cleaned_data):
 
     pending, desc = EXPERIMENT_STATUS_CODE[0]
-    ready, desc = EXPERIMENT_STATUS_CODE[1]
     if exp.status == pending:
 
         # select the right pipeline
         ms2lda, desc = EXPERIMENT_TYPE[0]
         decomposition, desc = EXPERIMENT_TYPE[1]
         pipelines = {
-            ms2lda: ms2lda_task,
+            ms2lda: lda_task,
             decomposition: decomposition_task
         }
 
         # runs the correct pipeline based on the experiment type
+        params = {
+            'decompose_from': cleaned_data['decompose_from'].name,
+            'K': cleaned_data['K']
+        }
         pipeline = pipelines[exp.experiment_type]
-        pipeline.delay(exp.id)
+        pipeline.delay(exp.id, params)
