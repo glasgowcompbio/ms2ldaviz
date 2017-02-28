@@ -129,8 +129,10 @@ def get_parents_decomposition(motif_id,decomposition,vo_id = None,experiment = N
     parent_data = []
     if edge_choice == 'probability':
         docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition).order_by('-probability')
-    else:
+    elif edge_choice == 'overlap_score':
         docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,decomposition = decomposition).order_by('-overlap_score')
+    elif edge_choice == 'both':
+        docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,probability__gte = edge_thresh,decomposition = decomposition).order_by('-overlap_score')
     for dm in docm2m:
         document = dm.document
         parent_data.append(get_parent_for_plot_decomp(decomposition,document,motif = motif,edge_choice = edge_choice))
