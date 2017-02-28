@@ -4,7 +4,7 @@ import jsonpickle
 from scipy.special import psi as psi
 import networkx as nx
 from networkx.readwrite import json_graph
-from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif,DocumentGlobalMass2Motif,DocumentFeatureMass2Motif,FeatureSet,Decomposition,FeatureMap
+from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif,DocumentGlobalMass2Motif,DocumentFeatureMass2Motif,FeatureSet,Decomposition,FeatureMap,Beta
 from basicviz.models import VizOptions,Experiment,Document,Mass2MotifInstance
 
 from options.views import get_option
@@ -12,6 +12,84 @@ from options.views import get_option
 import sys
 sys.path.append('../lda/code')
 from ms2lda_feature_extraction import LoadMZML
+
+def load_mzml_and_make_documents(experiment,motifset):
+    assert experiment.mzml_file
+    peaklist = None
+    if experiment.csv_file:
+        peaklist = experiment.csv_file.path
+
+    loader = LoadMZML(isolation_window=experiment.isolation_window, mz_tol=experiment.mz_tol,
+                      rt_tol=experiment.rt_tol, peaklist=peaklist)
+    print "Loading peaks from {} using peaklist {}".format(experiment.mzml_file.path,peaklist)
+    ms1,ms2,metadata = loader.load_spectra([experiment.mzml_file.path])
+    print "Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1),len(ms2))
+
+    min_ms1_rt = experiment.min_ms1_rt*60 # seconds
+    max_ms1_rt = experiment.max_ms1_rt*60 # seconds
+    min_ms2_intensity = experiment.min_ms2_intensity
+    ms1 = filter(lambda x: x.rt>min_ms1_rt and x.rt <max_ms1_rt,ms1)
+    ms2 = filter(lambda x: x[3].rt > min_ms1_rt and x[3].rt < max_ms1_rt,ms2)
+    ms2 = filter(lambda x: x[2]>min_ms2_intensity,ms2)
+
+    # feature set and original experiment hardcoded for now
+    fs = motifset.featureset
+
+    # decompose_from is the original experiment name, e.g. 'massbank_binned_005'
+    # TODO: what to do with this?
+    # original_experiment = Experiment.objects.get(name=decompose_from)
+
+    features = GlobalFeature.objects.filter(featureset=fs).order_by('min_mz')
+
+    fragment_features = [f for f in features if f.name.startswith('fragment')]
+    loss_features = [f for f in features if f.name.startswith('loss')]
+    min_frag_mz = [f.min_mz for f in fragment_features]
+    max_frag_mz = [f.max_mz for f in fragment_features]
+    min_loss_mz = [f.min_mz for f in loss_features]
+    max_loss_mz = [f.max_mz for f in loss_features]
+
+    # Delete any already existing docs (mainly for debugging)
+    # docs = Document.objects.filter(experiment = experiment)
+    # print "Found {} documents to delete".format(len(docs))
+    # for doc in docs:
+    #     doc.delete()
+
+    # Add the documents to the database
+    n_done = 0
+    for molecule in ms1:
+        ms2_features = filter(lambda x:x[3]==molecule,ms2)
+        if len(ms2_features) == 0:
+            continue
+        name = molecule.name + '_decomp'
+        new_doc,status = Document.objects.get_or_create(experiment = experiment,name = name)
+        doc_metadata = {}
+        doc_metadata['parentmass'] = molecule.mz
+        doc_metadata['parentrt'] = molecule.rt
+        new_doc.metadata = jsonpickle.encode(doc_metadata)
+        new_doc.save()
+        for f in ms2_features:
+            fragment_mz = f[0]
+            intensity = f[2]
+            frag_pos = bisect.bisect_right(min_frag_mz,fragment_mz)-1
+            if fragment_mz <= max_frag_mz[frag_pos]:
+                feat = fragment_features[frag_pos]
+                df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = feat)[0]
+                df.intensity = intensity
+                df.save()
+                
+            loss_mz = molecule.mz - fragment_mz
+            if loss_mz >= min_loss_mz[0] and loss_mz <= max_loss_mz[-1]:
+                loss_pos = bisect.bisect_right(min_loss_mz,loss_mz)-1
+                if loss_mz <= max_loss_mz[loss_pos]:
+                    feat = loss_features[loss_pos]
+                    df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature  = feat)[0]
+                    df.intensity = intensity
+                    df.save()
+        n_done += 1
+        if n_done % 100 == 0:
+            print "Done {} documents".format(n_done)
+
+
 
 
 def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
@@ -258,83 +336,6 @@ def get_decomp_doc_context_dict(decomposition,document):
     context_dict['fm2m'] = feature_mass2motif_instances
     return context_dict
 
-
-def load_mzml_and_make_documents(experiment,motifset):
-
-    assert experiment.mzml_file
-    peaklist = None
-    if experiment.csv_file:
-        peaklist = experiment.csv_file.path
-
-    loader = LoadMZML(isolation_window=experiment.isolation_window, mz_tol=experiment.mz_tol,
-                      rt_tol=experiment.rt_tol, peaklist=peaklist)
-    print "Loading peaks from {} using peaklist {}".format(experiment.mzml_file.path,peaklist)
-    ms1,ms2,metadata = loader.load_spectra([experiment.mzml_file.path])
-    print "Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1),len(ms2))
-
-    min_ms1_rt = experiment.min_ms1_rt*60 # seconds
-    max_ms1_rt = experiment.max_ms1_rt*60 # seconds
-    min_ms2_intensity = experiment.min_ms2_intensity
-    ms1 = filter(lambda x: x.rt>min_ms1_rt and x.rt <max_ms1_rt,ms1)
-    ms2 = filter(lambda x: x[3].rt > min_ms1_rt and x[3].rt < max_ms1_rt,ms2)
-    ms2 = filter(lambda x: x[2]>min_ms2_intensity,ms2)
-
-    # feature set and original experiment hardcoded for now
-    fs = motifset.featureset
-
-    # decompose_from is the original experiment name, e.g. 'massbank_binned_005'
-    # TODO: what to do with this?
-    # original_experiment = Experiment.objects.get(name=decompose_from)
-
-    features = GlobalFeature.objects.filter(featureset=fs).order_by('min_mz')
-
-    fragment_features = [f for f in features if f.name.startswith('fragment')]
-    loss_features = [f for f in features if f.name.startswith('loss')]
-    min_frag_mz = [f.min_mz for f in fragment_features]
-    max_frag_mz = [f.max_mz for f in fragment_features]
-    min_loss_mz = [f.min_mz for f in loss_features]
-    max_loss_mz = [f.max_mz for f in loss_features]
-
-    # Delete any already existing docs (mainly for debugging)
-    # docs = Document.objects.filter(experiment = experiment)
-    # print "Found {} documents to delete".format(len(docs))
-    # for doc in docs:
-    #     doc.delete()
-
-    # Add the documents to the database
-    n_done = 0
-    for molecule in ms1:
-        ms2_features = filter(lambda x:x[3]==molecule,ms2)
-        if len(ms2_features) == 0:
-            continue
-        name = molecule.name + '_decomp'
-        new_doc,status = Document.objects.get_or_create(experiment = experiment,name = name)
-        doc_metadata = {}
-        doc_metadata['parentmass'] = molecule.mz
-        doc_metadata['parentrt'] = molecule.rt
-        new_doc.metadata = jsonpickle.encode(doc_metadata)
-        new_doc.save()
-        for f in ms2_features:
-            fragment_mz = f[0]
-            intensity = f[2]
-            frag_pos = bisect.bisect_right(min_frag_mz,fragment_mz)-1
-            if fragment_mz <= max_frag_mz[frag_pos]:
-                feat = fragment_features[frag_pos]
-                df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = feat)[0]
-                df.intensity = intensity
-                df.save()
-                
-            loss_mz = molecule.mz - fragment_mz
-            if loss_mz >= min_loss_mz[0] and loss_mz <= max_loss_mz[-1]:
-                loss_pos = bisect.bisect_right(min_loss_mz,loss_mz)-1
-                if loss_mz <= max_loss_mz[loss_pos]:
-                    feat = loss_features[loss_pos]
-                    df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature  = feat)[0]
-                    df.intensity = intensity
-                    df.save()
-        n_done += 1
-        if n_done % 100 == 0:
-            print "Done {} documents".format(n_done)
 
 
 def make_word_graph(request, motif_id, vo_id, decomposition_id):
