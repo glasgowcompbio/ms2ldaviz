@@ -53,7 +53,11 @@
             <li><a href="/people"><strong>People</strong></a></li>
             {% if user.is_authenticated %}
                 <li>
-                    <a href="/registration/logout" class="pull-right"><strong>Logout</strong></a>
+                    <a href="/registration/logout" class="pull-right"><strong>Logout {{ user }}</strong></a>
+                </li>
+            {% else %}
+                <li>
+                    <a href="/registration/login" class="pull-right"><strong>Login</strong></a>
                 </li>
             {% endif %}
           </ul>
