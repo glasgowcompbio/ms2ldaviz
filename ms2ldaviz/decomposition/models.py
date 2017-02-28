@@ -3,12 +3,9 @@ from django.db import models
 # Create your models here.
 from basicviz.models import Feature,Experiment,Document,Mass2Motif
 
-# Object to package up one decomposition event
-class Decomposition(models.Model):
-	name = models.CharField(max_length=128,unique=True)
-	experiment = models.ForeignKey(Experiment)
-	def __unicode__(self):
-		return self.name + ' (' + self.experiment.name + ')'
+
+
+
 
 # Package for a bunch of global features
 class FeatureSet(models.Model):
@@ -16,6 +13,23 @@ class FeatureSet(models.Model):
 	description = models.CharField(max_length=1024,null = True)
 	def __unicode__(self):
 		return self.name
+
+
+ # Object to collect global motifs into a FeatureSet
+class MotifSet(models.Model):
+	name = models.CharField(max_length=128,unique=True)
+	featureset = models.ForeignKey(FeatureSet)
+	def __unicode__(self):
+		return self.name
+
+# Object to package up one decomposition event
+class Decomposition(models.Model):
+	name = models.CharField(max_length=128,unique=True)
+	experiment = models.ForeignKey(Experiment)
+	motifset = models.ForeignKey(MotifSet,null=True)
+	def __unicode__(self):
+		return self.name + ' (' + self.experiment.name + ')'
+
 
 # A decomposition feature. These are shared across decompositions.
 class GlobalFeature(models.Model):
@@ -50,6 +64,15 @@ class GlobalMotif(models.Model):
 	name = property(get_name) 
 	annotation = property(get_annotation)
 
+	def __unicode__(self):
+		return self.name
+
+class GlobalMotifsToSets(models.Model):
+	motif = models.ForeignKey(GlobalMotif)
+	motifset = models.ForeignKey(MotifSet)
+	def __unicode__(self):
+		return self.motif + ' <-> ' + self.motifset
+
 
 # Document <-> feature link here
 class DocumentGlobalFeature(models.Model):
@@ -69,6 +92,7 @@ class DocumentGlobalMass2Motif(models.Model):
 	mass2motif = models.ForeignKey(GlobalMotif)
 	probability = models.FloatField(null = True)
 	overlap_score = models.FloatField(null = True)
+	decomposition = models.ForeignKey(Decomposition,null = True)
 
 class DocumentFeatureMass2Motif(models.Model):
 	docm2m = models.ForeignKey(DocumentGlobalMass2Motif)
