@@ -443,8 +443,10 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,edge_thresh
     # This is the graph maker for a decomposition experiment
     documents = Document.objects.filter(experiment = experiment)
     doc_motif = DocumentGlobalMass2Motif.objects.filter(decomposition = decomposition)
+    print len(doc_motif)
     G = nx.Graph()
     motif_degrees = {}
+    print edge_choice,edge_thresh
     for dm in doc_motif:
         if edge_choice == 'probability':
             edge_score = dm.probability
@@ -456,6 +458,7 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,edge_thresh
             else:
                 motif_degrees[dm.mass2motif] += 1
     used_motifs = []
+
     for motif,degree in motif_degrees.items():
         if degree >= min_degree:
             # add to the graph

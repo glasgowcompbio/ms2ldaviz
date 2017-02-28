@@ -119,8 +119,9 @@ def get_graph(request,decomposition_id,min_degree):
     min_degree = int(min_degree)
 
     edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
-    edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
+    edge_thresh = float(get_option('doc_m2m_threshold',experiment = experiment))
 
+    print edge_choice,edge_thresh,decomposition,experiment
 
     d = make_decomposition_graph(decomposition,experiment,min_degree = min_degree,edge_thresh = edge_thresh,
                                 edge_choice = edge_choice,topic_scale_factor = 5, edge_scale_factor = 5)
