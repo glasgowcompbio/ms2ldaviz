@@ -14,6 +14,7 @@ class CreateExperimentForm(forms.ModelForm):
             label='Decompose using Mass2Motifs in'
         )
         self.fields['mzml_file'].required = True
+        self.fields['decompose_from'].required = False
 
     class Meta:
         model = Experiment

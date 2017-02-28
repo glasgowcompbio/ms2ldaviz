@@ -45,16 +45,18 @@ def process_experiment(exp, cleaned_data):
     if exp.status == pending:
 
         # select the right pipeline
-        ms2lda, desc = EXPERIMENT_TYPE[0]
+        lda, desc = EXPERIMENT_TYPE[0]
         decomposition, desc = EXPERIMENT_TYPE[1]
         pipelines = {
-            ms2lda: lda_task,
+            lda: lda_task,
             decomposition: decomposition_task
         }
 
         # runs the correct pipeline based on the experiment type
+        decompose_from = cleaned_data['decompose_from']
+        decompose_name = decompose_from.name if decompose_from is not None else None
         params = {
-            'decompose_from': cleaned_data['decompose_from'].name,
+            'decompose_from': decompose_name,
             'K': cleaned_data['K']
         }
         pipeline = pipelines[exp.experiment_type]
