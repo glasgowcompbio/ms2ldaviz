@@ -84,7 +84,7 @@
 			</thead>
 			<tbody>
 				{% for dm2m in dm2ms %}
-					<tr><td><a href="/basicviz/show_doc/{{dm2m.document.id}}">{{dm2m.document.name}}</a></td><td>{{dm2m.document.annotation}}</td><td>{{dm2m.probability}}</td><td>{{dm2m.overlap_score}}</td></tr>
+					<tr><td><a href="/decomposition/show_doc/{{decomposition.id}}/{{dm2m.document.id}}/">{{dm2m.document.name}}</a></td><td>{{dm2m.document.annotation}}</td><td>{{dm2m.probability}}</td><td>{{dm2m.overlap_score}}</td></tr>
 				{% endfor %}
 			</tbody>
 		</table>
@@ -168,10 +168,11 @@
 		var motif_name = '{{mass2motif.name}}';
 		var motif_id = '{{mass2motif.id}}';
         var experiment_id = '{{experiment.id}}';
-		load_parents_decomposition(motif_id,experiment_id);
-		var url = '/decomposition/get_word_graph/{{mass2motif.id}}/nan/{{experiment.id}}/';
+        var decomposition_id = '{{decomposition.id}}';
+		load_parents_decomposition(motif_id,decomposition_id);
+		var url = '/decomposition/get_word_graph/{{mass2motif.id}}/nan/{{decomposition.id}}/';
 		plot_word_graph(url,motif_id,motif_name);
-		url = '/decomposition/get_intensity/{{mass2motif.id}}/nan/{{experiment.id}}/';
+		url = '/decomposition/get_intensity_graph/{{mass2motif.id}}/nan/{{decomposition.id}}/';
 		plot_word_graph(url,motif_id,motif_name);
 
 		$(document).ready(function() {
