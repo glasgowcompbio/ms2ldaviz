@@ -64,7 +64,7 @@
             {% for experiment in experiments %}
             {% if experiment.0.experiment_type == "1" %}
             {% for decomposition in experiment.0.decomposition_set.all %}
-                <li>{{decomposition.name}}: <a href="/decomposition/show_parents/{{decomposition.id}}/">show parents</a>&nbsp;<a href="/decomposition/show_motifs/{{decomposition.id}}/">show motifs</a></li>
+                <li>{{decomposition.name}}: <a href="/decomposition/show_parents/{{decomposition.id}}/">show parents</a>&nbsp;<a href="/decomposition/show_motifs/{{decomposition.id}}/">show motifs</a>&nbsp;<a href="/decomposition/start_viz/{{decomposition.id}}/">start viz</a></li>
             {% endfor %}
             {% endif %}
             {% endfor %}

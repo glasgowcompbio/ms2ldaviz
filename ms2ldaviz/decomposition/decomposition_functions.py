@@ -2,7 +2,8 @@ import numpy as np
 import bisect
 import jsonpickle
 from scipy.special import psi as psi
-
+import networkx as nx
+from networkx.readwrite import json_graph
 from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif,DocumentGlobalMass2Motif,DocumentFeatureMass2Motif,FeatureSet,Decomposition,FeatureMap
 from basicviz.models import VizOptions,Experiment,Document,Mass2MotifInstance
 
@@ -435,4 +436,64 @@ def make_intensity_graph(request, motif_id, vo_id, decomposition_id):
 
     return data_for_json
 
+
+
+def make_decomposition_graph(decomposition,experiment,min_degree = 5,edge_thresh = 0.5,
+                                edge_choice = 'overlap_score',topic_scale_factor = 5, edge_scale_factor = 5):
+    # This is the graph maker for a decomposition experiment
+    documents = Document.objects.filter(experiment = experiment)
+    doc_motif = DocumentGlobalMass2Motif.objects.filter(decomposition = decomposition)
+    G = nx.Graph()
+    motif_degrees = {}
+    for dm in doc_motif:
+        if edge_choice == 'probability':
+            edge_score = dm.probability
+        else:
+            edge_score = dm.overlap_score
+        if edge_score >= edge_thresh:
+            if not dm.mass2motif in motif_degrees:
+                motif_degrees[dm.mass2motif] = 1
+            else:
+                motif_degrees[dm.mass2motif] += 1
+    used_motifs = []
+    for motif,degree in motif_degrees.items():
+        if degree >= min_degree:
+            # add to the graph
+            used_motifs.append(motif)
+            metadata = jsonpickle.decode(motif.originalmotif.metadata)
+            if 'annotation' in metadata:
+                G.add_node(motif.originalmotif.name, group=2, name=metadata['annotation'],
+                           size=topic_scale_factor * degree,
+                           special=True, in_degree = degree,
+                           score=1, node_id=motif.id, is_topic=True)
+            else:
+                G.add_node(motif.originalmotif.name, group=2, name=motif.originalmotif.name,
+                           size=topic_scale_factor * degree,
+                           special=False, in_degree=degree,
+                           score=1, node_id=motif.id, is_topic=True)
+    used_docs = []
+    for dm in doc_motif:
+        if dm.mass2motif in used_motifs:
+            # add the edge
+            if not dm.document in used_docs:
+                # add the document node
+                metadata = jsonpickle.decode(dm.document.metadata)
+                if 'compound' in metadata:
+                    name = metadata['compound']
+                elif 'annotation' in metadata:
+                    name = metadata['annotation']
+                else:
+                    name = dm.document.name
+
+                G.add_node(dm.document.name, group=1, name=name, size=20,
+                           type='square', peakid=dm.document.name, special=False,
+                           in_degree=0, score=0, is_topic=False)
+                used_docs.append(dm.document)
+            if edge_choice == 'probability':
+                weight = edge_scale_factor * dm.probability
+            else:
+                weight = edge_scale_factor * dm.overlap_score
+            G.add_edge(dm.mass2motif.originalmotif.name, dm.document.name, weight=weight)
+    d = json_graph.node_link_data(G)
+    return d
         

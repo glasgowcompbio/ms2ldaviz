@@ -7,7 +7,7 @@ from basicviz.models import Mass2MotifInstance,Experiment,Document
 
 from options.views import get_option
 
-from decomposition_functions import get_parents_decomposition,get_decomp_doc_context_dict,get_parent_for_plot_decomp,make_word_graph,make_intensity_graph
+from decomposition_functions import get_parents_decomposition,get_decomp_doc_context_dict,get_parent_for_plot_decomp,make_word_graph,make_intensity_graph,make_decomposition_graph
 from basicviz.views import views_lda_single
 # Create your views here.
 def view_parents(request,mass2motif_id,decomposition_id):
@@ -99,4 +99,25 @@ def get_doc_topics(request, decomposition_id,doc_id):
     score_type = get_option('default_doc_m2m_score',experiment = document.experiment)
     plot_fragments = [get_parent_for_plot_decomp(decomposition,document,edge_choice=score_type,get_key = True)]
     return HttpResponse(json.dumps(plot_fragments), content_type='application/json')
+
+def start_viz(request,decomposition_id):
+    decomposition = Decomposition.objects.get(id = decomposition_id)
+    experiment = decomposition.experiment
+
+    # add form stuff here!
+
+    context_dict = {}
+    context_dict['decomposition'] = decomposition
+    context_dict['experiment'] = experiment
+    context_dict['vo'] = {'min_degree':50,'random_seed':"hello",'edge_type':'overlap_score'}
+
+    return render(request,'decomposition/graph.html',context_dict)
+
+def get_graph(request,decomposition_id,edge_type,min_degree):
+    decomposition = Decomposition.objects.get(id = decomposition_id)
+    experiment = decomposition.experiment
+    min_degree = int(min_degree)
+    d = make_decomposition_graph(decomposition,experiment,min_degree = min_degree,edge_thresh = 0.5,
+                                edge_choice = 'overlap_score',topic_scale_factor = 5, edge_scale_factor = 5)
+    return HttpResponse(json.dumps(d),content_type = 'application/json')
 

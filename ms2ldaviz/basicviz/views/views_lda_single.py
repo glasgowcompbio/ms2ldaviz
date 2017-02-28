@@ -511,49 +511,6 @@ def view_word_graph(request, motif_id):
 
 
 def get_intensity(request, motif_id, vo_id, experiment = None):
-    # motif = Mass2Motif.objects.get(id=motif_id)
-
-    # experiment = motif.experiment
-
-    # features_m2m = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01)
-
-    # features = [f.feature for f in features_m2m]
-    # colours = ['#404080', '#0080C0']
-    # total_intensity = {}
-    # mass2motif_intensity = {}
-
-    # # getting the total intensities of each feature
-    # for feature in features:
-    #     feature_instances = FeatureInstance.objects.filter(feature=feature)
-    #     total_intensity[feature] = 0.0
-    #     mass2motif_intensity[feature] = 0.0
-    #     for instance in feature_instances:
-    #         total_intensity[feature] += instance.intensity
-    #         fm2m = FeatureMass2MotifInstance.objects.filter(featureinstance=instance, mass2motif=motif)
-    #         if len(fm2m) > 0:
-    #             mass2motif_intensity[feature] += fm2m[0].probability * instance.intensity
-    # data_for_json = []
-    # features_list = []
-    # highest_intensity = 0;
-    # for feature in features:
-    #     if mass2motif_intensity[feature] > 0:
-    #         if '.' in feature.name:
-    #             split_name = feature.name.split('.')
-    #             short_name = split_name[0]
-    #             if len(split_name[1]) < 5:
-    #                 short_name += '.' + split_name[1]
-    #             else:
-    #                 short_name += '.' + split_name[1][:5]
-    #         else:
-    #             short_name = feature.name
-    #         features_list.append((short_name, total_intensity[feature], colours[0]))
-    #         features_list.append(('', mass2motif_intensity[feature], colours[1]))
-    #         if total_intensity[feature] > highest_intensity:
-    #             highest_intensity = total_intensity[feature]
-    #         features_list.append(('', 0, ''))
-
-    # data_for_json.append(highest_intensity)
-    # data_for_json.append(features_list)
     if not vo_id == 'nan':
         viz_options = VizOptions.objects.get(id = vo_id)
         experiment = viz_options.experiment
@@ -604,47 +561,6 @@ def get_intensity(request, motif_id, vo_id, experiment = None):
             feat_list.append(('', 0, ''))
         data_for_json.append(feat_tot_intensity[0][1])
         data_for_json.append(feat_list)
-
-
-    elif experiment.experiment_type == "1": # decomp
-        data_for_json = []
-        motif = GlobalMotif.objects.get(id = motif_id)
-        originalmotif = motif.originalmotif
-        originalfeatures = Mass2MotifInstance.objects.filter(mass2motif = originalmotif,probability__gte = 0.1)
-        globalfeatures = FeatureMap.objects.filter(localfeature__in = [o.feature for o in originalfeatures])
-        globalfeatures = [g.globalfeature for g in globalfeatures]
-        if edge_choice == 'probability':
-            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,document__experiment = experiment)
-        else:
-            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,document__experiment = experiment)
-        documents = [d.document for d in docm2ms]
-        
-        feat_total_intensity = {}
-        feat_motif_intensity = {}
-        for feature in globalfeatures:
-            feat_total_intensity[feature] = 0.0
-            feat_motif_intensity[feature] = 0.0
-        for feature in globalfeatures:
-            fi = DocumentGlobalFeature.objects.filter(document__experiment = experiment,feature = feature)
-            for ft in fi:
-                feat_total_intensity[feature] += ft.intensity
-                if ft.document in documents:
-                    feat_motif_intensity[feature] += ft.intensity
-        
-
-        feat_list = []
-        feat_tot_intensity = zip(feat_total_intensity.keys(),feat_total_intensity.values())
-        feat_tot_intensity = sorted(feat_tot_intensity,key = lambda x: x[1],reverse = True)
-        for feature,tot_intensity in feat_tot_intensity:
-            feat_type = feature.name.split('_')[0]
-            feat_mz = feature.name.split('_')[1]
-            short_name = "{}_{:.4f}".format(feat_type,float(feat_mz))
-            feat_list.append([short_name,feat_total_intensity[feature],colours[0]])
-            feat_list.append(['',feat_motif_intensity[feature],colours[1]])
-            feat_list.append(('', 0, ''))
-        data_for_json.append(feat_tot_intensity[0][1])
-        data_for_json.append(feat_list)
-
     else:
         data_for_json = []
 
@@ -891,72 +807,73 @@ def get_graph(request, vo_id):
                        colour_topic_by_score=viz_options.colour_topic_by_score,
                        edge_choice=viz_options.edge_choice)
     else:
-        G = make_decomposition_graph(experiment, min_degree=viz_options.min_degree,
-                       edge_thresh=viz_options.edge_thresh,
-                       edge_choice=viz_options.edge_choice)
+        # G = make_decomposition_graph(experiment, min_degree=viz_options.min_degree,
+        #                edge_thresh=viz_options.edge_thresh,
+        #                edge_choice=viz_options.edge_choice)
+        raise Http404("page not found")
     d = json_graph.node_link_data(G)
     return HttpResponse(json.dumps(d), content_type='application/json')
 
 
-def make_decomposition_graph(experiment,min_degree = 5,edge_thresh = 0.5,
-                                edge_choice = 'probability',topic_scale_factor = 5, edge_scale_factor = 5):
-    # This is the graph maker for a decomposition experiment
-    documents = Document.objects.filter(experiment = experiment)
-    doc_motif = DocumentGlobalMass2Motif.objects.filter(document__in = documents)
-    G = nx.Graph()
-    motif_degrees = {}
-    for dm in doc_motif:
-        if edge_choice == 'probability':
-            edge_score = dm.probability
-        else:
-            edge_score = dm.overlap_score
-        if edge_score >= edge_thresh:
-            if not dm.mass2motif in motif_degrees:
-                motif_degrees[dm.mass2motif] = 1
-            else:
-                motif_degrees[dm.mass2motif] += 1
-    used_motifs = []
-    for motif,degree in motif_degrees.items():
-        if degree >= min_degree:
-            # add to the graph
-            used_motifs.append(motif)
-            metadata = jsonpickle.decode(motif.originalmotif.metadata)
-            if 'annotation' in metadata:
-                G.add_node(motif.originalmotif.name, group=2, name=metadata['annotation'],
-                           size=topic_scale_factor * degree,
-                           special=True, in_degree = degree,
-                           score=1, node_id=motif.id, is_topic=True)
-            else:
-                G.add_node(motif.originalmotif.name, group=2, name=motif.originalmotif.name,
-                           size=topic_scale_factor * degree,
-                           special=False, in_degree=degree,
-                           score=1, node_id=motif.id, is_topic=True)
-    used_docs = []
-    for dm in doc_motif:
-        if dm.mass2motif in used_motifs:
-            # add the edge
-            if not dm.document in used_docs:
-                # add the document node
-                metadata = jsonpickle.decode(dm.document.metadata)
-                if 'compound' in metadata:
-                    name = metadata['compound']
-                elif 'annotation' in metadata:
-                    name = metadata['annotation']
-                else:
-                    name = dm.document.name
+# def make_decomposition_graph(experiment,min_degree = 5,edge_thresh = 0.5,
+#                                 edge_choice = 'probability',topic_scale_factor = 5, edge_scale_factor = 5):
+#     # This is the graph maker for a decomposition experiment
+#     documents = Document.objects.filter(experiment = experiment)
+#     doc_motif = DocumentGlobalMass2Motif.objects.filter(document__in = documents)
+#     G = nx.Graph()
+#     motif_degrees = {}
+#     for dm in doc_motif:
+#         if edge_choice == 'probability':
+#             edge_score = dm.probability
+#         else:
+#             edge_score = dm.overlap_score
+#         if edge_score >= edge_thresh:
+#             if not dm.mass2motif in motif_degrees:
+#                 motif_degrees[dm.mass2motif] = 1
+#             else:
+#                 motif_degrees[dm.mass2motif] += 1
+#     used_motifs = []
+#     for motif,degree in motif_degrees.items():
+#         if degree >= min_degree:
+#             # add to the graph
+#             used_motifs.append(motif)
+#             metadata = jsonpickle.decode(motif.originalmotif.metadata)
+#             if 'annotation' in metadata:
+#                 G.add_node(motif.originalmotif.name, group=2, name=metadata['annotation'],
+#                            size=topic_scale_factor * degree,
+#                            special=True, in_degree = degree,
+#                            score=1, node_id=motif.id, is_topic=True)
+#             else:
+#                 G.add_node(motif.originalmotif.name, group=2, name=motif.originalmotif.name,
+#                            size=topic_scale_factor * degree,
+#                            special=False, in_degree=degree,
+#                            score=1, node_id=motif.id, is_topic=True)
+#     used_docs = []
+#     for dm in doc_motif:
+#         if dm.mass2motif in used_motifs:
+#             # add the edge
+#             if not dm.document in used_docs:
+#                 # add the document node
+#                 metadata = jsonpickle.decode(dm.document.metadata)
+#                 if 'compound' in metadata:
+#                     name = metadata['compound']
+#                 elif 'annotation' in metadata:
+#                     name = metadata['annotation']
+#                 else:
+#                     name = dm.document.name
 
-                G.add_node(dm.document.name, group=1, name=name, size=20,
-                           type='square', peakid=dm.document.name, special=False,
-                           in_degree=0, score=0, is_topic=False)
-                used_docs.append(dm.document)
-            if edge_choice == 'probability':
-                weight = edge_scale_factor * dm.probability
-            else:
-                weight = edge_scale_factor * dm.overlap_score
-            G.add_edge(dm.mass2motif.originalmotif.name, dm.document.name, weight=weight)
+#                 G.add_node(dm.document.name, group=1, name=name, size=20,
+#                            type='square', peakid=dm.document.name, special=False,
+#                            in_degree=0, score=0, is_topic=False)
+#                 used_docs.append(dm.document)
+#             if edge_choice == 'probability':
+#                 weight = edge_scale_factor * dm.probability
+#             else:
+#                 weight = edge_scale_factor * dm.overlap_score
+#             G.add_edge(dm.mass2motif.originalmotif.name, dm.document.name, weight=weight)
 
 
-    return G
+#     return G
 
 
 def make_graph(experiment, edge_thresh=0.05, min_degree=5,

@@ -169,7 +169,7 @@
 		var motif_id = '{{mass2motif.id}}';
         var experiment_id = '{{experiment.id}}';
         var decomposition_id = '{{decomposition.id}}';
-		load_parents_decomposition(motif_id,decomposition_id);
+		load_parents_decomposition(motif_id,motif_name,decomposition_id);
 		var url = '/decomposition/get_word_graph/{{mass2motif.id}}/nan/{{decomposition.id}}/';
 		plot_word_graph(url,motif_id,motif_name);
 		url = '/decomposition/get_intensity_graph/{{mass2motif.id}}/nan/{{decomposition.id}}/';

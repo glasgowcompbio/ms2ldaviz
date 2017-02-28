@@ -1,4 +1,4 @@
-function load_parents_decomposition(mass2motif_id,decomposition_id) {
+function load_parents_decomposition(mass2motif_id,motif_name,decomposition_id) {
     current_pos = 0
 
     //clear the existing svg (if it exists)
