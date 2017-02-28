@@ -355,11 +355,14 @@ def make_word_graph(request, motif_id, vo_id, decomposition_id):
     originalfeatures = Mass2MotifInstance.objects.filter(mass2motif = originalmotif,probability__gte = 0.01)
     globalfeatures = FeatureMap.objects.filter(localfeature__in = [o.feature for o in originalfeatures])
     globalfeatures = [g.globalfeature for g in globalfeatures]
-    print originalfeatures
     if edge_choice == 'probability':
         docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
-    else:
+    elif edge_choice == 'overlap_score':
         docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,decomposition = decomposition)
+    elif edge_choice == 'both':
+        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,probability__gte = edge_thresh,decomposition = decomposition)
+    else:
+        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
     data_for_json.append(len(docm2ms))
     feat_counts = {}
     for feature in globalfeatures:
@@ -409,8 +412,12 @@ def make_intensity_graph(request, motif_id, vo_id, decomposition_id):
     globalfeatures = [g.globalfeature for g in globalfeatures]
     if edge_choice == 'probability':
         docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
-    else:
+    elif edge_choice == 'overlap_score':
         docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,decomposition = decomposition)
+    elif edge_choice == 'both':
+        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,probability__gte = edge_thresh,decomposition = decomposition)
+    else:
+        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
     documents = [d.document for d in docm2ms]
     
     feat_total_intensity = {}
@@ -454,10 +461,14 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,edge_thresh
     print edge_choice,edge_thresh
     for dm in doc_motif:
         if edge_choice == 'probability':
-            edge_score = dm.probability
+            hit = dm.probability > edge_thresh
+        elif edge_choice == 'overlap_score':
+            hit = dm.overlap_score > edge_thresh
+        elif edge_choice == 'both':
+            hit = dm.overlap_score > edge_thresh and dm.probability > edge_thresh
         else:
-            edge_score = dm.overlap_score
-        if edge_score >= edge_thresh:
+            hit = dm.probability > edge_thresh # default
+        if hit:
             if not dm.mass2motif in motif_degrees:
                 motif_degrees[dm.mass2motif] = 1
             else:
