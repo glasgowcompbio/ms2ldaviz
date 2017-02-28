@@ -14,7 +14,10 @@ sys.path.append('../lda/code')
 from ms2lda_feature_extraction import LoadMZML
 
 
-def decompose(documents,betaobject,normalise = 1000.0,store_threshold = 0.01):
+def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
+    motifset = decomposition.motifset
+    betaobject = Beta.objects.get(motifset = motifset)
+    documents = Document.objects.filter(experiment = decomposition.experiment)
     # Load the beta objects
     print "Loading and unpickling beta"
     beta = jsonpickle.decode(betaobject.beta)
@@ -89,7 +92,7 @@ def decompose(documents,betaobject,normalise = 1000.0,store_threshold = 0.01):
                 break
             motif_pos = motif_index[motif[i]]
             overlap_score = compute_overlap(phi_matrix,motif_pos,beta_matrix[motif_pos,:],word_index)
-            dgm2m,status = DocumentGlobalMass2Motif.objects.get_or_create(document = document,mass2motif = motif[i])
+            dgm2m,status = DocumentGlobalMass2Motif.objects.get_or_create(document = document,mass2motif = motif[i],decomposition=decomposition)
             dgm2m.probability = theta[i]
             dgm2m.overlap_score = overlap_score
             dgm2m.save()
@@ -256,7 +259,7 @@ def get_decomp_doc_context_dict(decomposition,document):
     return context_dict
 
 
-def load_mzml_and_make_documents(experiment, decompose_from):
+def load_mzml_and_make_documents(experiment,motifset):
 
     assert experiment.mzml_file
     peaklist = None
@@ -277,11 +280,11 @@ def load_mzml_and_make_documents(experiment, decompose_from):
     ms2 = filter(lambda x: x[2]>min_ms2_intensity,ms2)
 
     # feature set and original experiment hardcoded for now
-    fs = FeatureSet.objects.get(name = 'binned_005')
+    fs = motifset.featureset
 
     # decompose_from is the original experiment name, e.g. 'massbank_binned_005'
     # TODO: what to do with this?
-    original_experiment = Experiment.objects.get(name=decompose_from)
+    # original_experiment = Experiment.objects.get(name=decompose_from)
 
     features = GlobalFeature.objects.filter(featureset=fs).order_by('min_mz')
 
@@ -293,10 +296,10 @@ def load_mzml_and_make_documents(experiment, decompose_from):
     max_loss_mz = [f.max_mz for f in loss_features]
 
     # Delete any already existing docs (mainly for debugging)
-    docs = Document.objects.filter(experiment = experiment)
-    print "Found {} documents to delete".format(len(docs))
-    for doc in docs:
-        doc.delete()
+    # docs = Document.objects.filter(experiment = experiment)
+    # print "Found {} documents to delete".format(len(docs))
+    # for doc in docs:
+    #     doc.delete()
 
     # Add the documents to the database
     n_done = 0

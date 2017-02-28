@@ -86,6 +86,7 @@ class Beta(models.Model):
 	motif_id_list = models.TextField(null = True)
 	feature_id_list = models.TextField(null = True)
 	alpha_list = models.TextField(null = True)
+	motifset = models.ForeignKey(MotifSet,null = True)
 
 class DocumentGlobalMass2Motif(models.Model):
 	document = models.ForeignKey(Document)

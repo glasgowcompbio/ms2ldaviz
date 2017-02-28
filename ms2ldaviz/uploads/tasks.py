@@ -4,7 +4,7 @@ from basicviz.constants import EXPERIMENT_STATUS_CODE
 from basicviz.models import Document, Experiment
 from decomposition.decomposition_functions import load_mzml_and_make_documents, decompose
 from .lda_functions import load_mzml_and_make_documents, run_lda, load_dict
-from decomposition.models import Beta
+from decomposition.models import Beta,MotifSet,Decomposition
 from ms2ldaviz.celery_tasks import app
 
 
@@ -27,17 +27,20 @@ def lda_task(exp_id, params):
 
 @app.task
 def decomposition_task(exp_id, params):
-    exp = Experiment.objects.get(pk=exp_id)
-    decompose_from = params['decompose_from']
-    print 'Running decomposition on experiment_%d (%s), decompose_from %s' % (exp_id, exp.description,
+    experiment = Experiment.objects.get(pk=exp_id)
+    decompose_from = params['decompose_from'] # This is not used - user should choose a MOTIFSET
+    print 'Running decomposition on experiment_%d (%s), decompose_from %s' % (exp_id, experiment.description,
                                                                               decompose_from)
-    print 'CSV file = %s' % exp.csv_file
-    print 'mzML file = %s' % exp.mzml_file
+    print 'CSV file = %s' % experiment.csv_file
+    print 'mzML file = %s' % experiment.mzml_file
 
-    load_mzml_and_make_documents(exp, decompose_from)
-    beta = Beta.objects.all()[0]
-    documents = Document.objects.filter(experiment=exp)
-    decompose(documents, beta)
+    # These two should come from the form...
+    motifset = MotifSet.objects.get(name = 'massbank_motifset')
+    name = experiment.name + ' decomposotion'
+
+    load_mzml_and_make_documents(experiment,motifset)
+    decomposition = Decomposition.objects.create(name = name,experiment = experiment,motifset = motifset)
+    decompose(decomposition)
 
     ready, desc = EXPERIMENT_STATUS_CODE[1]
     exp.status = ready
