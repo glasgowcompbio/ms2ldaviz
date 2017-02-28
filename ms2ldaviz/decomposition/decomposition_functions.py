@@ -143,7 +143,10 @@ def get_parents_decomposition(motif_id,decomposition,vo_id = None,experiment = N
 def get_parent_for_plot_decomp(decomposition,document,motif = None,edge_choice = 'probability',get_key = False):
     plot_data = []
     colours = ['red', 'green', 'black', 'yellow']
-    docm2m = DocumentGlobalMass2Motif.objects.filter(decomposition = decomposition,document = document).order_by('-'+edge_choice)
+    edge_order = edge_choice
+    if edge_choice == 'both':
+        edge_order = 'probability'
+    docm2m = DocumentGlobalMass2Motif.objects.filter(decomposition = decomposition,document = document).order_by('-'+edge_order)
     docfeatures = DocumentGlobalFeature.objects.filter(document = document)
     # Add the parent data
     score = "na"
