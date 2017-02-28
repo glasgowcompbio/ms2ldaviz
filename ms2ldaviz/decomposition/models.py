@@ -26,7 +26,7 @@ class MotifSet(models.Model):
 class Decomposition(models.Model):
 	name = models.CharField(max_length=128,unique=True)
 	experiment = models.ForeignKey(Experiment)
-	motifset = models.ForeignKey(MotifSet,null=True)
+	motifset = models.ForeignKey(MotifSet)
 	def __unicode__(self):
 		return self.name + ' (' + self.experiment.name + ')'
 

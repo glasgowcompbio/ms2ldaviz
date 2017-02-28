@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_block %}
+	<style>
+	.axis path,
+	.axis line {
+	    fill: none;
+	    stroke: black;
+	    shape-rendering: crispEdges;
+	}
+	.axis text {
+	    font-family: sans-serif;
+	    font-size: 11px;
+	}
+	.axis-label {
+	  font-family: sans-serif;
+	  font-size: 14px;
+	}
+	</style>
+{% endblock %}
+
+{% block body_block %}
+	{% if document %}
+		<h3>Document {{document.name}} -- {{document.display_name}}</h3>
+		<div>Decomposition: {{decomposition.name}}</div>
+		<div>MotifSet: {{decomposition.motifset.name}}</div>
+	{% endif %}
+
+	{% if mass2motifs %}
+		<table class="table" id="motiftable">
+			<thead>
+				<tr><th>Motif</th><th>Probability</th><th>Overlap Score</th><th>Annotation</th></tr>
+			</thead>
+		<tbody>
+			{% for mass2motif in mass2motifs %}
+			<tr>
+				<td>{{mass2motif.mass2motif.name}}</td>
+				<td>{{mass2motif.probability}}</td>
+				<td>{{mass2motif.overlap_score}}</td>
+				<td>{{mass2motif.mass2motif.annotation}}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+		</table>
+	{% endif %}
+
+	{% if image_url %}
+		<img src="{{image_url}}">
+		<a href="http://www.chemspider.com/Chemical-Structure.{{csid}}.html" target=new>View on ChemSpider</a>
+	{% endif %}
+
+	{% if features %}
+		<table class="table" id="parenttable">
+		<thead>
+		<tr><th>Name</th><th>Intensity</th><th>Topics</th></tr>
+		</thead>
+		<tbody>
+		{% for feature,m2minstances in fm2m %}
+			<tr><td>{{feature.feature.name}}</td><td>{{feature.intensity}}</td>
+			<td>
+				{% for m2minstance in m2minstances %}
+					({{m2minstance.mass2motif}},{{m2minstance.probability}})
+				{% endfor %}
+			</td>
+			</tr>
+		{% endfor %}
+		</tbody>
+		</table>
+	{% endif %}
+	<a href="/decomposition/show_parents/{{decomposition.id}}">return to parent list for {{experiment.name}}</a>
+	<div id="spectra" border="20" padding="20">
+	</div>
+{% endblock %}
+
+{% block js_block %}
+	
+	<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
+	<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
+	<script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
+
+
+
+	<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+	<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+	<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+	<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
+
+	<script type="text/javascript">
+
+		$('#parenttable').DataTable({
+			dom: 'Bfrtip',
+			buttons: [
+		        'csv',
+	        ],
+	        "order": [[ 1, "desc" ]],
+	    });
+	    $('#motiftable').DataTable({
+	    	dom: 'Bfrtip',
+	    	buttons: [
+	    		'csv',
+	    	],
+	    	"order": [[1, "desc"]],
+	    });
+
+		load_parent('/decomposition/get_doc_topics/{{decomposition.id}}/{{document.id}}/');
+	</script>
+
+
+
+
+
+{% endblock %}
+

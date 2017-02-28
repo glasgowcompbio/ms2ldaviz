@@ -1,4 +1,4 @@
-function load_parents_decomposition(mass2motif_id,experiment_id) {
+function load_parents_decomposition(mass2motif_id,decomposition_id) {
     current_pos = 0
 
     //clear the existing svg (if it exists)
@@ -7,7 +7,7 @@ function load_parents_decomposition(mass2motif_id,experiment_id) {
     d3.select("#frag_graph_svg").remove();
     d3.select('#frag_graph_svg').remove()
 
-    var url = '/decomposition/get_parents/' + experiment_id + '/' + mass2motif_id + '/';
+    var url = '/decomposition/get_parents/' + decomposition_id + '/' + mass2motif_id + '/';
     console.log(url);
 
     d3.json(url,function(error,total_dataset) {

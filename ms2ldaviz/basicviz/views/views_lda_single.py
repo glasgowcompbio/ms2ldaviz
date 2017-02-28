@@ -5,7 +5,7 @@ import jsonpickle
 import networkx as nx
 import numpy as np
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse,Http404
 from django.shortcuts import render
 from networkx.readwrite import json_graph
 from sklearn.decomposition import PCA
@@ -494,101 +494,9 @@ def get_word_graph(request, motif_id, vo_id, experiment = None):
             feat_list.append([short_name,feat_counts[feature],colours])
         feat_list = sorted(feat_list,key = lambda x: x[1],reverse = True)
         data_for_json.append(feat_list)
-    elif experiment.experiment_type == "1": # decomp
-        data_for_json = []
-        motif = GlobalMotif.objects.get(id = motif_id)
-        originalmotif = motif.originalmotif
-        originalfeatures = Mass2MotifInstance.objects.filter(mass2motif = originalmotif,probability__gte = 0.1)
-        globalfeatures = FeatureMap.objects.filter(localfeature__in = [o.feature for o in originalfeatures])
-        globalfeatures = [g.globalfeature for g in globalfeatures]
-        if edge_choice == 'probability':
-            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,document__experiment = experiment)
-        else:
-            docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,document__experiment = experiment)
-        data_for_json.append(len(docm2ms))
-        feat_counts = {}
-        for feature in globalfeatures:
-            feat_counts[feature] = 0
-        for dm2m in docm2ms:
-            fi = DocumentGlobalFeature.objects.filter(document = dm2m.document)
-            for ft in fi:
-                if ft.feature in feat_counts:
-                    feat_counts[ft.feature] += 1
-        colours = '#404080'
-        feat_list = []
-        for feature in feat_counts:
-            feat_type = feature.name.split('_')[0]
-            feat_mz = feature.name.split('_')[1]
-            short_name = "{}_{:.4f}".format(feat_type,float(feat_mz))
-            feat_list.append([short_name,feat_counts[feature],colours])
-        feat_list = sorted(feat_list,key = lambda x: x[1],reverse = True)
-        data_for_json.append(feat_list)
     else:
         data_for_json = []
-    # motif = Mass2Motif.objects.get(id=motif_id)
-    
-    # if not experiment_id == None:
-    #     experiment = Experiment.objects.get(id = experiment_id)
-    # else:
-    #     experiment = motif.experiment
-
-
-    # if not vo_id == 'nan':
-    #     viz_options = VizOptions.objects.get(id=vo_id)
-    #     edge_thresh = viz_options.edge_thresh
-    #     default_score = viz_options.edge_choice
-    # else:
-    #     edge_thresh = get_option('doc_m2m_threshold', experiment=motif.experiment)
-    #     if edge_thresh:
-    #         edge_thresh = float(edge_thresh)
-    #     else:
-    #         edge_thresh = 0.0
-    #     default_score = get_option('default_doc_m2m_score', experiment=motif.experiment)
-    #     if not default_score:
-    #         default_score = 'probability'
-
-    # m2mIns = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01)
-
-    # if default_score == 'probability':
-    #     m2mdocs = DocumentMass2Motif.objects.filter(mass2motif=motif, probability__gte=edge_thresh)
-    # else:
-    #     m2mdocs = DocumentMass2Motif.objects.filter(mass2motif=motif, overlap_score__gte=edge_thresh)
-
-
-    # colours = '#404080'
-    # features_data = {}
-    # for feat in m2mIns:
-    #     features_data[feat.feature] = 0
-
-    # for doc in m2mdocs:
-    #     feature_instances = FeatureInstance.objects.filter(document=doc.document)
-    #     for ft in feature_instances:
-    #         if ft.feature in features_data:
-    #             features_data[ft.feature] += 1
-
-    # data_for_json = []
-    # data_for_json.append(len(m2mdocs))
-    # sorted_feature_list = []
-
-    # for feature in features_data:
-    #     if '.' in feature.name:
-    #         split_name = feature.name.split('.')
-    #         short_name = split_name[0]
-    #         if len(split_name[1]) < 5:
-    #             short_name += '.' + split_name[1]
-    #         else:
-    #             short_name += '.' + split_name[1][:5]
-    #     else:
-    #         short_name = feature.name
-    #     sorted_feature_list.append([short_name, features_data[feature], colours])
-    # sorted_feature_list = sorted(sorted_feature_list, key=lambda x: x[1], reverse=True)
-
-    # feature_list_full = []
-    # for feature in sorted_feature_list:
-    #     feature_list_full.append(feature)
-    #     # feature_list_full.append(["", 0, ""])
-
-    # data_for_json.append(feature_list_full)
+ 
     return HttpResponse(json.dumps(data_for_json), content_type='application/json')
 
 
@@ -765,10 +673,11 @@ def view_mass2motifs(request, experiment_id):
         context_dict['experiment'] = experiment
         return render(request, 'basicviz/view_mass2motifs.html', context_dict)
     elif experiment.experiment_type == '1': #decomp
-        documents = Document.objects.filter(experiment = experiment)
-        dm2m = DocumentGlobalMass2Motif.objects.filter(document__in = documents)
-        mass2motifs = list(set([d.mass2motif for d in dm2m]))
-        context_dict = {'mass2motifs':mass2motifs,'experiment':experiment}
+        raise Http404('Page not found')
+        # documents = Document.objects.filter(experiment = experiment)
+        # dm2m = DocumentGlobalMass2Motif.objects.filter(document__in = documents)
+        # mass2motifs = list(set([d.mass2motif for d in dm2m]))
+        # context_dict = {'mass2motifs':mass2motifs,'experiment':experiment}
         return render(request, 'decomposition/view_mass2motifs.html',context_dict)
 
 
@@ -892,10 +801,11 @@ def get_doc_topics(request, doc_id):
     if document.experiment.experiment_type == '0':
         plot_fragments = [get_doc_for_plot(doc_id, get_key=True)]
     elif document.experiment.experiment_type == '1': # decomposition
-        score_type = get_option('default_doc_m2m_score',experiment = document.experiment)
-        if not score_type:
-            score_type = 'probability'
-        plot_fragments = [get_parent_for_plot_decomp(document,edge_choice=score_type,get_key = True)]
+        raise Http404('Page not found')
+        # score_type = get_option('default_doc_m2m_score',experiment = document.experiment)
+        # if not score_type:
+        #     score_type = 'probability'
+        # plot_fragments = [get_parent_for_plot_decomp(document,edge_choice=score_type,get_key = True)]
     else:
         plot_fragments = []
     return HttpResponse(json.dumps(plot_fragments), content_type='application/json')

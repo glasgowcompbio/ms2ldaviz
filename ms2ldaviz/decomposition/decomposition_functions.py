@@ -3,8 +3,8 @@ import bisect
 import jsonpickle
 from scipy.special import psi as psi
 
-from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif,DocumentGlobalMass2Motif,DocumentFeatureMass2Motif,FeatureSet
-from basicviz.models import VizOptions,Experiment,Document
+from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif,DocumentGlobalMass2Motif,DocumentFeatureMass2Motif,FeatureSet,Decomposition,FeatureMap
+from basicviz.models import VizOptions,Experiment,Document,Mass2MotifInstance
 
 from options.views import get_option
 
@@ -113,7 +113,7 @@ def compute_overlap(phi_matrix,motif_pos,beta_row,word_index):
     return overlap_score
 
 
-def get_parents_decomposition(motif_id,vo_id = None,experiment = None):
+def get_parents_decomposition(motif_id,decomposition,vo_id = None,experiment = None):
     if vo_id:
         viz_options = VizOptions.objects.get(id = vo_id)
         edge_choice = viz_options.edge_choice
@@ -127,20 +127,20 @@ def get_parents_decomposition(motif_id,vo_id = None,experiment = None):
     motif = GlobalMotif.objects.get(id = motif_id)
     parent_data = []
     if edge_choice == 'probability':
-        docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,document__experiment = experiment).order_by('-probability')
+        docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition).order_by('-probability')
     else:
-        docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh, document__experiment = experiment).order_by('-overlap_score')
+        docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,decomposition = decomposition).order_by('-overlap_score')
     for dm in docm2m:
         document = dm.document
-        parent_data.append(get_parent_for_plot_decomp(document,motif = motif,edge_choice = edge_choice))
+        parent_data.append(get_parent_for_plot_decomp(decomposition,document,motif = motif,edge_choice = edge_choice))
 
     return parent_data
 
 
-def get_parent_for_plot_decomp(document,motif = None,edge_choice = 'probability',get_key = False):
+def get_parent_for_plot_decomp(decomposition,document,motif = None,edge_choice = 'probability',get_key = False):
     plot_data = []
     colours = ['red', 'green', 'black', 'yellow']
-    docm2m = DocumentGlobalMass2Motif.objects.filter(document = document).order_by('-'+edge_choice)
+    docm2m = DocumentGlobalMass2Motif.objects.filter(decomposition = decomposition,document = document).order_by('-'+edge_choice)
     docfeatures = DocumentGlobalFeature.objects.filter(document = document)
     # Add the parent data
     score = "na"
@@ -231,11 +231,11 @@ def get_parent_for_plot_decomp(document,motif = None,edge_choice = 'probability'
 
 
 # Get the context dictionary for displaying a document
-def get_decomp_doc_context_dict(document):
+def get_decomp_doc_context_dict(decomposition,document):
     context_dict = {}
     features = DocumentGlobalFeature.objects.filter(document = document)
     context_dict['features'] = features
-    dm2m = DocumentGlobalMass2Motif.objects.filter(document = document)
+    dm2m = DocumentGlobalMass2Motif.objects.filter(decomposition = decomposition,document = document)
     context_dict['mass2motifs'] = dm2m
     feature_mass2motif_instances = []
     for feature in features:
@@ -326,4 +326,113 @@ def load_mzml_and_make_documents(experiment, decompose_from):
         n_done += 1
         if n_done % 100 == 0:
             print "Done {} documents".format(n_done)
+
+
+def make_word_graph(request, motif_id, vo_id, decomposition_id):
+    decomposition = Decomposition.objects.get(id = decomposition_id)
+    experiment = decomposition.experiment
+    if not vo_id == 'nan':
+        viz_options = VizOptions.objects.get(id = vo_id)
+        experiment = viz_options.experiment
+        edge_thresh = viz_options.edge_thresh
+        edge_choice = viz_options.edge_choice
+    elif experiment:
+        edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
+        edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
+    else:
+        edge_choice = 'probability'
+        edge_thresh = 0.05
+ 
+    data_for_json = []
+    motif = GlobalMotif.objects.get(id = motif_id)
+    originalmotif = motif.originalmotif
+    originalfeatures = Mass2MotifInstance.objects.filter(mass2motif = originalmotif,probability__gte = 0.01)
+    globalfeatures = FeatureMap.objects.filter(localfeature__in = [o.feature for o in originalfeatures])
+    globalfeatures = [g.globalfeature for g in globalfeatures]
+    print originalfeatures
+    if edge_choice == 'probability':
+        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
+    else:
+        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,decomposition = decomposition)
+    data_for_json.append(len(docm2ms))
+    feat_counts = {}
+    for feature in globalfeatures:
+        feat_counts[feature] = 0
+    for dm2m in docm2ms:
+        fi = DocumentGlobalFeature.objects.filter(document = dm2m.document)
+        for ft in fi:
+            if ft.feature in feat_counts:
+                feat_counts[ft.feature] += 1
+    colours = '#404080'
+    feat_list = []
+    for feature in feat_counts:
+        feat_type = feature.name.split('_')[0]
+        feat_mz = feature.name.split('_')[1]
+        short_name = "{}_{:.4f}".format(feat_type,float(feat_mz))
+        feat_list.append([short_name,feat_counts[feature],colours])
+    feat_list = sorted(feat_list,key = lambda x: x[1],reverse = True)
+    data_for_json.append(feat_list)
+
+    return data_for_json
+
+def make_intensity_graph(request, motif_id, vo_id, decomposition_id):
+    decomposition = Decomposition.objects.get(id = decomposition_id)
+    experiment = decomposition.experiment
+    if not vo_id == 'nan':
+        viz_options = VizOptions.objects.get(id = vo_id)
+        experiment = viz_options.experiment
+        edge_thresh = viz_options.edge_thresh
+        edge_choice = viz_options.edge_choice
+    elif experiment:
+        edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
+        edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
+    else:
+        edge_choice = 'probability'
+        edge_thresh = 0.05
+
+    colours = ['#404080', '#0080C0']
+    colours = ['red','blue']
+
+
+
+    data_for_json = []
+    motif = GlobalMotif.objects.get(id = motif_id)
+    originalmotif = motif.originalmotif
+    originalfeatures = Mass2MotifInstance.objects.filter(mass2motif = originalmotif,probability__gte = 0.01)
+    globalfeatures = FeatureMap.objects.filter(localfeature__in = [o.feature for o in originalfeatures])
+    globalfeatures = [g.globalfeature for g in globalfeatures]
+    if edge_choice == 'probability':
+        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
+    else:
+        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,decomposition = decomposition)
+    documents = [d.document for d in docm2ms]
+    
+    feat_total_intensity = {}
+    feat_motif_intensity = {}
+    for feature in globalfeatures:
+        feat_total_intensity[feature] = 0.0
+        feat_motif_intensity[feature] = 0.0
+    for feature in globalfeatures:
+        fi = DocumentGlobalFeature.objects.filter(document__experiment = experiment,feature = feature)
+        for ft in fi:
+            feat_total_intensity[feature] += ft.intensity
+            if ft.document in documents:
+                feat_motif_intensity[feature] += ft.intensity
+    
+
+    feat_list = []
+    feat_tot_intensity = zip(feat_total_intensity.keys(),feat_total_intensity.values())
+    feat_tot_intensity = sorted(feat_tot_intensity,key = lambda x: x[1],reverse = True)
+    for feature,tot_intensity in feat_tot_intensity:
+        feat_type = feature.name.split('_')[0]
+        feat_mz = feature.name.split('_')[1]
+        short_name = "{}_{:.4f}".format(feat_type,float(feat_mz))
+        feat_list.append([short_name,feat_total_intensity[feature],colours[0]])
+        feat_list.append(['',feat_motif_intensity[feature],colours[1]])
+        feat_list.append(('', 0, ''))
+    data_for_json.append(feat_tot_intensity[0][1])
+    data_for_json.append(feat_list)
+
+    return data_for_json
+
         
