@@ -3,6 +3,7 @@ from django.shortcuts import render,HttpResponse
 import json
 
 from decomposition.models import GlobalMotif,DocumentGlobalMass2Motif,Decomposition,GlobalMotifsToSets
+from decomposition.forms import DecompVizForm
 from basicviz.models import Mass2MotifInstance,Experiment,Document
 
 from options.views import get_option
@@ -103,15 +104,24 @@ def get_doc_topics(request, decomposition_id,doc_id):
 def start_viz(request,decomposition_id):
     decomposition = Decomposition.objects.get(id = decomposition_id)
     experiment = decomposition.experiment
-
-    # add form stuff here!
-
     context_dict = {}
     context_dict['decomposition'] = decomposition
     context_dict['experiment'] = experiment
-    context_dict['vo'] = {'min_degree':50,'random_seed':"hello"}
 
-    return render(request,'decomposition/graph.html',context_dict)
+    # add form stuff here!
+    if request.method == 'POST':
+        form = DecompVizForm(request.POST)
+        if form.is_valid():
+            min_degree = form.cleaned_data['min_degree']
+        context_dict['vo'] = {'min_degree':min_degree,'random_seed':'hello'}
+        return render(request,'decomposition/graph.html',context_dict)    
+    else:
+        context_dict['viz_form'] = DecompVizForm()
+
+    return render(request,'decomposition/viz_form.html',context_dict)
+
+
+    
 
 def get_graph(request,decomposition_id,min_degree):
     decomposition = Decomposition.objects.get(id = decomposition_id)
