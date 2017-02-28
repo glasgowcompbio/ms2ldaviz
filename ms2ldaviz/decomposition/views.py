@@ -109,15 +109,20 @@ def start_viz(request,decomposition_id):
     context_dict = {}
     context_dict['decomposition'] = decomposition
     context_dict['experiment'] = experiment
-    context_dict['vo'] = {'min_degree':50,'random_seed':"hello",'edge_type':'overlap_score'}
+    context_dict['vo'] = {'min_degree':50,'random_seed':"hello"}
 
     return render(request,'decomposition/graph.html',context_dict)
 
-def get_graph(request,decomposition_id,edge_type,min_degree):
+def get_graph(request,decomposition_id,min_degree):
     decomposition = Decomposition.objects.get(id = decomposition_id)
     experiment = decomposition.experiment
     min_degree = int(min_degree)
-    d = make_decomposition_graph(decomposition,experiment,min_degree = min_degree,edge_thresh = 0.5,
-                                edge_choice = 'overlap_score',topic_scale_factor = 5, edge_scale_factor = 5)
+
+    edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
+    edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
+
+
+    d = make_decomposition_graph(decomposition,experiment,min_degree = min_degree,edge_thresh = edge_thresh,
+                                edge_choice = edge_choice,topic_scale_factor = 5, edge_scale_factor = 5)
     return HttpResponse(json.dumps(d),content_type = 'application/json')
 
