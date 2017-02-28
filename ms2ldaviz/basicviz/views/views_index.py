@@ -3,7 +3,7 @@ from django.shortcuts import render
 
 from basicviz.models import UserExperiment, ExtraUsers, \
     MultiFileExperiment, MultiLink
-from basicviz.constants import EXPERIMENT_STATUS_CODE
+from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_TYPE
 
 @login_required(login_url='/registration/login/')
 def index(request):
@@ -15,6 +15,8 @@ def index(request):
 
     exclude_individuals = []
     pending_individuals = []
+    show_lda = False
+    show_decomposition = False
     for experiment in experiments:
 
         # Remove those that are multi ones
@@ -27,6 +29,13 @@ def index(request):
         if experiment.status == pending_code:
             exclude_individuals.append(experiment)
             pending_individuals.append(experiment)
+        else: # experiments are already finished
+            lda_code, _ = EXPERIMENT_TYPE[0]
+            decomposition_code, _ = EXPERIMENT_TYPE[1]
+            if experiment.experiment_type == lda_code:
+                show_lda = True
+            if experiment.experiment_type == decomposition_code:
+                show_decomposition = True
 
     show_pending = False if len(pending_individuals) == 0 else True
     for e in exclude_individuals:
@@ -45,6 +54,8 @@ def index(request):
     context_dict['user'] = request.user
     context_dict['pending_experiments'] = pending_individuals
     context_dict['show_pending'] = show_pending
+    context_dict['show_lda'] = show_lda
+    context_dict['show_decomposition'] = show_decomposition
 
     # to display additional links on the basicviz index page
     eu = ExtraUsers.objects.filter(user=request.user)
