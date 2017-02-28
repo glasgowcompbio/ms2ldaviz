@@ -120,8 +120,10 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
 
     K = len(motif_list)
     print "Performing e-steps"
-    for document in documents:
-        print document.name
+    total_docs = len(documents)
+    for i in range(total_docs):
+        document = documents[i]
+        print '%d/%d: %s' % (i, total_docs, document.name)
         docfeatures = DocumentGlobalFeature.objects.filter(document = document)
 
         doc_dict = {}

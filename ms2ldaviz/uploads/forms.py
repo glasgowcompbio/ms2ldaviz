@@ -1,6 +1,7 @@
 from django import forms
 
 from basicviz.models import Experiment
+from decomposition.models import MotifSet
 from basicviz.constants import EXPERIMENT_DECOMPOSITION_SOURCE
 
 
@@ -8,9 +9,8 @@ class CreateExperimentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CreateExperimentForm, self).__init__(*args, **kwargs)
-        yes, _ = EXPERIMENT_DECOMPOSITION_SOURCE[1]
         self.fields['decompose_from'] = forms.ModelChoiceField(
-            queryset=Experiment.objects.filter(decomposition_source=yes),
+            queryset=MotifSet.objects.all(),
             label='Decompose using Mass2Motifs in'
         )
         self.fields['mzml_file'].required = True
