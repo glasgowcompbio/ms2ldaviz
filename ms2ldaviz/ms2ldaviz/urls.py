@@ -8,6 +8,7 @@ import views
 urlpatterns = [
     url(r'^$', views.home, name='home'),
     url(r'^people/', views.people, name='people'),
+    url(r'^grappelli/', include('grappelli.urls')),  # grappelli URLS
     url(r'^admin/', include(admin.site.urls)),
     url(r'^basicviz/', include('basicviz.urls')),
     url(r'^annotation/', include('annotation.urls')),
