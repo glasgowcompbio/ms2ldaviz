@@ -65,34 +65,36 @@
     {% if show_decomposition %}
         <h3>Decomposition Experiments</h3>
         <p>The following are decomposition experiments where substructures have been discovered with respect to our annotated Mass2Motifs.</p>
-        <div id="accordion">
+        <div id="accordion2">
         {% for experiment in experiments %}
             {% ifequal experiment.0.experiment_type '1' %}
                 <h3><b>{{experiment.0.name}}</b> ({{experiment.0.description}}) ({{experiment.1}})</h3>
-                <div>
-                    {% if experiment.1 == 'edit' %}
-                        <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View experiment options</a>
-                    {% endif %}
-                </div>
-
-                {% for decomposition in experiment.0.decomposition_set.all %}
-                    <h4>{{decomposition.name}}</h4>
+                <div> <!-- div for each accordion section -->
                     <div>
-                        <a href="/decomposition/show_parents/{{decomposition.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a>
-                        <a href="/decomposition/show_motifs/{{decomposition.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a>
-                        <a href="/decomposition/start_viz/{{decomposition.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a>
-                        {% if extra_user %}
-                            <!-- <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate</a> -->
-                            <!-- a href="/basicviz/document_pca/{{experiment.0.id}}" class="btn btn-block btn-success">Document PCA</a -->
-                            <!-- <a href="/basicviz/topic_pca/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-eye-open"></span> Topic PCA</a> -->
-                            <!-- <a href="/basicviz/topic_table/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a> -->
-                            <!-- <a href="/basicviz/extract_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-folder-close"></span> Extract Documents</a> -->
-                            <!-- <a href="/basicviz/compute_topic_scores/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-sort-by-order"></span> Compute Topic Scores</a> -->
-                            <!-- <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a> -->
-                            <!-- <a href="/basicviz/high_classyfire/{{experiment.0.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> High classyfire scores</a> -->
+                        {% if experiment.1 == 'edit' %}
+                            <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-primary"><span class="glyphicon glyphicon-option-horizontal"></span> View experiment options</a>
                         {% endif %}
                     </div>
-                {% endfor %}
+                    {% for decomposition in experiment.0.decomposition_set.all %}
+                        <br/>
+                        <em>{{decomposition.name}}</em>
+                        <div>
+                            <a href="/decomposition/show_parents/{{decomposition.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a>
+                            <a href="/decomposition/show_motifs/{{decomposition.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a>
+                            <a href="/decomposition/start_viz/{{decomposition.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a>
+                            {% if extra_user %}
+                                <!-- <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate</a> -->
+                                <!-- a href="/basicviz/document_pca/{{experiment.0.id}}" class="btn btn-block btn-success">Document PCA</a -->
+                                <!-- <a href="/basicviz/topic_pca/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-eye-open"></span> Topic PCA</a> -->
+                                <!-- <a href="/basicviz/topic_table/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a> -->
+                                <!-- <a href="/basicviz/extract_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-folder-close"></span> Extract Documents</a> -->
+                                <!-- <a href="/basicviz/compute_topic_scores/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-sort-by-order"></span> Compute Topic Scores</a> -->
+                                <!-- <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a> -->
+                                <!-- <a href="/basicviz/high_classyfire/{{experiment.0.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> High classyfire scores</a> -->
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
             {% endifequal %}
         {% endfor %}
         </div>
@@ -103,7 +105,7 @@
   <div id="tabs-2">
     {% if extra_user %}
         <p>The following experiments are ready for analysis. After clicking on an experiment, you use the arrow keys to navigate to other experiments in the list. Press <b>Enter</b> to open or close an experiment.</p>
-        <div id="accordion2">
+        <div id="accordion3">
             {% for mf in mfe|sort_by:'name' %}
                 <h3><b>{{mf.name}}</b> ({{mf.description}})</h3>
                 <div>
@@ -149,6 +151,13 @@
     } );
     $( function() {
         $( "#accordion2" ).accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+    } );
+    $( function() {
+        $( "#accordion3" ).accordion({
             collapsible: true,
             heightStyle: "content",
             active: false
