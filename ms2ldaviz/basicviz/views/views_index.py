@@ -29,13 +29,13 @@ def index(request):
         if experiment.status == pending_code:
             exclude_individuals.append(experiment)
             pending_individuals.append(experiment)
-
-        lda_code, _ = EXPERIMENT_TYPE[0]
-        decomposition_code, _ = EXPERIMENT_TYPE[1]
-        if experiment.experiment_type == lda_code:
-            show_lda = True
-        if experiment.experiment_type == decomposition_code:
-            show_decomposition = True
+        else: # experiments are already finished
+            lda_code, _ = EXPERIMENT_TYPE[0]
+            decomposition_code, _ = EXPERIMENT_TYPE[1]
+            if experiment.experiment_type == lda_code:
+                show_lda = True
+            if experiment.experiment_type == decomposition_code:
+                show_decomposition = True
 
     show_pending = False if len(pending_individuals) == 0 else True
     for e in exclude_individuals:
