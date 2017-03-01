@@ -127,7 +127,7 @@ if __name__=='__main__':
         alpha_list[pos] = alpha.value
 
 
-    b = Beta.objects.get_or_create(experiment = experiment,motifset = motifset)
+    b,status = Beta.objects.get_or_create(experiment = experiment,motifset = motifset)
 
     b.beta = jsonpickle.encode(betalist)
     b.motif_id_list = jsonpickle.encode(motif_id_list)

@@ -107,8 +107,9 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
     n_motifs = len(motif_id_list)
     n_features = len(feature_id_list)
 
-    if decomposition.name.startswith('gnps'):
+    if decomposition.motifset.name.startswith('gnps'):
         # assuming sparse beta
+        # Naive construction
         beta_matrix = np.zeros((n_motif,n_feature),np.float)
         for r,c,v in beta:
             beta_matrix[r,c] = v
