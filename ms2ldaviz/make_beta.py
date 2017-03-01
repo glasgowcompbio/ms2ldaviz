@@ -1,12 +1,13 @@
 import os
 import sys
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings_simon")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 
 import django
 django.setup()
 
 import numpy as np
 import bisect
+import jsonpickle
 
 from basicviz.models import Experiment,Mass2Motif,Feature,Mass2MotifInstance,Alpha
 from decomposition.models import FeatureSet,MotifSet,GlobalFeature,FeatureMap,GlobalMotif,GlobalMotifsToSets,Beta
