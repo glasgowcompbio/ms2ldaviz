@@ -2,7 +2,7 @@ import numpy as np
 import bisect
 import jsonpickle
 from scipy.special import psi as psi
-import scipy.sparse.coo_matrix as coo_matrix
+from scipy.sparse import coo_matrix
 import networkx as nx
 from networkx.readwrite import json_graph
 from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif,DocumentGlobalMass2Motif,DocumentFeatureMass2Motif,FeatureSet,Decomposition,FeatureMap,Beta
@@ -107,18 +107,22 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
     n_motifs = len(motif_id_list)
     n_features = len(feature_id_list)
 
-    if decomposition.motifset.name.startswith('gnps'):
+    # if decomposition.motifset.name.startswith('gnps'):
         # assuming sparse beta
         # Naive construction
-        beta_matrix = np.zeros((n_motif,n_feature),np.float)
-        for r,c,v in beta:
-            beta_matrix[r,c] = v
+        # beta_matrix = np.zeros((n_motif,n_feature),np.float)
+        # for r,c,v in beta:
+        #     beta_matrix[r,c] = v
         # or using sparse...
-        r,c,data = zip(*beta)
-        coo = coo_matrix((data,(r,c)),shape=(n_motifs,n_features))
-        beta_matrix = coo.to_full()
-    else:
-        beta_matrix = np.array(beta)
+    r,c,data = zip(*beta)
+    beta_matrix = np.array(coo_matrix((data,(r,c)),shape=(n_motifs,n_features)).todense())
+    s = beta_matrix.sum(axis=1)[:,None]
+    s[s==0] = 1.0
+    beta_matrix /= s # makes beta a full matrix. Note that can keep it sparse by beta_matrix.data /= s[beta_matrix.row]
+    
+        # beta_matrix = coo.todense()
+    # else:
+        # beta_matrix = np.array(beta)
 
 
     alpha_matrix = np.array(alpha)
@@ -167,8 +171,11 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
             for word,intensity in doc_dict.items():
                 # Find the word position in beta
                 word_pos = word_index[word]
+                # beta_col = beta_matrix.getcol(word_pos).todense().flatten()
+                # if beta_col.sum() > 0:
                 if beta_matrix[:,word_pos].sum() > 0:
-                    log_phi_matrix = np.log(beta_matrix[:,word_pos]) + psi(gamma).T
+                    log_phi_matrix = np.log(beta_matrix[:,word_pos]) + psi(gamma)
+                    # log_phi_matrix = np.log(beta_col) + psi(gamma).T
                     log_phi_matrix = np.exp(log_phi_matrix - log_phi_matrix.max())
                     phi_matrix[word] = log_phi_matrix/log_phi_matrix.sum()
                     temp_gamma += phi_matrix[word]*intensity
@@ -179,7 +186,7 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
         
         # normalise the gamma to get probabilities
         theta = gamma/gamma.sum()
-        theta = list(theta)
+        theta = list(theta.flatten())
 
         theta_motif = zip(theta,motif_list)
         theta_motif = sorted(theta_motif,key = lambda x : x[0],reverse = True)
