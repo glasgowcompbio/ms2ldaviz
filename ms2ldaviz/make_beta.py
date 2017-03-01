@@ -26,32 +26,32 @@ if __name__=='__main__':
     print "Got {} features".format(len(experiment_features))
 
 
-    n_added = 0
-    n_done = 0
-    for f in experiment_features:
-        fe,status = GlobalFeature.objects.get_or_create(min_mz = f.min_mz,max_mz = f.max_mz,name = f.name,featureset = featureset)
-        fmap,status2 = FeatureMap.objects.get_or_create(localfeature = f,globalfeature = fe)
-        if status:
-            n_added += 1
-        n_done += 1
-        if n_done % 100 == 0:
-            print n_done,n_added
+    # n_added = 0
+    # n_done = 0
+    # for f in experiment_features:
+    #     fe,status = GlobalFeature.objects.get_or_create(min_mz = f.min_mz,max_mz = f.max_mz,name = f.name,featureset = featureset)
+    #     fmap,status2 = FeatureMap.objects.get_or_create(localfeature = f,globalfeature = fe)
+    #     if status:
+    #         n_added += 1
+    #     n_done += 1
+    #     if n_done % 100 == 0:
+    #         print n_done,n_added
 
-    print "Added {} features to {}".format(n_added,featureset)
+    # print "Added {} features to {}".format(n_added,featureset)
 
     motifset,status = MotifSet.objects.get_or_create(name = 'gnps_motifset',featureset = featureset)
     print status
     if status:
         print "Created {}".format(motifset)
 
-    # n_added = 0
-    # for motif in experiment_motifs:
-    #     g,status = GlobalMotif.objects.get_or_create(originalmotif = motif)
-    #     if status:
-    #         n_added += 1
-    #     gm,status = GlobalMotifsToSets.objects.get_or_create(motif = g,motifset = motifset)
+    n_added = 0
+    for motif in experiment_motifs:
+        g,status = GlobalMotif.objects.get_or_create(originalmotif = motif)
+        if status:
+            n_added += 1
+        gm,status = GlobalMotifsToSets.objects.get_or_create(motif = g,motifset = motifset)
 
-    # print "Added {} global motifs".format(n_added)
+    print "Added {} global motifs".format(n_added)
 
     gmms = GlobalMotifsToSets.objects.filter(motifset = motifset)
     global_motifs = [g.motif for g in gmms]
