@@ -38,7 +38,7 @@ if __name__=='__main__':
     #     if n_done % 100 == 0:
     #         print n_done,n_added
 
-    print "Added {} features to {}".format(n_added,featureset)
+    # print "Added {} features to {}".format(n_added,featureset)
 
     motifset,status = MotifSet.objects.get_or_create(name = 'gnps_motifset',featureset = featureset)
     print status
