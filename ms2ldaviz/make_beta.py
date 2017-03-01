@@ -8,7 +8,7 @@ django.setup()
 import numpy as np
 import bisect
 
-from basicviz.models import Experiment,Mass2Motif,Feature,Mass2MotifInstance
+from basicviz.models import Experiment,Mass2Motif,Feature,Mass2MotifInstance,Alpha
 from decomposition.models import FeatureSet,MotifSet,GlobalFeature,FeatureMap,GlobalMotif,GlobalMotifsToSets,Beta
 # This script makes a motifset object and a beta object based on an Experiment
 
@@ -44,14 +44,14 @@ if __name__=='__main__':
     if status:
         print "Created {}".format(motifset)
 
-    n_added = 0
-    for motif in experiment_motifs:
-        g,status = GlobalMotif.objects.get_or_create(originalmotif = motif)
-        if status:
-            n_added += 1
-        gm,status = GlobalMotifsToSets.objects.get_or_create(motif = g,motifset = motifset)
+    # n_added = 0
+    # for motif in experiment_motifs:
+    #     g,status = GlobalMotif.objects.get_or_create(originalmotif = motif)
+    #     if status:
+    #         n_added += 1
+    #     gm,status = GlobalMotifsToSets.objects.get_or_create(motif = g,motifset = motifset)
 
-    print "Added {} global motifs".format(n_added)
+    # print "Added {} global motifs".format(n_added)
 
     gmms = GlobalMotifsToSets.objects.filter(motifset = motifset)
     global_motifs = [g.motif for g in gmms]
@@ -96,11 +96,7 @@ if __name__=='__main__':
       if n_done % 100 == 0:
           print n_done,len(fm2ms)
 
-    alpha_list = []
-    for m in originalmotifs:
-        alp_val = Alpha.objects.get(mass2motif = m).value
-        alpha_list.append(alp_val)
-
+    
     # normalise
     norm_beta = []
     for row in beta:
@@ -116,6 +112,13 @@ if __name__=='__main__':
       motif_id_list[pos] = motif.id
     for feature,pos in feature_index.items():
       feature_id_list[pos] = feature.id
+
+    # Get the alphas
+    alpha_list = [0.0 for m in range(n_motifs)]
+    for motif,pos in motif_index.items():
+        originalmotif = motif.originalmotif
+        alpha = Alpha.objects.get(mass2motif = originalmotif)
+        alpha_list[pos] = alpha.value
 
     b.beta = jsonpickle.encode(beta)
     b.motif_id_list = jsonpickle.encode(motif_id_list)
