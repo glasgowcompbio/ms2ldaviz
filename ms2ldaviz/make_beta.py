@@ -38,7 +38,7 @@ if __name__=='__main__':
     #     if n_done % 100 == 0:
     #         print n_done,n_added
 
-    # print "Added {} features to {}".format(n_added,featureset)
+    print "Added {} features to {}".format(n_added,featureset)
 
     motifset,status = MotifSet.objects.get_or_create(name = 'gnps_motifset',featureset = featureset)
     print status
@@ -80,9 +80,11 @@ if __name__=='__main__':
       feature_index[fmap[i].globalfeature] = i
 
 
-    beta = []
-    for m in range(n_motifs):
-      beta.append([0 for f in range(n_features)])
+    # beta = []
+    # for m in range(n_motifs):
+    #   beta.append([0 for f in range(n_features)])
+
+    betalist = []
 
     originalmotifs = [m.originalmotif for m in global_motifs]
     fm2ms = Mass2MotifInstance.objects.filter(mass2motif__in = originalmotifs)
@@ -93,20 +95,23 @@ if __name__=='__main__':
       if fm2m.feature in feature_map_dict:
           fpos = feature_index[feature_map_dict[fm2m.feature]]
           mpos = motif_index[motif_map_dict[fm2m.mass2motif]]
-          beta[mpos][fpos] = fm2m.probability
+          betalist.append((mpos,fpos,fm2m.probability))
+          # beta[mpos][fpos] = fm2m.probability
       if n_done % 100 == 0:
           print n_done,len(fm2ms)
 
     
     # normalise
-    norm_beta = []
-    for row in beta:
-        total = sum(row)
-        if total > 0:
-          row = [r/total for r in row]
-        norm_beta.append(row)
+    # norm_beta = []
+    # for row in beta:
+    #     total = sum(row)
+    #     if total > 0:
+    #       row = [r/total for r in row]
+    #     norm_beta.append(row)
 
-    beta = norm_beta
+    # beta = norm_beta
+
+
     feature_id_list = [None for f in range(n_features)]
     motif_id_list = [None for m in range(n_motifs)]
     for motif,pos in motif_index.items():
@@ -121,7 +126,7 @@ if __name__=='__main__':
         alpha = Alpha.objects.get(mass2motif = originalmotif)
         alpha_list[pos] = alpha.value
 
-    b.beta = jsonpickle.encode(beta)
+    b.beta = jsonpickle.encode(betalist)
     b.motif_id_list = jsonpickle.encode(motif_id_list)
     b.feature_id_list = jsonpickle.encode(feature_id_list)
     b.alpha_list = jsonpickle.encode(alpha_list)
