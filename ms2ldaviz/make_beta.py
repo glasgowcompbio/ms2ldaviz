@@ -126,6 +126,9 @@ if __name__=='__main__':
         alpha = Alpha.objects.get(mass2motif = originalmotif)
         alpha_list[pos] = alpha.value
 
+
+    b = Beta.objects.get_or_create(experiment = experiment,motifset = motifset)
+
     b.beta = jsonpickle.encode(betalist)
     b.motif_id_list = jsonpickle.encode(motif_id_list)
     b.feature_id_list = jsonpickle.encode(feature_id_list)

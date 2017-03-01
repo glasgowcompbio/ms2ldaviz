@@ -2,6 +2,7 @@ import numpy as np
 import bisect
 import jsonpickle
 from scipy.special import psi as psi
+import scipy.sparse.coo_matrix as coo_matrix
 import networkx as nx
 from networkx.readwrite import json_graph
 from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif,DocumentGlobalMass2Motif,DocumentFeatureMass2Motif,FeatureSet,Decomposition,FeatureMap,Beta
@@ -96,15 +97,31 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
     motifset = decomposition.motifset
     betaobject = Beta.objects.get(motifset = motifset)
     documents = Document.objects.filter(experiment = decomposition.experiment)
-    # Load the beta objects
     print "Loading and unpickling beta"
-    beta = jsonpickle.decode(betaobject.beta)
+
     alpha = jsonpickle.decode(betaobject.alpha_list)
     motif_id_list = jsonpickle.decode(betaobject.motif_id_list)
     feature_id_list = jsonpickle.decode(betaobject.feature_id_list)
+    beta = jsonpickle.decode(betaobject.beta)
+
+    n_motifs = len(motif_id_list)
+    n_features = len(feature_id_list)
+
+    if decomposition.name.startswith('gnps'):
+        # assuming sparse beta
+        beta_matrix = np.zeros((n_motif,n_feature),np.float)
+        for r,c,v in beta:
+            beta_matrix[r,c] = v
+        # or using sparse...
+        r,c,data = zip(*beta)
+        coo = coo_matrix((data,(r,c)),shape=(n_motifs,n_features))
+        beta_matrix = coo.to_full()
+    else:
+        beta_matrix = np.array(beta)
+
 
     alpha_matrix = np.array(alpha)
-    beta_matrix = np.array(beta)
+    
 
     word_index = {}
     for i,word_id in enumerate(feature_id_list):
