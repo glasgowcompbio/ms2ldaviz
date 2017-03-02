@@ -192,12 +192,16 @@ class LoadCSV(Loader):
 # keeping the ms1 objects that can be matched. The matching is done with plus and minus the mz_tol (ppm)
 # and plus and minus the rt_tol
 class LoadMZML(Loader):
-    def __init__(self,min_intensity = 0.0,peaklist = None,isolation_window = 1.0,mz_tol = 5,rt_tol=5.0):
-        self.min_intensity = min_intensity
+    def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 1.0,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False):
+        self.min_ms1_intensity = min_ms1_intensity
         self.peaklist = peaklist
         self.isolation_window = isolation_window
         self.mz_tol = mz_tol
         self.rt_tol = rt_tol
+        self.duplicate_filter = duplicate_filter
+        self.duplicate_filter_mz_tol = duplicate_filter_mz_tol
+        self.duplicate_filter_rt_tol = duplicate_filter_rt_tol
+
     def __str__(self):
         return "mzML loader"
     def load_spectra(self,input_set):
@@ -269,6 +273,8 @@ class LoadMZML(Loader):
 
         print "Found {} ms2 spectra, and {} individual ms2 objects".format(len(ms1),len(ms2))
 
+        if self.min_ms1_intensity>0.0:
+            ms1,ms2 = filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
 
         if self.peaklist:
             ms1_peaks = self._load_peak_list()
@@ -330,6 +336,16 @@ class LoadMZML(Loader):
             ms2 = new_ms2_list
             metadata = new_metadata
             print "Peaklist filtering results in {} documents".format(len(ms1))
+
+        if self.duplicate_filter:
+            ms1,ms2 = filter_ms1(ms1,ms2,mz_tol = self.duplicate_filter_mz_tol,rt_tol = self.duplicate_filter_rt_tol)
+
+        # Chop out filtered docs from metadata
+        filtered_metadata = {}
+        for m in ms1:
+            if m in metadata:
+                filtered_metadata[m] = metadata[m]
+        metadata = filtered_metadata
 
         return ms1,ms2,metadata
 
@@ -1377,6 +1393,68 @@ class MS2LDAFeatureExtractor(object):
     def get_first_corpus(self):
         first_file_name = self.corpus.keys()[0]
         return self.corpus[first_file_name]
+
+
+def filter_ms1_intensity(ms1,ms2,min_ms1_intensity = 1e6):
+    print "Filtering MS1 on intensity"
+    filtered_ms1_list = []
+    filtered_ms2_list = []
+    for m in ms1:
+        if m.intensity >= min_ms1_intensity:
+            filtered_ms1_list.append(m)
+    print "{} MS1 remaining".format(len(filtered_ms1_list))
+    for m in ms2:
+        if m[3] in filtered_ms1_list:
+            filtered_ms2_list.append(m)
+    print "{} MS2 remaining".format(len(filtered_ms2_list))
+    return filtered_ms1_list,filtered_ms2_list
+
+def filter_ms1(ms1,ms2,mz_tol = 0.5,rt_tol = 16):
+    print "Filtering MS1 to remove duplicates"
+    # Filters the loaded ms1s to reduce the number of times that the same molecule has been fragmented
+
+   
+    # Sort the remaining ones by intensity
+    ms1_by_intensity = sorted(ms1,key = lambda x: x.intensity,reverse=True)
+
+
+    final_ms1_list = []
+    final_ms2_list = []
+    while True:
+        if len(ms1_by_intensity) == 0:
+            break
+        # Take the highest intensity one, find things within the window and remove them
+        current_ms1 = ms1_by_intensity[0]
+        final_ms1_list.append(current_ms1)
+        del ms1_by_intensity[0]
+
+        current_mz = current_ms1.mz
+        mz_err = mz_tol*1.0*current_mz/(1.0*1e6)
+        min_mz = current_mz - mz_err
+        max_mz = current_mz + mz_err
+
+        min_rt = current_ms1.rt - rt_tol
+        max_rt = current_ms1.rt + rt_tol
+
+        # find things inside this region
+        hits = filter(lambda x: x.mz > min_mz and x.mz < max_mz and x.rt > min_rt and x.rt < max_rt,ms1_by_intensity)
+        for hit in hits:
+            pos = ms1_by_intensity.index(hit)
+            del ms1_by_intensity[pos]
+        
+
+    print "{} MS1 remaining".format(len(final_ms1_list))    
+    for m in ms2:
+        if m[3] in final_ms1_list:
+            final_ms2_list.append(m)
+
+    print "{} MS2 remaining".format(len(final_ms2_list))
+    return final_ms1_list,final_ms2_list
+
+
+
+
+
 
 
 
