@@ -86,7 +86,12 @@ if __name__ == '__main__':
 	with open(filename,'r') as f:
 		lda_dict = pickle.load(f)
 	experiment_name = filename.split('/')[-1].split('.')[0]
-	experiment = Experiment.objects.get_or_create(name=experiment_name)[0]
+	current_e = Experiment.objects.filter(name = experiment_name)
+	if len(current_e) > 0:
+		print "Experiment of this name already exists, exiting"
+		return
+
+	experiment = Experiment(name = experiment_name)
 	experiment.status = 'loading'
 	experiment.save()
 

@@ -29,7 +29,6 @@ def load_mzml_and_make_documents(experiment,motifset):
     print "Loading peaks from {} using peaklist {}".format(experiment.mzml_file.path,peaklist)
     ms1,ms2,metadata = loader.load_spectra([experiment.mzml_file.path])
     print "Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1),len(ms2))
-
     min_ms1_rt = experiment.min_ms1_rt*60 # seconds
     max_ms1_rt = experiment.max_ms1_rt*60 # seconds
     min_ms2_intensity = experiment.min_ms2_intensity
