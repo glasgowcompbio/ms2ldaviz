@@ -40,6 +40,9 @@ class Experiment(models.Model):
     csv_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
     mzml_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
 
+
+    # I don't think this should be stored here
+    # as it precludes the same experiment being decomposed multiple times
     no, _ = EXPERIMENT_DECOMPOSITION_SOURCE[0]
     decomposition_source = models.CharField(max_length=1, choices=EXPERIMENT_DECOMPOSITION_SOURCE,
                               null=False, default=no)
