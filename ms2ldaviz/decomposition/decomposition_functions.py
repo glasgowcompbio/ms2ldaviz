@@ -91,7 +91,7 @@ def load_mzml_and_make_documents(experiment,motifset):
                     min_mz = np.floor(tempmz)/100
                 max_mz = min_mz + 0.005
                 new_feature_name = 'fragment_{}'.format((max_mz + min_mz)/2.0)
-                gf,status = GlobalFeature.objects.get_or_create(max_mz = max_mz,min_mz = min_mz,name = new_feature_name)
+                gf,status = GlobalFeature.objects.get_or_create(max_mz = max_mz,min_mz = min_mz,name = new_feature_name,featureset = fs)
                 df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = gf)[0]
                 df.intensity = intensity
                 df.save()
@@ -113,7 +113,7 @@ def load_mzml_and_make_documents(experiment,motifset):
                         min_mz = np.floor(tempmz)/100
                     max_mz = min_mz + 0.005
                     new_feature_name = 'loss_{}'.format((max_mz + min_mz)/2.0)
-                    gf,status = GlobalFeature.objects.get_or_create(max_mz = max_mz,min_mz = min_mz,name = new_feature_name)
+                    gf,status = GlobalFeature.objects.get_or_create(max_mz = max_mz,min_mz = min_mz,name = new_feature_name,featureset = fs)
                     df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = gf)[0]
                     df.intensity = intensity
                     df.save()
