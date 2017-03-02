@@ -81,6 +81,20 @@ def load_mzml_and_make_documents(experiment,motifset):
                 df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = feat)[0]
                 df.intensity = intensity
                 df.save()
+            else:
+                # make a new feature
+                # Assumes binned_005 featureset
+                tempmz = fragment_mz*100
+                if tempmz - np.floor(tempmz) > 0.5:
+                    min_mz = np.floor(tempmz)/100 + 0.005
+                else:
+                    min_mz = np.floor(tempmz)/100
+                max_mz = min_mz + 0.005
+                new_feature_name = 'fragment_{}'.format((max_mz + min_mz)/2.0)
+                gf,status = GlobalFeature.objects.get_or_create(max_mz = max_mz,min_mz = min_mz,name = new_feature_name)
+                df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = gf)[0]
+                df.intensity = intensity
+                df.save()
                 
             loss_mz = molecule.mz - fragment_mz
             if loss_mz >= min_loss_mz[0] and loss_mz <= max_loss_mz[-1]:
@@ -90,6 +104,20 @@ def load_mzml_and_make_documents(experiment,motifset):
                     df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature  = feat)[0]
                     df.intensity = intensity
                     df.save()
+                else:
+                    # make a new feature
+                    tempmz = loss_mz*100
+                    if tempmz - np.floor(tempmz) > 0.5:
+                        min_mz = np.floor(tempmz)/100 + 0.005
+                    else:
+                        min_mz = np.floor(tempmz)/100
+                    max_mz = min_mz + 0.005
+                    new_feature_name = 'loss_{}'.format((max_mz + min_mz)/2.0)
+                    gf,status = GlobalFeature.objects.get_or_create(max_mz = max_mz,min_mz = min_mz,name = new_feature_name)
+                    df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = gf)[0]
+                    df.intensity = intensity
+                    df.save()
+                    
         n_done += 1
         if n_done % 100 == 0:
             print "Done {} documents".format(n_done)
