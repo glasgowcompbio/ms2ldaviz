@@ -1,3 +1,4 @@
+# coding=utf8
 # Simon's attempts to make a single feature selection pipeline
 from Queue import PriorityQueue
 import numpy as np
@@ -192,7 +193,7 @@ class LoadCSV(Loader):
 # keeping the ms1 objects that can be matched. The matching is done with plus and minus the mz_tol (ppm)
 # and plus and minus the rt_tol
 class LoadMZML(Loader):
-    def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 1.0,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False):
+    def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 1.0,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False,repeated_precursor_match = None):
         self.min_ms1_intensity = min_ms1_intensity
         self.peaklist = peaklist
         self.isolation_window = isolation_window
@@ -201,6 +202,10 @@ class LoadMZML(Loader):
         self.duplicate_filter = duplicate_filter
         self.duplicate_filter_mz_tol = duplicate_filter_mz_tol
         self.duplicate_filter_rt_tol = duplicate_filter_rt_tol
+        if repeated_precursor_match:
+            self.repeated_precursor_match = repeated_precursor_match
+        else:
+            self.repeated_precursor_match = 2*self.isolation_window
 
     def __str__(self):
         return "mzML loader"
@@ -223,53 +228,76 @@ class LoadMZML(Loader):
             current_ms1_scan_rt = None
             run = pymzml.run.Reader(input_file, MS1_Precision=5e-6)
             file_name = input_file.split('/')[-1]
+            previous_precursor_mz = -10
+            previous_ms1 = None
+
             for spectrum in run:
                 if spectrum['ms level'] == 1:
                     current_ms1_scan_rt = spectrum['scan start time']
                     current_ms1_scan_mz,current_ms1_scan_intensity = zip(*spectrum.peaks)
+                    previous_precursor_mz = -10
+                    previous_ms1 = None
                 elif spectrum['ms level'] == 2:
                     precursor_mz = spectrum['precursors'][0]['mz']
-                    # This finds the insertion position for the precursor mz (i.e. the position one to the right
-                    # of the first element it is greater than)
-                    precursor_index_ish = bisect.bisect_right(current_ms1_scan_mz,precursor_mz)
-                    pos = precursor_index_ish - 1 # pos is now the largest value smaller than ours
+                    if abs(precursor_mz-previous_precursor_mz) < self.repeated_precursor_match:
+                        # Another collision energy perhaps??
+                        # if this is the case, we don't bother looking for a parent, but add to the previous one
+                        # Make the ms2 objects:
+                        if previous_ms1:
+                            for mz,intensity in spectrum.centroidedPeaks:
+                                ms2.append((mz,current_ms1_scan_rt,intensity,previous_ms1,file_name,float(ms2_id)))
+                                ms2_id += 1
+                        else:
+                            pass
+                    else:
+                        # This is a new fragmentation
 
-                    # Move left and right within the precursor window and pick the most intense parent_scan_number
-                    max_intensity = 0.0
-                    max_intensity_pos = None
-                    while abs(precursor_mz - current_ms1_scan_mz[pos]) < self.isolation_window:
-                        if current_ms1_scan_intensity[pos] >= max_intensity:
-                            max_intensity = current_ms1_scan_intensity[pos]
-                            max_intensity_pos = pos
-                        pos -= 1
-                        if pos < 0:
-                            break
-                    pos = precursor_index_ish
-                    if pos < len(current_ms1_scan_mz):
+                        # This finds the insertion position for the precursor mz (i.e. the position one to the right
+                        # of the first element it is greater than)
+                        precursor_index_ish = bisect.bisect_right(current_ms1_scan_mz,precursor_mz)
+                        pos = precursor_index_ish - 1 # pos is now the largest value smaller than ours
+
+                        # Move left and right within the precursor window and pick the most intense parent_scan_number
+                        max_intensity = 0.0
+                        max_intensity_pos = None
                         while abs(precursor_mz - current_ms1_scan_mz[pos]) < self.isolation_window:
                             if current_ms1_scan_intensity[pos] >= max_intensity:
                                 max_intensity = current_ms1_scan_intensity[pos]
                                 max_intensity_pos = pos
-                            pos += 1
-                            if pos > len(current_ms1_scan_mz)-1:
+                            pos -= 1
+                            if pos < 0:
                                 break
-                        # print current_ms1_scan_mz[max_intensity_pos],current_ms1_scan_rt
-                    # Make the new MS1 object
-                    if not max_intensity_pos == None:
-                    # mz,rt,intensity,file_name,scan_number = None):
-                        new_ms1 = MS1(ms1_id,current_ms1_scan_mz[max_intensity_pos],
-                                      current_ms1_scan_rt,max_intensity,file_name,scan_number = nc)
-                        metadata[new_ms1.name] = {'parentmass':current_ms1_scan_mz[max_intensity_pos],
-                                                  'parentrt':current_ms1_scan_rt,'scan_number':nc,
-                                                  'precursor_mass':precursor_mz}
+                        pos = precursor_index_ish
+                        if pos < len(current_ms1_scan_mz):
+                            while abs(precursor_mz - current_ms1_scan_mz[pos]) < self.isolation_window:
+                                if current_ms1_scan_intensity[pos] >= max_intensity:
+                                    max_intensity = current_ms1_scan_intensity[pos]
+                                    max_intensity_pos = pos
+                                pos += 1
+                                if pos > len(current_ms1_scan_mz)-1:
+                                    break
+                            # print current_ms1_scan_mz[max_intensity_pos],current_ms1_scan_rt
+                        # Make the new MS1 object
+                        if not max_intensity_pos == None:
+                        # mz,rt,intensity,file_name,scan_number = None):
+                            new_ms1 = MS1(ms1_id,current_ms1_scan_mz[max_intensity_pos],
+                                          current_ms1_scan_rt,max_intensity,file_name,scan_number = nc)
+                            metadata[new_ms1.name] = {'parentmass':current_ms1_scan_mz[max_intensity_pos],
+                                                      'parentrt':current_ms1_scan_rt,'scan_number':nc,
+                                                      'precursor_mass':precursor_mz}
 
-                        ms1.append(new_ms1)
-                        ms1_id += 1
+                            
+                            previous_ms1 = new_ms1 # used for merging energies
+                            previous_precursor_mz = new_ms1.mz
 
-                        # Make the ms2 objects:
-                        for mz,intensity in spectrum.centroidedPeaks:
-                            ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id)))
-                            ms2_id += 1
+
+                            ms1.append(new_ms1)
+                            ms1_id += 1
+
+                            # Make the ms2 objects:
+                            for mz,intensity in spectrum.centroidedPeaks:
+                                ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id)))
+                                ms2_id += 1
 
         print "Found {} ms2 spectra, and {} individual ms2 objects".format(len(ms1),len(ms2))
 
