@@ -26,8 +26,12 @@ def view_parents(request,mass2motif_id,decomposition_id):
 
     if edge_choice == 'probability':
         dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, probability__gte = edge_thresh,decomposition = decomposition).order_by('-probability')
-    else:
+    elif edge_choice == 'overlap_score':
         dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, overlap_score__gte = edge_thresh, decomposition = decomposition).order_by('-overlap_score')
+    elif edge_choice == 'both':
+        dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, overlap_score__gte = edge_thresh, probability__gte = edge_thresh,decomposition = decomposition).order_by('-overlap_score')
+    else:
+        dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, probability__gte = edge_thresh,decomposition = decomposition).order_by('-probability')
 
     originalfeatures = Mass2MotifInstance.objects.filter(mass2motif = mass2motif.originalmotif)
 
@@ -130,8 +134,6 @@ def get_graph(request,decomposition_id,min_degree):
 
     edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
     edge_thresh = float(get_option('doc_m2m_threshold',experiment = experiment))
-
-    print edge_choice,edge_thresh,decomposition,experiment
 
     d = make_decomposition_graph(decomposition,experiment,min_degree = min_degree,edge_thresh = edge_thresh,
                                 edge_choice = edge_choice,topic_scale_factor = 5, edge_scale_factor = 5)

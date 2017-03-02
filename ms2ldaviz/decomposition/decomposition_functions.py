@@ -61,6 +61,7 @@ def load_mzml_and_make_documents(experiment,motifset):
 
     # Add the documents to the database
     n_done = 0
+    n_new_features = 0
     for molecule in ms1:
         ms2_features = filter(lambda x:x[3]==molecule,ms2)
         if len(ms2_features) == 0:
@@ -92,6 +93,7 @@ def load_mzml_and_make_documents(experiment,motifset):
                 max_mz = min_mz + 0.005
                 new_feature_name = 'fragment_{}'.format((max_mz + min_mz)/2.0)
                 gf,status = GlobalFeature.objects.get_or_create(max_mz = max_mz,min_mz = min_mz,name = new_feature_name,featureset = fs)
+                n_new_features += 1
                 df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = gf)[0]
                 df.intensity = intensity
                 df.save()
@@ -114,13 +116,14 @@ def load_mzml_and_make_documents(experiment,motifset):
                     max_mz = min_mz + 0.005
                     new_feature_name = 'loss_{}'.format((max_mz + min_mz)/2.0)
                     gf,status = GlobalFeature.objects.get_or_create(max_mz = max_mz,min_mz = min_mz,name = new_feature_name,featureset = fs)
+                    n_new_features += 1
                     df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = gf)[0]
                     df.intensity = intensity
                     df.save()
                     
         n_done += 1
         if n_done % 100 == 0:
-            print "Done {} documents".format(n_done)
+            print "Done {} documents (required {} new features)".format(n_done,n_new_features)
 
 
 
@@ -524,20 +527,24 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,edge_thresh
     G = nx.Graph()
     motif_degrees = {}
     print edge_choice,edge_thresh
+    used_dm = []
     for dm in doc_motif:
+        hit = False
         if edge_choice == 'probability':
             hit = dm.probability > edge_thresh
         elif edge_choice == 'overlap_score':
             hit = dm.overlap_score > edge_thresh
         elif edge_choice == 'both':
-            hit = dm.overlap_score > edge_thresh and dm.probability > edge_thresh
+            hit = (dm.overlap_score > edge_thresh) and (dm.probability > edge_thresh)
         else:
             hit = dm.probability > edge_thresh # default
         if hit:
+            used_dm.append(dm)
             if not dm.mass2motif in motif_degrees:
                 motif_degrees[dm.mass2motif] = 1
             else:
                 motif_degrees[dm.mass2motif] += 1
+
     used_motifs = []
 
     for motif,degree in motif_degrees.items():
@@ -556,7 +563,7 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,edge_thresh
                            special=False, in_degree=degree,
                            score=1, node_id=motif.id, is_topic=True)
     used_docs = []
-    for dm in doc_motif:
+    for dm in used_dm:
         if dm.mass2motif in used_motifs:
             # add the edge
             if not dm.document in used_docs:
