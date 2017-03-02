@@ -174,15 +174,16 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
             temp_gamma = np.zeros(K) + alpha_matrix
             for word,intensity in doc_dict.items():
                 # Find the word position in beta
-                word_pos = word_index[word]
-                # beta_col = beta_matrix.getcol(word_pos).todense().flatten()
-                # if beta_col.sum() > 0:
-                if beta_matrix[:,word_pos].sum() > 0:
-                    log_phi_matrix = np.log(beta_matrix[:,word_pos]) + psi(gamma)
-                    # log_phi_matrix = np.log(beta_col) + psi(gamma).T
-                    log_phi_matrix = np.exp(log_phi_matrix - log_phi_matrix.max())
-                    phi_matrix[word] = log_phi_matrix/log_phi_matrix.sum()
-                    temp_gamma += phi_matrix[word]*intensity
+                if word in word_index:
+                    word_pos = word_index[word]
+                    # beta_col = beta_matrix.getcol(word_pos).todense().flatten()
+                    # if beta_col.sum() > 0:
+                    if beta_matrix[:,word_pos].sum() > 0:
+                        log_phi_matrix = np.log(beta_matrix[:,word_pos]) + psi(gamma)
+                        # log_phi_matrix = np.log(beta_col) + psi(gamma).T
+                        log_phi_matrix = np.exp(log_phi_matrix - log_phi_matrix.max())
+                        phi_matrix[word] = log_phi_matrix/log_phi_matrix.sum()
+                        temp_gamma += phi_matrix[word]*intensity
 
             gamma = temp_gamma.copy()
 
