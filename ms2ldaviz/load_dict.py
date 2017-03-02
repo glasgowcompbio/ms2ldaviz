@@ -89,7 +89,7 @@ if __name__ == '__main__':
 	current_e = Experiment.objects.filter(name = experiment_name)
 	if len(current_e) > 0:
 		print "Experiment of this name already exists, exiting"
-		return
+		sys.exit(0)
 
 	experiment = Experiment(name = experiment_name)
 	experiment.status = 'loading'
