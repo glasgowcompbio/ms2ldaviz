@@ -21,7 +21,11 @@ def load_mzml_and_make_documents(experiment,motifset):
         peaklist = experiment.csv_file.path
 
     loader = LoadMZML(isolation_window=experiment.isolation_window, mz_tol=experiment.mz_tol,
-                      rt_tol=experiment.rt_tol, peaklist=peaklist)
+                      rt_tol=experiment.rt_tol, peaklist=peaklist,
+                      min_ms1_intensity = experiment.min_ms1_intensity,
+                      duplicate_filter = experiment.filter_duplicates,
+                      duplicate_filter_mz_tol = experiment.duplicate_filter_mz_tol,
+                      duplicate_filter_rt_tol = experiment.duplicate_filter_rt_tol)
     print "Loading peaks from {} using peaklist {}".format(experiment.mzml_file.path,peaklist)
     ms1,ms2,metadata = loader.load_spectra([experiment.mzml_file.path])
     print "Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1),len(ms2))

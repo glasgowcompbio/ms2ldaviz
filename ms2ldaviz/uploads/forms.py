@@ -32,14 +32,19 @@ class CreateExperimentForm(forms.ModelForm):
             'rt_tol': 'Retention time tolerance when linking MS1-MS2 peaks (seconds)',
             'min_ms1_rt': 'Minimum retention time of MS1 peaks to keep (seconds)',
             'max_ms1_rt': 'Maximum retention time of MS1 peaks to keep (seconds)',
+            'min_ms1_intensity': 'Minimum intensity of MS1 peaks to keep',
             'min_ms2_intensity': 'Minimum intensity of MS2 peaks to keep',
+            'filter_duplicates': 'Attempt to filter out duplicate MS1 peaks',
+            'duplicate_filter_mz_tol': 'mz tol (ppm) for duplicate filtering',
+            'duplicate_filter_rt_tol': 'mz tol (ppm) for duplicate filtering',
             'K': 'Number of Mass2Motifs',
             'decomposition_source': 'Use for decomposition in the future?',
         }
         fields = [
             'name', 'description',
             'experiment_type', 'csv_file', 'mzml_file',
-            'isolation_window', 'mz_tol', 'rt_tol', 'min_ms1_rt', 'max_ms1_rt', 'min_ms2_intensity',
+            'isolation_window', 'mz_tol', 'rt_tol', 'min_ms1_rt', 'max_ms1_rt', 'min_ms1_intensity','min_ms2_intensity',
+            'filter_duplicates','duplicate_filter_mz_tol','duplicate_filter_rt_tol',
             'K', 'decomposition_source',
         ]
         exclude = ('status',)

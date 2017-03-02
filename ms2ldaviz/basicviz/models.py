@@ -51,6 +51,16 @@ class Experiment(models.Model):
     min_ms1_rt = models.FloatField(null=True, default=3) # minutes
     max_ms1_rt = models.FloatField(null=True, default=21) # minutes
     min_ms2_intensity = models.FloatField(null=True, default=5000)
+
+
+    # Same with these -- this model is getting a bit bloated
+    filter_duplicates = models.BooleanField(null = False,default = False)
+    min_ms1_intensity = models.FloatField(null = True,default=0.0)
+    duplicate_filter_mz_tol = models.FloatField(null = True,default = 0.5)
+    duplicate_filter_rt_tol = models.FloatField(null = True,default = 16)
+
+
+
     K = models.IntegerField(null=True, default=300)
 
     def __unicode__(self):
