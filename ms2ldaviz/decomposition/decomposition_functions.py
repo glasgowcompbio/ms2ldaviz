@@ -219,11 +219,12 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
 def compute_overlap(phi_matrix,motif_pos,beta_row,word_index):
     overlap_score = 0.0
     for word in phi_matrix:
-        word_pos = word_index[word]
-        if phi_matrix[word] == None:
-            continue
-        else:
-            overlap_score += phi_matrix[word][motif_pos]*beta_row[word_pos]
+        if word in word_inex:
+            word_pos = word_index[word]
+            if phi_matrix[word] == None:
+                continue
+            else:
+                overlap_score += phi_matrix[word][motif_pos]*beta_row[word_pos]
     return overlap_score
 
 
