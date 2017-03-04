@@ -344,7 +344,7 @@ def get_parent_for_plot_decomp(decomposition,document,motif = None,edge_choice =
                     # This feature wasnt decomposed - plot it grey
                     mz = float(docfeature.feature.name.split('_')[1])
                     colour = 'gray'
-                    intensity = docfeature.intensity
+                    intensity = docfeature.intensity/(1.0*maxi)
                     plot_fragments.append([mz,mz,0,intensity,1,colour,docfeature.feature.name])
 
         elif docfeature.feature.name.startswith('loss'):
