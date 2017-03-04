@@ -78,8 +78,11 @@ def load_mzml_and_make_documents(experiment,motifset):
             frag_pos = bisect.bisect_right(min_frag_mz,fragment_mz)-1
             if fragment_mz <= max_frag_mz[frag_pos]:
                 feat = fragment_features[frag_pos]
-                df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = feat)[0]
-                df.intensity = intensity
+                df,status = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = feat)
+                if status:
+                    df.intensity = intensity
+                else:
+                    df.intensity += intensity
                 df.save()
             else:
                 # make a new feature
@@ -93,8 +96,11 @@ def load_mzml_and_make_documents(experiment,motifset):
                 new_feature_name = 'fragment_{}'.format((max_mz + min_mz)/2.0)
                 gf,status = GlobalFeature.objects.get_or_create(max_mz = max_mz,min_mz = min_mz,name = new_feature_name,featureset = fs)
                 n_new_features += 1
-                df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = gf)[0]
-                df.intensity = intensity
+                df,status = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = gf)
+                if status:
+                    df.intensity = intensity
+                else:
+                    df.intensity += intensity
                 df.save()
                 
             loss_mz = molecule.mz - fragment_mz
@@ -102,8 +108,11 @@ def load_mzml_and_make_documents(experiment,motifset):
                 loss_pos = bisect.bisect_right(min_loss_mz,loss_mz)-1
                 if loss_mz <= max_loss_mz[loss_pos]:
                     feat = loss_features[loss_pos]
-                    df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature  = feat)[0]
-                    df.intensity = intensity
+                    df,status = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature  = feat)
+                    if status:
+                        df.intensity = intensity
+                    else:
+                        df.intensity += intensity
                     df.save()
                 else:
                     # make a new feature
@@ -116,8 +125,11 @@ def load_mzml_and_make_documents(experiment,motifset):
                     new_feature_name = 'loss_{}'.format((max_mz + min_mz)/2.0)
                     gf,status = GlobalFeature.objects.get_or_create(max_mz = max_mz,min_mz = min_mz,name = new_feature_name,featureset = fs)
                     n_new_features += 1
-                    df = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = gf)[0]
-                    df.intensity = intensity
+                    df,status = DocumentGlobalFeature.objects.get_or_create(document = new_doc,feature = gf)
+                    if status:
+                        df.intensity = intensity
+                    else:
+                        df.intensity += intensity
                     df.save()
                     
         n_done += 1
