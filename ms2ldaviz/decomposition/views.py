@@ -3,13 +3,16 @@ from django.shortcuts import render,HttpResponse
 import json
 
 from decomposition.models import GlobalMotif,DocumentGlobalMass2Motif,Decomposition,GlobalMotifsToSets
-from decomposition.forms import DecompVizForm
+from decomposition.forms import DecompVizForm,NewDecompositionForm
 from basicviz.models import Mass2MotifInstance,Experiment,Document
 
 from options.views import get_option
 
 from decomposition_functions import get_parents_decomposition,get_decomp_doc_context_dict,get_parent_for_plot_decomp,make_word_graph,make_intensity_graph,make_decomposition_graph
 from basicviz.views import views_lda_single
+
+from uploads.tasks import just_decompose_task
+
 # Create your views here.
 def view_parents(request,mass2motif_id,decomposition_id):
     context_dict = {}
@@ -139,3 +142,21 @@ def get_graph(request,decomposition_id,min_degree):
                                 edge_choice = edge_choice,topic_scale_factor = 5, edge_scale_factor = 5)
     return HttpResponse(json.dumps(d),content_type = 'application/json')
 
+
+def new_decomposition(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    context_dict = {}
+    context_dict['experiment'] = experiment
+    if request.method == 'POST':
+        form = NewDecompositionForm(request.POST)
+        if form.is_valid():
+            decomposition,status = Decomposition.objects.get_or_create(experiment = experiment,
+                                                    motifset = form.cleaned_data['motifset'],
+                                                    name = form.cleaned_data['name'])
+            just_decompose_task.delay(decomposition.id)
+        else:
+            context_dict['form'] = form
+    else:
+        form = NewDecompositionForm()
+        context_dict['form'] = form
+    return render(request,'decomposition/new_decomposition.html',context_dict)

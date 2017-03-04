@@ -47,9 +47,30 @@ def decomposition_task(exp_id, params):
 
     load_mzml_and_make_documents(experiment,motifset)
     decomposition = Decomposition.objects.create(name = name,experiment = experiment,motifset = motifset)
+    pending, _ = EXPERIMENT_STATUS_CODE[0]
+    decomposition.status = pending
+    decomposition.save()
+
     decompose(decomposition)
 
     ready, _ = EXPERIMENT_STATUS_CODE[1]
     experiment.status = ready
     experiment.save()
+    decomposition.status = ready
+    decomposition.save()
 
+@app.task
+def just_decompose_task(decomposition_id):
+
+    decomposition = Decomposition.objects.get(id = decomposition_id)
+
+    pending, _ = EXPERIMENT_STATUS_CODE[0]
+    decomposition.status = pending
+    decomposition.save()
+
+    print "Decomposing {} with {}".format(decomposition.experiment,decomposition.motifset)
+    decompose(decomposition)
+
+    ready, _ = EXPERIMENT_STATUS_CODE[1]
+    decomposition.status = ready
+    decomposition.save()

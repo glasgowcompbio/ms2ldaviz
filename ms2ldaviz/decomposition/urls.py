@@ -13,4 +13,5 @@ urlpatterns = [
 	url(r'^get_doc_topics/(?P<decomposition_id>\w+)/(?P<doc_id>\w+)/$',views.get_doc_topics,name='get_doc_topics'),
 	url(r'^start_viz/(?P<decomposition_id>\w+)/$',views.start_viz,name='start_viz'),
 	url(r'^get_graph/(?P<decomposition_id>\w+)/(?P<min_degree>\w+)/$',views.get_graph,name='get_graph'),
+	url(r'^new_decomposition/(?P<experiment_id>\w+)/$',views.new_decomposition,name = 'new_decomposition'),
 	]

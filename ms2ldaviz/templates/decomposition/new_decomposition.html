@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block head_block %}
+{% endblock %}
+
+{% block body_block %}
+    <h4>Add a new decomposition for {{experiment.name}}</h4>
+    {% if message %}
+        <h3>{{message}}</h3>
+    {% endif %}
+    {% if form %}
+        <form id="experiment_form" method="post" action="/decomposition/new_decomposition/{{experiment.id}}/" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+
+            {% for field in form.visible_fields %}
+                <p>{{ field.errors }}</p>
+                <p>  {{field.label}} {% if field.field.required %} * {% endif %} {{ field }}</p>
+            {% endfor %}
+            <input type="submit" name="submit" value="Submit Your Experiment" class="btn btn-primary" />
+        </form>
+    {% else %}
+        <div>Decomposition submitted, <a href="/basicviz/">return to experiment list</a>.</div>
+    {% endif %}
+
+{% endblock %}

@@ -3,6 +3,7 @@ from django.db import models
 # Create your models here.
 from basicviz.models import Feature,Experiment,Document,Mass2Motif
 
+from basicviz.constants import EXPERIMENT_STATUS_CODE,EXPERIMENT_TYPE, EXPERIMENT_DECOMPOSITION_SOURCE
 
 
 
@@ -27,6 +28,11 @@ class Decomposition(models.Model):
 	name = models.CharField(max_length=128,unique=True)
 	experiment = models.ForeignKey(Experiment)
 	motifset = models.ForeignKey(MotifSet)
+
+	ready_code, _ = EXPERIMENT_STATUS_CODE[1]
+	status = models.CharField(max_length=128, choices=EXPERIMENT_STATUS_CODE,
+                          null=True, default=ready_code)
+
 	def __unicode__(self):
 		return self.name + ' (' + self.experiment.name + ')'
 
@@ -52,6 +58,7 @@ class DecompositionFeatureInstance(models.Model):
 	document = models.ForeignKey(Document,null = False)
 	feature = models.ForeignKey(GlobalFeature,null = False)
 	intensity = models.FloatField(null = False)
+
 
 # A motif object here. Links to the original basicviz motif
 class GlobalMotif(models.Model):
