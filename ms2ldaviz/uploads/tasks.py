@@ -3,11 +3,13 @@ from __future__ import absolute_import, unicode_literals
 from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_DECOMPOSITION_SOURCE
 from basicviz.models import Document, Experiment
 from decomposition.decomposition_functions import decompose,load_mzml_and_make_documents
-from .lda_functions import run_lda, load_dict
+from .lda_functions import run_lda
 from .lda_functions import load_mzml_and_make_documents as lda_load_mzml_and_make_documents
 from decomposition.models import Beta,MotifSet,Decomposition
 from ms2ldaviz.celery_tasks import app
 
+# Import the load dict method
+from load_dict import load_dict
 
 @app.task
 def lda_task(exp_id, params):

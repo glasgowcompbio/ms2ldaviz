@@ -36,7 +36,7 @@ class CreateExperimentForm(forms.ModelForm):
             'min_ms2_intensity': 'Minimum intensity of MS2 peaks to keep',
             'filter_duplicates': 'Attempt to filter out duplicate MS1 peaks',
             'duplicate_filter_mz_tol': 'mz tol (ppm) for duplicate filtering',
-            'duplicate_filter_rt_tol': 'mz tol (ppm) for duplicate filtering',
+            'duplicate_filter_rt_tol': 'rt tol (seconds) for duplicate filtering',
             'K': 'Number of Mass2Motifs',
             'decomposition_source': 'Use for decomposition in the future?',
         }

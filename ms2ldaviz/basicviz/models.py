@@ -51,8 +51,8 @@ class Experiment(models.Model):
     isolation_window = models.FloatField(null=True, default=0.5)
     mz_tol = models.FloatField(null=True, default=5)
     rt_tol = models.FloatField(null=True, default=10) # seconds
-    min_ms1_rt = models.FloatField(null=True, default=3) # minutes
-    max_ms1_rt = models.FloatField(null=True, default=21) # minutes
+    min_ms1_rt = models.FloatField(null=True, default=3*60) # seconds
+    max_ms1_rt = models.FloatField(null=True, default=21*60) # seconds
     min_ms2_intensity = models.FloatField(null=True, default=5000)
 
 
