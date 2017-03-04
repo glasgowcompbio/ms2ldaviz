@@ -322,6 +322,7 @@ def get_parent_for_plot_decomp(decomposition,document,motif = None,edge_choice =
     for docfeature in docfeatures:
         # Find the motifs for this feature
         if docfeature.feature.name.startswith('fragment'):
+            plotted = False
             intensity = docfeature.intensity
             cum_intensity = 0.0
             mz = float(docfeature.feature.name.split('_')[1])
@@ -340,14 +341,16 @@ def get_parent_for_plot_decomp(decomposition,document,motif = None,edge_choice =
                                        100.0*cum_intensity/(1.0*maxi),
                                        1,colour,
                                        docfeature.feature.name])
-                else:
-                    # This feature wasnt decomposed - plot it grey
-                    mz = float(docfeature.feature.name.split('_')[1])
-                    colour = 'gray'
-                    intensity = docfeature.intensity/(1.0*maxi)
-                    plot_fragments.append([mz,mz,0,intensity,1,colour,docfeature.feature.name])
+                    plotted = True
+            if not plotted:
+                # This feature wasnt decomposed - plot it grey
+                mz = float(docfeature.feature.name.split('_')[1])
+                colour = 'gray'
+                intensity = docfeature.intensity/(1.0*maxi)
+                plot_fragments.append([mz,mz,0,intensity,1,colour,docfeature.feature.name])
 
         elif docfeature.feature.name.startswith('loss'):
+            plotted = False
             intensity = docfeature.intensity
             yval = 100.0*intensity/(1.0*maxi)
             total_width = float(docfeature.feature.name.split('_')[1])
@@ -373,9 +376,12 @@ def get_parent_for_plot_decomp(decomposition,document,motif = None,edge_choice =
                                            0,
                                            colour,
                                            docfeature.feature.name])
-                else:
-                    colour = 'gray'
-                    plot_fragments.append([start_x,start_x+total_width,yval,yval,0,colour,docfeature.feature.name])
+                    plotted = True
+                    
+            if not plotted:
+                colour = 'gray'
+                plot_fragments.append([start_x,start_x+total_width,yval,yval,0,colour,docfeature.feature.name])
+
     plot_data.append(plot_fragments)
     if get_key:
         key = []
