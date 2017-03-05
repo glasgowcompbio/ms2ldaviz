@@ -99,6 +99,8 @@
 			<h3>Parent ions</h3>
 		</div>	
 	</div>
+	<div class="rt_var">
+	</div>
 </div>
 
 <div id="dialog-massbank" title="Generate Massbank Record">
@@ -268,9 +270,9 @@ function draw_scatter(dataset) {
 	var plot_width = 500
 
 	rt_variance = dataset[6]
-	scatter_div = d3.select('#scatter').append('div');
+	rt_div = d3.select('#rt_var')
 	console.log(rt_variance)
-	scatter_div.innerHTML = "<p>" + rt_variance + "</p>";
+	rt_div.innerHTML = "<p>" + rt_variance + "</p>";
 
 	scatter_svg = d3.select('#scatter').append('svg')
 		.attr('width',plot_width)
