@@ -275,9 +275,10 @@ def get_doc_table(request, mf_id, motif_name):
     final_peakset_masses = [p.mz for p in final_peaksets]
     final_peakset_rt = [p.rt for p in final_peaksets]
 
+    final_peakset_rt_variance = np.array(final_peakset_rt).var()
     return HttpResponse(json.dumps((
         individual_names, doc_table, intensity_table, final_peakset_masses, final_peakset_rt,
-        unnormalised_intensity_table)), content_type='application/json')
+        unnormalised_intensity_table,final_peakset_rt_variance)), content_type='application/json')
 
 
 def view_multi_m2m(request, mf_id, motif_name):

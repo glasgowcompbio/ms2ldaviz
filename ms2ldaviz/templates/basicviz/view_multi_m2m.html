@@ -267,6 +267,9 @@ function draw_scatter(dataset) {
 	var plot_height = 500
 	var plot_width = 500
 
+	rt_variance = dataset[6]
+	scatter_div = d3.select('#scatter'),append('div');
+	scatter_div.innerHTML = "<p>" + rt_variance + "</p>";
 
 	scatter_svg = d3.select('#scatter').append('svg')
 		.attr('width',plot_width)

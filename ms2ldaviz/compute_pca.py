@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
     ma = np.abs(pca.components_).max()
     pma = np.abs(X).max()
-    
+
     scale_factor = 0.5*pma/ma
 
     for i,motif in enumerate(motifs):
