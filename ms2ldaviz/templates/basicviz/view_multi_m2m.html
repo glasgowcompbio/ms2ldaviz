@@ -269,6 +269,7 @@ function draw_scatter(dataset) {
 
 	rt_variance = dataset[6]
 	scatter_div = d3.select('#scatter').append('div');
+	console.log(rt_variance)
 	scatter_div.innerHTML = "<p>" + rt_variance + "</p>";
 
 	scatter_svg = d3.select('#scatter').append('svg')
