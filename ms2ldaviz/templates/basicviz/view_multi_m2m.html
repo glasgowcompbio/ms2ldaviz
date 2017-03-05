@@ -313,7 +313,7 @@ function draw_scatter(dataset) {
 	    .call(yAxis);
 
 
-	scatter_svg.append('text').attr('x',xScale(0.2*(max_rt + min_rt)))
+	scatter_svg.append('text').attr('x',xScale(0.3*(max_rt + min_rt)))
 							  .attr('y',yScale(min_mz) + 50)
 							  .text('rt (var = '+rt_variance + ')');
 
