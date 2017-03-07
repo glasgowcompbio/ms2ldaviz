@@ -25,8 +25,8 @@ def load_mzml_and_make_documents(experiment):
     ms1, ms2, metadata = loader.load_spectra([experiment.mzml_file.path])
     print "Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1), len(ms2))
 
-    min_ms1_rt = experiment.min_ms1_rt * 60  # seconds
-    max_ms1_rt = experiment.max_ms1_rt * 60  # seconds
+    min_ms1_rt = experiment.min_ms1_rt  # seconds
+    max_ms1_rt = experiment.max_ms1_rt  # seconds
     min_ms2_intensity = experiment.min_ms2_intensity
     ms1 = filter(lambda x: x.rt > min_ms1_rt and x.rt < max_ms1_rt, ms1)
     ms2 = filter(lambda x: x[3].rt > min_ms1_rt and x[3].rt < max_ms1_rt, ms2)
