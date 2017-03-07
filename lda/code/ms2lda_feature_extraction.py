@@ -371,8 +371,8 @@ class LoadMZML(Loader):
         # Chop out filtered docs from metadata
         filtered_metadata = {}
         for m in ms1:
-            if m in metadata:
-                filtered_metadata[m] = metadata[m]
+            if m.name in metadata:
+                filtered_metadata[m.name] = metadata[m.name]
         metadata = filtered_metadata
 
         return ms1,ms2,metadata
