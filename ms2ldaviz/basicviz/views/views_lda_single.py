@@ -1467,3 +1467,12 @@ def get_annotated_topics(request,experiment_id):
 
     return HttpResponse(json.dumps(output),content_type = 'application/json')
 
+# Gets the document <-> m2m links for a particular experiment as a json object
+def get_doc_m2m(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    dm2m = DocumentMass2Motif.objects.filter(document__experiment = experiment)
+    output_data = []
+    for d in dm2m:
+        output_data.append([d.mass2motif.name,d.document.name,d.probability,d.overlap_score])
+    return HttpResponse(json.dumps(output_data),content_type = 'application/json')
+
