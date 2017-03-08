@@ -1481,5 +1481,5 @@ def get_beta(request,experiment_id):
     mi = Mass2MotifInstance.objects.filter(mass2motif__experiment = experiment)
     output_data = []
     for m in mi:
-        output_data.append([mi.mass2motif.name,mi.feature.name,mi.probability])
+        output_data.append([m.mass2motif.name,m.feature.name,m.probability])
     return HttpResponse(json.dumps(output_data),content_type = 'application/json')
