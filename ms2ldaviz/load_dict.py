@@ -77,7 +77,7 @@ def add_document_words(document,doc_name,experiment,lda_dict):
         # fi = FeatureInstance.objects.get_or_create(document = d,feature = feature, intensity = lda_dict['corpus'][doc][word])
         add_feature_instance(document,feature,lda_dict['corpus'][doc][word])
 
-def load_dict(lda_dict,experiment):
+def load_dict(lda_dict,experiment,verbose = True):
     if 'features' in lda_dict:
         print "Explicit feature object: loading them all at once"
         add_all_features(experiment,lda_dict['features'])
@@ -179,4 +179,4 @@ if __name__ == '__main__':
     experiment.status = 'loading'
     experiment.save()
 
-    load_dict(lda_dict,experiment)
+    load_dict(lda_dict,experiment,verbose)
