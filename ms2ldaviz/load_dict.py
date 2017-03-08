@@ -71,11 +71,11 @@ def load_phi(doc_name,experiment,lda_dict):
             FeatureMass2MotifInstance.objects.get_or_create(featureinstance = feature_instance,mass2motif = mass2motif,probability = probability)[0]
 
 def add_document_words(document,doc_name,experiment,lda_dict):
-    for word in lda_dict['corpus'][doc]:
+    for word in lda_dict['corpus'][doc_name]:
         feature = add_feature(word,experiment)
         # feature = Feature.objects.get_or_create(name=word,experiment=experiment)[0]
         # fi = FeatureInstance.objects.get_or_create(document = d,feature = feature, intensity = lda_dict['corpus'][doc][word])
-        add_feature_instance(document,feature,lda_dict['corpus'][doc][word])
+        add_feature_instance(document,feature,lda_dict['corpus'][doc_name][word])
 
 def load_dict(lda_dict,experiment,verbose = True):
     if 'features' in lda_dict:
@@ -94,9 +94,9 @@ def load_dict(lda_dict,experiment,verbose = True):
         metdat = jsonpickle.encode(lda_dict['doc_metadata'][doc])
         if verbose:
             print doc,experiment,metdat
-        d = add_document(doc,experiment,metdat)
+        d = add_document(doc_name,experiment,metdat)
         # d = Document.objects.get_or_create(name=doc,experiment=experiment,metadata=metdat)[0]
-        add_document_words(d,doc,experiment,lda_dict)
+        add_document_words(d,doc_name,experiment,lda_dict)
 
 
 
