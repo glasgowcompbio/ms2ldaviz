@@ -1476,3 +1476,10 @@ def get_doc_m2m(request,experiment_id):
         output_data.append([d.mass2motif.name,d.document.name,d.probability,d.overlap_score])
     return HttpResponse(json.dumps(output_data),content_type = 'application/json')
 
+def get_beta(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    mi = Mass2MotifInstance.objects.filter(mass2motif__experiment = experiment)
+    output_data = []
+    for m in mi:
+        output_data.append([mi.mass2motif.name,mi.feature.name,mi.probability])
+    return HttpResponse(json.dumps(output_data),content_type = 'application/json')
