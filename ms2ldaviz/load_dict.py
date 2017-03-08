@@ -94,9 +94,9 @@ def load_dict(lda_dict,experiment,verbose = True):
         metdat = jsonpickle.encode(lda_dict['doc_metadata'][doc])
         if verbose:
             print doc,experiment,metdat
-        d = add_document(doc_name,experiment,metdat)
+        d = add_document(doc,experiment,metdat)
         # d = Document.objects.get_or_create(name=doc,experiment=experiment,metadata=metdat)[0]
-        add_document_words(d,doc_name,experiment,lda_dict)
+        add_document_words(d,doc,experiment,lda_dict)
 
 
 
