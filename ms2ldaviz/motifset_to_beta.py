@@ -22,7 +22,7 @@ if __name__ == '__main__':
     global_motifs = [m.motif for m in motif_links]
 
     global_features = GlobalFeature.objects.filter(featureset = fs)
-    print "Extracted {} global features".format(len(global_feature))
+    print "Extracted {} global features".format(len(global_features))
     fmap = FeatureMap.objects.filter(globalfeature__in = global_features)
     print "Extracted {} feature map objects".format(len(fmap))
 
