@@ -8,7 +8,7 @@ import django
 django.setup()
 
 from decomposition.models import MotifSet,FeatureSet,GlobalFeature,GlobalMotifsToSets,Beta,FeatureMap
-from basicviz.models import Alpha
+from basicviz.models import Alpha,Mass2MotifInstance
 
 if __name__ == '__main__':
     motifset_name = sys.argv[1]
@@ -22,7 +22,10 @@ if __name__ == '__main__':
     global_motifs = [m.motif for m in motif_links]
 
     global_features = GlobalFeature.objects.filter(featureset = fs)
+    print "Extracted {} global features".format(len(global_feature))
     fmap = FeatureMap.objects.filter(globalfeature__in = global_features)
+    print "Extracted {} feature map objects".format(len(fmap))
+
 
     feature_map_dict = {}
     for feature in fmap:
