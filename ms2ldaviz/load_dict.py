@@ -58,7 +58,7 @@ def add_theta(doc_name,experiment,lda_dict):
     document = Document.objects.get(name = doc_name,experiment=experiment)
     for topic in lda_dict['theta'][doc_name]:
         mass2motif = Mass2Motif.objects.get(name = topic,experiment = experiment)
-        DocumentMass2Motif.objects.get_or_create(document = document,mass2motif = mass2motif,probability = lda_dict['theta'][doc][topic])[0]
+        DocumentMass2Motif.objects.get_or_create(document = document,mass2motif = mass2motif,probability = lda_dict['theta'][doc_name][topic])[0]
 
 def load_phi(doc_name,experiment,lda_dict):
     document = Document.objects.get(name = doc_name,experiment=experiment)
@@ -158,8 +158,6 @@ def load_dict(lda_dict,experiment,verbose = True):
         #       mass2motif = Mass2Motif.objects.get(name=topic,experiment=experiment)
         #       probability = lda_dict['phi'][doc][word][topic]
         #       FeatureMass2MotifInstance.objects.get_or_create(featureinstance = feature_instance,mass2motif = mass2motif,probability = probability)
-    experiment.status = 'all loaded'
-    experiment.save()
 
 if __name__ == '__main__':
 
