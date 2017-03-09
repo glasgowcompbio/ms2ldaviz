@@ -10,38 +10,38 @@ django.setup()
 from decomposition.models import MotifSet,FeatureSet,GlobalFeature
 
 if __name__ == '__main__':
-	motifset_name = sys.argv[1]
-	ms = MotifSet.objects.get(name = motifset_name)
-	print "Loaded {}".format(ms)
+    motifset_name = sys.argv[1]
+    ms = MotifSet.objects.get(name = motifset_name)
+    print "Loaded {}".format(ms)
 
-	fs = FeatureSet.objects.get(motifset = ms)
-	print "Extracted {}".format(fs)
+    fs = FeatureSet.objects.get(motifset = ms)
+    print "Extracted {}".format(fs)
 
-	motif_links = GlobalMotifsToSets.objects.filter(motifset = ms)
-	global_motifs = [m.motif for m in motif_links]
+    motif_links = GlobalMotifsToSets.objects.filter(motifset = ms)
+    global_motifs = [m.motif for m in motif_links]
 
-	global_features = GlobalFeature.objects.filter(featureset = fs)
-	fmap = FeatureMap.objects.filter(global_feature__in = global_features)
+    global_features = GlobalFeature.objects.filter(featureset = fs)
+    fmap = FeatureMap.objects.filter(global_feature__in = global_features)
 
-	feature_map_dict = {}
+    feature_map_dict = {}
     for feature in fmap:
       feature_map_dict[feature.localfeature] = feature.globalfeature
 
-	motif_map_dict = {}
+    motif_map_dict = {}
     for globalmotif in global_motifs:
       motif_map_dict[globalmotif.originalmotif] = globalmotif
 
-	n_motifs = len(global_motifs)
+    n_motifs = len(global_motifs)
     n_features = len(fmap)
 
     motif_index = {}
     for i in range(n_motifs):
-		motif_index[global_motifs[i]] = i
+        motif_index[global_motifs[i]] = i
     feature_index = {}
     for i in range(n_features):
-		feature_index[fmap[i].globalfeature] = i
+        feature_index[fmap[i].globalfeature] = i
 
-	    betalist = []
+        betalist = []
 
     originalmotifs = [m.originalmotif for m in global_motifs]
     fm2ms = Mass2MotifInstance.objects.filter(mass2motif__in = originalmotifs)
