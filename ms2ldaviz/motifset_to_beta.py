@@ -22,7 +22,7 @@ if __name__ == '__main__':
     global_motifs = [m.motif for m in motif_links]
 
     global_features = GlobalFeature.objects.filter(featureset = fs)
-    fmap = FeatureMap.objects.filter(global_feature__in = global_features)
+    fmap = FeatureMap.objects.filter(globalfeature__in = global_features)
 
     feature_map_dict = {}
     for feature in fmap:
