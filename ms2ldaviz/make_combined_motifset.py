@@ -1,4 +1,12 @@
 # scipt to make combined motifset
+import os
+import sys
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
+
+import django
+django.setup()
+
+
 
 combined_filename = '/home/combined_motifs.csv'
 import csv
