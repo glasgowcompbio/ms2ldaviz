@@ -63,6 +63,8 @@ class Experiment(models.Model):
     duplicate_filter_rt_tol = models.FloatField(null = True,default = 16)
 
 
+    n_its = models.IntegerField(null = True,default = 1000)
+
 
     K = models.IntegerField(null=True, default=300)
 

@@ -39,12 +39,13 @@ class CreateExperimentForm(forms.ModelForm):
             'duplicate_filter_rt_tol': 'rt tol (seconds) for duplicate filtering',
             'K': 'Number of Mass2Motifs',
             'decomposition_source': 'Use for decomposition in the future?',
+            'n_its': 'Number of iterations (for LDA)',
         }
         fields = [
             'name', 'description',
             'experiment_type', 'csv_file', 'mzml_file',
             'isolation_window', 'mz_tol', 'rt_tol', 'min_ms1_rt', 'max_ms1_rt', 'min_ms1_intensity','min_ms2_intensity',
             'filter_duplicates','duplicate_filter_mz_tol','duplicate_filter_rt_tol',
-            'K', 'decomposition_source',
+            'K', 'decomposition_source','n_its',
         ]
         exclude = ('status',)

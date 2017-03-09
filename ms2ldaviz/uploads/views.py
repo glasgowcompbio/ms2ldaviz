@@ -57,7 +57,8 @@ def process_experiment(exp, cleaned_data):
         decompose_name = decompose_from.name if decompose_from is not None else None
         params = {
             'decompose_from': decompose_name,
-            'K': cleaned_data['K']
+            'K': cleaned_data['K'],
+            'n_its': cleaned_data['n_its'],
         }
         pipeline = pipelines[exp.experiment_type]
         pipeline.delay(exp.id, params)

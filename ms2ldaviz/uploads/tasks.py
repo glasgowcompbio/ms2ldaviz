@@ -15,12 +15,13 @@ from load_dict import load_dict
 def lda_task(exp_id, params):
     exp = Experiment.objects.get(pk=exp_id)
     K = int(params['K'])
+    n_its = int(params['n_its'])
     print 'Running lda on experiment_%d (%s), K=%d' % (exp_id, exp.description, K)
     print 'CSV file = %s' % exp.csv_file
     print 'mzML file = %s' % exp.mzml_file
 
     corpus, metadata, word_mz_range = lda_load_mzml_and_make_documents(exp)
-    lda_dict = run_lda(corpus, metadata, word_mz_range, K, n_its=1000)
+    lda_dict = run_lda(corpus, metadata, word_mz_range, K, n_its=n_its)
     load_dict(lda_dict, exp)
 
     yes, _ = EXPERIMENT_DECOMPOSITION_SOURCE[1]
