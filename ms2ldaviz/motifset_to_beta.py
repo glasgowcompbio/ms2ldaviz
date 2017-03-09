@@ -7,7 +7,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 import django
 django.setup()
 
-from decomposition.models import MotifSet,FeatureSet,GlobalFeature,GlobalMotifsToSets,Beta
+from decomposition.models import MotifSet,FeatureSet,GlobalFeature,GlobalMotifsToSets,Beta,FeatureMap
 from basicviz.models import Alpha
 
 if __name__ == '__main__':
