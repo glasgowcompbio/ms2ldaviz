@@ -88,7 +88,7 @@ class DocumentGlobalFeature(models.Model):
 	intensity = models.FloatField(null = True)
 
 class Beta(models.Model):
-	experiment = models.ForeignKey(Experiment)
+	experiment = models.ForeignKey(Experiment,null = True)
 	beta = models.TextField(null = True)
 	motif_id_list = models.TextField(null = True)
 	feature_id_list = models.TextField(null = True)

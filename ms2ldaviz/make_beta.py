@@ -11,6 +11,7 @@ import jsonpickle
 
 from basicviz.models import Experiment,Mass2Motif,Feature,Mass2MotifInstance,Alpha
 from decomposition.models import FeatureSet,MotifSet,GlobalFeature,FeatureMap,GlobalMotif,GlobalMotifsToSets,Beta
+
 # This script makes a motifset object and a beta object based on an Experiment
 
 if __name__=='__main__':
@@ -126,6 +127,8 @@ if __name__=='__main__':
         alpha = Alpha.objects.get(mass2motif = originalmotif)
         alpha_list[pos] = alpha.value
 
+    # make a dummy experiment object
+    e = Experiment.objects.create(name = 'massbank_gnps_dummy_experiment')
 
     b,status = Beta.objects.get_or_create(experiment = experiment,motifset = motifset)
 
