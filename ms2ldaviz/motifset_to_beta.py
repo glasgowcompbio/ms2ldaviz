@@ -83,7 +83,7 @@ if __name__ == '__main__':
     b.motif_id_list = jsonpickle.encode(motif_id_list)
     b.feature_id_list = jsonpickle.encode(feature_id_list)
     b.alpha_list = jsonpickle.encode(alpha_list)
-    b.motifset = motifset
+    b.motifset = ms
 
     b.save()
 
