@@ -7,7 +7,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 import django
 django.setup()
 
-from decomposition.models import MotifSet,FeatureSet,GlobalFeature
+from decomposition.models import MotifSet,FeatureSet,GlobalFeature,GlobalMotifsToSets,Beta
+from basicviz.models import Alpha
 
 if __name__ == '__main__':
     motifset_name = sys.argv[1]
