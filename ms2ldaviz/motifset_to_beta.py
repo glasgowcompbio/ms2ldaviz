@@ -37,16 +37,17 @@ if __name__ == '__main__':
       motif_map_dict[globalmotif.originalmotif] = globalmotif
 
     n_motifs = len(global_motifs)
-    n_features = len(fmap)
+    n_global_features = len(global_features)
 
     motif_index = {}
     for i in range(n_motifs):
         motif_index[global_motifs[i]] = i
     feature_index = {}
-    for i in range(n_features):
-        feature_index[fmap[i].globalfeature] = i
 
-        betalist = []
+    for i in range(n_global_features):
+        feature_index[global_features[i]] = i
+
+    betalist = []
 
     originalmotifs = [m.originalmotif for m in global_motifs]
     fm2ms = Mass2MotifInstance.objects.filter(mass2motif__in = originalmotifs)
@@ -55,14 +56,15 @@ if __name__ == '__main__':
     for fm2m in fm2ms:
       n_done += 1
       if fm2m.feature in feature_map_dict:
-          fpos = feature_index[feature_map_dict[fm2m.feature]]
+          global_feature = feature_map_dict[fm2m.feature]
+          fpos = feature_index[global_feature]
           mpos = motif_index[motif_map_dict[fm2m.mass2motif]]
           betalist.append((mpos,fpos,fm2m.probability))
           # beta[mpos][fpos] = fm2m.probability
       if n_done % 100 == 0:
           print n_done,len(fm2ms)
 
-    feature_id_list = [None for f in range(n_features)]
+    feature_id_list = [None for f in range(n_global_features)]
     motif_id_list = [None for m in range(n_motifs)]
     for motif,pos in motif_index.items():
       motif_id_list[pos] = motif.id
