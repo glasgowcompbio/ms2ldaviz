@@ -2,6 +2,7 @@
 import os
 import numpy as np
 import sys
+import jsonpickle
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 
 import django
