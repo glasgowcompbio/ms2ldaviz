@@ -76,7 +76,7 @@ if __name__ == '__main__':
         alpha_list[pos] = alpha.value
 
 
-    b,status = Beta.objects.get_or_create(motifset = motifset)
+    b,status = Beta.objects.get_or_create(motifset = ms)
 
     b.beta = jsonpickle.encode(betalist)
     b.motif_id_list = jsonpickle.encode(motif_id_list)
