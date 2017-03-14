@@ -53,8 +53,21 @@
 
         });
 
+        // Only show following two lines when ms1 duplicate checkbox is checked
+        $('#id_filter_duplicates').click(function(){
+            if($(this).is(":checked")){
+                $('#id_duplicate_filter_mz_tol').parent().show();
+                $('#id_duplicate_filter_rt_tol').parent().show();
+            } else{
+                $('#id_duplicate_filter_mz_tol').parent().hide();
+                $('#id_duplicate_filter_rt_tol').parent().hide();
+            }
+        });
+
         // initial state
         $('#id_decompose_from').parent().hide();
+        $('#id_duplicate_filter_mz_tol').parent().hide();
+        $('#id_duplicate_filter_rt_tol').parent().hide();
 
     </script>
 {% endblock %}
