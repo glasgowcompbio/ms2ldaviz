@@ -2,7 +2,7 @@
 # Simon's attempts to make a single feature selection pipeline
 from Queue import PriorityQueue
 import numpy as np
-import sys
+import sys, os
 # sys.path.append('/Users/simon/git/efcompute')
 # from ef_assigner import ef_assigner
 # from formula import Formula
@@ -690,7 +690,8 @@ class LoadMSP(Loader):
         ms2_id = 0
         ms1_id = 0
         for input_file in input_set:
-            file_name = input_file.split('/')[-1]
+            ## Use built-in method to get file_name
+            file_name = os.path.basename(input_file)
             with open(input_file,'r') as f:
                 temp_metadata = {}
                 in_doc = False
@@ -736,15 +737,23 @@ class LoadMSP(Loader):
                             ms1.append(new_ms1)
                         else:
                             key = tokens[0][:-1].lower()
-                            val = tokens[1]
+                            ## Keep key-value pair only if val is not empty
+                            if len(tokens) == 1:
+                                continue
+                            else:
+                                val = tokens[1]
                             if key == 'precursormz':
                                 temp_metadata['parentmass'] = float(val)
                                 parentmass = float(val)
                             elif key == 'retentiontime':
-                                temp_metadata['parentrt'] = float(val)
-                                parentrt = float(val)
+                                ## rt must in float format
+                                val = float(val) if isinstance(val, float) else None
+                                temp_metadata['parentrt'] = val
+                                parentrt = val
                             else:
-                                temp_metadata[key] = val
+                                ## consider the case that space exists in val
+                                ## like: "Comment: Rt=768.56  Contributor=.  Study=."  
+                                temp_metadata[key] = val if len(tokens) == 2 else " ".join(tokens[1:])
         return ms1,ms2,metadata
 
 
