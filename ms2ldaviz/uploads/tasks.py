@@ -9,7 +9,7 @@ from decomposition.models import Beta,MotifSet,Decomposition
 from ms2ldaviz.celery_tasks import app
 
 # Import the load dict method
-from load_dict import load_dict
+from load_dict_functions import load_dict
 
 @app.task
 def lda_task(exp_id, params):
