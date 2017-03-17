@@ -193,7 +193,8 @@ class LoadCSV(Loader):
 # keeping the ms1 objects that can be matched. The matching is done with plus and minus the mz_tol (ppm)
 # and plus and minus the rt_tol
 class LoadMZML(Loader):
-    def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 1.0,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False,repeated_precursor_match = None):
+    def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 1.0,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False,repeated_precursor_match = None,
+                    min_ms1_rt = 0.0, max_ms1_rt = 1e6, min_ms2_intensity = 0.0):
         self.min_ms1_intensity = min_ms1_intensity
         self.peaklist = peaklist
         self.isolation_window = isolation_window
@@ -202,6 +203,9 @@ class LoadMZML(Loader):
         self.duplicate_filter = duplicate_filter
         self.duplicate_filter_mz_tol = duplicate_filter_mz_tol
         self.duplicate_filter_rt_tol = duplicate_filter_rt_tol
+        self.min_ms1_rt = min_ms1_rt
+        self.max_ms1_rt = max_ms1_rt
+        self.min_ms2_intensity = min_ms2_intensity
         if repeated_precursor_match:
             self.repeated_precursor_match = repeated_precursor_match
         else:
@@ -367,6 +371,12 @@ class LoadMZML(Loader):
 
         if self.duplicate_filter:
             ms1,ms2 = filter_ms1(ms1,ms2,mz_tol = self.duplicate_filter_mz_tol,rt_tol = self.duplicate_filter_rt_tol)
+
+        ## class refactor, put filtering inside of the class
+        ms1 = filter(lambda x: x.rt > self.min_ms1_rt and x.rt < self.max_ms1_rt, ms1)
+        ms2 = filter(lambda x: x[3].rt > self.min_ms1_rt and x[3].rt < self.max_ms1_rt, ms2)
+        if self.min_ms2_intensity > 0.0:
+            ms2 = filter_ms2_intensity(ms1, min_ms2_intensity = self.min_ms2_intensity)
 
         # Chop out filtered docs from metadata
         filtered_metadata = {}
@@ -683,6 +693,13 @@ class LoadGNPS(Loader):
 
 # A class to load spectra that sit in MSP files
 class LoadMSP(Loader):
+    def __init__(self, min_ms1_intensity = 0.0, min_ms2_intensity = 0.0):
+        self.min_ms1_intensity = min_ms1_intensity
+        self.min_ms2_intensity = min_ms2_intensity
+
+    def __str__(self):
+        return "msp loader"
+
     def load_spectra(self,input_set):
         ms1 = []
         ms2 = []
@@ -754,6 +771,13 @@ class LoadMSP(Loader):
                                 ## consider the case that space exists in val
                                 ## like: "Comment: Rt=768.56  Contributor=.  Study=."  
                                 temp_metadata[key] = val if len(tokens) == 2 else " ".join(tokens[1:])
+
+        ## add ms1, ms2 intensity filtering for msp input
+        if self.min_ms1_intensity > 0.0:
+            ms1,ms2 = filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
+        if self.min_ms2_intensity > 0.0:
+            ms2 = filter_ms2_intensity(ms1, min_ms2_intensity = self.min_ms2_intensity)
+
         return ms1,ms2,metadata
 
 
@@ -1433,18 +1457,19 @@ class MS2LDAFeatureExtractor(object):
 
 
 def filter_ms1_intensity(ms1,ms2,min_ms1_intensity = 1e6):
+    ## Use filter function to simplify code
     print "Filtering MS1 on intensity"
-    filtered_ms1_list = []
-    filtered_ms2_list = []
-    for m in ms1:
-        if m.intensity >= min_ms1_intensity:
-            filtered_ms1_list.append(m)
-    print "{} MS1 remaining".format(len(filtered_ms1_list))
-    for m in ms2:
-        if m[3] in filtered_ms1_list:
-            filtered_ms2_list.append(m)
-    print "{} MS2 remaining".format(len(filtered_ms2_list))
-    return filtered_ms1_list,filtered_ms2_list
+    ms1 = filter(lambda x: x > min_ms1_intensity, ms1)
+    print "{} MS1 remaining".format(len(ms1))
+    ms2 = filter(lambda x: x[3] in ms1, ms2)
+    print "{} MS2 remaining".format(len(ms2))
+    return ms1, ms2
+
+def filter_ms2_intensity(ms2, min_ms2_intensity = 1e6):
+    print "Filtering MS2 on intensity"
+    ms2 = filter(lambda x: x[2] > min_ms2_intensity, ms2)
+    print "{} MS2 remaining".format(len(ms2))
+    return ms2
 
 def filter_ms1(ms1,ms2,mz_tol = 0.5,rt_tol = 16):
     print "Filtering MS1 to remove duplicates"
