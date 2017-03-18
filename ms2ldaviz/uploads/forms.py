@@ -13,7 +13,7 @@ class CreateExperimentForm(forms.ModelForm):
             queryset=MotifSet.objects.all(),
             label='Decompose using Mass2Motifs in'
         )
-        self.fields['mzml_file'].required = True
+        self.fields['ms2_file'].required = True
         self.fields['decompose_from'].required = False
 
     class Meta:
@@ -22,11 +22,11 @@ class CreateExperimentForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'style': 'width:300px'}),
             'description': forms.Textarea(attrs={'rows': 4, 'cols': 100}),
             'csv_file': forms.ClearableFileInput(),
-            'mzml_file': forms.ClearableFileInput()
+            'ms2_file': forms.ClearableFileInput()
         }
         labels = {
             'csv_file': 'MS1 file (CSV)',
-            'mzml_file': 'MS2 file (mzML)',
+            'ms2_file': 'MS2 file (mzML or msp)',
             'isolation_window': 'Isolation window when linking MS1-MS2 peaks (Da)',
             'mz_tol': 'Mass tolerance when linking MS1-MS2 peaks (ppm)',
             'rt_tol': 'Retention time tolerance when linking MS1-MS2 peaks (seconds)',
@@ -43,7 +43,7 @@ class CreateExperimentForm(forms.ModelForm):
         }
         fields = [
             'name', 'description',
-            'experiment_type', 'csv_file', 'mzml_file',
+            'experiment_type', 'experiment_ms2_format', 'ms2_file', 'csv_file',
             'isolation_window', 'mz_tol', 'rt_tol', 'min_ms1_rt', 'max_ms1_rt', 'min_ms1_intensity','min_ms2_intensity',
             'filter_duplicates','duplicate_filter_mz_tol','duplicate_filter_rt_tol',
             'K', 'decomposition_source','n_its',

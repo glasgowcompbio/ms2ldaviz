@@ -21,7 +21,7 @@ def create_experiment(request):
             pending_code, pending_msg = EXPERIMENT_STATUS_CODE[0] # pending
             new_experiment.status = pending_code
             new_experiment.csv_file = request.FILES.get('csv_file', None)
-            new_experiment.mzml_file = request.FILES.get('mzml_file', None)
+            new_experiment.ms2_file = request.FILES.get('ms2_file', None)
             new_experiment.save()
 
             user = request.user

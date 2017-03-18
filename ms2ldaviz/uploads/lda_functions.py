@@ -10,7 +10,7 @@ import jsonpickle
 
 
 def load_mzml_and_make_documents(experiment):
-    assert experiment.mzml_file
+    assert experiment.ms2_file
     peaklist = None
     if experiment.csv_file:
         peaklist = experiment.csv_file.path
@@ -21,8 +21,8 @@ def load_mzml_and_make_documents(experiment):
                       duplicate_filter = experiment.filter_duplicates,
                       duplicate_filter_mz_tol = experiment.duplicate_filter_mz_tol,
                       duplicate_filter_rt_tol = experiment.duplicate_filter_rt_tol)
-    print "Loading peaks from {} using peaklist {}".format(experiment.mzml_file.path, peaklist)
-    ms1, ms2, metadata = loader.load_spectra([experiment.mzml_file.path])
+    print "Loading peaks from {} using peaklist {}".format(experiment.ms2_file.path, peaklist)
+    ms1, ms2, metadata = loader.load_spectra([experiment.ms2_file.path])
     print "Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1), len(ms2))
 
     min_ms1_rt = experiment.min_ms1_rt  # seconds
