@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.conf import settings
 
-from .constants import EXPERIMENT_STATUS_CODE,EXPERIMENT_TYPE, EXPERIMENT_DECOMPOSITION_SOURCE
+from .constants import EXPERIMENT_STATUS_CODE,EXPERIMENT_TYPE, EXPERIMENT_DECOMPOSITION_SOURCE, EXPERIMENT_MS2_FORMAT
 
 
 # Create your models here.
@@ -37,8 +37,12 @@ class Experiment(models.Model):
     experiment_type = models.CharField(max_length=128, choices=EXPERIMENT_TYPE,
                               null=True, default=ms2lda_code)
 
+    ms2lda_format_code, _ = EXPERIMENT_MS2_FORMAT[0]
+    experiment_ms2_format = models.CharField(max_length=128, choices=EXPERIMENT_MS2_FORMAT,
+                              null=True, default=ms2lda_format_code)
+
+    ms2_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
     csv_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
-    mzml_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
 
 
     # I don't think this should be stored here
@@ -79,16 +83,16 @@ class Experiment(models.Model):
 
             # temporarily unset the uploaded files
             uploaded_csv_file = self.csv_file
-            uploaded_mzml_file = self.mzml_file
+            uploaded_ms2_file = self.ms2_file
             self.csv_file = None
-            self.mzml_file = None
+            self.ms2_file = None
 
             # save first to get the id
             super(Experiment, self).save(*args, **kwargs)
 
             # set the uploaded files back
             self.csv_file = uploaded_csv_file
-            self.mzml_file = uploaded_mzml_file
+            self.ms2_file = uploaded_ms2_file
 
         # actually does the saving here
         super(Experiment, self).save(*args, **kwargs)

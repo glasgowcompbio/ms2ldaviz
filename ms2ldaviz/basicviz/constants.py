@@ -22,6 +22,12 @@ EXPERIMENT_DECOMPOSITION_SOURCE = [
     ('Y', 'Yes'),
 ]
 
+EXPERIMENT_MS2_FORMAT = [
+    ('0', 'mzML'),
+    ('1', 'msp'),
+]
+
+
 MASSBANK_AUTHORS = "van der Hooft, J. J. J., Wandy J., Rogers, S., University of Glasgow"
 MASSBANK_LICENSE = 'CC BY'
 MASSBANK_PUBLICATION = "van der Hooft, J. J. J., Wandy, J., Barrett, M, P., Burgess, K. E. V. & Rogers, S. (2016). Topic modeling for untargeted substructure exploration in metabolomics. Proceedings of the National Academy of Sciences. 113(48), 13738-13743. http://doi.org/10.1073/pnas.1608041113"
