@@ -376,7 +376,7 @@ class LoadMZML(Loader):
         ms1 = filter(lambda x: x.rt > self.min_ms1_rt and x.rt < self.max_ms1_rt, ms1)
         ms2 = filter(lambda x: x[3].rt > self.min_ms1_rt and x[3].rt < self.max_ms1_rt, ms2)
         if self.min_ms2_intensity > 0.0:
-            ms2 = filter_ms2_intensity(ms1, min_ms2_intensity = self.min_ms2_intensity)
+            ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
 
         # Chop out filtered docs from metadata
         filtered_metadata = {}
@@ -776,7 +776,7 @@ class LoadMSP(Loader):
         if self.min_ms1_intensity > 0.0:
             ms1,ms2 = filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
         if self.min_ms2_intensity > 0.0:
-            ms2 = filter_ms2_intensity(ms1, min_ms2_intensity = self.min_ms2_intensity)
+            ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
 
         return ms1,ms2,metadata
 
