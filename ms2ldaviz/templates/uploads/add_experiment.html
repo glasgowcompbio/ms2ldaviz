@@ -38,20 +38,45 @@
     <script type='text/javascript'>
 
         $('#id_experiment_type').on('change', function() {
-            var a = $(this).val();
+            // var a = $(this).val();
 
-            if (a === '0') { // ms2lda
-                $('#id_decomposition_source').parent().show();
-                $('#id_K').parent().show();
-                $('#id_decompose_from').parent().hide();
+            // if (a === '0') { // ms2lda
+            //     $('#id_decomposition_source').parent().show();
+            //     $('#id_K').parent().show();
+            //     $('#id_decompose_from').parent().hide();
 
-            } else { // decomposition
-                $('#id_decomposition_source').parent().hide();
-                $('#id_K').parent().hide();
-                $('#id_decompose_from').parent().show();
-            }
+            // } else { // decomposition
+            //     $('#id_decomposition_source').parent().hide();
+            //     $('#id_K').parent().hide();
+            //     $('#id_decompose_from').parent().show();
+            // }
+
+            // Use toggle function
+            $('#id_decomposition_source').parent().toggle();
+            $('#id_K').parent().toggle();
+            $('#id_decompose_from').parent().toggle();
 
         });
+
+        $('#id_experiment_ms2_format').on('change', function() {
+            // reset 'filter ms1 duplicate' when choosing msp format input
+            if ($(this).val() == '1'){
+                $('#id_filter_duplicates').prop('checked', false);
+                $('#id_duplicate_filter_mz_tol').parent().hide();
+                $('#id_duplicate_filter_rt_tol').parent().hide();
+            }
+
+            $('#id_csv_file').parent().toggle();
+            $('#id_isolation_window').parent().toggle();
+            $('#id_mz_tol').parent().toggle();
+            $('#id_rt_tol').parent().toggle();
+            $('#id_min_ms1_rt').parent().toggle();
+            $('#id_max_ms1_rt').parent().toggle();
+            $('#id_filter_duplicates').parent().toggle();
+
+        });
+
+
 
         // Only show following two lines when ms1 duplicate checkbox is checked
         $('#id_filter_duplicates').click(function(){
