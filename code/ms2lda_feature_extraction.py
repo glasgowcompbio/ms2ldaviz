@@ -385,8 +385,11 @@ class LoadMZML(Loader):
             ms1,ms2 = filter_ms1(ms1,ms2,mz_tol = self.duplicate_filter_mz_tol,rt_tol = self.duplicate_filter_rt_tol)
 
         ## class refactor, put filtering inside of the class
+        print [m.rt for m in ms1]
+        print self.min_ms1_rt,self.max_ms1_rt
         ms1 = filter(lambda x: x.rt > self.min_ms1_rt and x.rt < self.max_ms1_rt, ms1)
-        ms2 = filter(lambda x: x[3].rt > self.min_ms1_rt and x[3].rt < self.max_ms1_rt, ms2)
+        ms2 = filter(lambda x: x[3] in set(ms1),ms2)
+        # ms2 = filter(lambda x: x[3].rt > self.min_ms1_rt and x[3].rt < self.max_ms1_rt, ms2)
         if self.min_ms2_intensity > 0.0:
             ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
 
@@ -1473,7 +1476,7 @@ def filter_ms1_intensity(ms1,ms2,min_ms1_intensity = 1e6):
     print "Filtering MS1 on intensity"
     ms1 = filter(lambda x: x > min_ms1_intensity, ms1)
     print "{} MS1 remaining".format(len(ms1))
-    ms2 = filter(lambda x: x[3] in ms1, ms2)
+    ms2 = filter(lambda x: x[3] in set(ms1), ms2)
     print "{} MS2 remaining".format(len(ms2))
     return ms1, ms2
 
