@@ -230,14 +230,16 @@ class LoadMZML(Loader):
             current_ms1_scan_mz = None
             current_ms1_scan_intensity = None
             current_ms1_scan_rt = None
-            run = pymzml.run.Reader(input_file, MS1_Precision=5e-6)
+            run = pymzml.run.Reader(input_file, MS1_Precision=5e-6, extraAccessions = [('MS:1000016' , ['value','unitName'] )])
             file_name = input_file.split('/')[-1]
             previous_precursor_mz = -10
             previous_ms1 = None
 
             for spectrum in run:
                 if spectrum['ms level'] == 1:
-                    current_ms1_scan_rt = spectrum['scan start time']
+                    current_ms1_scan_rt,units = spectrum['scan start time']
+                    if units == 'minute':
+                        current_ms1_scan_rt *= 60.0
                     # Note can sometimes get empty scans at the start. If this happens we should ignore.
                     if len(spectrum.peaks) > 0:
                         current_ms1_scan_mz,current_ms1_scan_intensity = zip(*spectrum.peaks)
@@ -450,7 +452,7 @@ class LoadEmma(Loader):
         for input_file in input_set:
 
             # Load the mzml object
-            run = pymzml.run.Reader(input_file, MS1_Precision=5e-6)
+            run = pymzml.run.Reader(input_file, MS1_Precision=5e-6, extraAccessions = [('MS:1000016' , ['value','unitName'] )])
             nspec = 0
             nmatch = 0
             parent_scan_number = None
@@ -460,7 +462,9 @@ class LoadEmma(Loader):
                 if 'collision-induced dissociation' in spectrum:
                     if self.spectrum_choice == 'cid':
                         parentmass = spectrum['precursors'][0]['mz']
-                        parentrt = spectrum['scan start time']
+                        parentrt,units = spectrum['scan start time']
+                        if unite == 'minute':
+                            parentrt *= 60.0
                         nc += 1
                         newms1 = MS1(nc,parentmass,parentrt,None,file_name,scan_number = parent_scan_number)
                         ms1.append(newms1)
@@ -472,7 +476,9 @@ class LoadEmma(Loader):
                 elif 'beam-type collision-induced dissociation' in spectrum:
                     if self.spectrum_choice == 'hcid':
                         parentmass = spectrum['precursors'][0]['mz']
-                        parentrt = spectrum['scan start time']
+                        parentrt,units = spectrum['scan start time']
+                        if units == 'minute':
+                            parentrt *= 60.0
                         nc += 1
                         newms1 = MS1(nc,parentmass,parentrt,None,file_name,scan_number = parent_scan_number)
                         ms1.append(newms1)
