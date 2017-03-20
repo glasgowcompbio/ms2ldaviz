@@ -238,70 +238,82 @@ class LoadMZML(Loader):
             for spectrum in run:
                 if spectrum['ms level'] == 1:
                     current_ms1_scan_rt = spectrum['scan start time']
-                    current_ms1_scan_mz,current_ms1_scan_intensity = zip(*spectrum.peaks)
+                    # Note can sometimes get empty scans at the start. If this happens we should ignore.
+                    if len(spectrum.peaks) > 0:
+                        current_ms1_scan_mz,current_ms1_scan_intensity = zip(*spectrum.peaks)
+                    else:
+                        current_ms1_scan_mz = None
+                        current_ms1_scan_intensity = None
+
                     previous_precursor_mz = -10
                     previous_ms1 = None
                 elif spectrum['ms level'] == 2:
-                    precursor_mz = spectrum['precursors'][0]['mz']
-                    if abs(precursor_mz-previous_precursor_mz) < self.repeated_precursor_match:
-                        # Another collision energy perhaps??
-                        # if this is the case, we don't bother looking for a parent, but add to the previous one
-                        # Make the ms2 objects:
-                        if previous_ms1:
-                            for mz,intensity in spectrum.centroidedPeaks:
-                                ms2.append((mz,current_ms1_scan_rt,intensity,previous_ms1,file_name,float(ms2_id)))
-                                ms2_id += 1
-                        else:
-                            pass
+                    # Check that we have an MS1 scan to refer to. If not, skip this one
+                    # this can happen if we have blank MS1 scans. We should never get an MS2 scan after a blank MS1
+                    # but better to be safe than sorry!
+                    if not current_ms1_scan_mz:
+                        continue
                     else:
-                        # This is a new fragmentation
+                        precursor_mz = spectrum['precursors'][0]['mz']
+                        if abs(precursor_mz-previous_precursor_mz) < self.repeated_precursor_match:
+                            # Another collision energy perhaps??
+                            # if this is the case, we don't bother looking for a parent, but add to the previous one
+                            # Make the ms2 objects:
+                            if previous_ms1:
+                                for mz,intensity in spectrum.centroidedPeaks:
+                                    ms2.append((mz,current_ms1_scan_rt,intensity,previous_ms1,file_name,float(ms2_id)))
+                                    ms2_id += 1
+                            else:
+                                pass
+                        else:
+                            # This is a new fragmentation
 
-                        # This finds the insertion position for the precursor mz (i.e. the position one to the right
-                        # of the first element it is greater than)
-                        precursor_index_ish = bisect.bisect_right(current_ms1_scan_mz,precursor_mz)
-                        pos = precursor_index_ish - 1 # pos is now the largest value smaller than ours
+                            # This finds the insertion position for the precursor mz (i.e. the position one to the right
+                            # of the first element it is greater than)
+                            precursor_index_ish = bisect.bisect_right(current_ms1_scan_mz,precursor_mz)
+                            pos = precursor_index_ish - 1 # pos is now the largest value smaller than ours
 
-                        # Move left and right within the precursor window and pick the most intense parent_scan_number
-                        max_intensity = 0.0
-                        max_intensity_pos = None
-                        while abs(precursor_mz - current_ms1_scan_mz[pos]) < self.isolation_window:
-                            if current_ms1_scan_intensity[pos] >= max_intensity:
-                                max_intensity = current_ms1_scan_intensity[pos]
-                                max_intensity_pos = pos
-                            pos -= 1
-                            if pos < 0:
-                                break
-                        pos = precursor_index_ish
-                        if pos < len(current_ms1_scan_mz):
+                            # Move left and right within the precursor window and pick the most intense parent_scan_number
+                            max_intensity = 0.0
+                            max_intensity_pos = None
                             while abs(precursor_mz - current_ms1_scan_mz[pos]) < self.isolation_window:
                                 if current_ms1_scan_intensity[pos] >= max_intensity:
                                     max_intensity = current_ms1_scan_intensity[pos]
                                     max_intensity_pos = pos
-                                pos += 1
-                                if pos > len(current_ms1_scan_mz)-1:
+                                pos -= 1
+                                if pos < 0:
                                     break
-                            # print current_ms1_scan_mz[max_intensity_pos],current_ms1_scan_rt
-                        # Make the new MS1 object
-                        if not max_intensity_pos == None:
-                        # mz,rt,intensity,file_name,scan_number = None):
-                            new_ms1 = MS1(ms1_id,current_ms1_scan_mz[max_intensity_pos],
-                                          current_ms1_scan_rt,max_intensity,file_name,scan_number = nc)
-                            metadata[new_ms1.name] = {'parentmass':current_ms1_scan_mz[max_intensity_pos],
-                                                      'parentrt':current_ms1_scan_rt,'scan_number':nc,
-                                                      'precursor_mass':precursor_mz}
+                            pos = precursor_index_ish
+                            if pos < len(current_ms1_scan_mz):
+                                while abs(precursor_mz - current_ms1_scan_mz[pos]) < self.isolation_window:
+                                    if current_ms1_scan_intensity[pos] >= max_intensity:
+                                        max_intensity = current_ms1_scan_intensity[pos]
+                                        max_intensity_pos = pos
+                                    pos += 1
+                                    if pos > len(current_ms1_scan_mz)-1:
+                                        break
+                                # print current_ms1_scan_mz[max_intensity_pos],current_ms1_scan_rt
+                            # Make the new MS1 object
+                            if not max_intensity_pos == None:
+                            # mz,rt,intensity,file_name,scan_number = None):
+                                new_ms1 = MS1(ms1_id,current_ms1_scan_mz[max_intensity_pos],
+                                              current_ms1_scan_rt,max_intensity,file_name,scan_number = nc)
+                                metadata[new_ms1.name] = {'parentmass':current_ms1_scan_mz[max_intensity_pos],
+                                                          'parentrt':current_ms1_scan_rt,'scan_number':nc,
+                                                          'precursor_mass':precursor_mz}
 
-                            
-                            previous_ms1 = new_ms1 # used for merging energies
-                            previous_precursor_mz = new_ms1.mz
+                                
+                                previous_ms1 = new_ms1 # used for merging energies
+                                previous_precursor_mz = new_ms1.mz
 
 
-                            ms1.append(new_ms1)
-                            ms1_id += 1
+                                ms1.append(new_ms1)
+                                ms1_id += 1
 
-                            # Make the ms2 objects:
-                            for mz,intensity in spectrum.centroidedPeaks:
-                                ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id)))
-                                ms2_id += 1
+                                # Make the ms2 objects:
+                                for mz,intensity in spectrum.centroidedPeaks:
+                                    ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id)))
+                                    ms2_id += 1
 
         print "Found {} ms2 spectra, and {} individual ms2 objects".format(len(ms1),len(ms2))
 
@@ -376,7 +388,7 @@ class LoadMZML(Loader):
         ms1 = filter(lambda x: x.rt > self.min_ms1_rt and x.rt < self.max_ms1_rt, ms1)
         ms2 = filter(lambda x: x[3].rt > self.min_ms1_rt and x[3].rt < self.max_ms1_rt, ms2)
         if self.min_ms2_intensity > 0.0:
-            ms2 = filter_ms2_intensity(ms1, min_ms2_intensity = self.min_ms2_intensity)
+            ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
 
         # Chop out filtered docs from metadata
         filtered_metadata = {}
@@ -776,7 +788,7 @@ class LoadMSP(Loader):
         if self.min_ms1_intensity > 0.0:
             ms1,ms2 = filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
         if self.min_ms2_intensity > 0.0:
-            ms2 = filter_ms2_intensity(ms1, min_ms2_intensity = self.min_ms2_intensity)
+            ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
 
         return ms1,ms2,metadata
 
