@@ -80,11 +80,20 @@ def get_degree_matrix(request, mf_id):
                 new_row = []
                 motif_set = individual.mass2motif_set.all().order_by('name')
                 for motif in motif_set:
-                    dm2m = motif.documentmass2motif_set.all()
-                    if default_score == 'probability':
-                        new_row.append(len([d for d in dm2m if d.probability > doc_m2m_threshold]))
-                    else:
-                        new_row.append(len([d for d in dm2m if d.overlap_score > doc_m2m_threshold]))
+                    motif_name = motif.name
+                    m2m = Mass2Motif.objects.get(name=motif_name, experiment=individual)
+                    docs = get_docm2m(m2m)
+
+                    # Following modified to make the degrees here consistent with the plots
+                    
+                    # dm2m = motif.documentmass2motif_set.all()
+                    # if default_score == 'probability':
+                    #     new_row.append(len([d for d in dm2m if d.probability > doc_m2m_threshold]))
+                    # else:
+                    #     new_row.append(len([d for d in dm2m if d.overlap_score > doc_m2m_threshold]))
+
+                    new_row.append(len(docs))
+
                 deg_vals.append(new_row)
 
             deg_vals = map(list, zip(*deg_vals))
