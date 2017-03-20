@@ -387,8 +387,6 @@ class LoadMZML(Loader):
             ms1,ms2 = filter_ms1(ms1,ms2,mz_tol = self.duplicate_filter_mz_tol,rt_tol = self.duplicate_filter_rt_tol)
 
         ## class refactor, put filtering inside of the class
-        print [m.rt for m in ms1]
-        print self.min_ms1_rt,self.max_ms1_rt
         ms1 = filter(lambda x: x.rt > self.min_ms1_rt and x.rt < self.max_ms1_rt, ms1)
         ms2 = filter(lambda x: x[3] in set(ms1),ms2)
         # ms2 = filter(lambda x: x[3].rt > self.min_ms1_rt and x[3].rt < self.max_ms1_rt, ms2)
