@@ -17,8 +17,8 @@ from load_dict_functions import load_dict
 
 def delete_analysis_dir(exp):
 
-    if exp.mzml_file:
-        upload_folder = os.path.dirname(exp.mzml_file.path)
+    if exp.ms2_file:
+        upload_folder = os.path.dirname(exp.ms2_file.path)
         print 'Deleting %s' % upload_folder
         shutil.rmtree(upload_folder)
 
@@ -30,7 +30,7 @@ def lda_task(exp_id, params):
     n_its = int(params['n_its'])
     print 'Running lda on experiment_%d (%s), K=%d' % (exp_id, exp.description, K)
     print 'CSV file = %s' % exp.csv_file
-    print 'mzML file = %s' % exp.mzml_file
+    print 'mzML file = %s' % exp.ms2_file
 
     corpus, metadata, word_mz_range = lda_load_mzml_and_make_documents(exp)
     lda_dict = run_lda(corpus, metadata, word_mz_range, K, n_its=n_its)
@@ -55,7 +55,7 @@ def decomposition_task(exp_id, params):
     print 'Running decomposition on experiment_%d (%s), decompose_from %s' % (exp_id, experiment.description,
                                                                               decompose_from)
     print 'CSV file = %s' % experiment.csv_file
-    print 'mzML file = %s' % experiment.mzml_file
+    print 'mzML file = %s' % experiment.ms2_file
 
     motifset = MotifSet.objects.get(name = decompose_from)
     name = experiment.name + ' decomposition'
