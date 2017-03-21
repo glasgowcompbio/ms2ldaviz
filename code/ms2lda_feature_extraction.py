@@ -783,7 +783,10 @@ class LoadMSP(Loader):
                                 parentmass = float(val)
                             elif key == 'retentiontime':
                                 ## rt must in float format
-                                val = float(val) if isinstance(val, float) else None
+                                try:
+                                    val = float(val)
+                                except:
+                                    val = None
                                 temp_metadata['parentrt'] = val
                                 parentrt = val
                             else:
