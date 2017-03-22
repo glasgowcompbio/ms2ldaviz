@@ -1326,9 +1326,11 @@ def get_docm2m_bydoc(document, default_score=None, doc_m2m_threshold=None):
     elif default_score == 'overlap_score':
         dm2m = DocumentMass2Motif.objects.filter(document=document, overlap_score__gte=doc_m2m_threshold).order_by(
             '-overlap_score')
-    else:
+    elif default_score == 'both':
         dm2m = DocumentMass2Motif.objects.filter(document=document, probability__gte=doc_m2m_threshold,
                                                  overlap_score__gte=doc_m2m_threshold).order_by('-probability')
+    else:
+        dm2m = []
     return dm2m
 
 @login_required(login_url='/registration/login/')

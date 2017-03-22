@@ -73,6 +73,7 @@ lda_multi_patterns = [
         name='get_individual_names'),
     url(r'^get_multifile_mass2motif_metadata/(?P<mf_id>\w+)/(?P<motif_name>\w+)/$',
         views.get_multifile_mass2motif_metadata, name='get_multifile_mass2motif_metadata'),
+    url(r'^get_proportion_annotated_docs/(?P<mf_id>\w+)/$',views.get_proportion_annotated_docs,name = 'get_proportion_annotation_docs')
 ]
 
 urlpatterns = [
