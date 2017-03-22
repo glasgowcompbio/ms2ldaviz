@@ -48,6 +48,7 @@ lda_single_patterns = [
     url(r'^get_doc_m2m/(?P<experiment_id>\w+)/$',views.get_doc_m2m,name = 'get_doc_m2m'),
     url(r'^get_beta/(?P<experiment_id>\w+)/$',views.get_beta,name = 'get_beta'),
     url(r'^get_all_doc_data/(?P<experiment_id>\w+)/$',views.get_all_doc_data,name = 'get_all_doc_data'),
+    url(r'^get_proportion_annotated_docs/(?P<experiment_id>\w+)/$',views.get_proportion_annotated_docs,name = 'get_proportion_annotation_docs')
 ]
 
 # for multi-file LDA experiments
@@ -73,7 +74,11 @@ lda_multi_patterns = [
         name='get_individual_names'),
     url(r'^get_multifile_mass2motif_metadata/(?P<mf_id>\w+)/(?P<motif_name>\w+)/$',
         views.get_multifile_mass2motif_metadata, name='get_multifile_mass2motif_metadata'),
-    url(r'^get_proportion_annotated_docs/(?P<mf_id>\w+)/$',views.get_proportion_annotated_docs,name = 'get_proportion_annotation_docs')
+    url(r'^get_individual_ids/(?P<mf_id>\w+)/$',views.get_individual_ids,name = 'get_individual_ids'),
+]
+
+lda_admin_patterns = [
+    url(r'^list_log/$',views.list_log,name = 'list_log'),
 ]
 
 urlpatterns = [

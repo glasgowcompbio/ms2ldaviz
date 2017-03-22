@@ -598,21 +598,9 @@ def get_multifile_mass2motif_metadata(request, mf_id, motif_name):
     md = jsonpickle.decode(mass2motif.metadata)
     return HttpResponse(json.dumps(md), content_type='application/json')
 
-def get_proportion_annotated_docs(request,mf_id):
+def get_individual_ids(request,mf_id):
     mfe = MultiFileExperiment.objects.get(id=mf_id)
     links = mfe.multilink_set.all().order_by('experiment__name')
     individuals = [l.experiment for l in links]
-    output_data = []
-    for experiment in individuals:
-        documents = Document.objects.filter(experiment = experiment)
-        n_docs = len(documents)
-        n_annotated = 0
-        for document in documents:
-            dm2ms = get_docm2m_bydoc(document)
-            for dm in dm2ms:
-                if dm.mass2motif.annotation:
-                    n_annotated += 1
-                    break
-        output_data.append((experiment.name,n_docs,n_annotated))
-    return HttpResponse(json.dumps(output_data),content_type = 'application/json')
-
+    output_data = [i.id for i in individuals]
+    return HttpResponse(json.dumps(output_data),content_type = 'application/json')    

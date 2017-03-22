@@ -1498,3 +1498,19 @@ def get_all_doc_data(request,experiment_id):
         doc_motifs = [(d.mass2motif.name,d.probability,d.overlap_score) for d in doc_motif]
         out_data.append([document.name,doc_features,doc_motifs])
     return HttpResponse(json.dumps(out_data),content_type = 'application/json')
+
+def get_proportion_annotated_docs(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    output_data = []
+    documents = Document.objects.filter(experiment = experiment)
+    n_docs = len(documents)
+    n_annotated = 0
+    for document in documents:
+        dm2ms = get_docm2m_bydoc(document)
+        for dm in dm2ms:
+            if dm.mass2motif.annotation:
+                n_annotated += 1
+                break
+    output_data.append((experiment.name,n_docs,n_annotated))
+    return HttpResponse(json.dumps(output_data),content_type = 'application/json')
+
