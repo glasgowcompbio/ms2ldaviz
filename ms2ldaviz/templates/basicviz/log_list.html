@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_block %}
+
+{% endblock %}
+
+{% block body_block %}
+
+	<table class="table" id="jobtable">
+	<thead>
+	<tr>
+		<th>User</th><th>Timestamp</th><th>Experiment</th><th>Details</th>
+	</tr>
+	</thead>
+	<tbody>
+	{% for log in logs %}
+	<tr>
+		<td>{{log.user.username}}</td>
+		<td>{{log.timestamp}}</td>
+		<td>{{log.experiment}}</td>
+		<td>{{log.tasktype}}</td>
+	</tr>
+	{% endfor %}
+	</tbody>
+	</table>
+
+{% endblock %}
+{% block js_block %}
+	<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+	<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+	<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+	<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
+
+	<script type="text/javascript">
+
+		$('#jobtable').DataTable({
+			dom: 'Bfrtip',
+			buttons: [
+		        'csv',
+	        ],
+	    });
+	</script>
+{% endblock %}
+
