@@ -4,7 +4,7 @@ import json
 
 from decomposition.models import GlobalMotif,DocumentGlobalMass2Motif,Decomposition,GlobalMotifsToSets
 from decomposition.forms import DecompVizForm,NewDecompositionForm
-from basicviz.models import Mass2MotifInstance,Experiment,Document
+from basicviz.models import Mass2MotifInstance,Experiment,Document,JobLog
 
 from options.views import get_option
 
@@ -153,6 +153,7 @@ def new_decomposition(request,experiment_id):
             decomposition,status = Decomposition.objects.get_or_create(experiment = experiment,
                                                     motifset = form.cleaned_data['motifset'],
                                                     name = form.cleaned_data['name'])
+            JobLog.objects.create(user = request.user,experiment = experiment,tasktype = 'Decompose with ' + str(form.cleaned_data['motifset']))
             just_decompose_task.delay(decomposition.id)
         else:
             context_dict['form'] = form

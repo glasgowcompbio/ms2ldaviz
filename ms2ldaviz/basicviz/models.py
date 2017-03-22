@@ -1,5 +1,6 @@
 import os
 import jsonpickle
+import datetime
 from django.contrib.auth.models import User
 from django.db import models
 from django.conf import settings
@@ -207,6 +208,12 @@ class Document(models.Model):
 
     def __unicode__(self):
         return self.name
+
+class JobLog(models.Model):
+    user = models.ForeignKey(User,null = False)
+    experiment = models.ForeignKey(Experiment, null = False)
+    timestamp = models.DateField(default= datetime.date.today, null = False)
+    tasktype = models.CharField(max_length=128, null = True)
 
 
 class Feature(models.Model):

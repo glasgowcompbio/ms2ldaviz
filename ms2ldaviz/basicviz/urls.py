@@ -47,6 +47,7 @@ lda_single_patterns = [
     url(r'^get_annotated_topics/(?P<experiment_id>\w+)/$',views.get_annotated_topics,name = 'get_annotated_topics'),
     url(r'^get_doc_m2m/(?P<experiment_id>\w+)/$',views.get_doc_m2m,name = 'get_doc_m2m'),
     url(r'^get_beta/(?P<experiment_id>\w+)/$',views.get_beta,name = 'get_beta'),
+    url(r'^get_all_doc_data/(?P<experiment_id>\w+)/$',views.get_all_doc_data,name = 'get_all_doc_data'),
 ]
 
 # for multi-file LDA experiments

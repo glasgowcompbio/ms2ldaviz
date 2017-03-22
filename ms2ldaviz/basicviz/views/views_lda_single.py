@@ -1483,3 +1483,16 @@ def get_beta(request,experiment_id):
     for m in mi:
         output_data.append([m.mass2motif.name,m.feature.name,m.probability])
     return HttpResponse(json.dumps(output_data),content_type = 'application/json')
+
+
+def get_all_doc_data(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    documents = Document.objects.filter(experiment = experiment)
+    out_data = []
+    for document in documents:
+        doc_feat = FeatureInstance.objects.filter(document = document)
+        doc_features = [(d.feature.name,d.intensity) for d in doc_feat]
+        doc_motif = DocumentMass2Motif.objects.filter(document = document)
+        doc_motifs = [(d.mass2motif.name,d.probability,d.overlap_score) for d in doc_motif]
+        out_data.append([document.name,doc_features,doc_motifs])
+    return HttpResponse(json.dumps(out_data),content_type = 'application/json')

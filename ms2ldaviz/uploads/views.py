@@ -4,7 +4,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
 from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_TYPE
-from basicviz.models import UserExperiment
+from basicviz.models import UserExperiment,JobLog
 from .forms import CreateExperimentForm
 from .tasks import lda_task, decomposition_task
 
@@ -26,6 +26,9 @@ def create_experiment(request):
 
             user = request.user
             UserExperiment.objects.create(user=user, experiment=new_experiment, permission='edit')
+
+            JobLog.objects.create(user = user, experiment = new_experiment, tasktype = 'Uploaded and ' + new_experiment.experiment_type)
+
 
             process_experiment(new_experiment, experiment_form.cleaned_data)
             return HttpResponseRedirect(reverse('index'))
@@ -61,4 +64,6 @@ def process_experiment(exp, cleaned_data):
             'n_its': cleaned_data['n_its'],
         }
         pipeline = pipelines[exp.experiment_type]
+
+
         pipeline.delay(exp.id, params)

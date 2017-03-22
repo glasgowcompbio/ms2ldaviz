@@ -1,7 +1,8 @@
 from django.contrib import admin
 
 from basicviz.models import Experiment, Document, Mass2Motif, Feature, FeatureMass2MotifInstance, VizOptions, \
-    UserExperiment, ExtraUsers, MultiFileExperiment, MultiLink, Alpha, PeakSet, IntensityInstance, SystemOptions
+    UserExperiment, ExtraUsers, MultiFileExperiment, MultiLink, Alpha, PeakSet, IntensityInstance, SystemOptions, \
+    JobLog
 
 
 class UserExperimentAdmin(admin.ModelAdmin):
@@ -21,3 +22,4 @@ admin.site.register(Alpha)
 admin.site.register(PeakSet)
 admin.site.register(IntensityInstance)
 admin.site.register(SystemOptions)
+admin.site.register(JobLog)
