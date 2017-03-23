@@ -804,7 +804,106 @@ class LoadMSP(Loader):
 
 
 
+# A class to load spectra that sit in MGF files
+class LoadMGF(Loader):
+    def __init__(self, min_ms1_intensity = 0.0, min_ms2_intensity = 0.0):
+        self.min_ms1_intensity = min_ms1_intensity
+        self.min_ms2_intensity = min_ms2_intensity
 
+    def __str__(self):
+        return "mgf loader"
+
+    def load_spectra(self,input_set):
+        ms1 = []
+        ms2 = []
+        metadata = {}
+        ms2_id = 0
+        ms1_id = 0
+        for input_file in input_set:
+            ## Use built-in method to get file_name
+            file_name = os.path.basename(input_file)
+            with open(input_file,'r') as f:
+                temp_metadata = {}
+                in_doc = False
+                parentmass = None
+                parentintensity = None
+                parentrt = None
+                for line in f:
+                    rline  = line.rstrip()
+                    if rline == "BEGIN IONS":
+                        continue
+                    if rline == "END IONS":
+                        # finished doc, time to save
+                        in_doc = False
+                        temp_metadata = {}
+                        parentmass = None
+                        parentintensity = None
+                        parentrt = None
+                        new_ms1 = None
+                    else:
+                        if "=" in rline:
+                            key, val = rline.split("=", 1)
+                            key = key.lower()
+
+                            if len(val) == 0:
+                                continue
+
+                            if key == "rtinseconds":
+                                # val = float(val) if isinstance(val, float) else None
+                                try:
+                                    val = float(val)
+                                except:
+                                    val = None
+                                temp_metadata['parentrt'] = val
+                                parentrt = val
+
+                            elif key == "pepmass":
+                                ## only mass exists
+                                if " " not in val:
+                                    temp_metadata['parentmass'] = float(val)
+                                    temp_metadata['parentintensity'] = None
+                                    parentmass = float(val)
+                                    parentintensity = None
+
+                                ## mass and intensity exist
+                                else:
+                                    parentmass, parentintensity = val.split(' ', 1)
+                                    parentmass = float(parentmass)
+                                    parentintensity = float(parentintensity)
+                                    temp_metadata['parentmass'] = parentmass
+                                    temp_metadata['parentintensity'] = parentintensity
+
+                            else:
+                                temp_metadata[key] = val
+                        else:
+                            if not in_doc:
+                                in_doc = True
+                                new_ms1 = MS1(ms1_id,parentmass,parentrt,parentintensity,file_name)
+                                ms1_id += 1
+                                # if 'Name' in temp_metadata:
+                                #     doc_name = temp_metadata['Name']
+                                # else:
+                                #     doc_name = 'document_{}'.format(ms1_id)
+                                doc_name = 'document_{}'.format(ms1_id)
+                                metadata[doc_name] = temp_metadata.copy()
+                                new_ms1.name = doc_name
+                                ms1.append(new_ms1)
+
+                            tokens = rline.split()
+                            if len(tokens) == 2:
+                                mz = float(tokens[0])
+                                intensity = float(tokens[1])
+                                if intensity != 0.0:
+                                    ms2.append((mz,0.0,intensity,new_ms1,file_name,float(ms2_id)))
+                                    ms2_id += 1
+
+        # add ms1, ms2 intensity filtering for msp input
+        if self.min_ms1_intensity > 0.0:
+            ms1,ms2 = filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
+        if self.min_ms2_intensity > 0.0:
+            ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
+
+        return ms1,ms2,metadata
 
 
 
