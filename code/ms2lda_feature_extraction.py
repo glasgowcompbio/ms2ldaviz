@@ -1481,7 +1481,7 @@ class MS2LDAFeatureExtractor(object):
 def filter_ms1_intensity(ms1,ms2,min_ms1_intensity = 1e6):
     ## Use filter function to simplify code
     print "Filtering MS1 on intensity"
-    ms1 = filter(lambda x: x > min_ms1_intensity, ms1)
+    ms1 = filter(lambda x: x.intensity > min_ms1_intensity, ms1)
     print "{} MS1 remaining".format(len(ms1))
     ms2 = filter(lambda x: x[3] in set(ms1), ms2)
     print "{} MS2 remaining".format(len(ms2))
