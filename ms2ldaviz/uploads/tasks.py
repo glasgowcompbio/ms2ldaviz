@@ -2,6 +2,9 @@ from __future__ import absolute_import, unicode_literals
 
 import os
 import shutil
+import logging
+import sys
+import traceback
 
 from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_DECOMPOSITION_SOURCE
 from basicviz.models import Document, Experiment
@@ -23,58 +26,104 @@ def delete_analysis_dir(exp):
         shutil.rmtree(upload_folder)
 
 
+# see http://stackoverflow.com/questions/29712938/python-celery-how-to-separate-log-files
+def custom_logger(exp):
+    experiment_id = 'experiment_%d' % exp.id
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+
+    upload_folder = os.path.dirname(exp.ms2_file.path)
+    media_folder = os.path.dirname(upload_folder)
+
+    # The log files will go to e.g. /Users/joewandy/git/ms2ldaviz/ms2ldaviz/media/logs
+    # Create the directory if it doesn't exist
+    log_folder = os.path.join(media_folder, 'logs')
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+
+    handler = logging.FileHandler(os.path.join(log_folder, experiment_id + '.log'), 'w')
+    logger.addHandler(handler)
+    return logger
+
+
 @app.task
 def lda_task(exp_id, params):
+
     exp = Experiment.objects.get(pk=exp_id)
     K = int(params['K'])
     n_its = int(params['n_its'])
-    print 'Running lda on experiment_%d (%s), K=%d' % (exp_id, exp.description, K)
-    print 'CSV file = %s' % exp.csv_file
-    print 'mzML file = %s' % exp.ms2_file
 
-    corpus, metadata, word_mz_range = lda_load_mzml_and_make_documents(exp)
-    lda_dict = run_lda(corpus, metadata, word_mz_range, K, n_its=n_its)
-    load_dict(lda_dict, exp)
+    logger = custom_logger(exp)
+    logger.info('Running lda on experiment_%d (%s), K=%d' % (exp_id, exp.description, K))
+    logger.info('CSV file = %s' % exp.csv_file)
+    logger.info('mzML file = %s' % exp.ms2_file)
 
-    yes, _ = EXPERIMENT_DECOMPOSITION_SOURCE[1]
-    if exp.decomposition_source == yes:
-        # TODO: create a MotifSet here from the topics in lda_dict?
-        print 'Creating MotifSet'
+    # here we redirect all stdout, stderr of this task to our custom logger
+    # see http://docs.celeryproject.org/en/latest/userguide/tasks.html#logging
+    old_outs = sys.stdout, sys.stderr
+    rlevel = app.conf.worker_redirect_stdouts_level
+    try:
+        app.log.redirect_stdouts_to_logger(logger, rlevel)
 
-    ready, _ = EXPERIMENT_STATUS_CODE[1]
-    exp.status = ready
-    exp.save()
+        corpus, metadata, word_mz_range = lda_load_mzml_and_make_documents(exp)
+        lda_dict = run_lda(corpus, metadata, word_mz_range, K, n_its=n_its)
+        load_dict(lda_dict, exp)
 
-    delete_analysis_dir(exp)
+        yes, _ = EXPERIMENT_DECOMPOSITION_SOURCE[1]
+        if exp.decomposition_source == yes:
+            # TODO: create a MotifSet here from the topics in lda_dict?
+            print 'Creating MotifSet'
 
+        ready, _ = EXPERIMENT_STATUS_CODE[1]
+        exp.status = ready
+        exp.save()
+
+        delete_analysis_dir(exp)
+
+    except:
+        traceback.print_exc()
+    finally:
+        sys.stdout, sys.stderr = old_outs
 
 @app.task
 def decomposition_task(exp_id, params):
     experiment = Experiment.objects.get(pk=exp_id)
     decompose_from = params['decompose_from']
-    print 'Running decomposition on experiment_%d (%s), decompose_from %s' % (exp_id, experiment.description,
-                                                                              decompose_from)
-    print 'CSV file = %s' % experiment.csv_file
-    print 'mzML file = %s' % experiment.ms2_file
 
-    motifset = MotifSet.objects.get(name = decompose_from)
-    name = experiment.name + ' decomposition'
+    logger = custom_logger(experiment)
+    logger.info('Running decomposition on experiment_%d (%s), decompose_from %s' % (exp_id, experiment.description, decompose_from))
+    logger.info('CSV file = %s' % experiment.csv_file)
+    logger.info('mzML file = %s' % experiment.ms2_file)
 
-    load_mzml_and_make_documents(experiment,motifset)
-    decomposition = Decomposition.objects.create(name = name,experiment = experiment,motifset = motifset)
-    pending, _ = EXPERIMENT_STATUS_CODE[0]
-    decomposition.status = pending
-    decomposition.save()
+    old_outs = sys.stdout, sys.stderr
+    rlevel = app.conf.worker_redirect_stdouts_level
+    try:
+        app.log.redirect_stdouts_to_logger(logger, rlevel)
 
-    decompose(decomposition)
+        motifset = MotifSet.objects.get(name = decompose_from)
+        name = experiment.name + ' decomposition'
 
-    ready, _ = EXPERIMENT_STATUS_CODE[1]
-    experiment.status = ready
-    experiment.save()
-    decomposition.status = ready
-    decomposition.save()
+        load_mzml_and_make_documents(experiment,motifset)
+        decomposition = Decomposition.objects.create(name = name,experiment = experiment,motifset = motifset)
+        pending, _ = EXPERIMENT_STATUS_CODE[0]
+        decomposition.status = pending
+        decomposition.save()
 
-    delete_analysis_dir(experiment)
+        decompose(decomposition)
+
+        ready, _ = EXPERIMENT_STATUS_CODE[1]
+        experiment.status = ready
+        experiment.save()
+        decomposition.status = ready
+        decomposition.save()
+
+        delete_analysis_dir(experiment)
+
+    except:
+        traceback.print_exc()
+    finally:
+        sys.stdout, sys.stderr = old_outs
+
 
 @app.task
 def just_decompose_task(decomposition_id):
