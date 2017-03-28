@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_block %}
+{% endblock %}
+
+{% block body_block %}
+
+	<h3>Experiment summary information</h3>
+	<div>
+		<ul>
+			<li><b>Name:</b> {{experiment.name}}</li>
+			<li><b>Details:</b> {{experiment.description}}</li>
+			<li><b>Users:</b> {% for user_experiment in user_experiments %} {{user_experiment.user.username}} ({{user_experiment.permission}}), {% endfor %}</li>
+		</ul>
+	</div>
+	<hr />
+	<div>
+		<h4>Upload options (if experiment uploaded and run on ms2lda.org)</h4>
+		<ul>
+			<li><b>MS2 file</b>: {{experiment.ms2_file}}</li>
+			<li><b>Peaklist file</b>: {{experiment.csv_file}}</li>
+			<li><b>isolation_window</b>: {{experiment.isolation_window}}</li>
+			<li><b>mz_tol</b>: {{experiment.mz_tol}}</li>
+			<li><b>rt_tol</b>: {{experiment.rt_tol}}</li>
+			<li><b>min_ms1_rt (s)</b>: {{experiment.min_ms1_rt}}</li>
+			<li><b>max_ms1_rt (s)</b>: {{experiment.max_ms1_rt}}</li>
+			<li><b>min_ms2_intensity</b>: {{experiment.min_ms2_intensity}}</li>
+			<li><b>filter duplicates</b>: {{experiment.filter_duplicates}}</li>
+			<li><b>min_ms1_intensity</b>: {{experiment.min_ms1_intensity}}</li>
+			<li><b>duplicate_filter_mz_tol</b>: {{experiment.duplicate_filter_mz_tol}}</li>
+			<li><b>duplicate_filter_rt_tol</b>: {{experiment.duplicate_filter_rt_tol}}</li>
+			<li><b>n_its (if LDA)</b>: {{experiment.n_its}}</li>
+			<li><b>K (if LDA)</b>: {{experiment.K}}</li>
+		</ul>
+	</div>
+	<hr />
+	<div>
+		<h4>Mass2Motif details</h4>
+		<table class='table' id='summarytable'>
+			<thead>
+				<tr><th>Name</th><th>Degree</th><th>Annotation</th></tr>
+			</thead>
+				{% for motif_tuple in motif_tuples %}
+					<tr>
+						<td>{{motif_tuple.0.name}}</td>
+						<td>{{motif_tuple.1}}</td>
+						<td>{{motif_tuple.0.annotation}}</td>
+ 					</tr>
+				{% endfor %}
+			<tbody>
+			</tbody>
+		</table>
+	</div>
+	<hr />
+	<div>
+	<h4>Feature table (filtered to show only features with probability > 0.05)</h4>
+	<table class='table' id = 'featuretable'>
+		<thead>
+			<tr><th>Motif</th><th>Feature</th><th>Min m/z</th><th>Max m/z</th><th>Probability</th></tr>
+		</thead>
+		<tbody>
+			{% for motif_feature in motif_features %}
+				<tr>
+					<td>{{motif_feature.mass2motif.name}}</td>
+					<td>{{motif_feature.feature.name}}</td>
+					<td>{{motif_feature.feature.min_mz}}</td>
+					<td>{{motif_feature.feature.max_mz}}</td>
+					<td>{{motif_feature.probability}}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	</div>
+{% endblock %}
+
+{% block js_block %}
+
+	<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+	<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+	<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+	<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
+
+	<script type="text/javascript">
+
+		$('#summarytable').DataTable({
+			dom: 'Bfrtip',
+			buttons: [
+		        'csv',
+	        ],
+	        "order": [[ 1, "desc" ]],
+	    });
+		$('#featuretable').DataTable({
+			dom: 'Bfrtip',
+			buttons: [
+		        'csv',
+	        ],
+	        "order": [[ 0, "desc" ]],
+	    });
+
+	</script>
+
+{% endblock %}
+
