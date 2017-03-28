@@ -1,6 +1,9 @@
 import math
 import itertools
 import copy
+import csv
+from collections import defaultdict
+
 from Queue import PriorityQueue
 from scipy.sparse import lil_matrix
 
@@ -16,7 +19,10 @@ class MatchFeature(object):
 
     def __repr__(self):
 
-        return "mz=%f, rt=%f, intensity=%f metadata=%s" % (self.mz, self.rt, self.intensity, self.metadata)
+        if self.rt is None:
+            return "mz=%f, intensity=%f metadata=%s" % (self.mz, self.intensity, self.metadata)
+        else:
+            return "mz=%f, rt=%f, intensity=%f metadata=%s" % (self.mz, self.rt, self.intensity, self.metadata)
 
 class SimpleMatching:
 
@@ -133,3 +139,76 @@ class SimpleMatching:
             item = (i, j)
             q.put((dist, item))
         return q
+
+class MassOnlyMatching(SimpleMatching):
+
+    def process(self, input_set, mz_tol):
+
+        # first file is the reference
+        ref_filename = input_set[0]
+        ref_features = self.to_features(ref_filename)
+        print 'Reference is %s (%d features)' % (ref_filename, len(ref_features))
+        print
+
+        # match all to the reference
+        results = []
+        for i in range(1, len(input_set)):
+            filename = input_set[i]
+            other_features = self.to_features(filename)
+            print 'Processing %s (%d features)' % (filename, len(other_features))
+            res = self.run(ref_features, other_features, mz_tol, None)
+            results.append(res)
+            print
+
+        # collect aligned peaksets across individual results by the reference m/z value
+        combined = defaultdict(set)
+        for res in results:
+            for row in res:
+                if len(row) > 1:
+                    f = self.get_ref_feature(row, ref_filename)
+                    combined[f.mz].update(row)
+
+        # turn aligned peaksets into a list of tuples
+        final = []
+        for ref_mz in combined:
+            row = combined[ref_mz]
+            new_row = set()
+            for f in row:
+                new_row.add((f.mz, f.intensity, f.metadata['filename']))
+            final.append(list(new_row))
+
+        return final
+
+    def to_features(self, filename):
+
+        feature_list = []
+        with open(filename, 'rb') as f:
+
+            reader = csv.reader(f)
+            peak_list = list(reader)
+
+            for mz, intensity in peak_list:
+                mz = float(mz)
+                intensity = float(intensity)
+                metadata = {'filename': filename}
+                f = MatchFeature(mz, None, intensity, metadata)
+                feature_list.append(f)
+
+        return feature_list
+
+    def get_ref_feature(self, aligned, ref_filename):
+        for f in aligned:
+            if f.metadata['filename'] == ref_filename:
+                return f
+
+    def is_within_tolerance(self, f1, f2, mz_tol, rt_tol):
+
+        mz_lower, mz_upper = self.get_mass_range(f1.mz, mz_tol)
+        mz_ok = (mz_lower < f2.mz) and (f2.mz < mz_upper)
+        return mz_ok
+
+    def compute_dist(self, f1, f2, mz_tol, rt_tol):
+
+        mz = f1.mz - f2.mz
+        dist = math.sqrt((mz*mz)/(mz_tol*mz_tol))
+        return dist
