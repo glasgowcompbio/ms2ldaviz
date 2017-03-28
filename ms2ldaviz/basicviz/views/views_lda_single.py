@@ -1514,3 +1514,24 @@ def get_proportion_annotated_docs(request,experiment_id):
     output_data.append((experiment.name,n_docs,n_annotated))
     return HttpResponse(json.dumps(output_data),content_type = 'application/json')
 
+# Renders a page summarising a particular experiment
+def summary(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    user_experiments = UserExperiment.objects.filter(experiment = experiment)
+
+    motifs = Mass2Motif.objects.filter(experiment = experiment)
+    motif_tuples = []
+    for motif in motifs:
+        dm2ms = get_docm2m(motif)
+        motif_tuples.append((motif,len(dm2ms)))
+
+    motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment = experiment,probability__gte = 0.05)
+
+
+    context_dict = {}
+    context_dict['experiment'] = experiment
+    context_dict['user_experiments'] = user_experiments
+    context_dict['motif_tuples'] = motif_tuples
+    context_dict['motif_features'] = motif_features
+
+    return render(request,'basicviz/summary.html',context_dict)

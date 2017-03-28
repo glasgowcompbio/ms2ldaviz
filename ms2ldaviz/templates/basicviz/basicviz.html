@@ -46,6 +46,7 @@
                     {% if experiment.1 == 'edit' %}
                     <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View experiment options</a>
                     {% endif %}
+                    <a href="/basicviz/summary/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span>Summary page</a>
                     {% if extra_user %}
                         <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate</a>
                         <!-- a href="/basicviz/document_pca/{{experiment.0.id}}" class="btn btn-block btn-success">Document PCA</a -->
