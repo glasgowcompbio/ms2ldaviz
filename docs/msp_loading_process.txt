@@ -1,0 +1,48 @@
+# Basic procedure of LoadMSP:
+Read each line, store useful metadata (name, annotation, parentmass, inchikey, smiles, collisionenergy, formula, dbaccession, parentrt). 
+If precursortype not in ['[M+H]+', '[M-H]-'], skip this block. 
+Also read ms2 spectra data, and store them. 
+Store 'collisionenergy' and 'dbaccession' as lists when we have same inchikey, and only store first value for others.
+Normalise ms2 intensity in each block first then combine and then normalise again.
+Return ms1, ms2 metadata
+
+# Rules: 
+If we see more than one block with the same inchikey(use first 14 digits) we should merge.
+Currently only keep [M+H]+ and [M-H]- for precursortype
+Retention time: if string or -1, keep it as None
+
+# Default values:
+min_ms1_intensity: 0.0
+min_ms2_intensity: 0.0
+normalizer: 100.0 (normalize to 100.0 as default)
+
+# New variables:
+inchikey_ms1_dict: store inchikey=>ms1 pair, do not generate new ms1 if we have the inchikey in this dictionary
+inchikey_ms2_dict: store inchikey=>[(mz, intensity, block_id),...] pair, used for merging and normalization, and final ms2 is generated from this dictionary
+block_id: record the index of the block, used for normalization inside of the block
+keep_block: to tell if we keep the current block or not (default value: True). When precursortype not in ['[M+H]+', '[M-H]-'], we set it to False
+
+
+# Examples:
+mrege all blocks with Inchikey(KZNIFHPLKGYRTM) in all Neg msp files:
+
+ms1:
+id: 0
+mz: 269.0455469
+rt: None
+intensity: None
+file_name: combined-Neg.msp
+scan_number: None
+name: document_1
+
+ms2:
+(167.08659, 0.0, 15.93897948, <ms2lda_feature_extraction.MS1 object at 0x05893ED0>, 'combined-Neg.msp', 0.0)
+(141.071, 0.0, 3.05102578, <ms2lda_feature_extraction.MS1 object at 0x05893ED0>, 'combined-Neg.msp', 1.0)
+(169.0659, 0.0, 57.07522357, <ms2lda_feature_extraction.MS1 object at 0x05893ED0>, 'combined-Neg.msp', 2.0)
+(165.071, 0.0, 5.52340873, <ms2lda_feature_extraction.MS1 object at 0x05893ED0>, 'combined-Neg.msp', 3.0)
+(65.03967, 0.0, 3.31404524, <ms2lda_feature_extraction.MS1 object at 0x05893ED0>, 'combined-Neg.msp', 4.0)
+(211.0764, 0.0, 100.0, <ms2lda_feature_extraction.MS1 object at 0x05893ED0>, 'combined-Neg.msp', 5.0)
+(41.00329, 0.0, 38.8742767, <ms2lda_feature_extraction.MS1 object at 0x05893ED0>, 'combined-Neg.msp', 6.0)
+
+metadata:
+{'smiles': 'OC1=CC=C(C=C1)C1=CC(=O)C2=C(O)C=C(O)C=C2O1', 'inchikey': 'KZNIFHPLKGYRTM', 'name': 'Apigenin M-H', 'dbaccession': [None, 'FIO00013', 'FIO00014', 'PR040001', 'PR100634', None, None], 'formula': 'C15H10O5', 'parentrt': None, 'collisionenergy': [None, 30.0, 40.0, None, None, 20.0, None], 'parentmass': 269.0455469, 'annotation': 'Apigenin M-H'}
