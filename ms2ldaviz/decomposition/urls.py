@@ -14,4 +14,6 @@ urlpatterns = [
 	url(r'^start_viz/(?P<decomposition_id>\w+)/$',views.start_viz,name='start_viz'),
 	url(r'^get_graph/(?P<decomposition_id>\w+)/(?P<min_degree>\w+)/$',views.get_graph,name='get_graph'),
 	url(r'^new_decomposition/(?P<experiment_id>\w+)/$',views.new_decomposition,name = 'new_decomposition'),
+	url(r'^api/batch_decompose/$',views.batch_decompose,name = 'batch_decompose'),
+	url(r'^api/batch_results/(?P<result_id>\w+)/$',views.batch_results,name = 'batch_results'),
 	]

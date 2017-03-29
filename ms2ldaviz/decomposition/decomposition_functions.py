@@ -617,3 +617,142 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,edge_thresh
     d = json_graph.node_link_data(G)
     return d
         
+
+
+def api_decomposition(doc_dict,motifset):
+
+    normalise = 1000.0
+
+    betaobject = Beta.objects.get(motifset = motifset)
+    alpha = jsonpickle.decode(betaobject.alpha_list)
+    motif_id_list = jsonpickle.decode(betaobject.motif_id_list)
+    feature_id_list = jsonpickle.decode(betaobject.feature_id_list)
+    beta = jsonpickle.decode(betaobject.beta)
+
+
+    n_motifs = len(motif_id_list)
+    n_features = len(feature_id_list)
+
+    r,c,data = zip(*beta)
+    beta_matrix = np.array(coo_matrix((data,(r,c)),shape=(n_motifs,n_features)).todense())
+    s = beta_matrix.sum(axis=1)[:,None]
+    s[s==0] = 1.0
+    beta_matrix /= s # makes beta a full matrix. Note that can keep it sparse by beta_matrix.data /= s[beta_matrix.row]
+
+
+    alpha_matrix = np.array(alpha)
+    
+
+    word_index = {}
+    for i,word_id in enumerate(feature_id_list):
+        feature = GlobalFeature.objects.get(id = word_id)
+        word_index[feature] = i
+
+    motif_index = {}
+    motif_list = []
+    for i,motif_id in enumerate(motif_id_list):
+        motif = GlobalMotif.objects.get(id = motif_id)
+        motif_index[motif] = i
+        motif_list.append(motif)
+
+    K = len(motif_list)
+    print "Performing e-steps"
+    total_docs = len(doc_dict)
+
+    results = {}
+
+    for i,doc in enumerate(doc_dict.keys()):
+        results[doc] = []
+        document = doc_dict[doc]
+        print '%d/%d: %s' % (i, total_docs, doc)
+
+        maxi = 0.0
+        for feature,intensity in doc_dict[doc].items():
+            if intensity > maxi:
+                maxi = intensity
+
+        # normalise
+        if normalise:
+            for word in doc_dict[doc]:
+                doc_dict[doc][word] = int(normalise*doc_dict[doc][word]/maxi)
+
+        # Do the e-steps for this document
+        phi_matrix = {}
+        for word in doc_dict[doc]:
+            phi_matrix[word] = None
+        gamma = np.ones(K)
+        for ei in range(100): # do 20 iterations
+            # print "Iteration {}".format(ei)
+            temp_gamma = np.zeros(K) + alpha_matrix
+            for word,intensity in doc_dict[doc].items():
+                # Find the word position in beta
+                if word in word_index:
+                    word_pos = word_index[word]
+                    if beta_matrix[:,word_pos].sum() > 0:
+                        log_phi_matrix = np.log(beta_matrix[:,word_pos]) + psi(gamma)
+                        log_phi_matrix = np.exp(log_phi_matrix - log_phi_matrix.max())
+                        phi_matrix[word] = log_phi_matrix/log_phi_matrix.sum()
+                        temp_gamma += phi_matrix[word]*intensity
+
+            gamma = temp_gamma.copy()
+
+        
+        
+        # normalise the gamma to get probabilities
+        theta = gamma/gamma.sum()
+        theta = list(theta.flatten())
+
+        theta_motif = zip(theta,motif_list)
+        theta_motif = sorted(theta_motif,key = lambda x : x[0],reverse = True)
+        pos = 0
+        cum_prob = 0.0
+        while cum_prob < 0.99:
+            theta,motif = theta_motif[pos]
+            motif_pos = motif_index[motif]
+            overlap_score = compute_overlap(phi_matrix,motif_pos,beta_matrix[motif_pos,:],word_index)
+            results[doc].append((motif.name,motif.originalmotif.name,theta,overlap_score))
+            cum_prob += theta
+            pos += 1
+
+    return results
+
+
+def make_documents(spectra,featureset):
+    import bisect
+    features = GlobalFeature.objects.filter(featureset = featureset).order_by('min_mz')
+    fragment_features = [f for f in features if f.name.startswith('fragment')]
+    loss_features = [f for f in features if f.name.startswith('loss')]
+    min_frag_mz = fragment_features[0].min_mz
+    max_frag_mz = fragment_features[-1].max_mz
+
+    min_loss_mz = loss_features[0].min_mz
+    max_loss_mz = loss_features[-1].max_mz
+
+    min_frag_mz_list = [f.min_mz for f in fragment_features]
+    min_loss_mz_list = [f.min_mz for f in loss_features]
+
+    doc_dict = {}
+    doc_id = 0
+    for doc_name,parentmass,peaks in spectra:
+        doc_dict[doc_name] = {}
+        doc_id += 1
+        for peak in peaks:
+            fragment_mz = peak[0]
+            intensity = peak[1]
+            loss_mz = parentmass - fragment_mz
+            feature = None
+            if fragment_mz >= min_frag_mz and fragment_mz <= max_frag_mz:
+                fragment_pos = bisect.bisect_right(min_frag_mz_list,fragment_mz) - 1
+                feature = fragment_features[fragment_pos]
+                # doc_dict[doc_name][fragment_features[fragment_pos]] = intensity
+            if loss_mz >= min_loss_mz and loss_mz <= max_loss_mz:
+                loss_pos = bisect.bisect_right(min_loss_mz_list,loss_mz) - 1
+                feature = loss_features[loss_pos]
+            if feature:
+                if not feature in doc_dict[doc_name]:
+                    doc_dict[doc_name][feature] = intensity
+                else:
+                    doc_dict[doc_name][feature] +=intensity
+
+
+    return doc_dict

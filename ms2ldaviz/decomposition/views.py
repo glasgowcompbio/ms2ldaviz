@@ -2,13 +2,17 @@ from django.shortcuts import render,HttpResponse
 
 import json
 
-from decomposition.models import GlobalMotif,DocumentGlobalMass2Motif,Decomposition,GlobalMotifsToSets
-from decomposition.forms import DecompVizForm,NewDecompositionForm
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+
+from decomposition.models import GlobalMotif,DocumentGlobalMass2Motif,Decomposition,GlobalMotifsToSets,MotifSet,FeatureSet,APIBatchResult
+from decomposition.forms import DecompVizForm,NewDecompositionForm,BatchDecompositionForm
 from basicviz.models import Mass2MotifInstance,Experiment,Document,JobLog
 
 from options.views import get_option
 
 from decomposition_functions import get_parents_decomposition,get_decomp_doc_context_dict,get_parent_for_plot_decomp,make_word_graph,make_intensity_graph,make_decomposition_graph
+from decomposition.tasks import api_batch_task
 from basicviz.views import views_lda_single
 
 from uploads.tasks import just_decompose_task
@@ -161,3 +165,49 @@ def new_decomposition(request,experiment_id):
         form = NewDecompositionForm()
         context_dict['form'] = form
     return render(request,'decomposition/new_decomposition.html',context_dict)
+
+@csrf_exempt
+def batch_decompose(request):
+    json_data = {'status':'FAILED'}
+    if request.method == 'POST':
+        batchform = BatchDecompositionForm(request.POST)
+        if batchform.is_valid():
+            json_data = {}
+            spectra = json.loads(batchform.cleaned_data['spectra'])
+            n_spectra = len(spectra)
+            json_data['n_spectra'] = n_spectra
+            motifset_name = batchform.cleaned_data['motifset']
+            json_data['motifset'] = motifset_name
+            try:
+                motifset = MotifSet.objects.get(name = motifset_name)
+            except:
+                all_motifsets = MotifSet.objects.all()
+                status_string = 'unknown motifset, try: ' + ' '.join([m.name for m in all_motifsets])
+                json_data = {'status':status_string}
+                return JsonResponse(json_data)
+
+
+            featureset = motifset.featureset
+            json_data['featureset'] = featureset.name
+
+            batch_result = APIBatchResult.objects.create(results = 'submitted')
+
+            api_batch_task.delay(spectra,featureset.id,motifset.id,batch_result.id)
+            json_data['result_id'] = str(batch_result.id)
+            # doc_dict = make_documents(spectra,featureset)
+            # results = api_decomposition(doc_dict,motifset)
+
+            # json_data['results'] = results
+
+            json_data['status'] = 'SUBMITTED'
+
+
+    return JsonResponse(json_data)
+
+def batch_results(request,result_id):
+    batch_result = APIBatchResult.objects.get(id = result_id)
+    try:
+        results = json.loads(batch_result.results)
+    except:
+        results = {'status':batch_result.results}
+    return JsonResponse(results)

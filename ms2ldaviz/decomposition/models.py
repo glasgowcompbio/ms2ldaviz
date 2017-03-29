@@ -110,3 +110,6 @@ class DocumentFeatureMass2Motif(models.Model):
 		return self.docm2m.mass2motif.originalmotif
 
 	mass2motif = property(get_original_mass2motif)
+
+class APIBatchResult(models.Model):
+	results = models.TextField(null = False)

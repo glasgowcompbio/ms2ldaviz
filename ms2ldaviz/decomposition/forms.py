@@ -12,3 +12,7 @@ class NewDecompositionForm(forms.ModelForm):
 		exclude = ['experiment','status']
 
 		# todo: add something here so that only motifsets with the correct feature set can be seen
+
+class BatchDecompositionForm(forms.Form):
+	spectra = forms.CharField(required = True)
+	motifset = forms.CharField(required = True)
