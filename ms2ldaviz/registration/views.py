@@ -2,6 +2,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
+from django.views.generic.edit import UpdateView
+from django.core.urlresolvers import reverse_lazy
+from django.contrib.auth.models import User
 
 from registration.forms import UserForm
 
@@ -45,6 +48,17 @@ def user_login(request):
         else:
             print "Invalid login details: {0}, {1}".format(username, password)
             return HttpResponse("Invalid login details supplied.")
+            return render(request, 'registration/login.html', {})
 
     else: # GET
         return render(request, 'registration/login.html', {})
+
+
+class ProfileUpdate(UpdateView):
+    model = User
+    template_name = 'registration/user_update.html'
+    success_url = reverse_lazy('home')
+    fields = ['first_name', 'last_name', 'email']
+
+    def get_object(self, queryset=None):
+        return self.request.user

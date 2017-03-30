@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Update User Profile{% endblock %}
+
+{% block body_block %}
+    <h1>Update User Profile</h1>
+    <strong>Please enter an email address in your user profile so we can contact you.</strong>
+    <br/><br/>
+    <form method="post" action=".">
+        {% csrf_token %}
+        <table>
+            {{ form.as_table }}
+        </table>
+        <br/>
+        <input type="submit" value="submit" class="btn btn-success"/>
+    </form>
+{% endblock %}

@@ -46,17 +46,20 @@
           <a class="navbar-brand" href="/">MS2LDA.org</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
+          <ul class="nav navbar-nav navbar-left">
             <li><a href="/basicviz"><strong>Experiments</strong></a></li>
             <li role="separator" class="divider"></li>
             <li><a href="/people"><strong>People</strong></a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
             {% if user.is_authenticated %}
                 <li>
-                    <a href="/registration/logout" class="pull-right"><strong>Logout {{ user }}</strong></a>
+                    <a href="/registration/logout" class="pull-right"><strong>Log out {{ user }}</strong></a>
+                    <a href="/registration/profile" class="pull-right"><strong>Update Profile</strong></a>
                 </li>
             {% else %}
                 <li>
-                    <a href="/registration/login" class="pull-right"><strong>Login</strong></a>
+                    <a href="/registration/login" class="pull-right"><strong>Log in</strong></a>
                 </li>
             {% endif %}
           </ul>
