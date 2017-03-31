@@ -1,20 +1,21 @@
 {% extends 'base.html' %}
 
-{% block title %}Select an experiment{% endblock %}
+{% block title %}User Registration{% endblock %}
 
 {% block body_block %}
-<h1>Register</h1>
+    <h1>User Registration</h1>
     {% if registered %}
-    <strong>thank you for registering!</strong>
-    <a href="/basicviz/">Return to the homepage.</a><br />
+    <strong>Thank you for registering! Your account is now active, and you can run analyses by logging into the site.</strong><br/><br/>
     {% else %}
-    <strong>register here!</strong><br />
-
+    <strong>Before you can run analyses at MS2LDA.org, you need to create an account with us.</strong><br/><br/>
     <form id="user_form" method="post" action="/registration/register/"
             enctype="multipart/form-data">
         {% csrf_token %}
-        {{ user_form.as_p }}
-        <input type="submit" name="submit" value="Register" />
+        <table>
+        {{ user_form.as_table }}
+        </table>
+        <br/>
+        <input type="submit" name="submit" value="Register" class="btn btn-success"/>
     </form>
     {% endif %}
 {% endblock %}
