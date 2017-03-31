@@ -712,9 +712,10 @@ class LoadGNPS(Loader):
 
 # A class to load spectra that sit in MSP files
 class LoadMSP(Loader):
-    def __init__(self, min_ms1_intensity = 0.0, min_ms2_intensity = 0.0):
+    def __init__(self, min_ms1_intensity = 0.0, min_ms2_intensity = 0.0, normalizer = 100.0):
         self.min_ms1_intensity = min_ms1_intensity
         self.min_ms2_intensity = min_ms2_intensity
+        self.normalizer = normalizer
 
     def __str__(self):
         return "msp loader"
@@ -725,18 +726,39 @@ class LoadMSP(Loader):
         metadata = {}
         ms2_id = 0
         ms1_id = 0
+
         for input_file in input_set:
             ## Use built-in method to get file_name
             file_name = os.path.basename(input_file)
             with open(input_file,'r') as f:
+                inchikey = None
+                ## this dict is used to quickly check if we've seen the inchikey before and give us the relevant ms1
+                inchikey_ms1_dict = {}
+
+                ## this dict used for genenrating ms2
+                ## structure:
+                ## inchikey=>[(mz1, intensity1, block_id1),
+                ##             (mz2, intensity2, block_id2),
+                ##             ...]
+                inchikey_ms2_dict = {}
+
                 temp_metadata = {}
                 in_doc = False
                 parentmass = None
                 parentrt = None
+                max_intensity = 0.0
+                ## Skip blocks we do not use
+                ## Currently only keep [M+H]+ and [M-H]- precursor type, skip other blocks
+                keep_block = True
+                ## record block_id for doing normalization when merging
+                block_id = -1
+
                 for line in f:
                     rline  = line.rstrip()
                     if not in_doc and len(rline) == 0:
                         continue
+
+                    ## end of each block
                     elif in_doc and len(rline) == 0:
                         # finished doc, time to save
                         in_doc = False
@@ -744,55 +766,156 @@ class LoadMSP(Loader):
                         parentmass = None
                         parentrt = None
                         new_ms1 = None
+                        inchikey = None
+                        max_intensity = 0.0
+                        keep_block = True
+
+                    ## parse block
                     else:
                         tokens = rline.split()
+                        ## parse ms2 spectra
                         if in_doc:
-                            if len(tokens) == 2:
-                                # One tuple per line
-                                mz = float(tokens[0])
-                                intensity = float(tokens[1])
-                                ms2.append((mz,0.0,intensity,new_ms1,file_name,float(ms2_id)))
-                                ms2_id += 1
-                            else:
-                                for pos in range(0,len(tokens),2):
-                                    mz = float(tokens[pos])
-                                    intensity = float(tokens[pos+1])
-                                    ms2.append((mz,0.0,intensity,new_ms1,file_name,float(ms2_id)))
-                                    ms2_id += 1
+                            if keep_block:
+                                if len(tokens) == 2:
+                                    # One tuple per line
+                                    mz = float(tokens[0])
+                                    intensity = float(tokens[1])
+                                    inchikey_ms2_dict.setdefault(inchikey, [])
+                                    inchikey_ms2_dict[inchikey].append((mz, intensity, block_id))
+
+                                else:
+                                    for pos in range(0,len(tokens),2):
+                                        mz = float(tokens[pos])
+                                        intensity = float(tokens[pos+1])
+                                        inchikey_ms2_dict.setdefault(inchikey, [])
+                                        inchikey_ms2_dict[inchikey].append((mz, intensity, block_id))
 
                         elif rline.startswith('Num Peaks'):
                             in_doc = True
-                            new_ms1 = MS1(ms1_id,parentmass,parentrt,None,file_name)
-                            ms1_id += 1
-                            if 'Name' in temp_metadata:
-                                doc_name = temp_metadata['Name']
-                            else:
-                                doc_name = 'document_{}'.format(ms1_id)
-                            metadata[doc_name] = temp_metadata.copy()
-                            new_ms1.name = doc_name
-                            ms1.append(new_ms1)
+                            if keep_block:
+                                ## record block_id for normalization later
+                                block_id += 1
+                                ## check inchikey duplicate or not
+                                if not inchikey or inchikey not in inchikey_ms1_dict:
+                                    new_ms1 = MS1(ms1_id,parentmass,parentrt,None,file_name)
+                                    ms1_id += 1
+
+                                    ## We have the case that 'doc' with same 'Name' metadata but different inchikey
+                                    ## If we use 'Name' as the key of metadata dictionary, the old data will be overwitten
+                                    ## So keep the following format of doc_name instead of using 'Name'
+                                    doc_name = 'document_{}'.format(ms1_id)
+                                    metadata[doc_name] = temp_metadata.copy()
+                                    new_ms1.name = doc_name
+                                    ms1.append(new_ms1)
+
+                                    if inchikey:
+                                        inchikey_ms1_dict[inchikey] = new_ms1
+
+                                ## has inchikey and has duplicates
+                                else:
+                                    new_ms1 = inchikey_ms1_dict[inchikey]
+                                    doc_name = new_ms1.name
+                                    ## do metadata combination
+                                    ## make 'collisionenergy', 'dbaccession' as a list in metadata when merging with same inchikey
+                                    ## Other metadata just keep the first value
+                                    for key in ['collisionenergy', 'dbaccession']:
+                                        temp_metadata.setdefault(key, None)
+                                        metadata[doc_name].setdefault(key, None)
+                                        try:
+                                            metadata[doc_name][key].append(temp_metadata[key])
+                                        except:
+                                            metadata[doc_name][key] = [metadata[doc_name][key], temp_metadata[key]]
+
+                        ## parse metadata
                         else:
                             key = tokens[0][:-1].lower()
+
                             ## Keep key-value pair only if val is not empty
                             if len(tokens) == 1:
                                 continue
-                            else:
+                            elif len(tokens) == 2:
                                 val = tokens[1]
-                            if key == 'precursormz':
+                            else:
+                                val = rline.split(': ', 1)[1]
+
+                            if key == 'name':
+                                temp_metadata[key] = val
+                                temp_metadata['annotation'] = val
+                            ## do the origal adding metadata stuff, notice the values insert to metadata are list
+                            elif key == 'inchikey':
+                                ## Only keep first 14 digits of inchikey for merging
+                                val = val[:14]
+                                temp_metadata['inchikey'] = val
+                                inchikey = val
+                            elif key == 'precursormz':
                                 temp_metadata['parentmass'] = float(val)
                                 parentmass = float(val)
                             elif key == 'retentiontime':
-                                ## rt must in float format
+                                ## rt must in float format, and can not be -1 as well
                                 try:
                                     val = float(val)
+                                    if val < 0:
+                                        val = None
                                 except:
                                     val = None
                                 temp_metadata['parentrt'] = val
                                 parentrt = val
-                            else:
-                                ## consider the case that space exists in val
-                                ## like: "Comment: Rt=768.56  Contributor=.  Study=."  
-                                temp_metadata[key] = val if len(tokens) == 2 else " ".join(tokens[1:])
+                            elif key == 'precursortype':
+                                ## Currently just keep '[M+H]+', '[M-H]-'
+                                ## May modify in the future
+                                if val not in ['[M+H]+', '[M-H]-']:
+                                    keep_block = False
+
+                            ## Hiroshi called 'massbankaccession', Mono called 'db#'
+                            ## May modify when try different dataset
+                            elif key in ['massbankaccession', 'db#']:
+                                temp_metadata['dbaccession'] = val
+
+                            elif key == 'collisionenergy':
+                                try:
+                                    temp_metadata[key] = float(val)
+                                except:
+                                    temp_metadata[key]
+
+                            ## may check the key name further if we have further dataset
+                            elif key in ['chemspiderid', 'chemspider', 'csid']:
+                                temp_metadata['csid'] = val
+
+                            elif key in ['smiles', 'formula']:
+                                temp_metadata[key] = val
+
+            ## do normalization
+            ## normalise them first then combine and then normalise again.
+            ## Some seem to have been normalised so that max peak is 999 and some 100. So, make the max 100, then combine. 
+            ## Once all combination done, make max 100 again in combined spectrum.
+            for inchikey, value in inchikey_ms2_dict.items():
+                block_max_intensity_dict = {}
+                temp_mz_intensity_dict = {}
+
+                ## get highest intensity for each block
+                ## store in block_max_intensity_dict
+                for mz, intensity, block_id in value:
+                    block_max_intensity_dict.setdefault(block_id, 0)
+                    block_max_intensity_dict[block_id] = max(block_max_intensity_dict[block_id], intensity)
+
+                ## first normalization
+                max_intensity = 0.0
+                for mz, intensity, block_id in value:
+                    ## normalize over each block
+                    normalized_intensity = intensity * self.normalizer / block_max_intensity_dict[block_id]
+                    ## merge when mz are same
+                    temp_mz_intensity_dict.setdefault(mz, 0)
+                    temp_mz_intensity_dict[mz] += normalized_intensity
+                    ## record highest intensity for next normalization
+                    max_intensity = max(max_intensity, temp_mz_intensity_dict[mz])
+
+                ## second normalization
+                for mz, intensity in temp_mz_intensity_dict.items():
+                    ## use round function here to overcome the case like: 100.000000000001 after calculation
+                    ## otherwise, will get trouble when using filter_ms2_intensity
+                    normalized_intensity = round(intensity * self.normalizer / max_intensity, 8)
+                    ms2.append((mz,0.0,normalized_intensity,inchikey_ms1_dict[inchikey],file_name,float(ms2_id)))
+                    ms2_id += 1
 
         ## add ms1, ms2 intensity filtering for msp input
         if self.min_ms1_intensity > 0.0:
@@ -880,10 +1003,6 @@ class LoadMGF(Loader):
                                 in_doc = True
                                 new_ms1 = MS1(ms1_id,parentmass,parentrt,parentintensity,file_name)
                                 ms1_id += 1
-                                # if 'Name' in temp_metadata:
-                                #     doc_name = temp_metadata['Name']
-                                # else:
-                                #     doc_name = 'document_{}'.format(ms1_id)
                                 doc_name = 'document_{}'.format(ms1_id)
                                 metadata[doc_name] = temp_metadata.copy()
                                 new_ms1.name = doc_name
@@ -1580,7 +1699,8 @@ class MS2LDAFeatureExtractor(object):
 def filter_ms1_intensity(ms1,ms2,min_ms1_intensity = 1e6):
     ## Use filter function to simplify code
     print "Filtering MS1 on intensity"
-    ms1 = filter(lambda x: x.intensity > min_ms1_intensity, ms1)
+    ## Sometimes ms1 intensity could be None
+    ms1 = filter(lambda x: False if x.intensity and x.intensity < min_ms1_intensity else True, ms1)
     print "{} MS1 remaining".format(len(ms1))
     ms2 = filter(lambda x: x[3] in set(ms1), ms2)
     print "{} MS2 remaining".format(len(ms2))
@@ -1588,7 +1708,7 @@ def filter_ms1_intensity(ms1,ms2,min_ms1_intensity = 1e6):
 
 def filter_ms2_intensity(ms2, min_ms2_intensity = 1e6):
     print "Filtering MS2 on intensity"
-    ms2 = filter(lambda x: x[2] > min_ms2_intensity, ms2)
+    ms2 = filter(lambda x: x[2] >= min_ms2_intensity, ms2)
     print "{} MS2 remaining".format(len(ms2))
     return ms2
 
