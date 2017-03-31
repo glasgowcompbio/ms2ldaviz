@@ -194,6 +194,7 @@ def batch_decompose(request):
 
             api_batch_task.delay(spectra,featureset.id,motifset.id,batch_result.id)
             json_data['result_id'] = str(batch_result.id)
+            json_data['result_url'] = 'http://ms2lda.org/decomposition/api/batch_results/{}/'.format(batch_result.id)
             # doc_dict = make_documents(spectra,featureset)
             # results = api_decomposition(doc_dict,motifset)
 
