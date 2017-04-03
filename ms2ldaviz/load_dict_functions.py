@@ -5,6 +5,8 @@ import jsonpickle
 
 from basicviz.models import Experiment,Document,Feature,FeatureInstance,Mass2Motif,Mass2MotifInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Alpha
 
+from basicviz.views import compute_overlap_score
+
 def add_all_features(experiment,features):
     # Used when we have a dictionary of features with their min and max mz values
     nfeatures = len(features)
@@ -63,6 +65,7 @@ def load_phi(doc_name,experiment,lda_dict):
             mass2motif = Mass2Motif.objects.get(name=topic,experiment=experiment)
             probability = lda_dict['phi'][doc_name][word][topic]
             FeatureMass2MotifInstance.objects.get_or_create(featureinstance = feature_instance,mass2motif = mass2motif,probability = probability)[0]
+    
 
 def add_document_words(document,doc_name,experiment,lda_dict):
     for word in lda_dict['corpus'][doc_name]:
@@ -152,3 +155,14 @@ def load_dict(lda_dict,experiment,verbose = True):
         #       mass2motif = Mass2Motif.objects.get(name=topic,experiment=experiment)
         #       probability = lda_dict['phi'][doc][word][topic]
         #       FeatureMass2MotifInstance.objects.get_or_create(featureinstance = feature_instance,mass2motif = mass2motif,probability = probability)
+
+    print "Computing overlap scores"
+    n_done = 0
+    dm2ms = DocumentMass2Motif.objects.filter(document__experiment = experiment)
+    to_do = len(dm2ms)
+    for dm2m in dm2ms:
+        n_done += 1
+        if n_done % 100 == 0:
+            print "Done {}/{}".format(n_done,to_do)
+        dm2m.overlap_score = compute_overlap_score(dm2m.mass2motif,dm2m.document)
+        dm2m.save()
