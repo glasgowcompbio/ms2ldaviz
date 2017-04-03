@@ -464,6 +464,8 @@ def get_word_graph(request, motif_id, vo_id, experiment = None):
         edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
         edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
     else:
+        motif = Mass2Motif.objects.get(id = motif_id)
+        experiment = motif.experiment
         edge_choice = 'probability'
         edge_thresh = 0.05
 
@@ -520,6 +522,8 @@ def get_intensity(request, motif_id, vo_id, experiment = None):
         edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
         edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
     else:
+        motif = Mass2Motif.objects.get(id = motif_id)
+        experiment = motif.experiment
         edge_choice = 'probability'
         edge_thresh = 0.05
 
