@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block body_block %}
-
+    <h3>Log Viewer</h3>
 	<table class="table" id="jobtable">
 	<thead>
 	<tr>
@@ -18,7 +18,7 @@
 	<tr>
 		<td>{{log.user.username}}</td>
 		<td>{{log.timestamp}}</td>
-		<td>{{log.experiment}}</td>
+		<td><a href="/basicviz/show_log_file/{{log.experiment.id}}">{{log.experiment}}</a></td>
 		<td>{{log.tasktype}}</td>
 	</tr>
 	{% endfor %}
