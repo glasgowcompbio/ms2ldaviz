@@ -6,19 +6,24 @@
 {% endblock %}
 
 {% block body_block %}
-
+    <h3>Log Viewer</h3>
 	<table class="table" id="jobtable">
 	<thead>
 	<tr>
-		<th>User</th><th>Timestamp</th><th>Experiment</th><th>Details</th>
+		<th>Exp. ID</th>
+        <th>Experiment</th>
+        <th>User</th>
+        <th>Timestamp</th>
+        <th>Details</th>
 	</tr>
 	</thead>
 	<tbody>
 	{% for log in logs %}
 	<tr>
+        <td>{{log.experiment.id}}</td>
+		<td><a href="/basicviz/show_log_file/{{log.experiment.id}}">{{log.experiment}}</a></td>
 		<td>{{log.user.username}}</td>
 		<td>{{log.timestamp}}</td>
-		<td>{{log.experiment}}</td>
 		<td>{{log.tasktype}}</td>
 	</tr>
 	{% endfor %}

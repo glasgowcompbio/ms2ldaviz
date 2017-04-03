@@ -80,6 +80,7 @@ lda_multi_patterns = [
 
 lda_admin_patterns = [
     url(r'^list_log/$',views.list_log,name = 'list_log'),
+    url(r'^show_log_file/(?P<experiment_id>\w+)/$', views.show_log_file, name='show_log_file'),
 ]
 
 urlpatterns = [
