@@ -50,6 +50,7 @@ lda_single_patterns = [
     url(r'^get_all_doc_data/(?P<experiment_id>\w+)/$',views.get_all_doc_data,name = 'get_all_doc_data'),
     url(r'^get_proportion_annotated_docs/(?P<experiment_id>\w+)/$',views.get_proportion_annotated_docs,name = 'get_proportion_annotation_docs'),
     url(r'^summary/(?P<experiment_id>\w+)/$',views.summary,name = 'summary'),
+    url(r'^match_motifs/(?P<experiment_id>\w+)/(?P<base_experiment_id>\w+)/$',views.match_motifs,name = 'match_motifs'),
 ]
 
 # for multi-file LDA experiments

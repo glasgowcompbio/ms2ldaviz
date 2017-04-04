@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block head_block %}
+
+{% endblock %}
+
+{% block body_block %}
+
+<h4>Matching motifs in {{experiment}} with those in {{base_experiment}}</h4>
+<div>{{n_matched_features}} features matched.</div>
+
+<table class='table' id='matchtable'>
+    <thead>
+        <tr><th>Mass2Motif</th><th>Best match</th><th>Match score</th><th>Matches</th></tr>
+    </thead>
+    <tbody>
+        {% for match in matches %}
+            <tr>
+                <td><a href="/basicviz/view_parents/{{match.0.id}}/">{{match.0}}</a></td>
+                <td><a href="/basicviz/view_parents/{{match.1.id}}/">{{match.1}}</a></td>
+                <td>{{match.2}}</td>
+                <td>
+                    {% for m in match.3 %}
+                    ({{ m.0.name }}:{{m.1}} <-> {{m.2.name}}:{{m.3}})<br />
+                    {% endfor %}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block js_block %}
+	<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+	<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+	<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+	<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
+	<script type="text/javascript">
+
+		
+
+		$(document).ready(function() {
+			$('#matchtable').DataTable({
+				dom: 'Bfrtip',
+				buttons: [
+			        'csv',
+		        ],
+		        "order": [[ 2, "desc" ]],
+		    });
+
+		});
+
+  
+	</script>
+
+{% endblock %}
