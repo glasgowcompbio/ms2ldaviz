@@ -32,5 +32,5 @@ if __name__ == '__main__':
 		d_m2m.overlap_score = new_score
 		d_m2m.save()
 		n_done += 1
-		if n_done % 500 == 0:
+		if n_done % 100 == 0:
 			print "Done {} of {}".format(n_done,len(document_mass2motifs))
