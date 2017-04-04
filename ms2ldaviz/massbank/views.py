@@ -42,24 +42,27 @@ def get_massbank_form(motif, motif_features, mf_id=None):
     print 'mb_dict', mb_dict
 
     # set to another form used when generating the massbank record
-    massbank_form = Mass2MotifMassbankForm(initial={
-        'motif_id': motif_id,
-        'accession': mb_dict['accession'],
-        'authors': mb_dict['authors'],
-        'comments': '\n'.join(mb_dict['comments']),
-        'ch_name': mb_dict['ch_name'],
-        'ch_compound_class': mb_dict['ch_compound_class'],
-        'ch_formula': 'NA' if is_new else mb_dict['ch_formula'],
-        'ch_exact_mass': 'NA' if is_new else mb_dict['ch_exact_mass'],
-        'ch_smiles': 'NA' if is_new else mb_dict['ch_smiles'],
-        'ch_iupac': 'NA' if is_new else mb_dict['ch_iupac'],
-        'ch_link': '\n'.join(mb_dict['ch_link']),
-        'ac_instrument': mb_dict['ac_instrument'],
-        'ac_instrument_type': mb_dict['ac_instrument_type'],
-        'ac_mass_spectrometry_ion_mode': mb_dict['ac_mass_spectrometry_ion_mode'],
-        'min_rel_int': 100 if is_new else mb_dict.get('min_rel_int', 100),
-        'mf_id': mf_id if mf_id is not None else ''
-    })
+    try:
+        massbank_form = Mass2MotifMassbankForm(initial={
+            'motif_id': motif_id,
+            'accession': mb_dict['accession'],
+            'authors': mb_dict['authors'],
+            'comments': '\n'.join(mb_dict['comments']),
+            'ch_name': mb_dict['ch_name'],
+            'ch_compound_class': mb_dict['ch_compound_class'],
+            'ch_formula': 'NA' if is_new else mb_dict['ch_formula'],
+            'ch_exact_mass': 'NA' if is_new else mb_dict['ch_exact_mass'],
+            'ch_smiles': 'NA' if is_new else mb_dict['ch_smiles'],
+            'ch_iupac': 'NA' if is_new else mb_dict['ch_iupac'],
+            'ch_link': '\n'.join(mb_dict['ch_link']),
+            'ac_instrument': mb_dict['ac_instrument'],
+            'ac_instrument_type': mb_dict['ac_instrument_type'],
+            'ac_mass_spectrometry_ion_mode': mb_dict['ac_mass_spectrometry_ion_mode'],
+            'min_rel_int': 100 if is_new else mb_dict.get('min_rel_int', 100),
+            'mf_id': mf_id if mf_id is not None else ''
+        })
+    except KeyError:
+        massbank_form = Mass2MotifMassbankForm()
     return massbank_form
 
 
@@ -95,65 +98,70 @@ def get_massbank_dict(data, motif, motif_features, min_rel_int):
     # this is [m/z, absolute intensity, relative intensity]
     peaks = np.array(peak_list)
 
-    # sort by first (m/z) column
-    mz = peaks[:, 0]
-    peaks = peaks[mz.argsort()]
+    try:
 
-    # the probabilities * scale_fact are set to be the absolute intensities,
-    # while the relative intensities are scaled from 1 ... 999 (from the manual)??
-    scale_fact = 1000
-    rel_range = [1, 999]
-    abs_intensities = peaks[:, 1]
-    min_prob = np.min(abs_intensities)
-    max_prob = np.max(abs_intensities)
-    rel_intensities = interp(abs_intensities, [min_prob, max_prob], rel_range)
-    abs_intensities *= scale_fact  # do this only after computing the rel. intensities
-    peaks[:, 2] = rel_intensities
-    peaks[:, 1] = abs_intensities
+        # sort by first (m/z) column
+        mz = peaks[:, 0]
+        peaks = peaks[mz.argsort()]
 
-    # filter features by the minimum relative intensity specified by the user
-    pos = np.where(rel_intensities > min_rel_int)[0]
-    peaks = peaks[pos, :]
-    hash = get_splash(peaks)
+        # the probabilities * scale_fact are set to be the absolute intensities,
+        # while the relative intensities are scaled from 1 ... 999 (from the manual)??
+        scale_fact = 1000
+        rel_range = [1, 999]
+        abs_intensities = peaks[:, 1]
+        min_prob = np.min(abs_intensities)
+        max_prob = np.max(abs_intensities)
+        rel_intensities = interp(abs_intensities, [min_prob, max_prob], rel_range)
+        abs_intensities *= scale_fact  # do this only after computing the rel. intensities
+        peaks[:, 2] = rel_intensities
+        peaks[:, 1] = abs_intensities
 
-    ch_name = motif.get_short_annotation()
-    if ch_name is None:
-        ch_name = ''
-    comments = data.get('comments', '').splitlines()
-    ch_exact_mass = data.get('ch_exact_mass', '0')
-    ch_links = data.get('ch_link', '').splitlines()
+        # filter features by the minimum relative intensity specified by the user
+        pos = np.where(rel_intensities > min_rel_int)[0]
+        peaks = peaks[pos, :]
+        hash = get_splash(peaks)
 
-    massbank_dict = {}
-    massbank_dict['accession'] = accession
-    massbank_dict['record_date'] = datetime.date.today().strftime('%Y.%m.%d')
-    massbank_dict['authors'] = data.get('authors', constants.MASSBANK_AUTHORS)
-    massbank_dict['license'] = constants.MASSBANK_LICENSE
-    massbank_dict['copyright'] = constants.MASSBANK_COPYRIGHT
-    massbank_dict['publication'] = constants.MASSBANK_PUBLICATION
-    massbank_dict['ch_name'] = ch_name
-    massbank_dict['ac_instrument'] = data.get('ac_instrument', constants.MASSBANK_AC_INSTRUMENT)
-    massbank_dict['ac_instrument_type'] = data.get('ac_instrument_type', constants.MASSBANK_AC_INSTRUMENT_TYPE)
-    massbank_dict['ms_type'] = ms_type
-    massbank_dict['comments'] = comments
-    massbank_dict['ch_link'] = ch_links
-    massbank_dict['ac_mass_spectrometry_ion_mode'] = ion_mode
-    massbank_dict['ac_ionisation'] = constants.MASSBANK_IONISATION
-    massbank_dict['ms_data_processing'] = constants.MASSBANK_MS_DATA_PROCESSING
-    massbank_dict['hash'] = hash
-    massbank_dict['peaks'] = peaks
+        ch_name = motif.get_short_annotation()
+        if ch_name is None:
+            ch_name = ''
+        comments = data.get('comments', '').splitlines()
+        ch_exact_mass = data.get('ch_exact_mass', '0')
+        ch_links = data.get('ch_link', '').splitlines()
 
-    tokens = [
-        massbank_dict['ch_name'],
-        massbank_dict['ac_instrument_type'],
-        massbank_dict['ms_type']
-    ]
-    massbank_dict['record_title'] = ';'.join(tokens)
-    massbank_dict['ch_compound_class'] = data.get('ch_compound_class', '')
-    massbank_dict['ch_formula'] = data.get('ch_formula', 'NA')
-    massbank_dict['ch_smiles'] = data.get('ch_smiles', 'NA')
-    massbank_dict['ch_iupac'] = data.get('ch_iupac', 'NA')
-    massbank_dict['ch_exact_mass'] = data.get('ch_exact_mass', 'NA')
-    massbank_dict['min_rel_int'] = min_rel_int
+        massbank_dict = {}
+        massbank_dict['accession'] = accession
+        massbank_dict['record_date'] = datetime.date.today().strftime('%Y.%m.%d')
+        massbank_dict['authors'] = data.get('authors', constants.MASSBANK_AUTHORS)
+        massbank_dict['license'] = constants.MASSBANK_LICENSE
+        massbank_dict['copyright'] = constants.MASSBANK_COPYRIGHT
+        massbank_dict['publication'] = constants.MASSBANK_PUBLICATION
+        massbank_dict['ch_name'] = ch_name
+        massbank_dict['ac_instrument'] = data.get('ac_instrument', constants.MASSBANK_AC_INSTRUMENT)
+        massbank_dict['ac_instrument_type'] = data.get('ac_instrument_type', constants.MASSBANK_AC_INSTRUMENT_TYPE)
+        massbank_dict['ms_type'] = ms_type
+        massbank_dict['comments'] = comments
+        massbank_dict['ch_link'] = ch_links
+        massbank_dict['ac_mass_spectrometry_ion_mode'] = ion_mode
+        massbank_dict['ac_ionisation'] = constants.MASSBANK_IONISATION
+        massbank_dict['ms_data_processing'] = constants.MASSBANK_MS_DATA_PROCESSING
+        massbank_dict['hash'] = hash
+        massbank_dict['peaks'] = peaks
+
+        tokens = [
+            massbank_dict['ch_name'],
+            massbank_dict['ac_instrument_type'],
+            massbank_dict['ms_type']
+        ]
+        massbank_dict['record_title'] = ';'.join(tokens)
+        massbank_dict['ch_compound_class'] = data.get('ch_compound_class', '')
+        massbank_dict['ch_formula'] = data.get('ch_formula', 'NA')
+        massbank_dict['ch_smiles'] = data.get('ch_smiles', 'NA')
+        massbank_dict['ch_iupac'] = data.get('ch_iupac', 'NA')
+        massbank_dict['ch_exact_mass'] = data.get('ch_exact_mass', 'NA')
+        massbank_dict['min_rel_int'] = min_rel_int
+
+    except IndexError:
+        massbank_dict = {}
 
     return massbank_dict
 
@@ -233,27 +241,34 @@ def generate_massbank(request):
         for key in keys:
             data[key] = request.POST.get(key)
 
-        motif_id = data['motif_id']
-        min_rel_int = int(data['min_rel_int'])
+        try:
+            motif_id = data['motif_id']
+            min_rel_int = int(data['min_rel_int'])
 
-        # get the data in dictionary form
-        motif = Mass2Motif.objects.get(id=motif_id)
-        motif_features = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by('-probability')
-        mb_dict = get_massbank_dict(data, motif, motif_features, min_rel_int)
+            # get the data in dictionary form
+            motif = Mass2Motif.objects.get(id=motif_id)
+            motif_features = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by('-probability')
+            mb_dict = get_massbank_dict(data, motif, motif_features, min_rel_int)
 
-        # convert to string and add to the dictionary
-        mb_string = get_massbank_str(mb_dict)
-        del (mb_dict['peaks'])  # got error if we jsonpickle this numpy array .. ?
-        mb_dict['massbank_record'] = mb_string
+            # convert to string and add to the dictionary
+            mb_string = get_massbank_str(mb_dict)
+            del (mb_dict['peaks'])  # got error if we jsonpickle this numpy array .. ?
+            mb_dict['massbank_record'] = mb_string
 
-        # decode the metadata first, add the massbank field, then encode it back
-        md = jsonpickle.decode(motif.metadata)
-        md['massbank'] = mb_dict
-        motif.metadata = jsonpickle.encode(md)
-        motif.save()
+            # decode the metadata first, add the massbank field, then encode it back
+            md = jsonpickle.decode(motif.metadata)
+            md['massbank'] = mb_dict
+            motif.metadata = jsonpickle.encode(md)
+            motif.save()
+
+            status = 'Massbank record has been generated. Please copy.'
+
+        except ValueError:
+            status = 'Failed to generate Massbank record.'
+            mb_string = ''
 
         response_data = {}
-        response_data['status'] = 'Massbank record has been generated. Please copy.'
+        response_data['status'] = status
         response_data['massbank_str'] = mb_string
         return HttpResponse(
             json.dumps(response_data),
