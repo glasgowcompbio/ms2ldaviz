@@ -710,7 +710,7 @@ def api_decomposition(doc_dict,motifset):
             theta,motif = theta_motif[pos]
             motif_pos = motif_index[motif]
             overlap_score = compute_overlap(phi_matrix,motif_pos,beta_matrix[motif_pos,:],word_index)
-            results[doc].append((motif.name,motif.originalmotif.name,theta,overlap_score))
+            results[doc].append((motif.name,motif.originalmotif.name,theta,overlap_score,motif.originalmotif.annotation))
             cum_prob += theta
             pos += 1
 
