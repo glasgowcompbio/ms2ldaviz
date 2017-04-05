@@ -932,9 +932,9 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                        highlight_colour=highlight_colour)
 
         else:
-            if topic.annotation:
+            if topic.short_annotation:
             # if 'annotation' in metadata:
-                G.add_node(topic.name, group=2, name=topic.annotation,
+                G.add_node(topic.name, group=2, name=topic.short_annotation,
                            size=topic_scale_factor * topics[topic],
                            special=True, in_degree=topics[topic],
                            score=1, node_id=topic.id, is_topic=True)
