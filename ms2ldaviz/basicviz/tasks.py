@@ -5,9 +5,8 @@ from ms2ldaviz.celery_tasks import app
 from basicviz.models import Experiment,Mass2MotifInstance,MotifMatch
 
 @app.task
-def match_motifs(experiment_id,base_experiment_id):
+def match_motifs(experiment_id,base_experiment_id,min_score_to_save = 0.5):
     
-    min_score_to_save = 0.5
 
     experiment = Experiment.objects.get(id = experiment_id)
     base_experiment = Experiment.objects.get(id = base_experiment_id)

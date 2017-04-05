@@ -73,4 +73,4 @@ class AlphaCorrelationForm(forms.Form):
 
 class MatchMotifForm(forms.Form):
     other_experiment = forms.ChoiceField(choices = [(e.id,e.name) for e in Experiment.objects.all()],required = True)
-    minimum_score_to_save = forms.FloatField(required = True,initial = 0.5)
+    min_score_to_save = forms.FloatField(required = True,initial = 0.5)

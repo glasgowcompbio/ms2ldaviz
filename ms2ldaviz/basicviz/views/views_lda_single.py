@@ -932,8 +932,9 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                        highlight_colour=highlight_colour)
 
         else:
-            if 'annotation' in metadata:
-                G.add_node(topic.name, group=2, name=metadata['annotation'],
+            if topic.annotation:
+            # if 'annotation' in metadata:
+                G.add_node(topic.name, group=2, name=topic.annotation,
                            size=topic_scale_factor * topics[topic],
                            special=True, in_degree=topics[topic],
                            score=1, node_id=topic.id, is_topic=True)
@@ -1553,7 +1554,8 @@ def start_match_motifs(request,experiment_id):
         match_motif_form = MatchMotifForm(request.POST)
         if match_motif_form.is_valid():
             base_experiment_id = int(match_motif_form.cleaned_data['other_experiment'])
-            match_motifs.delay(experiment.id,base_experiment_id)
+            minimum_score_to_save = float(match_motif_form.cleaned_data['min_score_to_save'])
+            match_motifs.delay(experiment.id,base_experiment_id,min_score_to_save = minimum_score_to_save)
             return redirect('/basicviz/')
     else:
         match_motif_form = MatchMotifForm()
