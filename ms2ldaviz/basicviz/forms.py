@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 
 from basicviz.constants import AVAILABLE_OPTIONS
-from basicviz.models import SystemOptions
+from basicviz.models import SystemOptions, Experiment
 
 
 class DocFilterForm(forms.Form):
@@ -70,3 +70,7 @@ class AlphaCorrelationForm(forms.Form):
     normalise_alphas = forms.BooleanField(required=False, initial=True, label='Normalise alpha vectors?')
     max_edges = forms.IntegerField(required=False, initial=1000, label='Maximum number of edges')
     just_annotated = forms.BooleanField(required=False, initial=False, label='Restrict to annotated M2Ms?')
+
+class MatchMotifForm(forms.Form):
+    other_experiment = forms.ChoiceField(choices = [(e.id,e.name) for e in Experiment.objects.all()],required = True)
+    minimum_score_to_save = forms.FloatField(required = True,initial = 0.5)

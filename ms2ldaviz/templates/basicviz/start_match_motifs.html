@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block head_block %}
+
+{% endblock %}
+
+{% block body_block %}
+
+<h4>Motif matches for {{experiment}}</h4>
+
+<div>This feature allows Mass2Motifs in one experiment to be searched against those in another. The searching involves two steps:</div>
+<div>
+    <ul>
+        <li>Matching the features</li>
+        <li>Computing the cosine similarity of the Mass2Motifs in the matched feature space</li>
+    </ul>
+</ul>
+</div>
+<div>Choose an experiment to compare against in the form below and pick a minimum threshold for storing found links. Note that once found, links need to be verified (choose manage motif matches for the experiment of interest from the main menu).</div>
+
+<form id="match_form" method="post" action="/basicviz/start_match_motifs/{{experiment.id}}/">
+    {% csrf_token %}
+    {% for hidden in match_motif_form.hidden_fields %}
+        {{ hidden }}
+    {% endfor %}
+
+    {% for field in match_motif_form.visible_fields %}
+        <p>{{ field.errors }}</p>
+        <p>{{ field }}
+        {{ field.label }}</p>
+    {% endfor %}
+    <input type="submit" name="submit" value="Start matching" />
+ </form>
+ 
+
+
+{% endblock %}
+
+{% block js_block %}
+
+{% endblock %}

@@ -240,12 +240,17 @@ class Mass2Motif(models.Model):
     experiment = models.ForeignKey(Experiment)
     metadata = models.CharField(max_length=1024 * 1024, null=True)
 
+    linkmotif = models.ForeignKey('Mass2Motif',null = True)
+
     def get_annotation(self):
         md = jsonpickle.decode(self.metadata)
         if 'annotation' in md:
             return md['annotation']
+        elif self.linkmotif:
+            return self.linkmotif.annotation
         else:
             return None
+
 
     def get_short_annotation(self):
         md = jsonpickle.decode(self.metadata)
@@ -351,3 +356,11 @@ class SystemOptions(models.Model):
 
     def __unicode__(self):
         return "{}  =  {}".format(self.key, self.value)
+
+class MotifMatch(models.Model):
+    frommotif = models.ForeignKey(Mass2Motif,related_name='frommotif')
+    tomotif = models.ForeignKey(Mass2Motif,related_name='tomotif')
+    score = models.FloatField(null = True)
+
+    def __unicode__(self):
+        return "{} <-> {} ({})".format(self.frommotif.name,self.tomotif.name,self.score)

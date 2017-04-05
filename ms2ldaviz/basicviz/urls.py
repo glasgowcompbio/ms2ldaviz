@@ -50,7 +50,10 @@ lda_single_patterns = [
     url(r'^get_all_doc_data/(?P<experiment_id>\w+)/$',views.get_all_doc_data,name = 'get_all_doc_data'),
     url(r'^get_proportion_annotated_docs/(?P<experiment_id>\w+)/$',views.get_proportion_annotated_docs,name = 'get_proportion_annotation_docs'),
     url(r'^summary/(?P<experiment_id>\w+)/$',views.summary,name = 'summary'),
-    url(r'^match_motifs/(?P<experiment_id>\w+)/(?P<base_experiment_id>\w+)/$',views.match_motifs,name = 'match_motifs'),
+    url(r'^start_match_motifs/(?P<experiment_id>\w+)/$',views.start_match_motifs,name = 'start_match_motifs'),
+    url(r'^manage_motif_matches/(?P<experiment_id>\w+)/$',views.manage_motif_matches,name = 'manage_motif_matches'),
+    url(r'^add_link/(?P<from_motif_id>\w+)/(?P<to_motif_id>\w+)/$',views.add_link,name = 'add_link'),
+    url(r'^remove_link/(?P<from_motif_id>\w+)/$',views.remove_link,name = 'remove_link'),
 ]
 
 # for multi-file LDA experiments

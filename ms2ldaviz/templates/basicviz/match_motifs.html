@@ -8,23 +8,27 @@
 
 {% block body_block %}
 
-<h4>Matching motifs in {{experiment}} with those in {{base_experiment}}</h4>
-<div>{{n_matched_features}} features matched.</div>
+<h4>Motif matches for {{experiment}}</h4>
+
+<div>
+<p>Below are listed all matches that have been found using searches for this experiment. Use the buttons in the final column to add or remove the discovered links. When a link is added, any annotations in the <i>linked to</i> motif will be shown on the <i>linked</i> motif.</p>
+<p>Note that the system defers to manual annotations so if motif A has been manually annotated as 'great motif' and then linked to motif B which is annotated as 'even better one' then it is 'great motif' that will be shown. If the manual annotation is removed from motif A, it will now be annotated as 'even better one'.</p>
+</div>
 
 <table class='table' id='matchtable'>
     <thead>
-        <tr><th>Mass2Motif</th><th>Best match</th><th>Match score</th><th>Matches</th></tr>
+        <tr><th>Mass2Motif (annotation)</th><th>Best match (Experiment, annotation) </th><th>Match score</th><th>Current link</th><th>Actions</th></tr>
     </thead>
     <tbody>
         {% for match in matches %}
             <tr>
-                <td><a href="/basicviz/view_parents/{{match.0.id}}/">{{match.0}}</a></td>
-                <td><a href="/basicviz/view_parents/{{match.1.id}}/">{{match.1}}</a></td>
-                <td>{{match.2}}</td>
+                <td><a href="/basicviz/view_parents/{{match.frommotif.id}}/">{{match.frommotif}} ({{match.frommotif.annotation}})</a></td>
+                <td><a href="/basicviz/view_parents/{{match.tomotif.id}}/">{{match.tomotif}} ({{match.tomotif.experiment}},{{match.tomotif.annotation}})</a></td>
+                <td>{{match.score}}</td>
+                <td>{{match.frommotif.linkmotif}} ({{match.frommotif.linkmotif.experiment}},{{match.frommotif.linkmotif.annotation}})</td>
                 <td>
-                    {% for m in match.3 %}
-                    ({{ m.0.name }}:{{m.1}} <-> {{m.2.name}}:{{m.3}})<br />
-                    {% endfor %}
+                    <a href="/basicviz/add_link/{{match.frommotif.id}}/{{match.tomotif.id}}/">Add link</a>
+                    <a href="/basicviz/remove_link/{{match.frommotif.id}}/">Remove link</a>
                 </td>
             </tr>
         {% endfor %}
