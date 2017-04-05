@@ -259,7 +259,7 @@ class Mass2Motif(models.Model):
             return md['short_annotation']
         elif self.linkmotif.short_annotation:
             return self.linkmotif.short_annotation
-        else
+        else:
             return self.annotation
 
     def get_massbank_dict(self):
