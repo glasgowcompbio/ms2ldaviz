@@ -30,22 +30,23 @@ def match_motifs(experiment_id,base_experiment_id):
 
 
     # The following code is just for testing should be removed...
-    base_mz = [float(f.name.split('_')[1]) for f in base_fragments]
-    for i,f in enumerate(base_fragments):
-        if not f.min_mz:
-            f.min_mz = base_mz[i] - 5e-6 * base_mz[i]
-        if not f.max_mz:
-            f.max_mz = base_mz[i] + 5e-6 * base_mz[i]
 
-    base_mz = [float(f.name.split('_')[1]) for f in base_losses]
-    for i,f in enumerate(base_losses):
-        if not f.min_mz:
-            f.min_mz = base_mz[i] - 5e-6 * base_mz[i]
-        if not f.max_mz:
-            f.max_mz = base_mz[i] + 5e-6 * base_mz[i]
+    # base_mz = [float(f.name.split('_')[1]) for f in base_fragments]
+    # for i,f in enumerate(base_fragments):
+    #     if not f.min_mz:
+    #         f.min_mz = base_mz[i] - 5e-6 * base_mz[i]
+    #     if not f.max_mz:
+    #         f.max_mz = base_mz[i] + 5e-6 * base_mz[i]
 
-    base_fragments = sorted(base_fragments,key = lambda x: x.min_mz)
-    base_losses = sorted(base_losses,key = lambda x: x.min_mz)
+    # base_mz = [float(f.name.split('_')[1]) for f in base_losses]
+    # for i,f in enumerate(base_losses):
+    #     if not f.min_mz:
+    #         f.min_mz = base_mz[i] - 5e-6 * base_mz[i]
+    #     if not f.max_mz:
+    #         f.max_mz = base_mz[i] + 5e-6 * base_mz[i]
+
+    # base_fragments = sorted(base_fragments,key = lambda x: x.min_mz)
+    # base_losses = sorted(base_losses,key = lambda x: x.min_mz)
 
     # END OF TESTING BLOCK
 
