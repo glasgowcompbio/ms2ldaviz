@@ -251,15 +251,16 @@ class Mass2Motif(models.Model):
         else:
             return None
 
+    annotation = property(get_annotation)
 
     def get_short_annotation(self):
         md = jsonpickle.decode(self.metadata)
         if 'short_annotation' in md:
             return md['short_annotation']
-        elif self.linkmotif:
+        elif self.linkmotif.short_annotation:
             return self.linkmotif.short_annotation
-        else:
-            return None
+        else
+            return self.annotation
 
     def get_massbank_dict(self):
         md = jsonpickle.decode(self.metadata)
@@ -268,7 +269,7 @@ class Mass2Motif(models.Model):
         else:
             return None
 
-    annotation = property(get_annotation)
+    
     massbank_dict = property(get_massbank_dict)
     short_annotation = property(get_short_annotation)
 
