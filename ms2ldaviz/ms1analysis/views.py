@@ -61,36 +61,3 @@ def process_ms1_analysis(new_analysis, cleaned_data, experiment_id):
 
 def add_analysis_result(new_analysis, document, fold, pValue):
     result = AnalysisResult.objects.get_or_create(analysis=new_analysis, document=document, foldChange=fold, pValue=pValue)
-
-
-    # params = {
-    #     'decompose_from': decompose_name,
-    #     'K': cleaned_data['K'],
-    #     'n_its': cleaned_data['n_its'],
-    # }
-    # do_analysis.delay(new_analysis.id, params)
-    #
-
-    # pending, desc = EXPERIMENT_STATUS_CODE[0]
-    # if exp.status == pending:
-    #
-    #     # select the right pipeline
-    #     lda, desc = EXPERIMENT_TYPE[0]
-    #     decomposition, desc = EXPERIMENT_TYPE[1]
-    #     pipelines = {
-    #         lda: lda_task,
-    #         decomposition: decomposition_task
-    #     }
-    #
-    #     # runs the correct pipeline based on the experiment type
-    #     decompose_from = cleaned_data['decompose_from']
-    #     decompose_name = decompose_from.name if decompose_from is not None else None
-    #     params = {
-    #         'decompose_from': decompose_name,
-    #         'K': cleaned_data['K'],
-    #         'n_its': cleaned_data['n_its'],
-    #     }
-    #     pipeline = pipelines[exp.experiment_type]
-    #
-    #
-    #     pipeline.delay(exp.id, params)

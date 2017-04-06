@@ -16,7 +16,7 @@ class AnalysisForm(forms.ModelForm):
                                                           label='Pick samples for group 2',
                                                           required=True)
         self.fields['group1'].required = True
-        self.fields['group2'].required = False
+        self.fields['group2'].required = True
 
     class Meta:
         model = Analysis

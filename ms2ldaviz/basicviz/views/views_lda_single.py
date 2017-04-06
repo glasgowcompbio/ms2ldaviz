@@ -973,7 +973,7 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
         docm2mset = DocumentMass2Motif.objects.filter(document__in=documents, mass2motif__in=topics,
                                                       overlap_score__gte=edge_thresh)
 
-    if colour_by_logfc:
+    if ms1_analysis_id:
         analysis = Analysis.objects.filter(id=ms1_analysis_id)[0]
         all_logfc_vals = []
         for analysis_result in AnalysisResult.objects.filter(analysis=analysis):
@@ -981,9 +981,11 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
             logfc = np.log(foldChange)
             if not np.abs(logfc) == np.inf:
                 all_logfc_vals.append(np.log(foldChange))
-        logfc_vals = np.sort(np.array(all_logfc_vals))
-        perc_lower = logfc_vals[int(np.floor((lower_colour_perc / 100.0) * len(logfc_vals)))]
-        perc_upper = logfc_vals[int(np.ceil((upper_colour_perc / 100.0) * len(logfc_vals)))]
+        min_logfc = np.min(all_logfc_vals)
+        max_logfc = np.max(all_logfc_vals)
+        # logfc_vals = np.sort(np.array(all_logfc_vals))
+        # perc_lower = logfc_vals[int(np.floor((lower_colour_perc / 100.0) * len(logfc_vals)))]
+        # perc_upper = logfc_vals[int(np.ceil((upper_colour_perc / 100.0) * len(logfc_vals)))]
 
     for docm2m in docm2mset:
         # if docm2m.mass2motif in topics:
@@ -995,40 +997,41 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                 name = metadata['annotation']
             else:
                 name = docm2m.document.name
-            if not colour_by_logfc:
+            if not ms1_analysis_id:
                 G.add_node(docm2m.document.name, group=1, name=name, size=20,
                            type='square', peakid=docm2m.document.name, special=False,
                            in_degree=0, score=0, is_topic=False)
             else:
                 ## logfc hard-coded in Document table? Need to delete??
-                if ms1_analysis_id:
-                    analysis_result = AnalysisResult.objects.filter(analysis=analysis, document=docm2m.document)[0]
-                    foldChange = analysis_result.foldChange
-                    pValue = analysis_result.pValue
-                    logfc = np.log(foldChange)
-                    if logfc > perc_upper or logfc == np.inf:
-                        col = "#{}{}{}".format('00', '00', 'FF')
-                    elif logfc < perc_lower or -logfc == np.inf:
-                        col = "#{}{}{}".format('FF', '00', '00')
-                    else:
-                        lowcol = [255, 0, 0]
-                        endcol = [0, 0, 255]
-                        midcol = [255, 255, 255]
-                        pos = (logfc - perc_lower) / (perc_upper - perc_lower)
-                        if pos < 0.5:
-                            r = lowcol[0] + int(pos / 0.5 * (midcol[0] - lowcol[0]))
-                            g = lowcol[1] + int(pos / 0.5 * (midcol[1] - lowcol[1]))
-                            b = lowcol[2] + int(pos / 0.5 * (midcol[2] - lowcol[2]))
-                        else:
-                            r = midcol[0] + int((pos - 0.5) / 0.5 * (endcol[0] - midcol[0]))
-                            g = midcol[1] + int((pos - 0.5) / 0.5 * (endcol[1] - midcol[1]))
-                            b = midcol[2] + int((pos - 0.5) / 0.5 * (endcol[2] - midcol[2]))
-                        col = "#{}{}{}".format("{:02x}".format(r), "{:02x}".format(g), "{:02x}".format(b))
-                    size = -np.log(pValue) * doc_size_scale_factor
-
+                # if ms1_analysis_id:
+                analysis_result = AnalysisResult.objects.filter(analysis=analysis, document=docm2m.document)[0]
+                foldChange = analysis_result.foldChange
+                pValue = analysis_result.pValue
+                logfc = np.log(foldChange)
+                if logfc == np.inf:
+                    col = "#{}{}{}".format('00', '00', 'FF')
+                elif -logfc == np.inf:
+                    col = "#{}{}{}".format('FF', '00', '00')
                 else:
-                    col = '#FFFFFF'
-                    size = 20
+                    lowcol = [255, 0, 0]
+                    endcol = [0, 0, 255]
+                    midcol = [255, 255, 255]
+                    if logfc < 0:
+                        pos = logfc/ min_logfc
+                        r = midcol[0] + int(pos * (lowcol[0] - midcol[0]))
+                        g = midcol[1] + int(pos * (lowcol[1] - midcol[1]))
+                        b = midcol[2] + int(pos * (lowcol[2] - midcol[2]))
+                    else:
+                        pos = logfc / max_logfc
+                        r = midcol[0] + int(pos * (endcol[0] - midcol[0]))
+                        g = midcol[1] + int(pos * (endcol[1] - midcol[1]))
+                        b = midcol[2] + int(pos * (endcol[2] - midcol[2]))
+                    col = "#{}{}{}".format("{:02x}".format(r), "{:02x}".format(g), "{:02x}".format(b))
+                size = -np.log(pValue) * doc_size_scale_factor
+
+                # else:
+                #     col = '#FFFFFF'
+                #     size = 20
                 G.add_node(docm2m.document.name, group=1, name=name, size=size,
                            type='square', peakid=docm2m.document.name, special=True,
                            highlight_colour=col, logfc=docm2m.document.logfc,
