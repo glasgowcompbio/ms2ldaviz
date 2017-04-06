@@ -17,4 +17,5 @@ urlpatterns = [
     url(r'^registration/', include('registration.urls')),
     url(r'^uploads/', include('uploads.urls')),
     url(r'^decomposition/',include('decomposition.urls')),
+    url(r'^ms1analysis/', include('ms1analysis.urls')),
 ]

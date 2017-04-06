@@ -6,6 +6,8 @@ import jsonpickle
 from basicviz.models import Experiment,Document,Feature,FeatureInstance,Mass2Motif,Mass2MotifInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Alpha
 
 from basicviz.views import compute_overlap_score
+from ms1analysis.models import Sample, DocSampleIntensity
+
 
 def add_all_features(experiment,features):
     # Used when we have a dictionary of features with their min and max mz values
@@ -73,6 +75,21 @@ def add_document_words(document,doc_name,experiment,lda_dict):
         # feature = Feature.objects.get_or_create(name=word,experiment=experiment)[0]
         # fi = FeatureInstance.objects.get_or_create(document = d,feature = feature, intensity = lda_dict['corpus'][doc][word])
         add_feature_instance(document,feature,lda_dict['corpus'][doc_name][word])
+
+def add_sample(sample_name, experiment):
+    sample = Sample.objects.get_or_create(name = sample_name, experiment = experiment)[0]
+    return sample
+
+def add_doc_sample_intensity(sample, document, intensity):
+    i = DocSampleIntensity.objects.get_or_create(sample = sample, document = document, intensity = intensity)[0]
+
+def load_sample_intensity(doc_name, experiment, lda_dict):
+    metadata = lda_dict['doc_metadata'][doc_name]
+    if 'intensities' in metadata:
+        for sample_name, intensity in metadata['intensities'].items():
+            sample = add_sample(sample_name, experiment)
+            document = Document.objects.get(name = doc_name, experiment = experiment)
+            add_doc_sample_intensity(sample, document, intensity)
 
 def load_dict(lda_dict,experiment,verbose = True):
     if 'features' in lda_dict:
@@ -166,3 +183,14 @@ def load_dict(lda_dict,experiment,verbose = True):
             print "Done {}/{}".format(n_done,to_do)
         dm2m.overlap_score = compute_overlap_score(dm2m.mass2motif,dm2m.document)
         dm2m.save()
+
+    print "Loading samples and intensities"
+    n_done = 0
+    to_do = len(lda_dict['doc_metadata'])
+    for doc_name in lda_dict['doc_metadata']:
+        n_done += 1
+        if n_done % 100 == 0:
+            print "Done {}/{}".format(n_done,to_do)
+            experiment.status = "Done {}/{} docs".format(n_done,to_do)
+            experiment.save()
+        load_sample_intensity(doc_name, experiment, lda_dict)
