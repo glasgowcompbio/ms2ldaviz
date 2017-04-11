@@ -335,7 +335,7 @@ class LoadMZML(Loader):
                     print n_peaks_checked
                 peak_mz = peak[0]
                 peak_rt = peak[1]
-                peak_intensity = peak[2]
+                peak_intensity = None if ',' in peak[2] else float(peak[2])
 
                 min_mz = peak_mz - self.mz_tol*peak_mz/1e6
                 max_mz = peak_mz + self.mz_tol*peak_mz/1e6
@@ -366,6 +366,20 @@ class LoadMZML(Loader):
                 new_ms1 = MS1(old_ms1.id,peak_mz,peak_rt,peak_intensity,old_ms1.file_name,old_ms1.scan_number)
                 new_ms1_list.append(new_ms1)
                 new_metadata[new_ms1.name] = metadata[old_ms1.name]
+
+                if ',' in peak[2]:
+                    # print "process sample", str(peak[0]), str(peak[1])
+                    tokens = []
+                    for token in peak[2].split(','):
+                        try:
+                            token = float(token)
+                        except:
+                            token = None
+                        if token < 0:
+                            token = None
+                        tokens.append(token)
+                    # tokens = [float(token) for token in peak[2].split(',')]
+                    new_metadata[new_ms1.name]['intensities'] = dict(zip(self.sample_names, tokens))
 
                 # Delete the old one so it can't be picked again - removed this, maybe it's not a good idea?
                 # pos = ms1.index(old_ms1)
@@ -406,10 +420,21 @@ class LoadMZML(Loader):
         self.ms1_peaks = []
         with open(self.peaklist,'r') as f:
             heads = f.readline()
+            tokens = heads.strip().split(',')
+            index = -1
+            for i in range(len(tokens)):
+                index = i
+                if tokens[i].lower() in ['mass', 'mz']:
+                    break
+
+            self.sample_names = tokens[index+2:]
             for line in f:
-                tokens = line.split(',')
+                tokens_tuple= line.strip().split(',', index+2)
+                mz = tokens_tuple[index]
+                rt = tokens_tuple[index+1]
+                samples = tokens_tuple[index+2]
                 # get mx,rt,intensity
-                self.ms1_peaks.append((float(tokens[1]),float(tokens[2]),float(tokens[3])))
+                self.ms1_peaks.append((float(mz), float(rt), samples))
 
         # sort them by mass
         self.ms1_peaks = sorted(self.ms1_peaks,key = lambda x: x[0])
