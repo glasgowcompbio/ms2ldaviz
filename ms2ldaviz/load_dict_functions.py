@@ -6,6 +6,8 @@ import jsonpickle
 from basicviz.models import Experiment,Document,Feature,FeatureInstance,Mass2Motif,Mass2MotifInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Alpha
 
 from basicviz.views import compute_overlap_score
+from ms1analysis.models import Sample, DocSampleIntensity
+
 
 def add_all_features(experiment,features):
     # Used when we have a dictionary of features with their min and max mz values
@@ -74,12 +76,29 @@ def add_document_words(document,doc_name,experiment,lda_dict):
         # fi = FeatureInstance.objects.get_or_create(document = d,feature = feature, intensity = lda_dict['corpus'][doc][word])
         add_feature_instance(document,feature,lda_dict['corpus'][doc_name][word])
 
+def add_sample(sample_name, experiment):
+    sample = Sample.objects.get_or_create(name = sample_name, experiment = experiment)[0]
+    return sample
+
+def add_doc_sample_intensity(sample, document, intensity):
+    i = DocSampleIntensity.objects.get_or_create(sample = sample, document = document, intensity = intensity)[0]
+
+def load_sample_intensity(document, experiment, metadata):
+    # metadata = lda_dict['doc_metadata'][doc_name]
+    if 'intensities' in metadata:
+        for sample_name, intensity in metadata['intensities'].items():
+            ## process missing data
+            ## if intensity not exist, does not save in database
+            if intensity:
+                sample = add_sample(sample_name, experiment)
+                add_doc_sample_intensity(sample, document, intensity)
+
 def load_dict(lda_dict,experiment,verbose = True):
     if 'features' in lda_dict:
         print "Explicit feature object: loading them all at once"
         add_all_features(experiment,lda_dict['features'])
 
-    print "Loading corpus"
+    print "Loading corpus, samples and intensities"
     n_done = 0
     to_do = len(lda_dict['corpus'])
     for doc in lda_dict['corpus']:
@@ -88,13 +107,17 @@ def load_dict(lda_dict,experiment,verbose = True):
             print "Done {}/{}".format(n_done,to_do)
             experiment.status = "Done {}/{} docs".format(n_done,to_do)
             experiment.save()
-        metdat = jsonpickle.encode(lda_dict['doc_metadata'][doc])
+        ## remove 'intensities' from metdat before store it into database
+        metdat = lda_dict['doc_metadata'][doc].copy()
+        metdat.pop('intensities', None)
+        metdat = jsonpickle.encode(metdat)
         if verbose:
             print doc,experiment,metdat
         d = add_document(doc,experiment,metdat)
         # d = Document.objects.get_or_create(name=doc,experiment=experiment,metadata=metdat)[0]
         add_document_words(d,doc,experiment,lda_dict)
 
+        load_sample_intensity(d, experiment, lda_dict['doc_metadata'][doc])
 
 
         # for word in lda_dict['corpus'][doc]:

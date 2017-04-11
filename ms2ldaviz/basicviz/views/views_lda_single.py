@@ -22,6 +22,8 @@ from options.views import get_option
 from decomposition.models import DocumentGlobalMass2Motif,GlobalMotif,DocumentGlobalFeature,FeatureMap
 from decomposition.decomposition_functions import get_parents_decomposition,get_parent_for_plot_decomp,get_decomp_doc_context_dict
 from basicviz.views import index as basicviz_index
+from ms1analysis.models import Analysis, AnalysisResult
+from basicviz.constants import EXPERIMENT_STATUS_CODE
 
 
 def check_user(request,experiment):
@@ -740,8 +742,11 @@ def start_viz(request, experiment_id):
         return HttpResponse("You do not have permission to access this page")
     context_dict = {'experiment': experiment}
 
+    ## Only show analysis choices done through celery
+    ready, _ = EXPERIMENT_STATUS_CODE[1]
+    choices = [(analysis.id, analysis.name + '(' + analysis.description + ')') for analysis in Analysis.objects.filter(experiment=experiment, status=ready)]
     if request.method == 'POST':
-        viz_form = VizForm(request.POST)
+        viz_form = VizForm(choices, request.POST)
         if viz_form.is_valid():
             min_degree = viz_form.cleaned_data['min_degree']
             edge_thresh = viz_form.cleaned_data['edge_thresh']
@@ -754,6 +759,11 @@ def start_viz(request, experiment_id):
             random_seed = viz_form.cleaned_data['random_seed']
             edge_choice = viz_form.cleaned_data['edge_choice']
             edge_choice = edge_choice[0].encode('ascii', 'ignore')  # should turn the unicode into ascii
+            ## do not colour document nodes analysis has not been chosen or use the default empty ('') analysis
+            if len(viz_form.cleaned_data['ms1_analysis']) == 0 or viz_form.cleaned_data['ms1_analysis'][0] == '':
+                ms1_analysis_id = None
+            else:
+                ms1_analysis_id = viz_form.cleaned_data['ms1_analysis'][0]
             vo = VizOptions.objects.get_or_create(experiment=experiment,
                                                   min_degree=min_degree,
                                                   edge_thresh=edge_thresh,
@@ -764,13 +774,14 @@ def start_viz(request, experiment_id):
                                                   upper_colour_perc=upper_colour_perc,
                                                   colour_topic_by_score=colour_topic_by_score,
                                                   random_seed=random_seed,
-                                                  edge_choice=edge_choice)[0]
+                                                  edge_choice=edge_choice,
+                                                  ms1_analysis_id=ms1_analysis_id)[0]
             context_dict['viz_options'] = vo
 
         else:
             context_dict['viz_form'] = viz_form
     else:
-        viz_form = VizForm()
+        viz_form = VizForm(choices)
         context_dict['viz_form'] = viz_form
 
     if 'viz_form' in context_dict:
@@ -812,7 +823,8 @@ def get_graph(request, vo_id):
                        lower_colour_perc=viz_options.lower_colour_perc,
                        upper_colour_perc=viz_options.upper_colour_perc,
                        colour_topic_by_score=viz_options.colour_topic_by_score,
-                       edge_choice=viz_options.edge_choice)
+                       edge_choice=viz_options.edge_choice,
+                       ms1_analysis_id=viz_options.ms1_analysis_id)
     else:
         # G = make_decomposition_graph(experiment, min_degree=viz_options.min_degree,
         #                edge_thresh=viz_options.edge_thresh,
@@ -886,7 +898,7 @@ def get_graph(request, vo_id):
 def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                topic_scale_factor=5, edge_scale_factor=5, just_annotated_docs=False,
                colour_by_logfc=False, discrete_colour=False, lower_colour_perc=10, upper_colour_perc=90,
-               colour_topic_by_score=False, edge_choice='probability'):
+               colour_topic_by_score=False, edge_choice='probability', ms1_analysis_id = None, doc_max_size = 50):
     mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
     # Find the degrees
     topics = {}
@@ -945,21 +957,6 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                            score=1, node_id=topic.id, is_topic=True)
 
     documents = Document.objects.filter(experiment=experiment)
-    if colour_by_logfc:
-        all_logfc_vals = []
-        if colour_by_logfc:
-            for document in documents:
-                if document.logfc:
-                    val = float(document.logfc)
-                    if not np.abs(val) == np.inf:
-                        all_logfc_vals.append(float(document.logfc))
-        logfc_vals = np.sort(np.array(all_logfc_vals))
-
-        perc_lower = logfc_vals[int(np.floor((lower_colour_perc / 100.0) * len(logfc_vals)))]
-        perc_upper = logfc_vals[int(np.ceil((upper_colour_perc / 100.0) * len(logfc_vals)))]
-
-        lowcol = [255, 0, 0]
-        endcol = [0, 0, 255]
 
     if just_annotated_docs:
         new_documents = []
@@ -980,6 +977,23 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
         docm2mset = DocumentMass2Motif.objects.filter(document__in=documents, mass2motif__in=topics,
                                                       overlap_score__gte=edge_thresh)
 
+    ## remove dependence on "colour nodes by logfc" and "discrete colouring"
+    ## document colouring and size setting only depends on users' choice of ms1 analysis setting
+    if ms1_analysis_id:
+        analysis = Analysis.objects.filter(id=ms1_analysis_id)[0]
+        all_logfc_vals = []
+        for analysis_result in AnalysisResult.objects.filter(analysis=analysis):
+            foldChange = analysis_result.foldChange
+            logfc = np.log(foldChange)
+            if not np.abs(logfc) == np.inf:
+                all_logfc_vals.append(np.log(foldChange))
+
+        ## give a default min_logfc of -3
+        ## avoid the case that one logfc is extremely small, which will give all other negative logfc documents white colour
+        # min_logfc = max(-3, np.min(all_logfc_vals))
+        min_logfc = np.min(all_logfc_vals)
+        max_logfc = np.max(all_logfc_vals)
+
     for docm2m in docm2mset:
         # if docm2m.mass2motif in topics:
         if not docm2m.document in doc_nodes:
@@ -990,29 +1004,49 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                 name = metadata['annotation']
             else:
                 name = docm2m.document.name
-            if not colour_by_logfc:
+            ## do MS1 expression analysis only when user choose a ms1 analysis setting
+            if not ms1_analysis_id:
                 G.add_node(docm2m.document.name, group=1, name=name, size=20,
                            type='square', peakid=docm2m.document.name, special=False,
                            in_degree=0, score=0, is_topic=False)
             else:
-                if docm2m.document.logfc:
-                    lfc = float(docm2m.document.logfc)
-                    if lfc > perc_upper or lfc == np.inf:
-                        col = "#{}{}{}".format('00', '00', 'FF')
-                    elif lfc < perc_lower or -lfc == np.inf:
-                        col = "#{}{}{}".format('FF', '00', '00')
-                    else:
-                        if not discrete_colour:
-                            pos = (lfc - perc_lower) / (perc_upper - perc_lower)
-                            r = lowcol[0] + int(pos * (endcol[0] - lowcol[0]))
-                            g = lowcol[1] + int(pos * (endcol[1] - lowcol[1]))
-                            b = lowcol[2] + int(pos * (endcol[2] - lowcol[2]))
-                            col = "#{}{}{}".format("{:02x}".format(r), "{:02x}".format(g), "{:02x}".format(b))
-                        else:
-                            col = '#FFFFFF'
+                analysis_result = AnalysisResult.objects.filter(analysis=analysis, document=docm2m.document)[0]
+                foldChange = analysis_result.foldChange
+                pValue = analysis_result.pValue
+                logfc = np.log(foldChange)
+
+                ## lowest: blue, logfc==0: white, highest: red
+                ## use scaled colour to represent logfc of document
+                if logfc == np.inf:
+                    col = "#{}{}{}".format('FF', '00', '00')
+                elif -logfc == np.inf:
+                    col = "#{}{}{}".format('00', '00', 'FF')
                 else:
-                    col = '#FFFFFF'
-                G.add_node(docm2m.document.name, group=1, name=name, size=20,
+                    lowcol = [0, 0, 255]
+                    endcol = [255, 0, 0]
+                    midcol = [255, 255, 255]
+                    if logfc < 0:
+                        # if logfc < -3:
+                        #     logfc = -3
+                        pos = logfc/ min_logfc
+                        r = midcol[0] + int(pos * (lowcol[0] - midcol[0]))
+                        g = midcol[1] + int(pos * (lowcol[1] - midcol[1]))
+                        b = midcol[2] + int(pos * (lowcol[2] - midcol[2]))
+                    else:
+                        pos = logfc / max_logfc
+                        r = midcol[0] + int(pos * (endcol[0] - midcol[0]))
+                        g = midcol[1] + int(pos * (endcol[1] - midcol[1]))
+                        b = midcol[2] + int(pos * (endcol[2] - midcol[2]))
+                    col = "#{}{}{}".format("{:02x}".format(r), "{:02x}".format(g), "{:02x}".format(b))
+
+                ## use size to represent pValue of document
+                if not pValue:
+                    size = 5
+                else:
+                    size = min(5 - np.log(pValue) * 15, doc_max_size)
+                ## represent document node with name + logfc + pValue
+                name += ", " + str(logfc) + ", " + str(pValue)
+                G.add_node(docm2m.document.name, group=1, name=name, size=size,
                            type='square', peakid=docm2m.document.name, special=True,
                            highlight_colour=col, logfc=docm2m.document.logfc,
                            in_degree=0, score=0, is_topic=False)

@@ -323,6 +323,7 @@ class VizOptions(models.Model):
     colour_topic_by_score = models.BooleanField(null=False)
     random_seed = models.CharField(null=False, max_length=128)
     edge_choice = models.CharField(null=False, max_length=128)
+    ms1_analysis_id = models.IntegerField(null=True)
 
 
 class AlphaCorrOptions(models.Model):

@@ -33,7 +33,14 @@ class VizForm(forms.Form):
     edge_choice = forms.MultipleChoiceField(required=True, initial='probability',
                                             choices=(('probability', 'probability'), ('overlap_score', 'overlap_score')),
                                             label='filter edges by probability or overlap score')
+    ms1_analysis = forms.MultipleChoiceField(choices=(),
+                                                  label='Pick one MS1 analysis',
+                                                  required=False)
 
+    def __init__(self, choices, *args, **kwargs):
+        super(VizForm, self).__init__(*args, **kwargs)
+        ## add default empty choice
+        self.fields['ms1_analysis'].choices = [('', '----------')] + choices
 
 class TopicScoringForm(forms.Form):
     upper_perc = forms.IntegerField(required=True, initial=75, label='upper percentile')
