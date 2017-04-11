@@ -17,9 +17,10 @@ from basicviz.constants import EXPERIMENT_STATUS_CODE
 def create_ms1analysis(request, experiment_id):
     experiment = Experiment.objects.filter(id=experiment_id)[0]
     context_dict = {}
-    context_dict['experiment_id'] = experiment_id
+    context_dict['experiment'] = experiment
     samples = Sample.objects.filter(experiment_id=experiment_id)
     sample_choices = [(sample.name, sample.name) for sample in samples]
+    sample_choices = sorted(sample_choices, key = lambda tup: tup[0])
 
     if request.method == 'POST':
         analysis_form = AnalysisForm(sample_choices, request.POST)
@@ -37,6 +38,7 @@ def create_ms1analysis(request, experiment_id):
                 'experiment_id': experiment_id
             }
             process_ms1_analysis.delay(new_analysis.id, params)
+            # process_ms1_analysis(new_analysis.id, params)
             return HttpResponseRedirect(reverse('index'))
 
         else:
@@ -50,26 +52,51 @@ def create_ms1analysis(request, experiment_id):
 
 @app.task
 def process_ms1_analysis(new_analysis_id, params):
-    new_analysis = Analysis.objects.get(id=new_analysis_id)
+    new_analysis = Analysis.objects.get(pk=new_analysis_id)
     group1 = params['group1']
     group2 = params['group2']
     experiment_id = params['experiment_id']
+    use_logarithm = new_analysis.use_logarithm
+
     group1_samples = [Sample.objects.filter(name=sample_name, experiment_id=experiment_id)[0] for sample_name in group1]
     group2_samples = [Sample.objects.filter(name=sample_name, experiment_id=experiment_id)[0] for sample_name in group2]
 
     documents = Document.objects.filter(experiment_id=experiment_id)
 
     for document in documents:
-        group1_intensities = []
-        group2_intensities = []
-        for sample in group1_samples:
-            group1_intensities.append(DocSampleIntensity.objects.filter(sample=sample, document=document)[0].intensity)
-        for sample in group2_samples:
-            group2_intensities.append(DocSampleIntensity.objects.filter(sample=sample, document=document)[0].intensity)
-        fold = np.mean(group1_intensities) / np.mean(group2_intensities)
-        pValue = ttest_ind(group1_intensities, group2_intensities, equal_var = False)[1]
+        group1_intensities = get_group_intensities(group1_samples, document, use_logarithm)
+        group2_intensities = get_group_intensities(group2_samples, document, use_logarithm)
+        if not group1_intensities or not group2_intensities:
+            fold = 1
+        else:
+            ## intensities between 0 and 1 are very rare
+            ## if this happens, it will influence other documents' colouring
+            ## so label fold to be 1 here (with white colour) to overcome that
+            if np.mean(group1_intensities) <= 1 or np.mean(group2_intensities) <= 1:
+                fold = 1
+            else:
+                fold = np.mean(group1_intensities) / np.mean(group2_intensities)
+        try:
+            pValue = ttest_ind(group1_intensities, group2_intensities, equal_var = False)[1]
+        except:
+            pValue = None
+        if not pValue >= 0 and pValue <= 1:
+            pValue = None
         # add_analysis_result(new_analysis, document, fold, pValue)
         AnalysisResult.objects.get_or_create(analysis=new_analysis, document=document, foldChange=fold, pValue=pValue)
-        ready, _ = EXPERIMENT_STATUS_CODE[1]
-        new_analysis.status = ready
-        new_analysis.save()
+
+    ready, _ = EXPERIMENT_STATUS_CODE[1]
+    new_analysis.status = ready
+    new_analysis.save()
+
+
+def get_group_intensities(group_samples, document, use_logarithm='N'):
+    group_intensities = []
+    for sample in group_samples:
+        query_res = DocSampleIntensity.objects.filter(sample=sample, document=document)
+        if query_res:
+            if use_logarithm == 'Y':
+                group_intensities.append(np.log(query_res[0].intensity))
+            elif use_logarithm == 'N':
+                group_intensities.append(query_res[0].intensity)
+    return group_intensities

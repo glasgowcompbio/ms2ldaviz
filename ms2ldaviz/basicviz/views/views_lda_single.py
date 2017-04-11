@@ -23,6 +23,7 @@ from decomposition.models import DocumentGlobalMass2Motif,GlobalMotif,DocumentGl
 from decomposition.decomposition_functions import get_parents_decomposition,get_parent_for_plot_decomp,get_decomp_doc_context_dict
 from basicviz.views import index as basicviz_index
 from ms1analysis.models import Analysis, AnalysisResult
+from basicviz.constants import EXPERIMENT_STATUS_CODE
 
 
 def check_user(request,experiment):
@@ -741,7 +742,9 @@ def start_viz(request, experiment_id):
         return HttpResponse("You do not have permission to access this page")
     context_dict = {'experiment': experiment}
 
-    choices = [(analysis.id, analysis.name + '(' + analysis.description + ')') for analysis in Analysis.objects.filter(experiment=experiment)]
+    ## Only show analysis choices done through celery
+    ready, _ = EXPERIMENT_STATUS_CODE[1]
+    choices = [(analysis.id, analysis.name + '(' + analysis.description + ')') for analysis in Analysis.objects.filter(experiment=experiment, status=ready)]
     if request.method == 'POST':
         viz_form = VizForm(choices, request.POST)
         if viz_form.is_valid():
@@ -756,10 +759,11 @@ def start_viz(request, experiment_id):
             random_seed = viz_form.cleaned_data['random_seed']
             edge_choice = viz_form.cleaned_data['edge_choice']
             edge_choice = edge_choice[0].encode('ascii', 'ignore')  # should turn the unicode into ascii
-            try:
-                ms1_analysis_id = viz_form.cleaned_data['ms1_analysis'][0]
-            except:
+            ## do not colour document nodes analysis has not been chosen or use the default empty ('') analysis
+            if len(viz_form.cleaned_data['ms1_analysis']) == 0 or viz_form.cleaned_data['ms1_analysis'][0] == '':
                 ms1_analysis_id = None
+            else:
+                ms1_analysis_id = viz_form.cleaned_data['ms1_analysis'][0]
             vo = VizOptions.objects.get_or_create(experiment=experiment,
                                                   min_degree=min_degree,
                                                   edge_thresh=edge_thresh,
@@ -894,7 +898,7 @@ def get_graph(request, vo_id):
 def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                topic_scale_factor=5, edge_scale_factor=5, just_annotated_docs=False,
                colour_by_logfc=False, discrete_colour=False, lower_colour_perc=10, upper_colour_perc=90,
-               colour_topic_by_score=False, edge_choice='probability', ms1_analysis_id = None, doc_size_scale_factor = 15):
+               colour_topic_by_score=False, edge_choice='probability', ms1_analysis_id = None, doc_max_size = 50):
     mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
     # Find the degrees
     topics = {}
@@ -973,6 +977,8 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
         docm2mset = DocumentMass2Motif.objects.filter(document__in=documents, mass2motif__in=topics,
                                                       overlap_score__gte=edge_thresh)
 
+    ## remove dependence on "colour nodes by logfc" and "discrete colouring"
+    ## document colouring and size setting only depends on users' choice of ms1 analysis setting
     if ms1_analysis_id:
         analysis = Analysis.objects.filter(id=ms1_analysis_id)[0]
         all_logfc_vals = []
@@ -981,11 +987,12 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
             logfc = np.log(foldChange)
             if not np.abs(logfc) == np.inf:
                 all_logfc_vals.append(np.log(foldChange))
+
+        ## give a default min_logfc of -3
+        ## avoid the case that one logfc is extremely small, which will give all other negative logfc documents white colour
+        # min_logfc = max(-3, np.min(all_logfc_vals))
         min_logfc = np.min(all_logfc_vals)
         max_logfc = np.max(all_logfc_vals)
-        # logfc_vals = np.sort(np.array(all_logfc_vals))
-        # perc_lower = logfc_vals[int(np.floor((lower_colour_perc / 100.0) * len(logfc_vals)))]
-        # perc_upper = logfc_vals[int(np.ceil((upper_colour_perc / 100.0) * len(logfc_vals)))]
 
     for docm2m in docm2mset:
         # if docm2m.mass2motif in topics:
@@ -997,26 +1004,30 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                 name = metadata['annotation']
             else:
                 name = docm2m.document.name
+            ## do MS1 expression analysis only when user choose a ms1 analysis setting
             if not ms1_analysis_id:
                 G.add_node(docm2m.document.name, group=1, name=name, size=20,
                            type='square', peakid=docm2m.document.name, special=False,
                            in_degree=0, score=0, is_topic=False)
             else:
-                ## logfc hard-coded in Document table? Need to delete??
-                # if ms1_analysis_id:
                 analysis_result = AnalysisResult.objects.filter(analysis=analysis, document=docm2m.document)[0]
                 foldChange = analysis_result.foldChange
                 pValue = analysis_result.pValue
                 logfc = np.log(foldChange)
+
+                ## lowest: blue, logfc==0: white, highest: red
+                ## use scaled colour to represent logfc of document
                 if logfc == np.inf:
-                    col = "#{}{}{}".format('00', '00', 'FF')
-                elif -logfc == np.inf:
                     col = "#{}{}{}".format('FF', '00', '00')
+                elif -logfc == np.inf:
+                    col = "#{}{}{}".format('00', '00', 'FF')
                 else:
-                    lowcol = [255, 0, 0]
-                    endcol = [0, 0, 255]
+                    lowcol = [0, 0, 255]
+                    endcol = [255, 0, 0]
                     midcol = [255, 255, 255]
                     if logfc < 0:
+                        # if logfc < -3:
+                        #     logfc = -3
                         pos = logfc/ min_logfc
                         r = midcol[0] + int(pos * (lowcol[0] - midcol[0]))
                         g = midcol[1] + int(pos * (lowcol[1] - midcol[1]))
@@ -1027,11 +1038,14 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                         g = midcol[1] + int(pos * (endcol[1] - midcol[1]))
                         b = midcol[2] + int(pos * (endcol[2] - midcol[2]))
                     col = "#{}{}{}".format("{:02x}".format(r), "{:02x}".format(g), "{:02x}".format(b))
-                size = -np.log(pValue) * doc_size_scale_factor
 
-                # else:
-                #     col = '#FFFFFF'
-                #     size = 20
+                ## use size to represent pValue of document
+                if not pValue:
+                    size = 5
+                else:
+                    size = min(5 - np.log(pValue) * 15, doc_max_size)
+                ## represent document node with name + logfc + pValue
+                name += ", " + str(logfc) + ", " + str(pValue)
                 G.add_node(docm2m.document.name, group=1, name=name, size=size,
                            type='square', peakid=docm2m.document.name, special=True,
                            highlight_colour=col, logfc=docm2m.document.logfc,

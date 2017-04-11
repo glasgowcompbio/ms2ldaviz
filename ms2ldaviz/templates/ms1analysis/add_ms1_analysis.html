@@ -9,13 +9,13 @@
 
 	<h3>Add a new MS1 differential expression analysis</h3>
     <p>
-        Your are viewing experiment {{  experiment_id }}.
+        Your are viewing experiment: <b>{{experiment.name}}</b> ({{experiment.description}}) ({{  experiment.id }}).
     </p>
     <p>
         You can choose sample names for group1 and group2 for differential expression analysis.
     </p>
 
-    <form id="analysis_form" method="post" action="/ms1analysis/create_ms1analysis/{{ experiment_id }}/" enctype="multipart/form-data">
+    <form id="analysis_form" method="post" action="/ms1analysis/create_ms1analysis/{{ experiment.id }}/" enctype="multipart/form-data">
         {% csrf_token %}
         {% for hidden in analysis_form.hidden_fields %}
             {{ hidden }}
@@ -23,7 +23,8 @@
 
         {% for field in analysis_form.visible_fields %}
             <p>{{ field.errors }}</p>
-            <p>  {{field.label}} {% if field.field.required %} * {% endif %} {{ field }}</p>
+            <p>{{field.label}} {% if field.field.required %} * {% endif %} </p>
+            <p>{{ field }}</p>
         {% endfor %}
         <input type="submit" name="submit" value="Submit Your Analysis" class="btn btn-primary" />
     </form>

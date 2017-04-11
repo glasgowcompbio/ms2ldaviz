@@ -22,6 +22,8 @@ class Analysis(models.Model):
     ready_code, _ = EXPERIMENT_STATUS_CODE[1]
     status = models.CharField(max_length=128, choices=EXPERIMENT_STATUS_CODE,
                               null=True, default=ready_code)
+    use_logarithm = models.CharField(max_length=128, choices=[('N', 'No'), ('Y', 'Yes'),],
+                              null=True, default='N')
 
 class AnalysisResult(models.Model):
     analysis = models.ForeignKey(Analysis)
