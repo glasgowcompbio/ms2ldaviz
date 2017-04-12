@@ -76,12 +76,15 @@ def process_ms1_analysis(new_analysis_id, params):
                 fold = 1
             else:
                 fold = np.mean(group1_intensities) / np.mean(group2_intensities)
-        try:
-            pValue = ttest_ind(group1_intensities, group2_intensities, equal_var = False)[1]
-        except:
-            pValue = None
-        if not pValue >= 0 and pValue <= 1:
-            pValue = None
+            if len(group1_intensities) > 1 and len(group2_intensities) > 1:
+                try:
+                    pValue = ttest_ind(group1_intensities, group2_intensities, equal_var = False)[1]
+                except:
+                    pValue = None
+            else:
+                pValue = None
+            if not pValue >= 0 and not pValue <= 1:
+                pValue = None
         # add_analysis_result(new_analysis, document, fold, pValue)
         AnalysisResult.objects.get_or_create(analysis=new_analysis, document=document, foldChange=fold, pValue=pValue)
 
