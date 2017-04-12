@@ -83,7 +83,7 @@ def process_ms1_analysis(new_analysis_id, params):
                     pValue = None
             else:
                 pValue = None
-            if not pValue >= 0 and not pValue <= 1:
+            if not (pValue >= 0 and pValue <= 1):
                 pValue = None
         # add_analysis_result(new_analysis, document, fold, pValue)
         AnalysisResult.objects.get_or_create(analysis=new_analysis, document=document, foldChange=fold, pValue=pValue)

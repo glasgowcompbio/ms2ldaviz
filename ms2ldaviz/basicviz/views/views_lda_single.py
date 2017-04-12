@@ -898,7 +898,7 @@ def get_graph(request, vo_id):
 def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                topic_scale_factor=5, edge_scale_factor=5, just_annotated_docs=False,
                colour_by_logfc=False, discrete_colour=False, lower_colour_perc=10, upper_colour_perc=90,
-               colour_topic_by_score=False, edge_choice='probability', ms1_analysis_id = None, doc_max_size = 50):
+               colour_topic_by_score=False, edge_choice='probability', ms1_analysis_id = None, doc_max_size = 200):
     mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
     # Find the degrees
     topics = {}
@@ -1045,7 +1045,11 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                 else:
                     size = min(5 - np.log(pValue) * 15, doc_max_size)
                 ## represent document node with name + logfc + pValue
-                name += ", " + str(logfc) + ", " + str(pValue)
+                if pValue:
+                    name = "{}, {:.3f}, {:.3f}".format(name, logfc, pValue)
+                else:
+                    name = "{}, {:.3f}, None".format(name, logfc)
+                # name += ", " + str(logfc) + ", " + str(pValue)
                 G.add_node(docm2m.document.name, group=1, name=name, size=size,
                            type='square', peakid=docm2m.document.name, special=True,
                            highlight_colour=col, logfc=docm2m.document.logfc,
