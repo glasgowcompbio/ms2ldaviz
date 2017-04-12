@@ -481,7 +481,11 @@ def get_alpha_correlation_graph(request, acviz_id):
     motif_names = []
     for motif in motifs:
         md = jsonpickle.decode(motif.metadata)
-        display_name = md.get('annotation', motif.name)
+        name = motif.name
+        if 'mass2motif' in name:
+            tokens = name.split('_')
+            name = tokens[1] # get the last part of e.g. 'mass2motif_11'
+        display_name = md.get('annotation', md.get('short_annotation', name))
 
         motif_names.append(motif.name)
         if 'annotation' in md:
@@ -533,6 +537,7 @@ def get_alpha_correlation_graph(request, acviz_id):
         if pos >= len(scores):
             break
 
+    # nx.write_gexf(G, "network_%d.gexf" % int(acviz_id))
     d = json_graph.node_link_data(G)
     return HttpResponse(json.dumps(d), content_type='application/json')
 
