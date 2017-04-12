@@ -375,7 +375,7 @@ class LoadMZML(Loader):
                             token = float(token)
                         except:
                             token = None
-                        if token < 0:
+                        if token <= 0:
                             token = None
                         tokens.append(token)
                     # tokens = [float(token) for token in peak[2].split(',')]
