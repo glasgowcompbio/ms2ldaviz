@@ -1100,7 +1100,7 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
         if edge_choice == 'probability':
             weight = edge_scale_factor * docm2m.probability
         elif edge_choice == 'both':
-            weight = min(docm2m.probability,docm2m.overlap_score)
+            weight = docm2m.overlap_score
         else:
             weight = edge_scale_factor * docm2m.overlap_score__gte
         G.add_edge(docm2m.mass2motif.name, docm2m.document.name, weight=weight)
