@@ -12,7 +12,7 @@
         You can choose either to decompose your spectra in a completely
         unsupervised manner (experiment type <strong>LDA</strong>) or with respect to
         existing Mass2Motifs that we have annotated
-        (experiment type <strong>Decomposition</strong>).
+        (experiment type <strong>Decomposition</strong>). Please scroll down for more detailed instructions.
     </p>
     <p>
         If an MS1 CSV file is provided, it will be used to seed the precursor peaks during the extraction of fragmentation spectra.
@@ -32,6 +32,17 @@
         <input type="submit" name="submit" value="Submit Your Experiment" class="btn btn-primary" />
     </form>
 
+    <h4>Instructions</h4>
+    <h5>Peaklist file:</h5>
+    <p>
+        The required file format for the MS1 peak list is as follows: a .csv file with header line: ("...,mass,RT,samplename_1, samplename_2,..."), delimiter: '.
+    </p>
+    <p>
+        The *mass* column must have the name mass or mz (case-insensitive). Retention time is assumed to be the column immediately after mass, and should be in seconds. Any columns before *mass* (e.g. containing peak IDs from other software) will be ignored.
+    </p>
+    <p>
+        All columns after retention time will be interpreted as MS1 intensities, one column per sample. Missing data can be stored as empty (e.g. 123.45,,567.89), or NA (e.g. 123.45,NA,567.89) in the .csv file. Any intensities that are negative values, cannot be interpreted as a float, or are empty will be ignored and not be stored for further analysis.
+    </p>
 {% endblock %}
 
 {% block js_block %}
