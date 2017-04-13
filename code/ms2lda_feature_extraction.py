@@ -427,7 +427,15 @@ class LoadMZML(Loader):
                 if tokens[i].lower() in ['mass', 'mz']:
                     break
 
+            ## if any sample names missing, use "Sample_*" to replace
+            empty_sample_name_id = 0
+            for i in range(index+2, len(tokens)):
+                if not tokens[i]:
+                    tokens[i] = "Sample_" + str(empty_sample_name_id)
+                    empty_sample_name_id += 1
+
             self.sample_names = tokens[index+2:]
+
             for line in f:
                 tokens_tuple= line.strip().split(',', index+2)
                 mz = tokens_tuple[index]
