@@ -7,15 +7,20 @@ from django.http import JsonResponse
 
 from decomposition.models import GlobalMotif,DocumentGlobalMass2Motif,Decomposition,GlobalMotifsToSets,MotifSet,FeatureSet,APIBatchResult
 from decomposition.forms import DecompVizForm,NewDecompositionForm,BatchDecompositionForm
-from basicviz.models import Mass2MotifInstance,Experiment,Document,JobLog
-
+from basicviz.models import Mass2MotifInstance,Experiment,Document,JobLog,VizOptions
+from basicviz.forms import VizForm
 from options.views import get_option
+
+from ms1analysis.models import Analysis
 
 from decomposition_functions import get_parents_decomposition,get_decomp_doc_context_dict,get_parent_for_plot_decomp,make_word_graph,make_intensity_graph,make_decomposition_graph
 from decomposition.tasks import api_batch_task
 from basicviz.views import views_lda_single
 
 from uploads.tasks import just_decompose_task
+
+from basicviz.constants import EXPERIMENT_STATUS_CODE
+
 
 # Create your views here.
 def view_parents(request,mass2motif_id,decomposition_id):
@@ -118,32 +123,46 @@ def start_viz(request,decomposition_id):
     context_dict = {}
     context_dict['decomposition'] = decomposition
     context_dict['experiment'] = experiment
+    
+    ready, _ = EXPERIMENT_STATUS_CODE[1]
+    choices = [(analysis.id, analysis.name + '(' + analysis.description + ')') for analysis in Analysis.objects.filter(experiment=experiment, status=ready)]
+
 
     # add form stuff here!
     if request.method == 'POST':
-        form = DecompVizForm(request.POST)
-        if form.is_valid():
-            min_degree = form.cleaned_data['min_degree']
-        context_dict['vo'] = {'min_degree':min_degree,'random_seed':'hello'}
+        # form = DecompVizForm(request.POST)
+        viz_form = VizForm(choices,request.POST)
+        if viz_form.is_valid():
+            min_degree = viz_form.cleaned_data['min_degree']
+        if len(viz_form.cleaned_data['ms1_analysis']) == 0 or viz_form.cleaned_data['ms1_analysis'][0] == '':
+            ms1_analysis_id = None
+        else:
+            ms1_analysis_id = viz_form.cleaned_data['ms1_analysis'][0]
+        vo = VizOptions.objects.get_or_create(experiment=experiment,
+                                                  min_degree=min_degree,
+                                                  ms1_analysis_id=ms1_analysis_id)[0]
+        context_dict['vo'] = vo
         return render(request,'decomposition/graph.html',context_dict)    
     else:
-        context_dict['viz_form'] = DecompVizForm()
+        # context_dict['viz_form'] = DecompVizForm()
+        context_dict['viz_form'] = VizForm(choices)
 
     return render(request,'decomposition/viz_form.html',context_dict)
 
 
     
 
-def get_graph(request,decomposition_id,min_degree):
+def get_graph(request,decomposition_id,vo_id):
+    vo = VizOptions.objects.get(id = vo_id)
     decomposition = Decomposition.objects.get(id = decomposition_id)
     experiment = decomposition.experiment
-    min_degree = int(min_degree)
+    min_degree = int(vo.min_degree)
 
     edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
     edge_thresh = float(get_option('doc_m2m_threshold',experiment = experiment))
 
     d = make_decomposition_graph(decomposition,experiment,min_degree = min_degree,edge_thresh = edge_thresh,
-                                edge_choice = edge_choice,topic_scale_factor = 5, edge_scale_factor = 5)
+                                edge_choice = edge_choice,topic_scale_factor = 5, edge_scale_factor = 5,ms1_analysis_id = ms1_analysis_id)
     return HttpResponse(json.dumps(d),content_type = 'application/json')
 
 

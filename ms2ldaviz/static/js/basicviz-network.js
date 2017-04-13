@@ -488,7 +488,7 @@ function plot_graph(vo_id,random_seed) {
 
 
 
-function plot_decomposition_graph(decomposition_id,min_degree,random_seed) {
+function plot_decomposition_graph(decomposition_id,vo_id,random_seed) {
 
     Math.seedrandom(random_seed);
 
@@ -519,7 +519,7 @@ function plot_decomposition_graph(decomposition_id,min_degree,random_seed) {
     var unselectNode = undefined;
     var optArray = [];
     var toggle = 0;
-    var url = '/decomposition/get_graph/'+decomposition_id + '/' + min_degree + '/';
+    var url = '/decomposition/get_graph/'+decomposition_id + '/' + vo_id + '/';
     console.log('url is ' + url)
 
     // see https://gist.github.com/mbostock/3750941

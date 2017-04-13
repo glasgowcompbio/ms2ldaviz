@@ -310,7 +310,7 @@ def get_parent_for_plot_decomp(decomposition,document,motif = None,edge_choice =
     score = "na"
     top_motifs = []
     if not motif == None:
-        topdm2m = DocumentGlobalMass2Motif.objects.get(document = document,mass2motif = motif)
+        topdm2m = DocumentGlobalMass2Motif.objects.get(decomposition = decomposition,document = document,mass2motif = motif)
         top_motifs.append(topdm2m.mass2motif)
         if edge_choice == 'probability':
             score = topdm2m.probability
@@ -548,7 +548,9 @@ def make_intensity_graph(request, motif_id, vo_id, decomposition_id):
 
 
 def make_decomposition_graph(decomposition,experiment,min_degree = 5,edge_thresh = 0.5,
-                                edge_choice = 'overlap_score',topic_scale_factor = 5, edge_scale_factor = 5):
+                                edge_choice = 'overlap_score',topic_scale_factor = 5,
+                                edge_scale_factor = 5,
+                                ms1_analysis_id = None):
     # This is the graph maker for a decomposition experiment
     documents = Document.objects.filter(experiment = experiment)
     doc_motif = DocumentGlobalMass2Motif.objects.filter(decomposition = decomposition)
