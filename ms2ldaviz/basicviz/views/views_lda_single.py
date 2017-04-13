@@ -375,24 +375,23 @@ def mass2motif_feature(request, fm2m_id):
 def get_parents(request, motif_id, vo_id):
     viz_options = VizOptions.objects.get(id=vo_id)
     experiment = viz_options.experiment
+    edge_choice = get_option('default_doc_m2m_score',experiment)
     if experiment.experiment_type == '0': #ms2lda
         motif = Mass2Motif.objects.get(id=motif_id)
-        edge_choice = viz_options.edge_choice
-        if edge_choice == 'probability':
-            docm2m = DocumentMass2Motif.objects.filter(mass2motif=motif, probability__gte=viz_options.edge_thresh).order_by(
-                '-probability')
-        else:
-            docm2m = DocumentMass2Motif.objects.filter(mass2motif=motif,
-                                                       overlap_score__gte=viz_options.edge_thresh).order_by(
-                '-overlap_score')
+
+        docm2m = get_docm2m(motif)
+        # if edge_choice == 'probability':
+        #     docm2m = DocumentMass2Motif.objects.filter(mass2motif=motif, probability__gte=viz_options.edge_thresh).order_by(
+        #         '-probability')
+        # else:
+        #     docm2m = DocumentMass2Motif.objects.filter(mass2motif=motif,
+        #                                                overlap_score__gte=viz_options.edge_thresh).order_by(
+        #         '-overlap_score')
         documents = [d.document for d in docm2m]
         parent_data = []
         for dm in docm2m:
             document = dm.document
-            if viz_options.just_annotated_docs and document.annotation:
-                parent_data.append(get_doc_for_plot(document.id, motif_id,score_type = edge_choice))
-            elif not viz_options.just_annotated_docs:
-                parent_data.append(get_doc_for_plot(document.id, motif_id,score_type = edge_choice))
+            parent_data.append(get_doc_for_plot(document.id, motif_id,score_type = edge_choice))
     else: # decomposition
         parent_data = get_parents_decomposition(motif_id,vo_id = vo_id,experiment = experiment)
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
@@ -462,26 +461,20 @@ def get_parents_metadata(request, motif_id):
 def get_word_graph(request, motif_id, vo_id, experiment = None):
     if not vo_id == 'nan':
         viz_options = VizOptions.objects.get(id = vo_id)
-        experiment = viz_options.experiment
-        edge_thresh = viz_options.edge_thresh
-        edge_choice = viz_options.edge_choice
-    elif experiment:
-        edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
-        edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
+        experiment =  viz_options.experiment
     else:
         motif = Mass2Motif.objects.get(id = motif_id)
         experiment = motif.experiment
-        edge_choice = 'probability'
-        edge_thresh = 0.05
 
 
     if experiment.experiment_type == "0": # standard LDA
         motif = Mass2Motif.objects.get(id = motif_id)
         m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte = 0.01)
-        if edge_choice == 'probability':
-            docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
-        else:
-            docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh)
+        docm2ms = get_docm2m(motif)
+        # if edge_choice == 'probability':
+        #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
+        # else:
+        #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh)
         data_for_json = []
         data_for_json.append(len(docm2ms))
         feat_counts = {}
@@ -521,16 +514,9 @@ def get_intensity(request, motif_id, vo_id, experiment = None):
     if not vo_id == 'nan':
         viz_options = VizOptions.objects.get(id = vo_id)
         experiment = viz_options.experiment
-        edge_thresh = viz_options.edge_thresh
-        edge_choice = viz_options.edge_choice
-    elif experiment:
-        edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
-        edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
     else:
         motif = Mass2Motif.objects.get(id = motif_id)
         experiment = motif.experiment
-        edge_choice = 'probability'
-        edge_thresh = 0.05
 
     colours = ['#404080', '#0080C0']
     colours = ['red','blue']
@@ -539,10 +525,11 @@ def get_intensity(request, motif_id, vo_id, experiment = None):
     if experiment.experiment_type == "0": # standard LDA
         motif = Mass2Motif.objects.get(id = motif_id)
         m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte = 0.01)
-        if edge_choice == 'probability':
-            docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
-        else:
-            docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh)
+        docm2ms = get_docm2m(motif)
+        # if edge_choice == 'probability':
+        #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
+        # else:
+        #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh)
         documents = [d.document for d in docm2ms]
         data_for_json = []
         feat_total_intensity = {}
@@ -1108,7 +1095,7 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
         elif edge_choice == 'both':
             weight = min(docm2m.probability,docm2m.overlap_score)
         else:
-            weight = edge_scale_factor * docm2m.overlap_score
+            weight = edge_scale_factor * docm2m.overlap_score__gte
         G.add_edge(docm2m.mass2motif.name, docm2m.document.name, weight=weight)
     print "Third"
     return G
