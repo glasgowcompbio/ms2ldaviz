@@ -1102,7 +1102,7 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
         elif edge_choice == 'both':
             weight = docm2m.overlap_score
         else:
-            weight = edge_scale_factor * docm2m.overlap_score__gte
+            weight = edge_scale_factor * docm2m.overlap_score
         G.add_edge(docm2m.mass2motif.name, docm2m.document.name, weight=weight)
     print "Third"
     return G
