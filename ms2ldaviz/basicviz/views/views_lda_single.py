@@ -928,6 +928,7 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
 
     ## remove dependence on "colour nodes by logfc" and "discrete colouring"
     ## document colouring and size setting only depends on users' choice of ms1 analysis setting
+    do_plage_flag = True
     if ms1_analysis_id:
         analysis = Analysis.objects.filter(id=ms1_analysis_id)[0]
         all_logfc_vals = []
@@ -945,8 +946,11 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
         for plage_result in AnalysisResultPlage.objects.filter(analysis=analysis, mass2motif__in=topics.keys()):
             plage_t_value = plage_result.plage_t_value
             all_plage_vals.append(plage_t_value)
-        min_plage = np.min(all_plage_vals)
-        max_plage = np.max(all_plage_vals)
+        if all_plage_vals:
+            min_plage = np.min(all_plage_vals)
+            max_plage = np.max(all_plage_vals)
+        else:
+            do_plage_flag = False
 
 
     print "First"
@@ -971,7 +975,7 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
         #                highlight_colour=highlight_colour)
 
         ## try make graph for plage
-        if ms1_analysis_id:
+        if ms1_analysis_id and do_plage_flag:
             ## white to green
             lowcol = [255, 255, 255]
             endcol = [0, 255, 0]
