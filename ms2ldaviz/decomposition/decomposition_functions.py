@@ -578,6 +578,37 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,edge_thresh
 
     used_motifs = []
 
+    ## remove dependence on "colour nodes by logfc" and "discrete colouring"
+    ## document colouring and size setting only depends on users' choice of ms1 analysis setting
+    # This isn't used yet...
+    do_plage_flag = True
+    if ms1_analysis_id:
+        analysis = Analysis.objects.filter(id=ms1_analysis_id)[0]
+        all_logfc_vals = []
+        res = AnalysisResult.objects.filter(analysis=analysis, document__in=[docm2m.document for docm2m in used_dm])
+        for analysis_result in res:
+            foldChange = analysis_result.foldChange
+            logfc = np.log(foldChange)
+            if not np.abs(logfc) == np.inf:
+                all_logfc_vals.append(np.log(foldChange))
+        min_logfc = np.min(all_logfc_vals)
+        max_logfc = np.max(all_logfc_vals)
+
+        ## try make graph for plage
+        all_plage_vals = []
+        for plage_result in AnalysisResultPlage.objects.filter(analysis=analysis, mass2motif__in=topics.keys()):
+            plage_t_value = plage_result.plage_t_value
+            all_plage_vals.append(plage_t_value)
+        if all_plage_vals:
+            min_plage = np.min(all_plage_vals)
+            max_plage = np.max(all_plage_vals)
+        else:
+            do_plage_flag = False
+
+
+
+
+
     for motif,degree in motif_degrees.items():
         if degree >= min_degree:
             # add to the graph

@@ -162,7 +162,7 @@ def get_graph(request,decomposition_id,vo_id):
     edge_thresh = float(get_option('doc_m2m_threshold',experiment = experiment))
 
     d = make_decomposition_graph(decomposition,experiment,min_degree = min_degree,edge_thresh = edge_thresh,
-                                edge_choice = edge_choice,topic_scale_factor = 5, edge_scale_factor = 5,ms1_analysis_id = ms1_analysis_id)
+                                edge_choice = edge_choice,topic_scale_factor = 5, edge_scale_factor = 5,ms1_analysis_id = vo.ms1_analysis_id)
     return HttpResponse(json.dumps(d),content_type = 'application/json')
 
 
