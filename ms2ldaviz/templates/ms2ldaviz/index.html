@@ -11,23 +11,33 @@
     <p>
         <a href="/basicviz" class="btn btn-primary">Go to Experiments</a>
     </p>
+
+    <h4>Ms2lda.org provides a platform to:</h4>
     <p>
-        <b>Significance Statement</b>
+    <ul>
+        <li>perform unsupervised substructure discovery in fragmentation experiments</li>
+        <li>decompose fragmentation experiments into characterized substructures (Mass2Motifs) found in MS/MS spectra of reference compounds</li>
+        <li>integrate fragmentation analysis with comparative metabolomics experiments</li>
+    </ul>
     </p>
-    <blockquote>
     <p>
-        Tandem MS is a technique for compound identification in untargeted metabolomics
-        experiments. Because of a lack of reference spectra, most molecules cannot be identified, and many
-        spectra cannot be used. We present MS2LDA, an unsupervised method (inspired by text-mining) that
-        extracts common patterns of mass fragments and neutral losses—Mass2Motifs—from collections of
-        fragmentation spectra. Structurally characterized Mass2Motifs can be used to annotate molecules
-        for which no reference spectra exist and expose biochemical relationships between molecules.
-        For four beer extracts, without training data, we show that, with 30 structurally characterized
-        Mass2Motifs, we can annotate approximately three times as many molecules as with library matching.
-        These Mass2Motifs were validated in reference spectra from Global Natural Products Social Molecular
-        Networking (GNPS) and MassBank.
+        The tool currently accepts the fragmentation experiments in .mzML and .MSP formats and optionally an MS1 peak list can be added to which the MS1 peaks found in the fragmentation experiment are then matched prior to running LDA or Decomposition.
     </p>
-    </blockquote>
+
+    <h4>Ms2lda.org provdes access to the LDA and Decomposition models and includes the following visualisation features:</h4>
+    <p>
+    <ul>
+        <li>Network display of discovered substructures (Mass2Motifs) and fragmented molecules</li>
+        <li>Mass2Motif pages with spectra of fragmented molecules and characteristic fragment/loss features</li>
+        <li>Parent pages displaying all Mass2Motifs found in fragmentation spectra</li>
+    </ul>
+
+    <h4>Ms2lda.org facilitates integration with metabolomics experiments by:</h4>
+    <ul>
+        <li>Mapping fold changes onto fragmented molecules</li>
+        <li>Computing differentially expressed Mass2Motifs</li>
+        <li>Highlighting changing molecules and differential Mass2Motifs in the network display</li>
+    </ul>
     <p>
         <b>Links</b>
     </p>
@@ -36,7 +46,7 @@
         The data and codes for the paper can be found at <a href="http://dx.doi.org/10.5525/gla.researchdata.313">http://dx.doi.org/10.5525/gla.researchdata.313</a>.
     </p>
     <p>
-        An improved code for MS2LDA that allows for topics (i.e. Mass2Motifs) to be inferred across multiple document collections (i.e. fragmentation files) at once
+        An new version of MS2LDA that allows for topics (i.e. Mass2Motifs) to be inferred across multiple document collections (i.e. fragmentation files) at once
         can be found at <a href="http://github.com/sdrogers/lda">http://github.com/sdrogers/lda</a>.
         The rest of the pipeline codes to process and load fragmentation data into the pipeline can also be found there.
         The codes for this website itself, alongside various visualisation modules, can be found at <a href="http://github.com/sdrogers/ms2ldaviz">http://github.com/sdrogers/ms2ldaviz</a>
