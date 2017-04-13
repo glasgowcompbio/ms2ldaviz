@@ -302,7 +302,7 @@ function plot_graph(vo_id,random_seed) {
                     if (isConnected(d, o)) {
                         if ( (isTopicNode(d) && !isTopicNode(o)) || (!isTopicNode(d) && isTopicNode(o)) ) {
                             target = document.getElementById(o.name + '_label');
-                            target.style.display = 'inline';
+                            // target.style.display = 'inline';
                         }
                     }
                 });
