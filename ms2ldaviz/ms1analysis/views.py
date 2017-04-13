@@ -67,16 +67,31 @@ def process_ms1_analysis(new_analysis_id, params):
     # do PLAGE here
     mass2motifs = Mass2Motif.objects.filter(experiment_id=experiment_id)
     groups = group1 + group2
+    samples = [Sample.objects.filter(name=sample_name, experiment_id=experiment_id)[0] for sample_name in groups]
+    ## set up a dictionary to cache documents' intensities
+    document_intensities_dict = {}
     for mass2motif in mass2motifs:
         docm2ms = get_docm2m(mass2motif)
         # docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif)
         sub_mat = []
         for docm2m in docm2ms:
-            samples = Sample.objects.filter(name__in=groups, experiment_id = experiment_id)
-            temp_list = [obj.intensity for obj in DocSampleIntensity.objects.filter(document = docm2m.document, sample__in = samples)]
-            if len(temp_list) < len(samples):
-                continue
-            sub_mat.append(temp_list)
+            if docm2m.document in document_intensities_dict:
+                temp_list = document_intensities_dict[docm2m.document]
+                sub_mat.append(temp_list)
+            else:
+                temp_list = []
+                for sample in samples:
+                    ## missing intensity will be set to 0.0
+                    try:
+                        intensity = DocSampleIntensity.objects.filter(document=docm2m.document, sample=sample)[0].intensity
+                    except:
+                        intensity = 0.0
+                    temp_list.append(intensity)
+                ## documents with all missing values should still be omitted
+                if np.sum(temp_list) > 0.0:
+                    document_intensities_dict[docm2m.document] = temp_list
+                    sub_mat.append(temp_list)
+
         sub_mat = np.array(sub_mat)
 
         ## is it correct to set t_val to be zero here???
