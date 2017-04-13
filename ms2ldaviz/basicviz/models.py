@@ -249,7 +249,7 @@ class Mass2Motif(models.Model):
         elif self.linkmotif:
             return self.linkmotif.annotation
         else:
-            return None
+            return self.name
 
     annotation = property(get_annotation)
 
@@ -268,6 +268,7 @@ class Mass2Motif(models.Model):
             return md['massbank']
         else:
             return None
+
 
     
     massbank_dict = property(get_massbank_dict)
