@@ -11,6 +11,7 @@ from scipy.stats import ttest_ind
 from ms2ldaviz.celery_tasks import app
 from basicviz.constants import EXPERIMENT_STATUS_CODE
 from basicviz.models import Mass2Motif, DocumentMass2Motif
+from basicviz.views import get_docm2m
 
 # Create your views here.
 @login_required(login_url='/registration/login/')
@@ -67,7 +68,8 @@ def process_ms1_analysis(new_analysis_id, params):
     mass2motifs = Mass2Motif.objects.filter(experiment_id=experiment_id)
     groups = group1 + group2
     for mass2motif in mass2motifs:
-        docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif)
+        docm2ms = get_docm2m(mass2motif)
+        # docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif)
         sub_mat = []
         for docm2m in docm2ms:
             samples = Sample.objects.filter(name__in=groups, experiment_id = experiment_id)
@@ -96,7 +98,7 @@ def process_ms1_analysis(new_analysis_id, params):
                 for i in range(iterations):
                     v0_permutation = np.random.permutation(v[0])
                     v0_group1 = v0_permutation[:len(group1)]
-                    v0_group2 = v0_permutation[:len(group2)]
+                    v0_group2 = v0_permutation[len(group1):]
                     t_val = np.abs(np.mean(v0_group1) - np.mean(v0_group2))
                     t_val /= np.sqrt(np.var(v0_group1) / (1.0 * len(group1)) + np.var(v0_group2) / (1.0 * len(group2)))
                     if t_val >= true_t_val:
