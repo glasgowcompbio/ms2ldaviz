@@ -25,27 +25,29 @@ class CreateExperimentForm(forms.ModelForm):
             'ms2_file': forms.ClearableFileInput()
         }
         labels = {
-            'csv_file': 'MS1 file (CSV)',
-            'ms2_file': 'MS2 file (mzML or msp)',
-            'isolation_window': 'Isolation window when linking MS1-MS2 peaks (Da)',
-            'mz_tol': 'Mass tolerance when linking MS1-MS2 peaks (ppm)',
-            'rt_tol': 'Retention time tolerance when linking MS1-MS2 peaks (seconds)',
-            'min_ms1_rt': 'Minimum retention time of MS1 peaks to keep (seconds)',
-            'max_ms1_rt': 'Maximum retention time of MS1 peaks to keep (seconds)',
-            'min_ms1_intensity': 'Minimum intensity of MS1 peaks to keep',
-            'min_ms2_intensity': 'Minimum intensity of MS2 peaks to keep',
-            'filter_duplicates': 'Attempt to filter out duplicate MS1 peaks',
+            'name': '(Required) Experiment name. Note that this must be unique in the system',
+            'description':'(Required) Experiment description.',
+            'csv_file': 'MS1 file (CSV) [see below for formatting instructions]',
+            'ms2_file': '(Required) MS2 file (mzML or msp)',
+            'isolation_window': 'Fragmentation isolation window. Used to match fragment spectra with MS1 peaks.',
+            'mz_tol': 'Mass tolerance when linking peaks from the peaklist to those found in the mzML (ppm)',
+            'rt_tol': 'Retention time tolerance when peaks from the peaklist to those found in the mzML (seconds)',
+            'min_ms1_rt': 'Minimum retention time of MS1 peaks to store (seconds)',
+            'max_ms1_rt': 'Maximum retention time of MS1 peaks to store (seconds)',
+            'min_ms1_intensity': 'Minimum intensity of MS1 peaks to store',
+            'min_ms2_intensity': 'Minimum intensity of MS2 peaks to store',
+            'filter_duplicates': 'Attempt to filter out duplicate MS1 peaks. If Set to True, the code merges peaks within duplicate_filter_mz_tol and duplicate_filter_rt_tol.',
             'duplicate_filter_mz_tol': 'mz tol (ppm) for duplicate filtering',
             'duplicate_filter_rt_tol': 'rt tol (seconds) for duplicate filtering',
             'K': 'Number of Mass2Motifs',
             'decomposition_source': 'Use for decomposition in the future?',
-            'n_its': 'Number of iterations (for LDA)',
+            'n_its': 'Number of iterations (for LDA).',
         }
         fields = [
             'name', 'description',
             'experiment_type', 'experiment_ms2_format', 'ms2_file', 'csv_file',
             'isolation_window', 'mz_tol', 'rt_tol', 'min_ms1_rt', 'max_ms1_rt', 'min_ms1_intensity','min_ms2_intensity',
             'filter_duplicates','duplicate_filter_mz_tol','duplicate_filter_rt_tol',
-            'K', 'decomposition_source','n_its',
+            'K', 'n_its',
         ]
         exclude = ('status',)
