@@ -313,16 +313,16 @@ class FeatureMass2MotifInstance(models.Model):
 
 class VizOptions(models.Model):
     experiment = models.ForeignKey(Experiment)
-    edge_thresh = models.FloatField(null=False)
+    # edge_thresh = models.FloatField(null=False)
     min_degree = models.IntegerField(null=False)
-    just_annotated_docs = models.BooleanField(null=False)
-    colour_by_logfc = models.BooleanField(null=False)
-    discrete_colour = models.BooleanField(null=False)
-    upper_colour_perc = models.IntegerField(null=False)
-    lower_colour_perc = models.IntegerField(null=False)
-    colour_topic_by_score = models.BooleanField(null=False)
-    random_seed = models.CharField(null=False, max_length=128)
-    edge_choice = models.CharField(null=False, max_length=128)
+    # just_annotated_docs = models.BooleanField(null=False)
+    # colour_by_logfc = models.BooleanField(null=False)
+    # discrete_colour = models.BooleanField(null=False)
+    # upper_colour_perc = models.IntegerField(null=False)
+    # lower_colour_perc = models.IntegerField(null=False)
+    # colour_topic_by_score = models.BooleanField(null=False)
+    # random_seed = models.CharField(null=False, max_length=128)
+    # edge_choice = models.CharField(null=False, max_length=128)
     ms1_analysis_id = models.IntegerField(null=True)
 
 

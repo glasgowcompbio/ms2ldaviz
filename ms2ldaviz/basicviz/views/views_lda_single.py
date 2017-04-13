@@ -749,16 +749,16 @@ def start_viz(request, experiment_id):
         viz_form = VizForm(choices, request.POST)
         if viz_form.is_valid():
             min_degree = viz_form.cleaned_data['min_degree']
-            edge_thresh = viz_form.cleaned_data['edge_thresh']
-            j_a_n = viz_form.cleaned_data['just_annotated_docs']
-            colour_by_logfc = viz_form.cleaned_data['colour_by_logfc']
-            discrete_colour = viz_form.cleaned_data['discrete_colour']
-            lower_colour_perc = viz_form.cleaned_data['lower_colour_perc']
-            upper_colour_perc = viz_form.cleaned_data['upper_colour_perc']
-            colour_topic_by_score = viz_form.cleaned_data['colour_topic_by_score']
-            random_seed = viz_form.cleaned_data['random_seed']
-            edge_choice = viz_form.cleaned_data['edge_choice']
-            edge_choice = edge_choice[0].encode('ascii', 'ignore')  # should turn the unicode into ascii
+            # edge_thresh = viz_form.cleaned_data['edge_thresh']
+            # j_a_n = viz_form.cleaned_data['just_annotated_docs']
+            # colour_by_logfc = viz_form.cleaned_data['colour_by_logfc']
+            # discrete_colour = viz_form.cleaned_data['discrete_colour']
+            # lower_colour_perc = viz_form.cleaned_data['lower_colour_perc']
+            # upper_colour_perc = viz_form.cleaned_data['upper_colour_perc']
+            # colour_topic_by_score = viz_form.cleaned_data['colour_topic_by_score']
+            # random_seed = viz_form.cleaned_data['random_seed']
+            # edge_choice = viz_form.cleaned_data['edge_choice']
+            # edge_choice = edge_choice[0].encode('ascii', 'ignore')  # should turn the unicode into ascii
             ## do not colour document nodes analysis has not been chosen or use the default empty ('') analysis
             if len(viz_form.cleaned_data['ms1_analysis']) == 0 or viz_form.cleaned_data['ms1_analysis'][0] == '':
                 ms1_analysis_id = None
@@ -766,15 +766,15 @@ def start_viz(request, experiment_id):
                 ms1_analysis_id = viz_form.cleaned_data['ms1_analysis'][0]
             vo = VizOptions.objects.get_or_create(experiment=experiment,
                                                   min_degree=min_degree,
-                                                  edge_thresh=edge_thresh,
-                                                  just_annotated_docs=j_a_n,
-                                                  colour_by_logfc=colour_by_logfc,
-                                                  discrete_colour=discrete_colour,
-                                                  lower_colour_perc=lower_colour_perc,
-                                                  upper_colour_perc=upper_colour_perc,
-                                                  colour_topic_by_score=colour_topic_by_score,
-                                                  random_seed=random_seed,
-                                                  edge_choice=edge_choice,
+                                                  # edge_thresh=edge_thresh,
+                                                  # just_annotated_docs=j_a_n,
+                                                  # colour_by_logfc=colour_by_logfc,
+                                                  # discrete_colour=discrete_colour,
+                                                  # lower_colour_perc=lower_colour_perc,
+                                                  # upper_colour_perc=upper_colour_perc,
+                                                  # colour_topic_by_score=colour_topic_by_score,
+                                                  # random_seed=random_seed,
+                                                  # edge_choice=edge_choice,
                                                   ms1_analysis_id=ms1_analysis_id)[0]
             context_dict['viz_options'] = vo
 
@@ -816,14 +816,14 @@ def get_graph(request, vo_id):
 
     if experiment.experiment_type == "0":
         G = make_graph(experiment, min_degree=viz_options.min_degree,
-                       edge_thresh=viz_options.edge_thresh,
-                       just_annotated_docs=viz_options.just_annotated_docs,
-                       colour_by_logfc=viz_options.colour_by_logfc,
-                       discrete_colour=viz_options.discrete_colour,
-                       lower_colour_perc=viz_options.lower_colour_perc,
-                       upper_colour_perc=viz_options.upper_colour_perc,
-                       colour_topic_by_score=viz_options.colour_topic_by_score,
-                       edge_choice=viz_options.edge_choice,
+                       # edge_thresh=viz_options.edge_thresh,
+                       # just_annotated_docs=viz_options.just_annotated_docs,
+                       # colour_by_logfc=viz_options.colour_by_logfc,
+                       # discrete_colour=viz_options.discrete_colour,
+                       # lower_colour_perc=viz_options.lower_colour_perc,
+                       # upper_colour_perc=viz_options.upper_colour_perc,
+                       # colour_topic_by_score=viz_options.colour_topic_by_score,
+                       # edge_choice=viz_options.edge_choice,
                        ms1_analysis_id=viz_options.ms1_analysis_id)
     else:
         # G = make_decomposition_graph(experiment, min_degree=viz_options.min_degree,

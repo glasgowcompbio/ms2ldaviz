@@ -21,18 +21,18 @@ class ValidationForm(forms.Form):
 
 class VizForm(forms.Form):
     min_degree = forms.IntegerField(required=True, initial=20, label='Enter minimum topic degree for inclusion')
-    edge_thresh = forms.DecimalField(required=True, initial=0.05, label='Enter probability threshold for edge')
-    just_annotated_docs = forms.BooleanField(required=False, initial=False, label='Just show annotated documents?')
-    colour_by_logfc = forms.BooleanField(required=False, initial=False, label='colour nodes by logfc')
-    colour_topic_by_score = forms.BooleanField(required=False, initial=False,
-                                               label='colour motifs by up and down scores')
-    discrete_colour = forms.BooleanField(required=False, initial=False, label='discrete colouring')
-    lower_colour_perc = forms.IntegerField(required=True, initial=25, label='lower colour percentile')
-    upper_colour_perc = forms.IntegerField(required=True, initial=75, label='upper colour percentile')
-    random_seed = forms.CharField(required=True, initial='hello', label='seed for network visualisation')
-    edge_choice = forms.MultipleChoiceField(required=True, initial='probability',
-                                            choices=(('probability', 'probability'), ('overlap_score', 'overlap_score')),
-                                            label='filter edges by probability or overlap score')
+    # edge_thresh = forms.DecimalField(required=True, initial=0.05, label='Enter probability threshold for edge')
+    # just_annotated_docs = forms.BooleanField(required=False, initial=False, label='Just show annotated documents?')
+    # colour_by_logfc = forms.BooleanField(required=False, initial=False, label='colour nodes by logfc')
+    # colour_topic_by_score = forms.BooleanField(required=False, initial=False,
+    #                                            label='colour motifs by up and down scores')
+    # discrete_colour = forms.BooleanField(required=False, initial=False, label='discrete colouring')
+    # lower_colour_perc = forms.IntegerField(required=True, initial=25, label='lower colour percentile')
+    # upper_colour_perc = forms.IntegerField(required=True, initial=75, label='upper colour percentile')
+    # random_seed = forms.CharField(required=True, initial='hello', label='seed for network visualisation')
+    # edge_choice = forms.MultipleChoiceField(required=True, initial='probability',
+    #                                         choices=(('probability', 'probability'), ('overlap_score', 'overlap_score')),
+    #                                         label='filter edges by probability or overlap score')
     ms1_analysis = forms.MultipleChoiceField(choices=(),
                                                   label='Pick one MS1 analysis',
                                                   required=False)
