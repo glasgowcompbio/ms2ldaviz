@@ -42,6 +42,7 @@ class CreateExperimentForm(forms.ModelForm):
             'K': 'Number of Mass2Motifs',
             'decomposition_source': 'Use for decomposition in the future?',
             'n_its': 'Number of iterations (for LDA).',
+            'experiment_type': '(Required) LDA, or decomposition,'
         }
         fields = [
             'name', 'description',
