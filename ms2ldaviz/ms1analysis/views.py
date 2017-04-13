@@ -5,12 +5,12 @@ from django.shortcuts import render
 
 from basicviz.models import UserExperiment,JobLog, Document, Experiment
 from .forms import AnalysisForm
-from .models import Sample, DocSampleIntensity, Analysis, AnalysisResult
+from .models import Sample, DocSampleIntensity, Analysis, AnalysisResult, AnalysisResultPlage
 import numpy as np
 from scipy.stats import ttest_ind
 from ms2ldaviz.celery_tasks import app
 from basicviz.constants import EXPERIMENT_STATUS_CODE
-
+from basicviz.models import Mass2Motif, DocumentMass2Motif
 
 # Create your views here.
 @login_required(login_url='/registration/login/')
@@ -63,11 +63,54 @@ def process_ms1_analysis(new_analysis_id, params):
 
     documents = Document.objects.filter(experiment_id=experiment_id)
 
+    # do PLAGE here
+    mass2motifs = Mass2Motif.objects.filter(experiment_id=experiment_id)
+    groups = group1 + group2
+    for mass2motif in mass2motifs:
+        docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif)
+        sub_mat = []
+        for docm2m in docm2ms:
+            samples = Sample.objects.filter(name__in=groups, experiment_id = experiment_id)
+            temp_list = [obj.intensity for obj in DocSampleIntensity.objects.filter(document = docm2m.document, sample__in = samples)]
+            if len(temp_list) < len(samples):
+                continue
+            sub_mat.append(temp_list)
+        sub_mat = np.array(sub_mat)
+
+        ## is it correct to set t_val to be zero here???
+        if len(sub_mat) == 0:
+            true_t_val = 0
+            plage_p_val = None
+        else:
+            u, s, v = np.linalg.svd(sub_mat)
+            v0_group1 = v[0][:len(group1)]
+            v0_group2 = v[0][len(group1):]
+            t_val = np.abs(np.mean(v0_group1) - np.mean(v0_group2))
+            t_val /= np.sqrt(np.var(v0_group1)/(1.0*len(group1)) + np.var(v0_group2)/(1.0*len(group2)))
+            true_t_val = t_val
+            if true_t_val == 0:
+                plage_p_val = None
+            else:
+                count = 0
+                iterations = 10000
+                for i in range(iterations):
+                    v0_permutation = np.random.permutation(v[0])
+                    v0_group1 = v0_permutation[:len(group1)]
+                    v0_group2 = v0_permutation[:len(group2)]
+                    t_val = np.abs(np.mean(v0_group1) - np.mean(v0_group2))
+                    t_val /= np.sqrt(np.var(v0_group1) / (1.0 * len(group1)) + np.var(v0_group2) / (1.0 * len(group2)))
+                    if t_val >= true_t_val:
+                        count += 1
+                plage_p_val = count * 1.0 / iterations
+        AnalysisResultPlage.objects.get_or_create(analysis=new_analysis, mass2motif=mass2motif,plage_t_value=true_t_val, plage_p_value=plage_p_val)
+
+    ## do fold change and pValue here
     for document in documents:
         group1_intensities = get_group_intensities(group1_samples, document, use_logarithm)
         group2_intensities = get_group_intensities(group2_samples, document, use_logarithm)
         if not group1_intensities or not group2_intensities:
             fold = 1
+            pValue = None
         else:
             ## intensities between 0 and 1 are very rare
             ## if this happens, it will influence other documents' colouring

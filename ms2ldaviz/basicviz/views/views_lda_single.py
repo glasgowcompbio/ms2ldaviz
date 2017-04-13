@@ -22,7 +22,7 @@ from options.views import get_option
 from decomposition.models import DocumentGlobalMass2Motif,GlobalMotif,DocumentGlobalFeature,FeatureMap
 from decomposition.decomposition_functions import get_parents_decomposition,get_parent_for_plot_decomp,get_decomp_doc_context_dict
 from basicviz.views import index as basicviz_index
-from ms1analysis.models import Analysis, AnalysisResult
+from ms1analysis.models import Analysis, AnalysisResult, AnalysisResultPlage
 from basicviz.constants import EXPERIMENT_STATUS_CODE
 
 
@@ -898,8 +898,9 @@ def get_graph(request, vo_id):
 def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                topic_scale_factor=5, edge_scale_factor=5, just_annotated_docs=False,
                colour_by_logfc=False, discrete_colour=False, lower_colour_perc=10, upper_colour_perc=90,
-               colour_topic_by_score=False, edge_choice='probability', ms1_analysis_id = None, doc_max_size = 200):
+               colour_topic_by_score=False, edge_choice='probability', ms1_analysis_id = None, doc_max_size = 200, motif_max_size = 1000):
     mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
+    documents = Document.objects.filter(experiment=experiment)
     # Find the degrees
     topics = {}
     for mass2motif in mass2motifs:
@@ -908,7 +909,6 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
             docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=edge_thresh)
         else:
             docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, overlap_score__gte=edge_thresh)
-
 
         for d in docm2ms:
             if just_annotated_docs and d.document.annotation:
@@ -921,6 +921,36 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
             to_remove.append(topic)
     for topic in to_remove:
         del topics[topic]
+
+    if edge_choice == 'probability':
+        docm2mset = DocumentMass2Motif.objects.filter(document__in=documents, mass2motif__in=topics,
+                                                      probability__gte=edge_thresh)
+    else:
+        docm2mset = DocumentMass2Motif.objects.filter(document__in=documents, mass2motif__in=topics,
+                                                      overlap_score__gte=edge_thresh)
+
+    ## remove dependence on "colour nodes by logfc" and "discrete colouring"
+    ## document colouring and size setting only depends on users' choice of ms1 analysis setting
+    if ms1_analysis_id:
+        analysis = Analysis.objects.filter(id=ms1_analysis_id)[0]
+        all_logfc_vals = []
+        res = AnalysisResult.objects.filter(analysis=analysis, document__in=[docm2m.document for docm2m in docm2mset])
+        for analysis_result in res:
+            foldChange = analysis_result.foldChange
+            logfc = np.log(foldChange)
+            if not np.abs(logfc) == np.inf:
+                all_logfc_vals.append(np.log(foldChange))
+        min_logfc = np.min(all_logfc_vals)
+        max_logfc = np.max(all_logfc_vals)
+
+        ## try make graph for plage
+        all_plage_vals = []
+        for plage_result in AnalysisResultPlage.objects.filter(analysis=analysis, mass2motif__in=topics.keys()):
+            plage_t_value = plage_result.plage_t_value
+            all_plage_vals.append(plage_t_value)
+        min_plage = np.min(all_plage_vals)
+        max_plage = np.max(all_plage_vals)
+
 
     print "First"
     # Add the topics to the graph
@@ -943,6 +973,32 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                        score=1, node_id=topic.id, is_topic=True,
                        highlight_colour=highlight_colour)
 
+        ## try make graph for plage
+        elif ms1_analysis_id:
+            ## white to green
+            lowcol = [255, 255, 255]
+            endcol = [0, 255, 0]
+            plage_result = AnalysisResultPlage.objects.filter(analysis=analysis, mass2motif=topic)[0]
+            plage_t_value = plage_result.plage_t_value
+            plage_p_value = plage_result.plage_p_value
+            pos = (plage_t_value - min_plage) / (max_plage - min_plage)
+            r = lowcol[0] + int(pos * (endcol[0] - lowcol[0]))
+            g = lowcol[1] + int(pos * (endcol[1] - lowcol[1]))
+            b = lowcol[2] + int(pos * (endcol[2] - lowcol[2]))
+            col = "#{}{}{}".format("{:02x}".format(r), "{:02x}".format(g), "{:02x}".format(b))
+            if plage_p_value == None:
+                size = 10
+            elif plage_p_value == 0:
+                size = motif_max_size
+            else:
+                size = min(10 - np.log(plage_p_value) * 200, motif_max_size)
+            G.add_node(topic.name, group=2, name=topic.name+", "+str(plage_t_value) + ", "+str(plage_p_value),
+                       # size=topic_scale_factor * topics[topic],
+                       size= size,
+                       special=True, in_degree=topics[topic],
+                       highlight_colour=col,
+                       score=1, node_id=topic.id, is_topic=True)
+
         else:
             if topic.short_annotation:
             # if 'annotation' in metadata:
@@ -956,7 +1012,7 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
                            special=False, in_degree=topics[topic],
                            score=1, node_id=topic.id, is_topic=True)
 
-    documents = Document.objects.filter(experiment=experiment)
+
 
     if just_annotated_docs:
         new_documents = []
@@ -970,29 +1026,8 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
 
     print "Second"
 
-    if edge_choice == 'probability':
-        docm2mset = DocumentMass2Motif.objects.filter(document__in=documents, mass2motif__in=topics,
-                                                      probability__gte=edge_thresh)
-    else:
-        docm2mset = DocumentMass2Motif.objects.filter(document__in=documents, mass2motif__in=topics,
-                                                      overlap_score__gte=edge_thresh)
 
-    ## remove dependence on "colour nodes by logfc" and "discrete colouring"
-    ## document colouring and size setting only depends on users' choice of ms1 analysis setting
-    if ms1_analysis_id:
-        analysis = Analysis.objects.filter(id=ms1_analysis_id)[0]
-        all_logfc_vals = []
-        for analysis_result in AnalysisResult.objects.filter(analysis=analysis):
-            foldChange = analysis_result.foldChange
-            logfc = np.log(foldChange)
-            if not np.abs(logfc) == np.inf:
-                all_logfc_vals.append(np.log(foldChange))
 
-        ## give a default min_logfc of -3
-        ## avoid the case that one logfc is extremely small, which will give all other negative logfc documents white colour
-        # min_logfc = max(-3, np.min(all_logfc_vals))
-        min_logfc = np.min(all_logfc_vals)
-        max_logfc = np.max(all_logfc_vals)
 
     for docm2m in docm2mset:
         # if docm2m.mass2motif in topics:
