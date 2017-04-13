@@ -895,26 +895,28 @@ def get_graph(request, vo_id):
 #     return G
 
 
-def make_graph(experiment, edge_thresh=0.05, min_degree=5,
-               topic_scale_factor=5, edge_scale_factor=5, just_annotated_docs=False,
-               colour_by_logfc=False, discrete_colour=False, lower_colour_perc=10, upper_colour_perc=90,
-               colour_topic_by_score=False, edge_choice='probability', ms1_analysis_id = None, doc_max_size = 200, motif_max_size = 1000):
+# def make_graph(experiment, edge_thresh=0.05, min_degree=5,
+#                topic_scale_factor=5, edge_scale_factor=5, just_annotated_docs=False,
+#                colour_by_logfc=False, discrete_colour=False, lower_colour_perc=10, upper_colour_perc=90,
+#                colour_topic_by_score=False, edge_choice='probability', ms1_analysis_id = None, doc_max_size = 200, motif_max_size = 1000):
+def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=5,
+                ms1_analysis_id = None, doc_max_size = 200, motif_max_size = 1000):
+
     mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
     documents = Document.objects.filter(experiment=experiment)
     # Find the degrees
     topics = {}
+    docm2m_dict = {}
     for mass2motif in mass2motifs:
         topics[mass2motif] = 0
-        if edge_choice == 'probability':
-            docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=edge_thresh)
-        else:
-            docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, overlap_score__gte=edge_thresh)
-
+        docm2ms = get_docm2m(mass2motif)
+        docm2m_dict[mass2motif] = list(docm2ms)
+        # if edge_choice == 'probability':
+        #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=edge_thresh)
+        # else:
+        #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, overlap_score__gte=edge_thresh)
         for d in docm2ms:
-            if just_annotated_docs and d.document.annotation:
-                topics[mass2motif] += 1
-            elif (not just_annotated_docs):
-                topics[mass2motif] += 1
+            topics[mass2motif] += 1
     to_remove = []
     for topic in topics:
         if topics[topic] < min_degree:
@@ -922,12 +924,20 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
     for topic in to_remove:
         del topics[topic]
 
-    if edge_choice == 'probability':
-        docm2mset = DocumentMass2Motif.objects.filter(document__in=documents, mass2motif__in=topics,
-                                                      probability__gte=edge_thresh)
-    else:
-        docm2mset = DocumentMass2Motif.objects.filter(document__in=documents, mass2motif__in=topics,
-                                                      overlap_score__gte=edge_thresh)
+
+    docm2mset = []
+    for topic in topics:
+        docm2mset += docm2m_dict[topic]
+
+    # if edge_choice == 'probability':
+    #     docm2mset = DocumentMass2Motif.objects.filter(document__in=documents, mass2motif__in=topics,
+    #                                                   probability__gte=edge_thresh)
+    # else:
+    #     docm2mset = DocumentMass2Motif.objects.filter(document__in=documents, mass2motif__in=topics,
+    #                                                   overlap_score__gte=edge_thresh)
+
+
+
 
     ## remove dependence on "colour nodes by logfc" and "discrete colouring"
     ## document colouring and size setting only depends on users' choice of ms1 analysis setting
@@ -957,24 +967,24 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
     G = nx.Graph()
     for topic in topics:
         metadata = jsonpickle.decode(topic.metadata)
-        if colour_topic_by_score:
-            upscore = metadata.get('upscore', 1.0)
-            downscore = metadata.get('downscore', 1.0)
-            if upscore < 0.05:
-                highlight_colour = '#0000FF'
-            elif downscore < 0.05:
-                highlight_colour = '#FF0000'
-            else:
-                highlight_colour = '#AAAAAA'
-            name = metadata.get('annotation', topic.name)
-            G.add_node(topic.name, group=2, name=name,
-                       size=topic_scale_factor * topics[topic],
-                       special=True, in_degree=topics[topic],
-                       score=1, node_id=topic.id, is_topic=True,
-                       highlight_colour=highlight_colour)
+        # if colour_topic_by_score:
+        #     upscore = metadata.get('upscore', 1.0)
+        #     downscore = metadata.get('downscore', 1.0)
+        #     if upscore < 0.05:
+        #         highlight_colour = '#0000FF'
+        #     elif downscore < 0.05:
+        #         highlight_colour = '#FF0000'
+        #     else:
+        #         highlight_colour = '#AAAAAA'
+        #     name = metadata.get('annotation', topic.name)
+        #     G.add_node(topic.name, group=2, name=name,
+        #                size=topic_scale_factor * topics[topic],
+        #                special=True, in_degree=topics[topic],
+        #                score=1, node_id=topic.id, is_topic=True,
+        #                highlight_colour=highlight_colour)
 
         ## try make graph for plage
-        elif ms1_analysis_id:
+        if ms1_analysis_id:
             ## white to green
             lowcol = [255, 255, 255]
             endcol = [0, 255, 0]
@@ -1014,19 +1024,19 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
 
 
 
-    if just_annotated_docs:
-        new_documents = []
-        for document in documents:
-            if document.annotation:
-                new_documents.append(document)
+    # if just_annotated_docs:
+    #     new_documents = []
+    #     for document in documents:
+    #         if document.annotation:
+    #             new_documents.append(document)
 
-        documents = new_documents
+    #     documents = new_documents
 
     doc_nodes = []
 
     print "Second"
 
-
+    edge_choice = get_option('default_doc_m2m_score',experiment)
 
 
     for docm2m in docm2mset:
@@ -1092,8 +1102,11 @@ def make_graph(experiment, edge_thresh=0.05, min_degree=5,
 
             doc_nodes.append(docm2m.document)
 
+
         if edge_choice == 'probability':
             weight = edge_scale_factor * docm2m.probability
+        elif edge_choice == 'both':
+            weight = min(docm2m.probability,docm2m.overlap_score)
         else:
             weight = edge_scale_factor * docm2m.overlap_score
         G.add_edge(docm2m.mass2motif.name, docm2m.document.name, weight=weight)
