@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
-from basicviz.models import Document, Experiment
+from basicviz.models import Document, Experiment, Mass2Motif
 from basicviz.constants import EXPERIMENT_STATUS_CODE
 
 class Sample(models.Model):
@@ -30,3 +30,9 @@ class AnalysisResult(models.Model):
     document = models.ForeignKey(Document)
     pValue = models.FloatField(null=True)
     foldChange = models.FloatField(null=True)
+
+class AnalysisResultPlage(models.Model):
+    analysis = models.ForeignKey(Analysis)
+    mass2motif = models.ForeignKey(Mass2Motif)
+    plage_t_value = models.FloatField(null=True)
+    plage_p_value = models.FloatField(null=True)
