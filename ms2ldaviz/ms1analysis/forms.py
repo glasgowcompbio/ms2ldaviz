@@ -17,7 +17,7 @@ class AnalysisForm(forms.ModelForm):
                                                           required=True)
         self.fields['group1'].required = True
         self.fields['group2'].required = True
-        self.fields['use_logarithm'].required = True
+        # self.fields['use_logarithm'].required = True
 
     class Meta:
         model = Analysis
@@ -28,5 +28,5 @@ class AnalysisForm(forms.ModelForm):
         labels = {
         }
         fields = [
-            'name', 'description', 'group1', 'group2', 'use_logarithm'
+            'name', 'description', 'group1', 'group2'
         ]

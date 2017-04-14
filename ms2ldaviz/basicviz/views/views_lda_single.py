@@ -994,8 +994,10 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
             else:
                 size = min(10 - np.log(plage_p_value) * 200, motif_max_size)
             na = topic.short_annotation
-            if not na.startswith('motif'):
+            if na:
                 na += ' (' + topic.name + ')'
+            else:
+                na = topic.name
             G.add_node(topic.name, group=2, name=na+", "+str(plage_t_value) + ", "+str(plage_p_value),
                        # size=topic_scale_factor * topics[topic],
                        size= size,

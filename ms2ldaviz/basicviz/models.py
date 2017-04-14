@@ -249,7 +249,7 @@ class Mass2Motif(models.Model):
         elif self.linkmotif:
             return self.linkmotif.annotation
         else:
-            return self.name
+            return None
 
     annotation = property(get_annotation)
 
