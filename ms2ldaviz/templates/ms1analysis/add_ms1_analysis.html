@@ -5,6 +5,38 @@
 {% block head_block %}
 {% endblock %}
 
+{%  block js_block %}
+    <script type='text/javascript' src='{% static "js/pair-select.min.js" %}'></script>
+    <script type='text/javascript' src='{% static "js/ms1-analysis.js" %}'></script>
+    <script type="text/javascript">
+        function ValidateAndSelectAll()
+        {
+            selectBox1 = document.getElementById("id_group1");
+
+            for (var i = 0; i < selectBox1.options.length; i++)
+            {
+                 selectBox1.options[i].selected = true;
+            }
+            selectBox2 = document.getElementById("id_group2");
+
+            for (var i = 0; i < selectBox2.options.length; i++)
+            {
+                 selectBox2.options[i].selected = true;
+            }
+
+            if (selectBox1.options.length == 0 || selectBox2.options.length == 0){
+                var html_to_insert = "*Group1 and group2 should not be empty*";
+                document.getElementById("errors").innerHTML = html_to_insert;
+                return false;
+            }
+            else{
+                document.getElementById("errors").innerHTML = "";
+            }
+            return true;
+        }
+    </script>
+{% endblock %}
+
 {% block body_block %}
 
 	<h3>Add a new MS1 differential expression analysis</h3>
@@ -14,32 +46,50 @@
     <p>
         You can choose sample names for group1 and group2 for differential expression analysis.
     </p>
-
+    
     <form id="analysis_form" method="post" action="/ms1analysis/create_ms1analysis/{{ experiment.id }}/" enctype="multipart/form-data">
         {% csrf_token %}
         {% for hidden in analysis_form.hidden_fields %}
             {{ hidden }}
         {% endfor %}
 
-        {% for field in analysis_form.visible_fields %}
-            <p>{{ field.errors }}</p>
-            <p>{{field.label}} {% if field.field.required %} * {% endif %} </p>
-            <p>{{ field }}</p>
-        {% endfor %}
-        <input type="submit" name="submit" value="Submit Your Analysis" class="btn btn-primary" />
+        <p>{{ analysis_form.name.errors }}</p>
+        <p>{{analysis_form.name.label}} {% if analysis_form.name.field.required %} * {% endif %} </p>
+        <p>{{ analysis_form.name }}</p>
+
+        <p>{{ analysis_form.description.errors }}</p>
+        <p>{{analysis_form.description.label}} {% if analysis_form.description.field.required %} * {% endif %} </p>
+        <p>{{ analysis_form.description }}</p>
+
+        <p>Choose sample names for Group1(LEFT) and Group2(RIGHT) *</p>
+
+        <select name="group1" id="id_group1" multiple  size="20" style="min-width: 200px;float:left;">
+        </select>
+
+        <div style="float:left;margin:10px;margin-top: 170px">
+            <button type="button" id="btnGroup1Add"><</button><br>
+            <button type="button" id="btnGroup1Remove">></button>
+        </div>
+
+        <select id="MasterSelectBox" multiple size="20" style="min-width: 200px;float:left;">
+            {% for choice in sample_choices %}
+                <option value="{{ choice }}">{{ choice }}</option>
+            {% endfor %}
+        </select>
+
+        <div style="float:left;margin:10px;margin-top: 170px">
+            <button type="button" id="btnGroup2Add">></button><br>
+            <button type="button" id="btnGroup2Remove"><</button>
+        </div>
+
+        <select name="group2" id="id_group2" multiple  size="20" style="min-width: 200px;float:left;">
+        </select>
+
+        <div style="clear:both;margin-bottom:20px"></div>
+
+        <input id="submitbtn" type="submit" name="submit" value="Submit Your Analysis" class="btn btn-primary" onclick="return ValidateAndSelectAll();" />
+        <label id ="errors" style="display: inline-block;color: red"></label>
     </form>
 
-{#    <form id="experiment_form" method="post" action="/uploads/create_experiment/" enctype="multipart/form-data">#}
-{#        {% csrf_token %}#}
-{#        {% for hidden in experiment_form.hidden_fields %}#}
-{#            {{ hidden }}#}
-{#        {% endfor %}#}
-{##}
-{#        {% for field in experiment_form.visible_fields %}#}
-{#            <p>{{ field.errors }}</p>#}
-{#            <p>  {{field.label}} {% if field.field.required %} * {% endif %} {{ field }}</p>#}
-{#        {% endfor %}#}
-{#        <input type="submit" name="submit" value="Submit Your Experiment" class="btn btn-primary" />#}
-{#    </form>#}
 
 {% endblock %}
