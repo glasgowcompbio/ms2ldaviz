@@ -11,7 +11,6 @@ urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),  # grappelli URLS
     url(r'^admin/', include(admin.site.urls)),
     url(r'^basicviz/', include('basicviz.urls')),
-    url(r'^annotation/', include('annotation.urls')),
     url(r'^massbank/', include('massbank.urls')),
     url(r'^options/', include('options.urls')),
     url(r'^registration/', include('registration.urls')),

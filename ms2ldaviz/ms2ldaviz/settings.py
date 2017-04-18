@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'basicviz',
-    'annotation',
     'massbank',
     'options',
     'registration',

@@ -1,4 +1,0 @@
-ANNOTATE_DATABASES = {
-    'MASSBANK': 185,
-    'GNPS': 188
-}
