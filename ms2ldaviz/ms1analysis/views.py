@@ -20,22 +20,28 @@ def create_ms1analysis(request, experiment_id):
     context_dict = {}
     context_dict['experiment'] = experiment
     samples = Sample.objects.filter(experiment_id=experiment_id)
-    sample_choices = [(sample.name, sample.name) for sample in samples]
-    sample_choices = sorted(sample_choices, key = lambda tup: tup[0])
+    sample_choices = [sample.name for sample in samples]
+    sample_choices = sorted(sample_choices)
 
     if request.method == 'POST':
-        analysis_form = AnalysisForm(sample_choices, request.POST)
-        if analysis_form.is_valid():
-            new_analysis = analysis_form.save(commit=False)
+        analysis_form = AnalysisForm(request.POST)
+        group1_choices = request.POST.getlist('group1')
+        group2_choices = request.POST.getlist('group2')
+
+        if analysis_form.is_valid() and group1_choices and group2_choices:
             pending_code, pending_msg = EXPERIMENT_STATUS_CODE[0]
-            new_analysis.status = pending_code
-            new_analysis.experiment = experiment
-            new_analysis.save()
+            new_analysis = Analysis.objects.get_or_create(name=analysis_form.cleaned_data['name'],
+                                                          description=analysis_form.cleaned_data['description'],
+                                                          experiment=experiment,
+                                                          group1=group1_choices,
+                                                          group2=group2_choices,
+                                                          status=pending_code
+                                                          )[0]
 
             context_dict['analysis'] = new_analysis
             params = {
-                'group1': analysis_form.cleaned_data['group1'],
-                'group2': analysis_form.cleaned_data['group2'],
+                'group1': group1_choices,
+                'group2': group2_choices,
                 'experiment_id': experiment_id
             }
             process_ms1_analysis.delay(new_analysis.id, params)
@@ -44,10 +50,12 @@ def create_ms1analysis(request, experiment_id):
 
         else:
             context_dict['analysis_form'] = analysis_form
+            context_dict['sample_choices'] = sample_choices
 
     else:
-        analysis_form = AnalysisForm(sample_choices)
+        analysis_form = AnalysisForm()
         context_dict['analysis_form'] = analysis_form
+        context_dict['sample_choices'] = sample_choices
 
     return render(request, 'ms1analysis/add_ms1_analysis.html', context_dict)
 
