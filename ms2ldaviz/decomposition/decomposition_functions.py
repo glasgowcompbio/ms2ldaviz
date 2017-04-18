@@ -2,6 +2,7 @@ import numpy as np
 import bisect
 import jsonpickle
 from scipy.special import psi as psi
+from scipy.special import polygamma as pg
 from scipy.sparse import coo_matrix
 import networkx as nx
 from networkx.readwrite import json_graph
@@ -189,6 +190,8 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
         motif_list.append(motif)
 
     K = len(motif_list)
+
+    g_term = np.zeros(K)
     print "Performing e-steps"
     total_docs = len(documents)
     for i in range(total_docs):
@@ -230,7 +233,7 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
                         temp_gamma += phi_matrix[word]*intensity
 
             gamma = temp_gamma.copy()
-
+        g_term += psi(gamma) - psi(gamma.sum())
         
         
         # normalise the gamma to get probabilities
@@ -258,6 +261,8 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
                         dfm = DocumentFeatureMass2Motif.objects.get_or_create(docm2m = dgm2m,feature = word)[0]
                         dfm.probability = phi_matrix[word][motif_pos]
                         dfm.save()
+    M = total_docs
+    alpha = alpha_nr(g_term,M)
 
 
 def compute_overlap(phi_matrix,motif_pos,beta_row,word_index):
@@ -694,6 +699,8 @@ def api_decomposition(doc_dict,motifset):
 
     results = {}
 
+    g_term = np.zeros(K)
+
     for i,doc in enumerate(doc_dict.keys()):
         results[doc] = []
         document = doc_dict[doc]
@@ -729,7 +736,7 @@ def api_decomposition(doc_dict,motifset):
 
             gamma = temp_gamma.copy()
 
-        
+        g_term += psi(gamma) - psi(gamma.sum())        
         
         # normalise the gamma to get probabilities
         theta = gamma/gamma.sum()
@@ -746,7 +753,9 @@ def api_decomposition(doc_dict,motifset):
             results[doc].append((motif.name,motif.originalmotif.name,theta,overlap_score,motif.originalmotif.annotation))
             cum_prob += theta
             pos += 1
-
+    # Do the alpha optimisation
+    M = len(doc_dict)
+    alpha = alpha_nr(g_term,M)
     return results
 
 
@@ -789,3 +798,41 @@ def make_documents(spectra,featureset):
 
 
     return doc_dict
+
+
+def alpha_nr(g_term,M,maxit=100,init_alpha=[]):
+
+
+    SMALL_NUMBER = 1e-100
+
+    if len(init_alpha) == 0:
+        init_alpha = np.ones_like(g_term)
+    old_alpha = init_alpha.copy()
+    K = len(g_term)
+    
+    # try:
+    alpha = init_alpha.copy()
+    alphap = init_alpha.copy()
+    # g_term = (psi(self.gamma_matrix) - psi(self.gamma_matrix.sum(axis=1))[:,None]).sum(axis=0)
+    for it in range(maxit):
+        grad = M *(psi(alpha.sum()) - psi(alpha)) + g_term
+        H = -M*np.diag(pg(1,alpha)) + M*pg(1,alpha.sum())
+
+        z = M*pg(1,alpha.sum())
+        h = -M*pg(1,alpha)
+        c = ((grad/h).sum())/((1.0/z) + (1.0/h).sum())
+        alpha_change = (grad - c)/h
+
+        alpha_new = alpha - alpha_change
+
+        pos = np.where(alpha_new <= SMALL_NUMBER)[0]
+        alpha_new[pos] = SMALL_NUMBER
+
+        diff = np.sum(np.abs(alpha-alpha_new))
+        print "Alpha: {}, it: {}".format(diff,it)
+        alpha = alpha_new
+        if diff < 1e-6 and it > 1:
+            return alpha
+    # except:
+    #     alpha = old_alpha
+    return alpha
