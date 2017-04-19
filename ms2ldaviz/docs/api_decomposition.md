@@ -21,21 +21,22 @@ For example in python, using the requests package
 ~~~~{.python}
 
 import requests
+import json
 
 spectrum = ('spec_name',188.0818,[(53.0384,331117.7),
 (57.0447,798106.4),
 (65.0386,633125.7),
 (77.0385,5916789.799999999),
 (81.0334,27067.0),
-(85.0396,740633.6)]
+(85.0396,740633.6)])
 
 spectra = [spectrum] # or add more to the list
 
-args = {‘spectra’: json.dumps(spectra), ‘motifset’: ‘massbank_motifset’}
+args = {'spectra': json.dumps(spectra), 'motifset': 'massbank_motifset'}
 
-url = ‘http://ms2lda.org/decomposition/api/batch_decompose/’
+url = 'http://ms2lda.org/decomposition/api/batch_decompose/'
 
-r = request.post(url,args)
+r = requests.post(url,args)
 
 ~~~~
 
