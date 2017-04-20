@@ -7,14 +7,15 @@ from options.forms import SystemOptionsForm
 
 def get_option(key, experiment=None):
     # Retrieves an option, looking for an experiment specific one if it exists
+    print "Looking for option ",key
     if experiment:
         options = SystemOptions.objects.filter(key=key, experiment=experiment)
         if len(options) == 0:
-            options = SystemOptions.objects.filter(key=key)
+            options = SystemOptions.objects.filter(key=key, experiment__isnull = True)
     else:
-        options = SystemOptions.objects.filter(key=key)
+        options = SystemOptions.objects.filter(key=key, experiment__isnull = True)
     if len(options) > 0:
-        return options[0].value
+        return options[0].value 
     else:
         return None
 
