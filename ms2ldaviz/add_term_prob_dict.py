@@ -61,6 +61,6 @@ if __name__ == '__main__':
 			if term_type == 'sub':
 				SubstituentInstance.objects.create(motif = motif,subterm = term,probability = probs[i])
 			else:
-				TaxaInstance.objects.create(motif = motif,taxaterm = term,probability = probs[i])
+				TaxaInstance.objects.create(motif = motif,taxterm = term,probability = probs[i])
 
 
