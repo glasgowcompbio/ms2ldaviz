@@ -285,9 +285,11 @@ def view_parents(request, motif_id):
     context_dict['total_prob'] = total_prob
 
     # Get the taxa or substituent terms (if there are any)
-    taxa_terms = motif.taxainstance_set.all().order_by('-probability')
-    substituent_terms = motif.substituentinstance_set.all().order_by('-probability')
+    # taxa_terms = motif.taxainstance_set.all().order_by('-probability')
+    # substituent_terms = motif.substituentinstance_set.all().order_by('-probability')
 
+    taxa_terms = []
+    substituent_terms = []
     if len(taxa_terms) > 0:
         context_dict['taxa_terms'] = taxa_terms
     if len(substituent_terms) > 0:
