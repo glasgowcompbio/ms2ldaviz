@@ -28,10 +28,10 @@ if __name__ == '__main__':
 
 	if term_type == 'sub':
 		current_values = SubstituentInstance.objects.filter(motif__experiment = experiment)
-		all_terms = SubstituentTerms.objects.all()
+		all_terms = SubstituentTerm.objects.all()
 	else:
 		current_values = TaxaInstance.objects.filter(motif__experiment = experiment)
-		all_terms = TaxaTerms.objects.all()
+		all_terms = TaxaTerm.objects.all()
 
 	for c in current_values:
 		c.delete()
@@ -43,9 +43,9 @@ if __name__ == '__main__':
 	for term_name in term_list:
 		if not tern_name in term_dict:
 			if term_type == 'sub':
-				new_term = SubstituentTerms.objects.create(name = term_name)
+				new_term = SubstituentTerm.objects.create(name = term_name)
 			else:
-				new_term = TaxaTerms.objects.create(name = term_name)
+				new_term = TaxaTerm.objects.create(name = term_name)
 			term_dict[term_name] = new_term
 
 	
