@@ -41,7 +41,7 @@ if __name__ == '__main__':
 		term_dict[term.name] = term
 
 	for term_name in term_list:
-		if not tern_name in term_dict:
+		if not term_name in term_dict:
 			if term_type == 'sub':
 				new_term = SubstituentTerm.objects.create(name = term_name)
 			else:
