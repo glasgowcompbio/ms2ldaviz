@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block title %}MS2LDA Annotation Engine {% endblock %}
+
+{% block body_block %}
+
+<h2>Annotate your spectra</h2>
+
+<p>Choose an experiment to annotate against:</p>
+
+<ul>
+    {% for experiment in experiments %}
+        <li><a href="/annotation/start_annotation/{{experiment.id}}/">{{experiment.name}}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}
