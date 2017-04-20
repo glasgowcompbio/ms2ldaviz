@@ -10,6 +10,7 @@ from django.shortcuts import render,redirect
 from networkx.readwrite import json_graph
 from sklearn.decomposition import PCA
 
+from annotation.models import TaxaInstance,SubstituentInstance
 from basicviz.forms import DocFilterForm, ValidationForm, VizForm, \
     TopicScoringForm, MatchMotifForm
 from massbank.forms import Mass2MotifMetadataForm
@@ -1523,14 +1524,11 @@ def rate_by_conserved_motif_rating(request, experiment_id):
 def high_classyfire(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
     motifs = Mass2Motif.objects.filter(experiment = experiment)
-
-    # TaxaInstance and SubstituentInstance were in the annotation app, which got deleted
-    # taxa_instances = TaxaInstance.objects.filter(motif__in = motifs,probability__gte = 0.2)
-    # substituent_instances = SubstituentInstance.objects.filter(motif__in = motifs,probability__gte = 0.2)
-
+    taxa_instances = TaxaInstance.objects.filter(motif__in = motifs,probability__gte = 0.2)
+    substituent_instances = SubstituentInstance.objects.filter(motif__in = motifs,probability__gte = 0.2)
     context_dict = {}
-    # context_dict['taxa_instances'] = taxa_instances
-    # context_dict['substituent_instances'] = substituent_instances
+    context_dict['taxa_instances'] = taxa_instances
+    context_dict['substituent_instances'] = substituent_instances
     context_dict['experiment'] = experiment
     return render(request,'basicviz/high_classyfire.html',context_dict)
 
