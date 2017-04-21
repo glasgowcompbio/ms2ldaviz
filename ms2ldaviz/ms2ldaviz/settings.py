@@ -142,3 +142,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     STATIC_PATH,
 )
+
+
+# Approx 10MB for big API requests
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10000000
