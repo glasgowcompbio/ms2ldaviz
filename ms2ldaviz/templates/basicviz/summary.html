@@ -36,14 +36,22 @@
 	</div>
 	<hr />
 	<div>
-		<h4>Mass2Motif details</h4>
+		<h4>Fragmentation Spectra Details</h4>
+        <p>
+            <a href="/basicviz/show_docs/{{experiment.id}}" class="btn btn-info"><span class="glyphicon glyphicon-export"></span>Show Documents</a>
+        </p>
+    </div>
+	<div>
+		<h4>Mass2Motif Details</h4>
 		<table class='table' id='summarytable'>
 			<thead>
 				<tr><th>Name</th><th>Degree</th><th>Annotation</th></tr>
 			</thead>
 				{% for motif_tuple in motif_tuples %}
 					<tr>
-						<td>{{motif_tuple.0.name}}</td>
+						<td>
+                            <a href="/basicviz/view_parents/{{motif_tuple.0.id}}">{{ motif_tuple.0.name }}</a>
+                        </td>
 						<td>{{motif_tuple.1}}</td>
 						<td>{{motif_tuple.0.annotation}}</td>
  					</tr>
@@ -54,7 +62,7 @@
 	</div>
 	<hr />
 	<div>
-	<h4>Feature table (filtered to show only features with probability > 0.05)</h4>
+	<h4>Feature Table (filtered to show only features with probability > 0.05)</h4>
 	<table class='table' id = 'featuretable'>
 		<thead>
 			<tr><th>Motif</th><th>Feature</th><th>Min m/z</th><th>Max m/z</th><th>Probability</th></tr>
@@ -62,7 +70,9 @@
 		<tbody>
 			{% for motif_feature in motif_features %}
 				<tr>
-					<td>{{motif_feature.mass2motif.name}}</td>
+					<td>
+                        <a href="/basicviz/view_parents/{{motif_feature.mass2motif.id}}">{{ motif_feature.mass2motif.name }}</a>
+                    </td>
 					<td>{{motif_feature.feature.name}}</td>
 					<td>{{motif_feature.feature.min_mz}}</td>
 					<td>{{motif_feature.feature.max_mz}}</td>
