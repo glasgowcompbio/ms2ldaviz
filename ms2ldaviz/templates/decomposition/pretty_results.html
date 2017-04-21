@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}MS2LDA Decomposition Results{% endblock %}
+
+
+{% block head_block %}
+
+{% endblock %}
+
+{% block body_block %}
+
+{% if finished %}
+
+<h4>Decomposition results</h4>
+
+<div><b>Motifset:</b> {{motifset.name}}</div>
+<div><b>Featureset:</b> {{motifset.featureset.name}}</div>
+
+{% for decomp_doc in decomp_list %}
+    <hr />
+    <p><b>{{decomp_doc.0}}</b></p>
+    <table class="table" id="dtable">
+    <thead>
+        <tr><th>Motif</th><th>Probability</th><th>Overlap</th><th>Annotation</th></tr>
+    </thead>
+    <tbody>
+    {% for decomp_item in decomp_doc.1 %}
+        <tr><td><a href="/basicviz/view_parents/{{decomp_item.0.originalmotif.id}}">{{decomp_item.0}}</a></td><td>{{decomp_item.1}}</td><td>{{decomp_item.2}}</td><td>{{decomp_item.0.annotation}}</td></tr>
+    {% endfor %}
+    </tbody>
+    </table>
+{% endfor %}
+
+{% else %}
+    <p>Decomposition hasn't finished</p>
+{% endif %}
+{% endblock %}
+
+{% block js_block %}
+
+<script type='text/javascript' src='{% static "js/d3.v3.min.js" %}'></script>
+
+<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
+
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#dtable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                'csv',
+            ],
+            "order": [[ 1, "desc" ]],
+        });
+});
+</script>
+{% endblock %}

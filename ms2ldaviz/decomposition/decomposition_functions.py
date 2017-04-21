@@ -698,11 +698,11 @@ def api_decomposition(doc_dict,motifset):
     total_docs = len(doc_dict)
 
     results = {}
-
+    results['decompositions'] = {}
     g_term = np.zeros(K)
 
     for i,doc in enumerate(doc_dict.keys()):
-        results[doc] = []
+        results['decompositions'][doc] = []
         document = doc_dict[doc]
         print '%d/%d: %s' % (i, total_docs, doc)
 
@@ -746,16 +746,24 @@ def api_decomposition(doc_dict,motifset):
         theta_motif = sorted(theta_motif,key = lambda x : x[0],reverse = True)
         pos = 0
         cum_prob = 0.0
-        while cum_prob < 0.99:
+        while cum_prob < 0.999:
             theta,motif = theta_motif[pos]
             motif_pos = motif_index[motif]
             overlap_score = compute_overlap(phi_matrix,motif_pos,beta_matrix[motif_pos,:],word_index)
-            results[doc].append((motif.name,motif.originalmotif.name,theta,overlap_score,motif.originalmotif.annotation))
+            results['decompositions'][doc].append((motif.name,motif.originalmotif.name,theta,overlap_score,motif.originalmotif.annotation))
             cum_prob += theta
             pos += 1
     # Do the alpha optimisation
-    M = len(doc_dict)
-    alpha = alpha_nr(g_term,M)
+    if total_docs > 1:
+        M = len(doc_dict)
+        alpha = alpha_nr(g_term,M)
+        alpha_list = []
+        for a in alpha:
+            alpha_list.append(float(a))
+    else:
+        alpha_list = []
+    results['alpha'] = alpha_list
+    results['motifset'] = motifset.name
     return results
 
 
@@ -785,19 +793,26 @@ def make_documents(spectra,featureset):
             feature = None
             if fragment_mz >= min_frag_mz and fragment_mz <= max_frag_mz:
                 fragment_pos = bisect.bisect_right(min_frag_mz_list,fragment_mz) - 1
-                feature = fragment_features[fragment_pos]
-                # doc_dict[doc_name][fragment_features[fragment_pos]] = intensity
+                if fragment_mz <= fragment_features[fragment_pos].max_mz:
+                    feature = fragment_features[fragment_pos]
+            if feature:
+                if not feature in doc_dict[doc_name]:
+                    doc_dict[doc_name][feature] = intensity
+                else:
+                    doc_dict[doc_name][feature] +=intensity
+            feature = None
             if loss_mz >= min_loss_mz and loss_mz <= max_loss_mz:
                 loss_pos = bisect.bisect_right(min_loss_mz_list,loss_mz) - 1
-                feature = loss_features[loss_pos]
+                if loss_mz <= loss_features[loss_pos].max_mz:
+                    feature = loss_features[loss_pos]
             if feature:
                 if not feature in doc_dict[doc_name]:
                     doc_dict[doc_name][feature] = intensity
                 else:
                     doc_dict[doc_name][feature] +=intensity
 
-
     return doc_dict
+
 
 
 def alpha_nr(g_term,M,maxit=100,init_alpha=[]):
@@ -836,3 +851,32 @@ def alpha_nr(g_term,M,maxit=100,init_alpha=[]):
     # except:
     #     alpha = old_alpha
     return alpha
+
+
+def parse_spectrum_string(spectrum_string):
+    # Parse the spectrum that has been input
+    peaks = []
+    tokens = spectrum_string.split()
+    mz = None
+    intensity = None
+    for token in tokens:
+        # First check for MONA format
+        if ':' in token:
+            vals = token.split(':')
+            mz = float(vals[0])
+            intensity = float(vals[1])
+            peaks.append((mz,intensity))
+            continue
+        else:
+            # If not MONA, assume that its just mz, rt pairs in a long list
+            if mz is None:
+                # Must be a new peak
+                mz = float(token)
+            elif intensity is None:
+                # Already have a mz so this must be an intensity
+                intensity = float(token)
+                # Store the peak and then forget the mz and intensity
+                peaks.append((mz,intensity))
+                mz = None
+                intensity = None
+    return peaks

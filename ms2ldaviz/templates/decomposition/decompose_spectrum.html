@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}MS2LDA Spectrum Decomposition {% endblock %}
+
+
+{% block head_block %}
+    <style>
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: black;
+        shape-rendering: crispEdges;
+    }
+    .axis text {
+        font-family: sans-serif;
+        font-size: 11px;
+    }
+    .axis-label {
+      font-family: sans-serif;
+      font-size: 14px;
+    }
+    textarea {
+        font-family: monospace;
+        font-size: 12px;
+    }
+    </style>
+{% endblock %}
+
+{% block body_block %}
+
+<h2>Decompose your spectra</h2>
+
+
+{% if spectrum_form %}
+    <p>You must enter the mass of the parent ion and the spectrum. Spectrum should be entered as pairs of mass intensity values with the mass and intensity separated by a colon (:) or a space ( ). Pairs should be separated by a space, or a newline.</p>
+    <form id="spectrum_form" method="post" action="/decomposition/decompose_spectrum/">
+        {% csrf_token %}
+        {% for hidden in spectrum_form.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+
+        {% for field in spectrum_form.visible_fields %}
+            <p>{{ field.errors }}</p>
+            <p>{{ field }}
+            {{ field.label }}</p>
+        {% endfor %}
+        <input type="submit" name="submit" value="Decompose spectrum" class="btn btn-primary" />
+     </form>
+{% endif %}
+
+{% if result_url %}
+    <h4>Job Submitted</h4>
+    <p>
+    Your results will be available as a json object at <A href="/decomposition/api/batch_results/{{result_id}}">{{result_url}}</A> (format described below), and in a prettier way <A href="/decomposition/api/pretty_results/{{result_id}}/">here</A>.
+    </p>
+    <p>
+    Keep these urls safe!
+    </p>
+{% endif %}
+
+{% if motif_theta_overlap %}
+    <h2>Annotations</h2>
+    <table class="table" id='motiftable'>
+        <thead>
+            <tr><th>Motif</th><th>Probability</th><th>Overlap</th><th>Annotation</th></tr>
+        </thead>
+        <tbody>
+            {% for mt in motif_theta_overlap %}
+                <tr>
+                    <td><a href="/basicviz/view_parents/{{mt.0.id}}">{{mt.0.name}}</a></td><td>{{mt.1}}</td><td>{{mt.2}}</td><td>{{mt.0.annotation}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
+{% if taxa_term_probs %}
+    <h3>Taxa term probs</h3>
+    <ul>
+        {% for t in taxa_term_probs %}
+        <li>{{t.0}},{{t.1}}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% if sub_term_probs %}
+    <h3>Substituent term probs</h3>
+    <ul>
+        {% for t in sub_term_probs %}
+        <li>{{t.0}},{{t.1}}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+
+
+<div id="spectra" border="20" padding="20"></div>
+<div id="scatter_div" border="20" padding="20"></dic>
+
+{% if document %}
+    <h2>Your document</h2>
+    <table class="table" id='doctable'>
+    <thead><th>Feature</th><th>Intensity</th></thead>
+    <tbody>
+        {% for peak in document %}
+        <tr><td>{{peak.0}}</td><td>{{peak.1}}</td></tr>
+        {% endfor %}
+    </tbody>
+    </table>
+{% endif %}
+
+
+{% endblock %}
+
+{% block js_block %}
+
+    <script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+    <script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+    <link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $('#motiftable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+            'csv',
+            ],
+            "order": [[1,"desc"]],
+        });   
+        $('#doctable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+            'csv',
+            ],
+            "order": [[1,"desc"]],
+        });   
+
+    });
+    </script>
+
+
+
+    <script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
+    <script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
+    <script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
+    <script type='text/javascript' src="{% static "js/annotation-scatterplot.js" %}"></script>
+    <script type="text/javascript">
+        plotdata = {{plotdata|safe}};
+        current_pos = 0
+        key = plotdata[0]
+        plot_parent(plotdata[1],"");
+
+        // scatter_data = [[0.1,0.2,"hello"],[0.3,0.4,"hi"]];
+        scatter_data = {{scatter_data|safe}}
+        scatter_plot(scatter_data)
+    </script>
+{% endblock %}

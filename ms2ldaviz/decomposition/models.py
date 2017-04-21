@@ -71,14 +71,18 @@ class GlobalMotif(models.Model):
 	name = property(get_name) 
 	annotation = property(get_annotation)
 
+	def __str__(self):
+		return self.name
 	def __unicode__(self):
 		return self.name
+	def __repr__(self):
+		return seld.name
 
 class GlobalMotifsToSets(models.Model):
 	motif = models.ForeignKey(GlobalMotif)
 	motifset = models.ForeignKey(MotifSet)
 	def __unicode__(self):
-		return self.motif + ' <-> ' + self.motifset
+		return str(self.motif) + ' <-> ' + str(self.motifset)
 
 
 # Document <-> feature link here

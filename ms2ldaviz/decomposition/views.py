@@ -6,14 +6,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 
 from decomposition.models import GlobalMotif,DocumentGlobalMass2Motif,Decomposition,GlobalMotifsToSets,MotifSet,FeatureSet,APIBatchResult
-from decomposition.forms import DecompVizForm,NewDecompositionForm,BatchDecompositionForm
+from decomposition.forms import DecompVizForm,NewDecompositionForm,BatchDecompositionForm,SpectrumForm
 from basicviz.models import Mass2MotifInstance,Experiment,Document,JobLog,VizOptions
 from basicviz.forms import VizForm
 from options.views import get_option
 
 from ms1analysis.models import Analysis
 
-from decomposition_functions import get_parents_decomposition,get_decomp_doc_context_dict,get_parent_for_plot_decomp,make_word_graph,make_intensity_graph,make_decomposition_graph
+from decomposition_functions import get_parents_decomposition,get_decomp_doc_context_dict,get_parent_for_plot_decomp,make_word_graph,make_intensity_graph,make_decomposition_graph,parse_spectrum_string
 from decomposition.tasks import api_batch_task
 from basicviz.views import views_lda_single
 
@@ -231,3 +231,59 @@ def batch_results(request,result_id):
     except:
         results = {'status':batch_result.results}
     return JsonResponse(results)
+
+def decompose_spectrum(request):
+    context_dict = {}
+    if request.method == 'POST':
+        form = SpectrumForm(request.POST)
+        if form.is_valid():
+            # Convert the spectrum into json
+            motifset_id = int(form.cleaned_data['motifset'])
+            motifset = MotifSet.objects.get(id = motifset_id)
+            featureset = motifset.featureset
+            peaks = parse_spectrum_string(form.cleaned_data['spectrum'])
+            parentmass = float(form.cleaned_data['parentmass'])
+            spectra = [('spectrum_{}'.format(parentmass),parentmass,peaks)]
+            batch_result = APIBatchResult.objects.create(results = 'submitted')
+            api_batch_task.delay(spectra,featureset.id,motifset.id,batch_result.id)
+            result_url = 'http://ms2lda.org/decomposition/api/batch_results/{}/'.format(batch_result.id)
+            context_dict['result_url'] = result_url
+            context_dict['result_id'] = batch_result.id
+            print peaks
+            # context_dict['document'] = peaks
+            return render(request,'decomposition/decompose_spectrum.html',context_dict)
+    else:
+        form = SpectrumForm()
+    context_dict['spectrum_form'] = form
+    return render(request,'decomposition/decompose_spectrum.html',context_dict)
+
+def pretty_results(request,result_id):
+    batch_result = APIBatchResult.objects.get(id = result_id)
+    context_dict = {}
+    context_dict['result'] = batch_result
+    try:
+        result_json = json.loads(batch_result.results)
+        context_dict['alpha'] = result_json['alpha']
+        motifset = MotifSet.objects.get(name = result_json['motifset'])
+        context_dict['motifset'] = motifset
+        decomps = result_json['decompositions']
+
+        all_global_motifs = GlobalMotifsToSets.objects.filter(motifset = motifset)
+
+        global_motif_dict = {}
+        for global_motif in all_global_motifs:
+            global_motif_dict[global_motif.motif.name] = global_motif.motif
+
+        decomp_list = []
+        for doc_name,motif_info in decomps.items():
+            doc_list = []
+            for global_name,original_name,p,o,annotation in motif_info:
+                global_motif = global_motif_dict[global_name]
+                doc_list.append((global_motif,p,o))
+            doc_list = sorted(doc_list,key = lambda x: x[1],reverse = True)
+            decomp_list.append((doc_name,doc_list))
+        context_dict['decomp_list'] = decomp_list
+        context_dict['finished'] = True
+    except:
+        context_dict['finished'] = False
+    return render(request,'decomposition/pretty_results.html',context_dict)
