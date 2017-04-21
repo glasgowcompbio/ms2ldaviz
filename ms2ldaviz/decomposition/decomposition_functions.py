@@ -10,10 +10,29 @@ from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif
 from basicviz.models import VizOptions,Experiment,Document,Mass2MotifInstance
 
 from options.views import get_option
+from ms1analysis.models import Sample, DocSampleIntensity
+from ms1analysis.models import DecompositionAnalysis, DecompositionAnalysisResult, DecompositionAnalysisResultPlage
 
 import sys
 sys.path.append('../lda/code')
 from ms2lda_feature_extraction import LoadMZML, LoadMSP
+
+def add_sample(sample_name, experiment):
+    sample = Sample.objects.get_or_create(name = sample_name, experiment = experiment)[0]
+    return sample
+
+def add_doc_sample_intensity(sample, document, intensity):
+    i = DocSampleIntensity.objects.get_or_create(sample = sample, document = document, intensity = intensity)[0]
+
+def load_sample_intensity(document, experiment, metadata):
+    # metadata = lda_dict['doc_metadata'][doc_name]
+    if 'intensities' in metadata:
+        for sample_name, intensity in metadata['intensities'].items():
+            ## process missing data
+            ## if intensity not exist, does not save in database
+            if intensity:
+                sample = add_sample(sample_name, experiment)
+                add_doc_sample_intensity(sample, document, intensity)
 
 def load_mzml_and_make_documents(experiment,motifset):
     assert experiment.ms2_file
@@ -70,6 +89,8 @@ def load_mzml_and_make_documents(experiment,motifset):
             continue
         name = molecule.name + '_decomp'
         new_doc,status = Document.objects.get_or_create(experiment = experiment,name = name)
+        ## load peaklist (sample names) to database
+        load_sample_intensity(new_doc, experiment, metadata[molecule.name])
         doc_metadata = {}
         doc_metadata['parentmass'] = molecule.mz
         doc_metadata['parentrt'] = molecule.rt
@@ -551,46 +572,57 @@ def make_intensity_graph(request, motif_id, vo_id, decomposition_id):
     return data_for_json
 
 
-
-def make_decomposition_graph(decomposition,experiment,min_degree = 5,edge_thresh = 0.5,
-                                edge_choice = 'overlap_score',topic_scale_factor = 5,
+## This function is basically a replicate from *make_graph* function of basicviz/views/views_lda_single.py
+## For MS1 analysis, LDA and Decomposition both use *Sample* and *DocSampleIntensity* to store data from peaklist
+## Differnece:
+## Decomposition:
+##      need *decomposition* input
+##      use GlobalMotif linked to original motifs, use *DocumentGlobalMass2Motif* to get the relation
+##      use DecompositionAnalysis, DecompositionAnalysisResult, DecompositionAnalysisResultPlage for MS1 analysis
+##      use *get_docglobalm2m* function to get docm2ms result, notice motif is *GlobalMotif* here
+## LDA:
+##      only needs *experiment* input
+##      use *DocumentMass2Motif* to get the relation
+##      use Analysis, AnalysisResult, AnalysisResultPlage for MS1 analysis
+##      use *get_docm2m* function to get docm2ms result
+def make_decomposition_graph(decomposition,experiment,min_degree = 5,
+                                topic_scale_factor = 5,
                                 edge_scale_factor = 5,
-                                ms1_analysis_id = None):
+                                ms1_analysis_id = None,
+                                doc_max_size=200, motif_max_size=1000):
     # This is the graph maker for a decomposition experiment
-    documents = Document.objects.filter(experiment = experiment)
-    doc_motif = DocumentGlobalMass2Motif.objects.filter(decomposition = decomposition)
-    print len(doc_motif)
-    G = nx.Graph()
-    motif_degrees = {}
-    print edge_choice,edge_thresh
-    used_dm = []
-    for dm in doc_motif:
-        hit = False
-        if edge_choice == 'probability':
-            hit = dm.probability > edge_thresh
-        elif edge_choice == 'overlap_score':
-            hit = dm.overlap_score > edge_thresh
-        elif edge_choice == 'both':
-            hit = (dm.overlap_score > edge_thresh) and (dm.probability > edge_thresh)
-        else:
-            hit = dm.probability > edge_thresh # default
-        if hit:
-            used_dm.append(dm)
-            if not dm.mass2motif in motif_degrees:
-                motif_degrees[dm.mass2motif] = 1
-            else:
-                motif_degrees[dm.mass2motif] += 1
+    ## Notice mass2motif here is an object of GlobalMotif
+    ## Get all unique Global mass2motifs, prepare for *get_docglobalm2m*
+    all_docm2ms = DocumentGlobalMass2Motif.objects.filter(decomposition = decomposition)
+    mass2motifs = set([docm2m.mass2motif for docm2m in all_docm2ms])
 
-    used_motifs = []
+    # Find the degrees
+    topics = {}
+    docm2m_dict = {}
+    for mass2motif in mass2motifs:
+        topics[mass2motif] = 0
+        docm2ms = get_docglobalm2m(mass2motif, decomposition)
+        docm2m_dict[mass2motif] = list(docm2ms)
 
-    ## remove dependence on "colour nodes by logfc" and "discrete colouring"
-    ## document colouring and size setting only depends on users' choice of ms1 analysis setting
-    # This isn't used yet...
+        for d in docm2ms:
+            topics[mass2motif] += 1
+    to_remove = []
+    for topic in topics:
+        if topics[topic] < min_degree:
+            to_remove.append(topic)
+    for topic in to_remove:
+        del topics[topic]
+
+    docm2mset = []
+    for topic in topics:
+        docm2mset += docm2m_dict[topic]
+
+
     do_plage_flag = True
     if ms1_analysis_id:
-        analysis = Analysis.objects.filter(id=ms1_analysis_id)[0]
+        analysis = DecompositionAnalysis.objects.filter(id=ms1_analysis_id)[0]
         all_logfc_vals = []
-        res = AnalysisResult.objects.filter(analysis=analysis, document__in=[docm2m.document for docm2m in used_dm])
+        res = DecompositionAnalysisResult.objects.filter(analysis=analysis, document__in=[docm2m.document for docm2m in docm2mset])
         for analysis_result in res:
             foldChange = analysis_result.foldChange
             logfc = np.log(foldChange)
@@ -601,7 +633,7 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,edge_thresh
 
         ## try make graph for plage
         all_plage_vals = []
-        for plage_result in AnalysisResultPlage.objects.filter(analysis=analysis, mass2motif__in=topics.keys()):
+        for plage_result in DecompositionAnalysisResultPlage.objects.filter(analysis=analysis, globalmotif__in=topics.keys()):
             plage_t_value = plage_result.plage_t_value
             all_plage_vals.append(plage_t_value)
         if all_plage_vals:
@@ -610,50 +642,137 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,edge_thresh
         else:
             do_plage_flag = False
 
-
-
-
-
-    for motif,degree in motif_degrees.items():
-        if degree >= min_degree:
-            # add to the graph
-            used_motifs.append(motif)
-            metadata = jsonpickle.decode(motif.originalmotif.metadata)
-            if 'annotation' in metadata:
-                G.add_node(motif.originalmotif.name, group=2, name=metadata['annotation'],
-                           size=topic_scale_factor * degree,
-                           special=True, in_degree = degree,
-                           score=1, node_id=motif.id, is_topic=True)
+    print "First"
+    # Add the topics to the graph
+    G = nx.Graph()
+    for topic in topics:
+        mass2motif = topic.originalmotif
+        metadata = jsonpickle.decode(mass2motif.metadata)
+        ## try make graph for plage
+        if ms1_analysis_id and do_plage_flag:
+            ## white to green
+            lowcol = [255, 255, 255]
+            endcol = [0, 255, 0]
+            plage_result = DecompositionAnalysisResultPlage.objects.filter(analysis=analysis, globalmotif=topic)[0]
+            plage_t_value = plage_result.plage_t_value
+            plage_p_value = plage_result.plage_p_value
+            pos = (plage_t_value - min_plage) / (max_plage - min_plage)
+            r = lowcol[0] + int(pos * (endcol[0] - lowcol[0]))
+            g = lowcol[1] + int(pos * (endcol[1] - lowcol[1]))
+            b = lowcol[2] + int(pos * (endcol[2] - lowcol[2]))
+            col = "#{}{}{}".format("{:02x}".format(r), "{:02x}".format(g), "{:02x}".format(b))
+            if plage_p_value == None:
+                size = 10
+            elif plage_p_value == 0:
+                size = motif_max_size
             else:
-                G.add_node(motif.originalmotif.name, group=2, name=motif.originalmotif.name,
-                           size=topic_scale_factor * degree,
-                           special=False, in_degree=degree,
-                           score=1, node_id=motif.id, is_topic=True)
-    used_docs = []
-    for dm in used_dm:
-        if dm.mass2motif in used_motifs:
-            # add the edge
-            if not dm.document in used_docs:
-                # add the document node
-                metadata = jsonpickle.decode(dm.document.metadata)
-                if 'compound' in metadata:
-                    name = metadata['compound']
-                elif 'annotation' in metadata:
-                    name = metadata['annotation']
-                else:
-                    name = dm.document.name
+                size = min(10 - np.log(plage_p_value) * 200, motif_max_size)
+            na = mass2motif.short_annotation
+            if na:
+                na += ' (' + topic.name + ')'
+            else:
+                na = topic.name
+            G.add_node(topic.name, group=2, name=na+", "+str(plage_t_value) + ", "+str(plage_p_value),
+                       # size=topic_scale_factor * topics[topic],
+                       size= size,
+                       special=True, in_degree=topics[topic],
+                       highlight_colour=col,
+                       score=1, node_id=topic.id, is_topic=True)
 
-                G.add_node(dm.document.name, group=1, name=name, size=20,
-                           type='square', peakid=dm.document.name, special=False,
+        else:
+            if mass2motif.short_annotation:
+            # if 'annotation' in metadata:
+                G.add_node(topic.name, group=2, name=mass2motif.short_annotation,
+                           size=topic_scale_factor * topics[topic],
+                           special=True, in_degree=topics[topic],
+                           score=1, node_id=topic.id, is_topic=True)
+            else:
+                G.add_node(topic.name, group=2, name=topic.name,
+                           size=topic_scale_factor * topics[topic],
+                           special=False, in_degree=topics[topic],
+                           score=1, node_id=topic.id, is_topic=True)
+
+    doc_nodes = []
+
+    print "Second"
+
+    edge_choice = get_option('default_doc_m2m_score', experiment)
+
+
+    for docm2m in docm2mset:
+        # if docm2m.mass2motif in topics:
+        if not docm2m.document in doc_nodes:
+            metadata = jsonpickle.decode(docm2m.document.metadata)
+            if 'compound' in metadata:
+                name = metadata['compound']
+            elif 'annotation' in metadata:
+                name = metadata['annotation']
+            else:
+                name = docm2m.document.name
+            ## do MS1 expression analysis only when user choose a ms1 analysis setting
+            if not ms1_analysis_id:
+                G.add_node(docm2m.document.name, group=1, name=name, size=20,
+                           type='square', peakid=docm2m.document.name, special=False,
                            in_degree=0, score=0, is_topic=False)
-                used_docs.append(dm.document)
-            if edge_choice == 'probability':
-                weight = edge_scale_factor * dm.probability
             else:
-                weight = edge_scale_factor * dm.overlap_score
-            G.add_edge(dm.mass2motif.originalmotif.name, dm.document.name, weight=weight)
-    d = json_graph.node_link_data(G)
-    return d
+                analysis_result = DecompositionAnalysisResult.objects.filter(analysis=analysis, document=docm2m.document)[0]
+                foldChange = analysis_result.foldChange
+                pValue = analysis_result.pValue
+                logfc = np.log(foldChange)
+
+                ## lowest: blue, logfc==0: white, highest: red
+                ## use scaled colour to represent logfc of document
+                if logfc == np.inf:
+                    col = "#{}{}{}".format('FF', '00', '00')
+                elif -logfc == np.inf:
+                    col = "#{}{}{}".format('00', '00', 'FF')
+                else:
+                    lowcol = [0, 0, 255]
+                    endcol = [255, 0, 0]
+                    midcol = [255, 255, 255]
+                    if logfc < 0:
+                        # if logfc < -3:
+                        #     logfc = -3
+                        pos = logfc/ min_logfc
+                        r = midcol[0] + int(pos * (lowcol[0] - midcol[0]))
+                        g = midcol[1] + int(pos * (lowcol[1] - midcol[1]))
+                        b = midcol[2] + int(pos * (lowcol[2] - midcol[2]))
+                    else:
+                        pos = logfc / max_logfc
+                        r = midcol[0] + int(pos * (endcol[0] - midcol[0]))
+                        g = midcol[1] + int(pos * (endcol[1] - midcol[1]))
+                        b = midcol[2] + int(pos * (endcol[2] - midcol[2]))
+                    col = "#{}{}{}".format("{:02x}".format(r), "{:02x}".format(g), "{:02x}".format(b))
+
+                ## use size to represent pValue of document
+                if not pValue:
+                    size = 5
+                else:
+                    size = min(5 - np.log(pValue) * 15, doc_max_size)
+                ## represent document node with name + logfc + pValue
+                if pValue:
+                    name = "{}, {:.3f}, {:.3f}".format(name, logfc, pValue)
+                else:
+                    name = "{}, {:.3f}, None".format(name, logfc)
+                # name += ", " + str(logfc) + ", " + str(pValue)
+                G.add_node(docm2m.document.name, group=1, name=name, size=size,
+                           type='square', peakid=docm2m.document.name, special=True,
+                           highlight_colour=col, logfc=docm2m.document.logfc,
+                           in_degree=0, score=0, is_topic=False)
+
+            doc_nodes.append(docm2m.document)
+
+
+        if edge_choice == 'probability':
+            weight = edge_scale_factor * docm2m.probability
+        elif edge_choice == 'both':
+            weight = docm2m.overlap_score
+        else:
+            weight = edge_scale_factor * docm2m.overlap_score
+        G.add_edge(docm2m.mass2motif.name, docm2m.document.name, weight=weight)
+    print "Third"
+
+    return G
         
 
 
@@ -852,7 +971,6 @@ def alpha_nr(g_term,M,maxit=100,init_alpha=[]):
     #     alpha = old_alpha
     return alpha
 
-
 def parse_spectrum_string(spectrum_string):
     # Parse the spectrum that has been input
     peaks = []
@@ -880,3 +998,34 @@ def parse_spectrum_string(spectrum_string):
                 mz = None
                 intensity = None
     return peaks
+
+def get_docglobalm2m(globalm2m, decomposition, default_score=None, doc_m2m_threshold=None):
+    # experiment = mass2motif.experiment
+    experiment = Experiment.objects.get(pk=decomposition.experiment_id)
+    if not default_score:
+        default_score = get_option('default_doc_m2m_score', experiment=experiment)
+        if not default_score:
+            default_score = 'probability'
+    if not doc_m2m_threshold:
+        doc_m2m_threshold = get_option('doc_m2m_threshold', experiment=experiment)
+        if doc_m2m_threshold:
+            doc_m2m_threshold = float(doc_m2m_threshold)
+        else:
+            doc_m2m_threshold = 0.0  # Default
+
+    ## Notice need to add *decomposition* when search database for *DocumentGlobalMass2Motif*
+    ## For LDA experiment,  *DocumentMass2Motif* does not have *experiment* entry, so does not need to do that
+    if default_score == 'probability':
+        dm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif=globalm2m, decomposition=decomposition, probability__gte=doc_m2m_threshold).order_by(
+            '-probability')
+    elif default_score == 'overlap_score':
+        dm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif=globalm2m, decomposition=decomposition, overlap_score__gte=doc_m2m_threshold).order_by(
+            '-overlap_score')
+    elif default_score == 'both':
+        dm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif=globalm2m, decomposition=decomposition, probability__gte=doc_m2m_threshold,
+                                                 overlap_score__gte=doc_m2m_threshold).order_by('-probability')
+    else:
+        dm2m = []
+
+
+    return dm2m

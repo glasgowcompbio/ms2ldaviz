@@ -11,7 +11,7 @@ from basicviz.models import Mass2MotifInstance,Experiment,Document,JobLog,VizOpt
 from basicviz.forms import VizForm
 from options.views import get_option
 
-from ms1analysis.models import Analysis
+from ms1analysis.models import DecompositionAnalysis
 
 from decomposition_functions import get_parents_decomposition,get_decomp_doc_context_dict,get_parent_for_plot_decomp,make_word_graph,make_intensity_graph,make_decomposition_graph,parse_spectrum_string
 from decomposition.tasks import api_batch_task
@@ -20,6 +20,8 @@ from basicviz.views import views_lda_single
 from uploads.tasks import just_decompose_task
 
 from basicviz.constants import EXPERIMENT_STATUS_CODE
+
+from networkx.readwrite import json_graph
 
 
 # Create your views here.
@@ -125,7 +127,7 @@ def start_viz(request,decomposition_id):
     context_dict['experiment'] = experiment
     
     ready, _ = EXPERIMENT_STATUS_CODE[1]
-    choices = [(analysis.id, analysis.name + '(' + analysis.description + ')') for analysis in Analysis.objects.filter(experiment=experiment, status=ready)]
+    choices = [(analysis.id, analysis.name + '(' + analysis.description + ')') for analysis in DecompositionAnalysis.objects.filter(decomposition=decomposition, status=ready)]
 
 
     # add form stuff here!
@@ -158,11 +160,12 @@ def get_graph(request,decomposition_id,vo_id):
     experiment = decomposition.experiment
     min_degree = int(vo.min_degree)
 
-    edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
-    edge_thresh = float(get_option('doc_m2m_threshold',experiment = experiment))
+    # edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
+    # edge_thresh = float(get_option('doc_m2m_threshold',experiment = experiment))
 
-    d = make_decomposition_graph(decomposition,experiment,min_degree = min_degree,edge_thresh = edge_thresh,
-                                edge_choice = edge_choice,topic_scale_factor = 5, edge_scale_factor = 5,ms1_analysis_id = vo.ms1_analysis_id)
+    G = make_decomposition_graph(decomposition,experiment,min_degree = min_degree,
+                                ms1_analysis_id = vo.ms1_analysis_id)
+    d = json_graph.node_link_data(G)
     return HttpResponse(json.dumps(d),content_type = 'application/json')
 
 

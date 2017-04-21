@@ -41,13 +41,21 @@
 
 	<h3>Add a new MS1 differential expression analysis</h3>
     <p>
-        Your are viewing experiment: <b>{{experiment.name}}</b> ({{experiment.description}}) ({{  experiment.id }}).
+        {% if decomposition %}
+        Your are viewing decomposition: <b>{{decomposition.name}}</b> ({{ decomposition.id }}).
+        {% elif experiment %}
+        Your are viewing experiment: <b>{{experiment.name}}</b> ({{experiment.description}}) ({{ experiment.id }}).
+        {% endif %}
     </p>
     <p>
         You can choose sample names for group1 and group2 for differential expression analysis.
     </p>
-    
+
+    {% if decomposition %}
+    <form id="analysis_form" method="post" action="/ms1analysis/create_ms1analysis_decomposition/{{ decomposition.id }}/" enctype="multipart/form-data">
+    {% elif experiment %}
     <form id="analysis_form" method="post" action="/ms1analysis/create_ms1analysis/{{ experiment.id }}/" enctype="multipart/form-data">
+    {% endif %}
         {% csrf_token %}
         {% for hidden in analysis_form.hidden_fields %}
             {{ hidden }}
