@@ -21,7 +21,7 @@
         Create a new LDA or Decomposition experiment by clicking the button below. Once submitted, wait for the file to have uploaded completely after which the browser returns to this page and the experiment will appear as “Pending”. All functionalities can then be used as normal. Once finished, the experiment will appear in the “LDA Experiments” or “Decomposition Experiments” section.
     </p>
     <p>
-        <a href="/uploads/create_experiment" class="btn btn-default">Create Experiment</a>
+        <a href="/uploads/create_experiment" class="btn btn-default btn-primary" style="color: white">Create Experiment</a>
     </p>
     {% if show_pending %}
         <h3>Pending Experiments</h3>
@@ -40,25 +40,27 @@
             {% ifequal experiment.0.experiment_type '0' %}
                 <h3><b>{{experiment.0.name}}</b> ({{experiment.0.description}}) ({{experiment.1}}) ({{experiment.0.id}})</h3>
                 <div>
-                    <a href="/basicviz/show_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a>
-                    <a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a>
-                    <a href="/basicviz/start_viz/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a>
-                    <a href="/ms1analysis/create_ms1analysis/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span> Create MS1 Analysis</a>
+                    <!-- a href="/basicviz/show_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a -->
+                    <!-- a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a -->
+                    <a href="/basicviz/summary/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Summary page</a>
                     {% if experiment.1 == 'edit' %}
-                    <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-option-horizontal"></span> View experiment options</a>
+                       <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-option-horizontal"></span>&nbsp;View Experiment Options</a>
                     {% endif %}
-                    <a href="/basicviz/summary/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span>Summary page</a>
+                    <a href="/basicviz/start_match_motifs/{{experiment.0.id}}" class = "btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-random"></span>&nbsp;Start Motif Matching</a>
+                    <a href="/basicviz/manage_motif_matches/{{experiment.0.id}}" class = "btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;Manage Motif Matches</a>
+                    <a href="/basicviz/start_viz/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Start Visualisation</a>
+                    <a href="/ms1analysis/create_ms1analysis/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-tasks"></span>&nbsp;Create MS1 Analysis</a>
                     {% if extra_user %}
-                        <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate</a>
+                        <hr/>
+                        <p><em>Experimental Functions</em></p>
+                        <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span>&nbsp;Validate Motifs</a>
                         <!-- a href="/basicviz/document_pca/{{experiment.0.id}}" class="btn btn-block btn-success">Document PCA</a -->
-                        <a href="/basicviz/topic_pca/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-eye-open"></span> Topic PCA</a>
-                        <a href="/basicviz/topic_table/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a>
-                        <a href="/basicviz/extract_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-folder-close"></span> Extract Documents</a>
-                        <a href="/basicviz/compute_topic_scores/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-sort-by-order"></span> Compute Topic Scores</a>
-                        <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a>
-                        <a href="/basicviz/high_classyfire/{{experiment.0.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> High classyfire scores</a>
-                        <a href="/basicviz/start_match_motifs/{{experiment.0.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Start motif matching</a>
-                        <a href="/basicviz/manage_motif_matches/{{experiment.0.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Manage motif matches</a>
+                        <!-- a href="/basicviz/topic_pca/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-eye-open"></span>&nbsp;Topic PCA</a -->
+                        <!-- a href="/basicviz/topic_table/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;Topic Table</a -->
+                        <!-- a href="/basicviz/extract_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-folder-close"></span>&nbsp;Extract Documents</a -->
+                        <!-- a href="/basicviz/compute_topic_scores/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-sort-by-order"></span>&nbsp;Compute Topic Scores</a -->
+                        <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-indent-right"></span>&nbsp;Rate by Conserved Motifs</a>
+                        <a href="/basicviz/high_classyfire/{{experiment.0.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span>&nbsp;High Classyfire scores</a>
                     {% endif %}
                 </div>
             {% endifequal %}
@@ -76,21 +78,20 @@
                 <div> <!-- div for each accordion section -->
                     <div>
                         {% if experiment.1 == 'edit' %}
-                            <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-primary"><span class="glyphicon glyphicon-option-horizontal"></span> View experiment options</a>
-                            <a href="/decomposition/new_decomposition/{{experiment.0.id}}" class="btn btn-block btn-primary"><span class="glyphicon glyphicon-option-horizontal"></span>Create New Decomposition</a>
+                            <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-primary" style="color:white;"><span class="glyphicon glyphicon-option-horizontal"></span>&nbsp;View Experiment Options</a>
+                            <a href="/decomposition/new_decomposition/{{experiment.0.id}}" class="btn btn-block btn-primary" style="color:white;"><span class="glyphicon glyphicon-new-window"></span>&nbsp;Create New Decomposition</a>
                         {% endif %}
                     </div>
                     {% for decomposition in experiment.0.decomposition_set.all %}
                         <br/>
-                        
-                        <em>{{decomposition.name}}</em>
+                        <p><em>{{decomposition.name}}</em></p>
                         {% if decomposition.status == '0' %}
                             <div>Decomposition Pending, check back later...</div>
                         {% else %}
                             <div>
-                                <a href="/decomposition/show_parents/{{decomposition.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a>
-                                <a href="/decomposition/show_motifs/{{decomposition.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a>
-                                <a href="/decomposition/start_viz/{{decomposition.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-stats"></span> Start Visualisation</a>
+                                <a href="/decomposition/show_parents/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-export"></span>&nbsp;Show Parents</a>
+                                <a href="/decomposition/show_motifs/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show Motifs</a>
+                                <a href="/decomposition/start_viz/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Start Visualisation</a>
                                 {% if extra_user %}
                                     <!-- <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate</a> -->
                                     <!-- a href="/basicviz/document_pca/{{experiment.0.id}}" class="btn btn-block btn-success">Document PCA</a -->
