@@ -25,6 +25,7 @@ EXPERIMENT_DECOMPOSITION_SOURCE = [
 EXPERIMENT_MS2_FORMAT = [
     ('0', 'mzML'),
     ('1', 'msp'),
+    ('2', 'mgf'),
 ]
 
 
