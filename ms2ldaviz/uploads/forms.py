@@ -27,15 +27,15 @@ class CreateExperimentForm(forms.ModelForm):
       ms2_file_name = self.cleaned_data['ms2_file'].name.lower()
       if ms2_format == '0':
         if not ms2_file_name.endswith('.mzml'):
-          self.add_error('ms2_file', ValidationError(_('Extension should be .mzML'), code='invalid'))
+          self.add_error('ms2_file', ValidationError(_('Error: Extension should be in .mzML format'), code='invalid'))
           return False
       elif ms2_format == '1':
         if not ms2_file_name.endswith('.msp'):
-          self.add_error('ms2_file', ValidationError(_('Extension should be .msp'), code='invalid'))
+          self.add_error('ms2_file', ValidationError(_('Error: Extension should be in .msp format'), code='invalid'))
           return False
       elif ms2_format == '2':
         if not ms2_file_name.endswith('.mgf'):
-          self.add_error('ms2_file', ValidationError(_('Extension should be .mgf'), code='invalid'))
+          self.add_error('ms2_file', ValidationError(_('Error: Extension should be in .mgf format'), code='invalid'))
           return False
 
       return True
