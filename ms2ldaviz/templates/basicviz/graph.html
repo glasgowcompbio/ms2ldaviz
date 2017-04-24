@@ -13,12 +13,17 @@
    </div>
 
     <div id="network"><h4>Network</h4>
-    <p>The network will appear below. Squares indicate molecules, circles Mass2Motifs (topics). Edges are coloured according to probability (the darker, the higher the probability). Hover over a node to see information. Double-click on a Mass2Motif to see its molecules.</p><div id="status"><p>Loading...</p></div></div>
+    <p>The network will appear below. Squares indicate molecules, circles Mass2Motifs (topics). Edges are coloured according to probability (the darker, the higher the probability). Hover over a node to see information. Double-click on a Mass2Motif to see its molecules.</p><div id="status">Loading...</div></div>
+    <div id="show_ms1_div">
+        <label>
+            <input type="checkbox" name="show_ms1" id="show_ms1">&nbsp;Show MS1 analysis in the network
+        </label>
+    </div>
     <div id="spectra">
     <h4>Spectra</h4>
-    <p>When you double-click on a Mass2Motif, the spectra of the moleceles associated with it will appear here. Features (fragments and losses) explained by this Mass2Motif will be coloured red. Click 'next' and 'previous' to cycle through the molecules.</p></div>
+    <p>When you double-click on a Mass2Motif, the spectra of the molecules associated with it will appear here. Features (fragments and losses) explained by this Mass2Motif will be coloured red. Click 'next' and 'previous' to cycle through the molecules.</p></div>
     <div id="graphs"><h4>Features</h4>
-    <p>When you double-click on a Mass2Motif, two bar plots will appear below this meesage. The first shows the proportion of the total intensity of these features explained by this Mass2Motif. Dark blue bars show the total intensity (across the whole dataset), light blue show the proportion explained by the selected Mass2Motif. The second shows the number of times each feature in this Mass2Motif appears in the documents associated with this Mass2Motif.</p>
+    <p>When you double-click on a Mass2Motif, two bar plots will appear below this message. The first shows the proportion of the total intensity of these features explained by this Mass2Motif. Dark blue bars show the total intensity (across the whole dataset), light blue show the proportion explained by the selected Mass2Motif. The second shows the number of times each feature in this Mass2Motif appears in the documents associated with this Mass2Motif.</p>
     </div>
 {% endblock %}
 
@@ -31,12 +36,41 @@
     <script type='text/javascript' src="{% static "js/word-graph.js" %}"> </script>
 
     <script type='text/javascript'>
-        var annotated = 0
-        // var experiment_id = '{{ experiment.id}}'
-        // var min_degree = '{{vo.min_degree}}'
-        // var edge_thresh = '{{vo.edge_thresh}}'
-        var viz_options = '{{viz_options.id}}'
-        plot_graph(viz_options,'{{viz_options.random_seed}}');
+
+        function blockUI() {
+            $.blockUI({ css: {
+                border: 'none',
+                padding: '15px',
+                backgroundColor: '#000',
+                '-webkit-border-radius': '10px',
+                '-moz-border-radius': '10px',
+                opacity: .5,
+                color: '#fff'
+            } });
+        }
+
+        var annotated = 0;
+        // var experiment_id = '{{ experiment.id}}';
+        // var min_degree = '{{vo.min_degree}}';
+        // var edge_thresh = '{{vo.edge_thresh}}';
+
+        blockUI();
+
+        var viz_options = '{{viz_options.id}}';
+        var show_ms1 = $("#show_ms1").is(':checked');
+        $("#show_ms1_div").css({"visibility":"hidden"});
+        plot_graph(viz_options,'{{viz_options.random_seed}}',show_ms1);
+
+        $('#show_ms1').on('change', function() {
+            blockUI();
+            d3.selectAll('#network svg').remove();
+            d3.selectAll('#spectra svg').remove();
+            d3.selectAll('#graphs svg').remove();
+            $('#status').html('Loading...');
+            $("#show_ms1_div").css({"visibility":"hidden"});
+            var show_ms1 = $("#show_ms1").is(':checked');
+            plot_graph(viz_options,'{{viz_options.random_seed}}',show_ms1);
+        })
 
         // var current_pos = 0;
         // var motif_name = '{{initial_motif.name}}'

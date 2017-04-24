@@ -800,8 +800,14 @@ def start_annotated_viz(request, experiment_id):
 def get_graph(request, vo_id):
     viz_options = VizOptions.objects.get(id=vo_id)
     experiment = viz_options.experiment
+    show_ms1 = request.GET.get('show_ms1')
+    if show_ms1 == 'true':
+        show_ms1 = True
+    else:
+        show_ms1 = False
 
     if experiment.experiment_type == "0":
+        ms1_analysis_id = viz_options.ms1_analysis_id if show_ms1 else None
         G = make_graph(experiment, min_degree=viz_options.min_degree,
                        # edge_thresh=viz_options.edge_thresh,
                        # just_annotated_docs=viz_options.just_annotated_docs,
@@ -811,7 +817,7 @@ def get_graph(request, vo_id):
                        # upper_colour_perc=viz_options.upper_colour_perc,
                        # colour_topic_by_score=viz_options.colour_topic_by_score,
                        # edge_choice=viz_options.edge_choice,
-                       ms1_analysis_id=viz_options.ms1_analysis_id)
+                       ms1_analysis_id=ms1_analysis_id)
     else:
         # G = make_decomposition_graph(experiment, min_degree=viz_options.min_degree,
         #                edge_thresh=viz_options.edge_thresh,
