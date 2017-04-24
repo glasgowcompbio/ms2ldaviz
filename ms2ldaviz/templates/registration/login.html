@@ -42,12 +42,16 @@
                         <div class="form-group">
                             <div class="col-md-12 control">
                                 <div style="border-top: 1px solid#888; padding-top:15px; font-size:85%">
-                                    Don't have an account?
                                     <!-- a href="/registration/register">
                                         Sign Up Here
                                     </a -->
+                                    Please
                                     <a href="mailto:Simon.Rogers@glasgow.ac.uk?Subject=Registration" target="_top">
-                                        Email us for access.
+                                        email us
+                                    </a>
+                                    to create an account. Alternatively, you can also
+                                    <a href="#" id="login-as-guest">
+                                        login as guest.
                                     </a>
                                 </div>
                             </div>
@@ -137,4 +141,16 @@
         </div>
     </div>
 
+{% endblock %}
+
+{% block js_block %}
+    <script type='text/javascript'>
+        $(function(){
+            $('#login-as-guest').click(function() {
+                $("#login-username").val('guest');
+                $("#login-password").val('guest');
+                $('#loginform').submit();
+            });
+        });
+    </script>
 {% endblock %}

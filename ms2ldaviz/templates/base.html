@@ -56,7 +56,9 @@
             {% if user.is_authenticated %}
                 <li>
                     <a href="/registration/logout" class="pull-right"><strong>Log out {{ user }}</strong></a>
-                    <a href="/registration/profile" class="pull-right"><strong>Update Profile</strong></a>
+                    {% ifnotequal request.user.username "guest" %}
+                        <a href="/registration/profile" class="pull-right"><strong>Update Profile</strong></a>
+                    {% endifnotequal %}
                     {% if request.user.is_staff %}
                         <a href="/basicviz/list_log" class="pull-right"><strong>View Job Logs</strong></a>
                     {% endif %}
