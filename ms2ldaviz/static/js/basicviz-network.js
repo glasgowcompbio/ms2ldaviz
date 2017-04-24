@@ -533,14 +533,16 @@ function plot_decomposition_graph(decomposition_id,vo_id,random_seed) {
     // see https://gist.github.com/mbostock/3750941
     d3.json(url)
         .on("progress", function() {
-            $("#status").text('Loading network graph: ' + d3.event.loaded)
+            $("#status").text('Loading network graph: ' + d3.event.loaded);
         })
         .on("load", function(json) {
-            $("#status").text('Loaded')
+            $("#status").text('Loaded');
             loadGraph(json);
+            $.unblockUI();
         })
         .on("error", function(error) {
-            $("#status").text('Cannot load network graph!')
+            $("#status").text('Cannot load network graph!');
+            $.unblockUI();
         })
         .get();
     
