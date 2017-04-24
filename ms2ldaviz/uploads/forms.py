@@ -3,6 +3,8 @@ from django import forms
 from basicviz.models import Experiment
 from decomposition.models import MotifSet
 from basicviz.constants import EXPERIMENT_DECOMPOSITION_SOURCE
+from django.core.exceptions import ValidationError
+from django.utils.translation import ugettext_lazy as _
 
 
 class CreateExperimentForm(forms.ModelForm):
@@ -15,6 +17,28 @@ class CreateExperimentForm(forms.ModelForm):
         )
         self.fields['ms2_file'].required = True
         self.fields['decompose_from'].required = False
+
+    def is_valid(self):
+      valid = super(CreateExperimentForm, self).is_valid()
+      if not valid:
+        return valid
+
+      ms2_format = self.cleaned_data['experiment_ms2_format']
+      ms2_file_name = self.cleaned_data['ms2_file'].name.lower()
+      if ms2_format == '0':
+        if not ms2_file_name.endswith('.mzml'):
+          self.add_error('ms2_file', ValidationError(_('Extension should be .mzML'), code='invalid'))
+          return False
+      elif ms2_format == '1':
+        if not ms2_file_name.endswith('.msp'):
+          self.add_error('ms2_file', ValidationError(_('Extension should be .msp'), code='invalid'))
+          return False
+      elif ms2_format == '2':
+        if not ms2_file_name.endswith('.mgf'):
+          self.add_error('ms2_file', ValidationError(_('Extension should be .mgf'), code='invalid'))
+          return False
+
+      return True
 
     class Meta:
         model = Experiment
