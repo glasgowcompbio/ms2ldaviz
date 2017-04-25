@@ -447,7 +447,7 @@ class VariationalLDA(object):
 			self.its_performed += 1
 			estimated_finish = ((end_time - start_time)*(n_its - it)/60.0)
 			if verbose:
-				print "Iteration {} (change = {}) ({} seconds, I think I'll finish in {} minutes)".format(it,diff,end_time - start_time,estimated_finish)
+				print "Iteration {} (change = {}) ({} seconds, I think I'll finish in {} minutes). Alpha: ({},{})".format(it,diff,end_time - start_time,estimated_finish,self.alpha.min(),self.alpha.max())
 
 	# D a VB step
 	def vb_step(self):
@@ -463,7 +463,7 @@ class VariationalLDA(object):
 		self.beta_matrix = temp_beta
 		# If we're updating alpha, run the alpha update
 		if self.update_alpha:
-			self.alpha = self.alpha_nr()
+			self.alpha = self.alpha_nr(init_alpha = self.alpha.copy())
 		return total_difference
 		# self.m_step()
 
@@ -488,8 +488,12 @@ class VariationalLDA(object):
 				c = ((grad/h).sum())/((1.0/z) + (1.0/h).sum())
 				alpha_change = (grad - c)/h
 
+				n_bad = (alpha_change > alpha).sum()
+				while n_bad > 0:
+					alpha_change/=2.0
+					n_bad = (alpha_change > alpha).sum()
 
-				# alpha_new = alpha - np.dot(np.linalg.inv(H),grad)
+				
 				alpha_new = alpha - alpha_change
 
 				pos = np.where(alpha_new <= SMALL_NUMBER)[0]
