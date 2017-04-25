@@ -1,5 +1,5 @@
 from django.shortcuts import render,HttpResponse
-
+from ipware.ip import get_ip
 import json
 
 from django.views.decorators.csrf import csrf_exempt
@@ -215,6 +215,11 @@ def batch_decompose(request):
             batch_result = APIBatchResult.objects.create(results = 'submitted')
 
             api_batch_task.delay(spectra,featureset.id,motifset.id,batch_result.id)
+
+            send_ip = get_ip(request)
+            job_string = "Batch decompose, {} spectra, motifset: {}, from {}".format(n_spectra,motifset_name,send_ip)
+            JobLog.objects.create(tasktype = job_string)
+
             json_data['result_id'] = str(batch_result.id)
             json_data['result_url'] = 'http://ms2lda.org/decomposition/api/batch_results/{}/'.format(batch_result.id)
             # doc_dict = make_documents(spectra,featureset)

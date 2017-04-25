@@ -210,10 +210,10 @@ class Document(models.Model):
         return self.name
 
 class JobLog(models.Model):
-    user = models.ForeignKey(User,null = False)
-    experiment = models.ForeignKey(Experiment, null = False)
+    user = models.ForeignKey(User,null = True)
+    experiment = models.ForeignKey(Experiment, null = True)
     timestamp = models.DateField(default= datetime.date.today, null = False)
-    tasktype = models.CharField(max_length=128, null = True)
+    tasktype = models.CharField(max_length=1028, null = True)
 
 
 class Feature(models.Model):
