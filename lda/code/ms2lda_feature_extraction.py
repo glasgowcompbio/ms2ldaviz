@@ -322,6 +322,10 @@ class LoadMZML(Loader):
         if self.min_ms1_intensity>0.0:
             ms1,ms2 = filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
 
+        if self.min_ms2_intensity > 0.0:
+            ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
+
+
         if self.peaklist:
             ms1_peaks = self._load_peak_list()
             ms1 = sorted(ms1,key = lambda x: x.mz)
@@ -397,15 +401,18 @@ class LoadMZML(Loader):
             metadata = new_metadata
             print "Peaklist filtering results in {} documents".format(len(ms1))
 
+
+
+
         if self.duplicate_filter:
             ms1,ms2 = filter_ms1(ms1,ms2,mz_tol = self.duplicate_filter_mz_tol,rt_tol = self.duplicate_filter_rt_tol)
+
+
 
         ## class refactor, put filtering inside of the class
         ms1 = filter(lambda x: x.rt > self.min_ms1_rt and x.rt < self.max_ms1_rt, ms1)
         ms2 = filter(lambda x: x[3] in set(ms1),ms2)
         # ms2 = filter(lambda x: x[3].rt > self.min_ms1_rt and x[3].rt < self.max_ms1_rt, ms2)
-        if self.min_ms2_intensity > 0.0:
-            ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
 
         # Chop out filtered docs from metadata
         filtered_metadata = {}
