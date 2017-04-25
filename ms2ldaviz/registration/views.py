@@ -46,9 +46,14 @@ def user_login(request):
             else:
                 return HttpResponse("Your account is disabled.")
         else:
-            print "Invalid login details: {0}, {1}".format(username, password)
-            return HttpResponse("Invalid login details supplied.")
-            return render(request, 'registration/login.html', {})
+            if username == 'guest': # auto-create if not there
+                guest_user = User.objects.create_user(username='guest', password='guest')
+                login(request, guest_user)
+                return HttpResponseRedirect('/basicviz/')
+            else:
+                print "Invalid login details: {0}, {1}".format(username, password)
+                return HttpResponse("Invalid login details supplied.")
+                return render(request, 'registration/login.html', {})
 
     else: # GET
         return render(request, 'registration/login.html', {})

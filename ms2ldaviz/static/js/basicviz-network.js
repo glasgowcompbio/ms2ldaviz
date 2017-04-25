@@ -167,7 +167,7 @@ d3.json(url, function(error, graph) {
 
 
 
-function plot_graph(vo_id,random_seed) {
+function plot_graph(vo_id,random_seed,show_ms1) {
 
     Math.seedrandom(random_seed);
 
@@ -198,8 +198,9 @@ function plot_graph(vo_id,random_seed) {
     var unselectNode = undefined;
     var optArray = [];
     var toggle = 0;
-    var url = '/basicviz/get_graph/' + vo_id
-    console.log('url is ' + url)
+    var url = '/basicviz/get_graph/' + vo_id + "?show_ms1=" + show_ms1;
+    console.log('url is ' + url);
+    console.log('show_ms1 is ' + show_ms1);
 
     // see https://gist.github.com/mbostock/3750941
     d3.json(url)
@@ -209,14 +210,18 @@ function plot_graph(vo_id,random_seed) {
         .on("load", function(json) {
             $("#status").text('Loaded')
             loadGraph(json);
+            $.unblockUI();
         })
         .on("error", function(error) {
-            $("#status").text('Cannot load network graph!')
+            $("#status").text('Cannot load network graph!');
+            $.unblockUI();
         })
         .get();
     
 
     function loadGraph(graph) {
+
+        d3.select("#show_ms1_div").style("visibility", "visible");
 
         var force = d3.layout.force()
             .size([width, height])
@@ -286,9 +291,12 @@ function plot_graph(vo_id,random_seed) {
                 toggle = 1;
                 d = d3.select(this).node().__data__;
                 if(d.is_topic) {
+                    console.log('Topic selected');
+                    $('#network').block({ message: null });
                     load_parents(d.node_id,d.name,vo_id);
                     plot_word_graph('/basicviz/get_word_graph/'+d.node_id + '/' + vo_id + '/', d.node_id, d.name);
                     plot_word_graph('/basicviz/get_intensity/'+d.node_id + '/' + vo_id + '/', d.node_id, d.name);
+                    $('#network').unblock();
                 }
 
                 // reduce the opacity of all but the neighbouring nodes
@@ -525,14 +533,16 @@ function plot_decomposition_graph(decomposition_id,vo_id,random_seed) {
     // see https://gist.github.com/mbostock/3750941
     d3.json(url)
         .on("progress", function() {
-            $("#status").text('Loading network graph: ' + d3.event.loaded)
+            $("#status").text('Loading network graph: ' + d3.event.loaded);
         })
         .on("load", function(json) {
-            $("#status").text('Loaded')
+            $("#status").text('Loaded');
             loadGraph(json);
+            $.unblockUI();
         })
         .on("error", function(error) {
-            $("#status").text('Cannot load network graph!')
+            $("#status").text('Cannot load network graph!');
+            $.unblockUI();
         })
         .get();
     

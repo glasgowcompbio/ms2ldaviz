@@ -40,9 +40,9 @@
             {% ifequal experiment.0.experiment_type '0' %}
                 <h3><b>{{experiment.0.name}}</b> ({{experiment.0.description}}) ({{experiment.1}}) ({{experiment.0.id}})</h3>
                 <div>
-                    <!-- a href="/basicviz/show_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-export"></span>Show Parents</a -->
-                    <!-- a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-barcode"></span> Show Motifs</a -->
                     <a href="/basicviz/summary/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Summary page</a>
+                    <a href="/basicviz/show_docs/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-export"></span>&nbsp;Show Parents</a>
+                    <a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show Motifs</a>
                     {% if experiment.1 == 'edit' %}
                        <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-option-horizontal"></span>&nbsp;View Experiment Options</a>
                     {% endif %}
@@ -92,6 +92,7 @@
                                 <a href="/decomposition/show_parents/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-export"></span>&nbsp;Show Parents</a>
                                 <a href="/decomposition/show_motifs/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show Motifs</a>
                                 <a href="/decomposition/start_viz/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Start Visualisation</a>
+                                <a href="/ms1analysis/create_ms1analysis_decomposition/{{decomposition.id}}" class="btn btn-block btn-info" style="color;white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Create MS1 Analysis</a>
                                 {% if extra_user %}
                                     <!-- <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate</a> -->
                                     <!-- a href="/basicviz/document_pca/{{experiment.0.id}}" class="btn btn-block btn-success">Document PCA</a -->

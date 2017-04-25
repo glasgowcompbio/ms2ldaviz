@@ -3,6 +3,23 @@
 {% load static %}
 
 {% block head_block %}
+    <style type="text/css">
+        .selector{
+            float: left;
+            width: 230px;
+            overflow: auto;
+            border: 1px silver solid;
+        }
+        .arrows{
+            float:left;
+            margin:10px;
+            margin-top: 170px;
+        }
+        .selector select{
+            border: none;
+            min-width: 230px;
+        }
+    </style>
 {% endblock %}
 
 {%  block js_block %}
@@ -41,13 +58,21 @@
 
 	<h3>Add a new MS1 differential expression analysis</h3>
     <p>
-        Your are viewing experiment: <b>{{experiment.name}}</b> ({{experiment.description}}) ({{  experiment.id }}).
+        {% if decomposition %}
+        Your are viewing decomposition: <b>{{decomposition.name}}</b> ({{ decomposition.id }}).
+        {% elif experiment %}
+        Your are viewing experiment: <b>{{experiment.name}}</b> ({{experiment.description}}) ({{ experiment.id }}).
+        {% endif %}
     </p>
     <p>
         You can choose sample names for group1 and group2 for differential expression analysis.
     </p>
-    
+
+    {% if decomposition %}
+    <form id="analysis_form" method="post" action="/ms1analysis/create_ms1analysis_decomposition/{{ decomposition.id }}/" enctype="multipart/form-data">
+    {% elif experiment %}
     <form id="analysis_form" method="post" action="/ms1analysis/create_ms1analysis/{{ experiment.id }}/" enctype="multipart/form-data">
+    {% endif %}
         {% csrf_token %}
         {% for hidden in analysis_form.hidden_fields %}
             {{ hidden }}
@@ -63,27 +88,33 @@
 
         <p>Choose sample names for Group1(LEFT) and Group2(RIGHT) *</p>
 
-        <select name="group1" id="id_group1" multiple  size="20" style="min-width: 200px;float:left;">
-        </select>
+        <div class="selector">
+            <select name="group1" id="id_group1" multiple  size="20">
+            </select>
+        </div>
 
-        <div style="float:left;margin:10px;margin-top: 170px">
+        <div class="arrows">
             <button type="button" id="btnGroup1Add"><</button><br>
             <button type="button" id="btnGroup1Remove">></button>
         </div>
 
-        <select id="MasterSelectBox" multiple size="20" style="min-width: 200px;float:left;">
-            {% for choice in sample_choices %}
-                <option value="{{ choice }}">{{ choice }}</option>
-            {% endfor %}
-        </select>
+        <div class="selector">
+            <select id="MasterSelectBox" multiple size="20">
+                {% for choice in sample_choices %}
+                    <option value="{{ choice }}">{{ choice }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-        <div style="float:left;margin:10px;margin-top: 170px">
+        <div class="arrows">
             <button type="button" id="btnGroup2Add">></button><br>
             <button type="button" id="btnGroup2Remove"><</button>
         </div>
 
-        <select name="group2" id="id_group2" multiple  size="20" style="min-width: 200px;float:left;">
-        </select>
+        <div class="selector">
+            <select name="group2" id="id_group2" multiple  size="20">
+            </select>
+        </div>
 
         <div style="clear:both;margin-bottom:20px"></div>
 
