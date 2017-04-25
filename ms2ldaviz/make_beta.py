@@ -15,7 +15,7 @@ from decomposition.models import FeatureSet,MotifSet,GlobalFeature,FeatureMap,Gl
 # This script makes a motifset object and a beta object based on an Experiment
 
 if __name__=='__main__':
-    experiment = Experiment.objects.get(name = 'gnps_binned_005') 
+    experiment = Experiment.objects.get(name = 'massbank_binned_005_alpha') 
     print "Got experiment ",experiment
 
     featureset = FeatureSet.objects.get(name = 'binned_005')
@@ -28,21 +28,20 @@ if __name__=='__main__':
     print "Got {} features".format(len(experiment_features))
 
 
-    # n_added = 0
-    # n_done = 0
-    # for f in experiment_features:
-    #     fe,status = GlobalFeature.objects.get_or_create(min_mz = f.min_mz,max_mz = f.max_mz,name = f.name,featureset = featureset)
-    #     fmap,status2 = FeatureMap.objects.get_or_create(localfeature = f,globalfeature = fe)
-    #     if status:
-    #         n_added += 1
-    #     n_done += 1
-    #     if n_done % 100 == 0:
-    #         print n_done,n_added
+    n_added = 0
+    n_done = 0
+    for f in experiment_features:
+        fe,status = GlobalFeature.objects.get_or_create(min_mz = f.min_mz,max_mz = f.max_mz,name = f.name,featureset = featureset)
+        fmap,status2 = FeatureMap.objects.get_or_create(localfeature = f,globalfeature = fe)
+        if status:
+            n_added += 1
+        n_done += 1
+        if n_done % 1000 == 0:
+            print n_done,n_added
 
-    # print "Added {} features to {}".format(n_added,featureset)
+    print "Added {} features to {}".format(n_added,featureset)
 
-    motifset,status = MotifSet.objects.get_or_create(name = 'gnps_motifset',featureset = featureset)
-    print status
+    motifset,status = MotifSet.objects.get_or_create(name = 'massbank_motifset_alpha',featureset = featureset)
     if status:
         print "Created {}".format(motifset)
 
@@ -128,7 +127,8 @@ if __name__=='__main__':
         alpha_list[pos] = alpha.value
 
     # make a dummy experiment object
-    e = Experiment.objects.create(name = 'massbank_gnps_dummy_experiment')
+    # e = Experiment.objects.get_or_create(name = '')[0]
+    e = experiment
 
     b,status = Beta.objects.get_or_create(experiment = experiment,motifset = motifset)
 

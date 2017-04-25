@@ -13,7 +13,7 @@ from basicviz.models import Experiment,Feature,Mass2Motif,Mass2MotifInstance,Alp
 
 if __name__ == '__main__':
     # Match all of the features in massbank to this experiment
-    massbank_experiment = Experiment.objects.get(name = 'massbank_binned_005')
+    massbank_experiment = Experiment.objects.get(name = 'massbank_binned_005_alpha')
     massbank_features = Feature.objects.filter(experiment = massbank_experiment)
     fs = FeatureSet.objects.get_or_create(name='binned_005')[0]
 

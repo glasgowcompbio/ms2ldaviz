@@ -724,6 +724,7 @@ def api_decomposition(doc_dict,motifset):
         for ei in range(100): # do 20 iterations
             # print "Iteration {}".format(ei)
             temp_gamma = np.zeros(K) + alpha_matrix
+            # temp_gamma = np.ones_like(alpha_matrix)
             for word,intensity in doc_dict[doc].items():
                 # Find the word position in beta
                 if word in word_index:
@@ -735,7 +736,6 @@ def api_decomposition(doc_dict,motifset):
                         temp_gamma += phi_matrix[word]*intensity
 
             gamma = temp_gamma.copy()
-
         g_term += psi(gamma) - psi(gamma.sum())        
         
         # normalise the gamma to get probabilities
@@ -746,7 +746,7 @@ def api_decomposition(doc_dict,motifset):
         theta_motif = sorted(theta_motif,key = lambda x : x[0],reverse = True)
         pos = 0
         cum_prob = 0.0
-        while cum_prob < 0.999:
+        while cum_prob < 0.99:
             theta,motif = theta_motif[pos]
             motif_pos = motif_index[motif]
             overlap_score = compute_overlap(phi_matrix,motif_pos,beta_matrix[motif_pos,:],word_index)
@@ -762,7 +762,7 @@ def api_decomposition(doc_dict,motifset):
             alpha_list.append(float(a))
     else:
         alpha_list = []
-    results['alpha'] = alpha_list
+    results['alpha'] = zip(motif_list,alpha_list)
     results['motifset'] = motifset.name
     return results
 
@@ -817,36 +817,47 @@ def make_documents(spectra,featureset):
 
 def alpha_nr(g_term,M,maxit=100,init_alpha=[]):
 
+    # with open('./test_g.csv','w') as f:
+    #     for g in g_term:
+    #         f.write("{}\n".format(g))
 
     SMALL_NUMBER = 1e-100
-
-    if len(init_alpha) == 0:
-        init_alpha = np.ones_like(g_term)
-    old_alpha = init_alpha.copy()
     K = len(g_term)
+    if len(init_alpha) == 0:
+        init_alpha = np.ones_like(g_term)/K
+    old_alpha = init_alpha.copy()
+    
     
     # try:
     alpha = init_alpha.copy()
-    alphap = init_alpha.copy()
     # g_term = (psi(self.gamma_matrix) - psi(self.gamma_matrix.sum(axis=1))[:,None]).sum(axis=0)
     for it in range(maxit):
-        grad = M *(psi(alpha.sum()) - psi(alpha)) + g_term
-        H = -M*np.diag(pg(1,alpha)) + M*pg(1,alpha.sum())
-
+        grad = M * (psi(alpha.sum()) - psi(alpha)) + g_term
+        # H = -M*np.diag(pg(1,alpha)) + M*pg(1,alpha.sum())
         z = M*pg(1,alpha.sum())
         h = -M*pg(1,alpha)
         c = ((grad/h).sum())/((1.0/z) + (1.0/h).sum())
         alpha_change = (grad - c)/h
 
+        # Check to make sure none of them go negative
+        n_bad = (alpha_change > alpha).sum()
+        while n_bad > 0:
+            alpha_change/=2.0
+            n_bad = (alpha_change > alpha).sum()
+
+
+        # alpha_change = np.dot(np.linalg.inv(H),grad)
         alpha_new = alpha - alpha_change
 
         pos = np.where(alpha_new <= SMALL_NUMBER)[0]
         alpha_new[pos] = SMALL_NUMBER
 
         diff = np.sum(np.abs(alpha-alpha_new))
-        print "Alpha: {}, it: {}".format(diff,it)
+        # print "Alpha: {}, it: {}".format(diff,it)
+        # print grad.max(),grad.argmax(),alpha[grad.argmax()],alpha_new[grad.argmax()],alpha_change[grad.argmax()],h[grad.argmax()]
         alpha = alpha_new
-        if diff < 1e-6 and it > 1:
+        
+        if diff < 1e-6 and it > 10:
             return alpha
     # except:
     #     alpha = old_alpha
