@@ -881,7 +881,7 @@ def api_decomposition(doc_dict,motifset):
             alpha_list.append(float(a))
     else:
         alpha_list = []
-    results['alpha'] = zip(motif_list,alpha_list)
+    results['alpha'] = zip([m.name for m in motif_list],alpha_list)
     results['motifset'] = motifset.name
     return results
 

@@ -76,7 +76,7 @@ class GlobalMotif(models.Model):
 	def __unicode__(self):
 		return self.name
 	def __repr__(self):
-		return seld.name
+		return self.name
 
 class GlobalMotifsToSets(models.Model):
 	motif = models.ForeignKey(GlobalMotif)
