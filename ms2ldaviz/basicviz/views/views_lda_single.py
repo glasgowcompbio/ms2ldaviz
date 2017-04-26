@@ -1639,14 +1639,15 @@ def start_match_motifs(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
     context_dict['experiment'] = experiment
     if request.method == 'POST':
-        match_motif_form = MatchMotifForm(request.POST)
+        match_motif_form = MatchMotifForm(request.user, request.POST)
         if match_motif_form.is_valid():
-            base_experiment_id = int(match_motif_form.cleaned_data['other_experiment'])
+            base_experiment = match_motif_form.cleaned_data['other_experiment']
+            base_experiment_id = base_experiment.id
             minimum_score_to_save = float(match_motif_form.cleaned_data['min_score_to_save'])
             match_motifs.delay(experiment.id,base_experiment_id,min_score_to_save = minimum_score_to_save)
             return redirect('/basicviz/')
     else:
-        match_motif_form = MatchMotifForm()
+        match_motif_form = MatchMotifForm(request.user)
     context_dict['match_motif_form'] = match_motif_form
     return render(request,'basicviz/start_match_motifs.html',context_dict)
 

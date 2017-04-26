@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 
 from basicviz.constants import AVAILABLE_OPTIONS
-from basicviz.models import SystemOptions, Experiment
+from basicviz.models import SystemOptions, Experiment, UserExperiment
 
 
 class DocFilterForm(forms.Form):
@@ -78,6 +78,17 @@ class AlphaCorrelationForm(forms.Form):
     max_edges = forms.IntegerField(required=False, initial=1000, label='Maximum number of edges')
     just_annotated = forms.BooleanField(required=False, initial=False, label='Restrict to annotated M2Ms?')
 
+
 class MatchMotifForm(forms.Form):
-    other_experiment = forms.ChoiceField(choices = [(e.id,e.name) for e in Experiment.objects.all()],required = True)
-    min_score_to_save = forms.FloatField(required = True,initial = 0.5)
+
+    other_experiment = forms.ModelChoiceField(queryset=Experiment.objects.none(),
+                                              required=True, label="Match against")
+    min_score_to_save = forms.FloatField(required=True, initial=0.5)
+
+    def __init__(self, user, *args, **kwargs):
+        super(MatchMotifForm, self).__init__(*args, **kwargs)
+
+        # Select only the experiments that belong to this user (through UserExperiment)
+        # and also not a multi-file experiment (through MultiLink), because there are too many of them
+        self.fields['other_experiment'].queryset = Experiment.objects.filter(
+            userexperiment__user=user, multilink__isnull=True).order_by('name')
