@@ -12,19 +12,24 @@
 
 <div id="tabs">
   <ul>
-    <li><a href="#tabs-1">Single-file LDA Experiments</a></li>
-    <li><a href="#tabs-2">Multi-file LDA Experiments</a></li>
+    <li><a href="#tabs-1">LDA &amp; Decomposition</a></li>
+    <li><a href="#tabs-2">MS2LDA+</a></li>
   </ul>
   <div id="tabs-1">
-    <h3>Create Experiments</h3>
+    <h4>Create LDA &amp; Decomposition Experiments</h4>
     <p>
-        Create a new LDA or Decomposition experiment by clicking the button below. Once submitted, wait for the file to have uploaded completely after which the browser returns to this page and the experiment will appear as “Pending”. All functionalities can then be used as normal. Once finished, the experiment will appear in the “LDA Experiments” or “Decomposition Experiments” section.
+        Create a new LDA or Decomposition experiment by clicking the button below.
+        Once submitted, wait for the file to have uploaded completely after which
+        the browser returns to this page and the experiment will appear as 'Pending'.
+        All functionalities can then be used as normal.
+        Once finished, the experiment will appear in the 'LDA Experiments' or
+        'Decomposition Experiments' sections.
     </p>
     <p>
         <a href="/uploads/create_experiment" class="btn btn-default btn-primary" style="color: white">Create Experiment</a>
     </p>
     {% if show_pending %}
-        <h3>Pending Experiments</h3>
+        <h5>Pending Experiments</h5>
         <p>The following experiments have been created but are still being processed.
         {% for experiment in pending_experiments %}
             <li><b>{{experiment.name}}</b> ({{experiment.description}})</li>
@@ -33,7 +38,7 @@
     {% endif %}
 
     {% if show_lda %}
-        <h3>LDA Experiments</h3>
+        <h5>LDA Experiments</h5>
         <p>The following are LDA experiments where substructures have been discovered in a completely unsupervised manner.</p>
         <div id="accordion">
         {% for experiment in experiments|sort_experiment_by_id %}
@@ -69,7 +74,7 @@
     {% endif %}
 
     {% if show_decomposition %}
-        <h3>Decomposition Experiments</h3>
+        <h5>Decomposition Experiments</h5>
         <p>The following are decomposition experiments where substructures have been discovered with respect to our annotated Mass2Motifs.</p>
         <div id="accordion2">
         {% for experiment in experiments|sort_experiment_by_id %}
@@ -117,6 +122,11 @@
 
   </div> <!-- end first tab for single LDA -->
   <div id="tabs-2">
+    <h4>Create MS2LDA+ Experiments</h4>
+    <p>
+        MS2LDA+ experiments share the Mass2Motifs across multiple samples, allowing us to
+        infer the prevalence of that motif in a particular sample.
+    </p>
     {% if extra_user %}
         <p>The following experiments are ready for analysis. After clicking on an experiment, you use the arrow keys to navigate to other experiments in the list. Press <b>Enter</b> to open or close an experiment.</p>
         <div id="accordion3">
@@ -146,7 +156,6 @@
             {% endfor %}
         </div>
     {% else %}
-        <h2>Multi-file LDA Experiments</h2>
         <p>You do not have access to this functionality yet.</p>
     {% endif %}
     </div>
