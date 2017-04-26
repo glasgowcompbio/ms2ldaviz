@@ -32,15 +32,54 @@
         <input type="submit" name="submit" value="Submit Your Experiment" class="btn btn-primary" />
     </form>
     <hr />
-    <h5>Peaklist file:</h5>
+    <h5>MS1 Peaklist File Format</h5>
     <p>
-        The required file format for the MS1 peak list is as follows: a .csv file with header line: ("...,mass,RT,samplename_1, samplename_2,..."), delimiter: '.
+        <small>
+            <a href="{% static "txt/example_peaklist.csv" %}">Download an example here</a>.
+        </small>
     </p>
     <p>
-        The *mass* column must have the name mass or mz (case-insensitive). Retention time is assumed to be the column immediately after mass, and should be in seconds. Any columns before *mass* (e.g. containing peak IDs from other software) will be ignored.
+        <small>
+            The required file format for the MS1 peak list is as follows:
+        </small>
     </p>
     <p>
-        All columns after retention time will be interpreted as MS1 intensities, one column per sample. Missing data can be stored as empty (e.g. 123.45,,567.89), or NA (e.g. 123.45,NA,567.89) in the .csv file. Any intensities that are negative values, cannot be interpreted as a float, or are empty will be ignored and not be stored for further analysis.
+        <small>
+            A .CSV file with header line:
+        </small>
+    </p>
+    <blockquote>
+        ("..., mass, RT, samplename_1, samplename_2,..."), delimiter: '.
+    </blockquote>
+    <p>
+        <small>
+            The <strong>mass</strong> column must have the column header of either 'mass' or 'mz' (case-insensitive).
+            Retention time is assumed to be the column immediately after mass, and should be in seconds.
+            Any columns before <strong>mass</strong> (e.g. containing peak IDs from other software) will be ignored.
+        </small>
+    </p>
+    <p>
+        <small>
+            All columns after retention time will be interpreted as MS1 intensities, with one column per sample.
+            In the .CSV file, missing data can be stored as empty, e.g.
+        </small>
+    </p>
+    <blockquote>
+        123.45,,567.89
+    </blockquote>
+    <p>
+        <small>
+            or NA, e.g.
+        </small>
+    </p>
+    <blockquote>
+        123.45,NA,567.89
+    </blockquote>
+    <p>
+        <small>
+            Any intensities that are negative values, cannot be interpreted as a float, or are empty will be ignored
+            and not be stored for further analysis.
+        </small>
     </p>
 {% endblock %}
 
