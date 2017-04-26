@@ -91,8 +91,10 @@
                             <div>
                                 <a href="/decomposition/show_parents/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-export"></span>&nbsp;Show Parents</a>
                                 <a href="/decomposition/show_motifs/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show Motifs</a>
+                                {% if experiment.1 == 'edit' %}
+                                    <a href="/ms1analysis/create_ms1analysis_decomposition/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-tasks"></span>&nbsp;Create MS1 Analysis</a>
+                                {% endif %}
                                 <a href="/decomposition/start_viz/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Start Visualisation</a>
-                                <a href="/ms1analysis/create_ms1analysis_decomposition/{{decomposition.id}}" class="btn btn-block btn-info" style="color;white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Create MS1 Analysis</a>
                                 {% if extra_user %}
                                     <!-- <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate</a> -->
                                     <!-- a href="/basicviz/document_pca/{{experiment.0.id}}" class="btn btn-block btn-success">Document PCA</a -->
