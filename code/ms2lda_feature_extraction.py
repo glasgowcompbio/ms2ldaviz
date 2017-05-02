@@ -993,7 +993,7 @@ class LoadMGF(Loader):
                 parentrt = None
                 for line in f:
                     rline  = line.rstrip()
-                    if rline == "BEGIN IONS":
+                    if not rline or rline == "BEGIN IONS":
                         continue
                     if rline == "END IONS":
                         # finished doc, time to save
