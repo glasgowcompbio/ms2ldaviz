@@ -86,62 +86,73 @@
 {% block js_block %}
     <script type='text/javascript'>
 
-        $('#id_experiment_type').on('change', function() {
-            // var a = $(this).val();
+        function experiment_type_actions(){
+            var a = $('#id_experiment_type').val();
 
-            // if (a === '0') { // ms2lda
-            //     $('#id_decomposition_source').parent().show();
-            //     $('#id_K').parent().show();
-            //     $('#id_decompose_from').parent().hide();
+            if (a === '0') { // ms2lda
+                $('#id_decomposition_source').parent().show();
+                $('#id_K').parent().show();
+                $('#id_decompose_from').parent().hide();
 
-            // } else { // decomposition
-            //     $('#id_decomposition_source').parent().hide();
-            //     $('#id_K').parent().hide();
-            //     $('#id_decompose_from').parent().show();
-            // }
+            } else { // decomposition
+                $('#id_decomposition_source').parent().hide();
+                $('#id_K').parent().hide();
+                $('#id_decompose_from').parent().show();
+            }
+        }
 
-            // Use toggle function
-            $('#id_decomposition_source').parent().toggle();
-            $('#id_K').parent().toggle();
-            $('#id_decompose_from').parent().toggle();
+        function experiment_ms2_format_actions(){
+            var a = $('#id_experiment_ms2_format').val();
+            if (a == '0') { // mzML
+                $('#id_csv_file').parent().show();
+                $('#id_isolation_window').parent().show();
+                $('#id_mz_tol').parent().show();
+                $('#id_rt_tol').parent().show();
+                $('#id_min_ms1_rt').parent().show();
+                $('#id_max_ms1_rt').parent().show();
+                $('#id_filter_duplicates').parent().show();
 
-        });
-
-        $('#id_experiment_ms2_format').on('change', function() {
-            // reset 'filter ms1 duplicate' when choosing msp format input
-            if ($(this).val() == '1'){
+            } else if(a == '1' || a == '2') { // msp or mgf
+                $('#id_csv_file').parent().hide();
+                $('#id_isolation_window').parent().hide();
+                $('#id_mz_tol').parent().hide();
+                $('#id_rt_tol').parent().hide();
+                $('#id_min_ms1_rt').parent().hide();
+                $('#id_max_ms1_rt').parent().hide();
+                $('#id_filter_duplicates').parent().hide();
                 $('#id_filter_duplicates').prop('checked', false);
                 $('#id_duplicate_filter_mz_tol').parent().hide();
                 $('#id_duplicate_filter_rt_tol').parent().hide();
             }
+        }
 
-            $('#id_csv_file').parent().toggle();
-            $('#id_isolation_window').parent().toggle();
-            $('#id_mz_tol').parent().toggle();
-            $('#id_rt_tol').parent().toggle();
-            $('#id_min_ms1_rt').parent().toggle();
-            $('#id_max_ms1_rt').parent().toggle();
-            $('#id_filter_duplicates').parent().toggle();
-
-        });
-
-
-
-        // Only show following two lines when ms1 duplicate checkbox is checked
-        $('#id_filter_duplicates').click(function(){
-            if($(this).is(":checked")){
+        function filter_duplicates_actions(){
+            if($('#id_filter_duplicates').is(":checked")){
                 $('#id_duplicate_filter_mz_tol').parent().show();
                 $('#id_duplicate_filter_rt_tol').parent().show();
             } else{
                 $('#id_duplicate_filter_mz_tol').parent().hide();
                 $('#id_duplicate_filter_rt_tol').parent().hide();
             }
+        }
+
+        $('#id_experiment_type').on('change', function() {
+            experiment_type_actions();
+        });
+
+        $('#id_experiment_ms2_format').on('change', function() {
+            experiment_ms2_format_actions();
+        });
+
+        // Only show following two lines when ms1 duplicate checkbox is checked
+        $('#id_filter_duplicates').click(function(){
+            filter_duplicates_actions();
         });
 
         // initial state
-        $('#id_decompose_from').parent().hide();
-        $('#id_duplicate_filter_mz_tol').parent().hide();
-        $('#id_duplicate_filter_rt_tol').parent().hide();
+        experiment_type_actions();
+        filter_duplicates_actions();
+        experiment_ms2_format_actions();
 
     </script>
 {% endblock %}
