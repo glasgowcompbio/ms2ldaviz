@@ -3,6 +3,7 @@
 from Queue import PriorityQueue
 import numpy as np
 import sys, os
+import re
 # sys.path.append('/Users/simon/git/efcompute')
 # from ef_assigner import ef_assigner
 # from formula import Formula
@@ -782,6 +783,10 @@ class LoadMSP(Loader):
                 ##             ...]
                 inchikey_ms2_dict = {}
 
+                ## in case that msp file does not contains *inchikey*, with key-value pairs: 
+                ## new_ms1=>[(mz1, intensity1), (mz2, intensity2), ...]
+                ms2_dict = {}
+
                 temp_metadata = {}
                 in_doc = False
                 parentmass = None
@@ -812,6 +817,9 @@ class LoadMSP(Loader):
 
                     ## parse block
                     else:
+                        ## bug fixed: some msp files has ';' in ms2 spectra
+                        ## filter it out before parsing 
+                        rline = re.sub('[;,]', '', rline)
                         tokens = rline.split()
                         ## parse ms2 spectra
                         if in_doc:
@@ -820,15 +828,29 @@ class LoadMSP(Loader):
                                     # One tuple per line
                                     mz = float(tokens[0])
                                     intensity = float(tokens[1])
-                                    inchikey_ms2_dict.setdefault(inchikey, [])
-                                    inchikey_ms2_dict[inchikey].append((mz, intensity, block_id))
+                                    ## bug fixed: 
+                                    ## if msp file does not contains inchikey, should not store values to inchikey_ms2_dict
+                                    ## and intensity value to ms2_dict, for normalization later
+                                    if inchikey:
+                                        inchikey_ms2_dict.setdefault(inchikey, [])
+                                        inchikey_ms2_dict[inchikey].append((mz, intensity, block_id))
+                                    else:
+                                        # ms2.append((mz,0.0,intensity,new_ms1,file_name,float(ms2_id)))
+                                        ms2_dict.setdefault(new_ms1, [])
+                                        ms2_dict[new_ms1].append((mz,intensity))
+
 
                                 else:
                                     for pos in range(0,len(tokens),2):
                                         mz = float(tokens[pos])
                                         intensity = float(tokens[pos+1])
-                                        inchikey_ms2_dict.setdefault(inchikey, [])
-                                        inchikey_ms2_dict[inchikey].append((mz, intensity, block_id))
+                                        if inchikey:
+                                            inchikey_ms2_dict.setdefault(inchikey, [])
+                                            inchikey_ms2_dict[inchikey].append((mz, intensity, block_id))
+                                        else:
+                                            # ms2.append((mz,0.0,intensity,new_ms1,file_name,float(ms2_id)))
+                                            ms2_dict.setdefault(new_ms1, [])
+                                            ms2_dict[new_ms1].append((mz,intensity))
 
                         elif rline.startswith('Num Peaks'):
                             in_doc = True
@@ -923,6 +945,16 @@ class LoadMSP(Loader):
 
                             elif key in ['smiles', 'formula']:
                                 temp_metadata[key] = val
+
+
+            ## if *inchikey* not exist in msp file, do normalization for ms2 spectra
+            for key, value in ms2_dict.items():
+                max_intensity = np.max([tup[1] for tup in value])
+                # for intensity in value * self.normalizer / maxIntensity:
+                for (mz, intensity) in value:
+                    normalized_intensity = round(intensity * self.normalizer / max_intensity, 8)
+                    ms2.append((mz, 0.0, normalized_intensity, key, file_name, float(ms2_id)))
+                    ms2_id += 1
 
             ## do normalization
             ## normalise them first then combine and then normalise again.
