@@ -7,7 +7,7 @@ from decomposition.models import Decomposition, GlobalMotif
 
 ## tables for LDA experiment
 class Sample(models.Model):
-    name = models.CharField(max_length=32)
+    name = models.CharField(max_length=128)
     experiment = models.ForeignKey(Experiment)
 
 class DocSampleIntensity(models.Model):

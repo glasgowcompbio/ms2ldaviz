@@ -58,7 +58,7 @@ class Experiment(models.Model):
     rt_tol = models.FloatField(null=True, default=10) # seconds
     min_ms1_rt = models.FloatField(null=True, default=3*60) # seconds
     max_ms1_rt = models.FloatField(null=True, default=21*60) # seconds
-    min_ms2_intensity = models.FloatField(null=True, default=5000)
+    min_ms2_intensity = models.FloatField(null=True, default=5000.0)
 
 
     # Same with these -- this model is getting a bit bloated
