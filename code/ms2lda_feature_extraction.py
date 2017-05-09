@@ -194,7 +194,7 @@ class LoadCSV(Loader):
 # keeping the ms1 objects that can be matched. The matching is done with plus and minus the mz_tol (ppm)
 # and plus and minus the rt_tol
 class LoadMZML(Loader):
-    def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 1.0,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False,repeated_precursor_match = None,
+    def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 0.5,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False,repeated_precursor_match = None,
                     min_ms1_rt = 0.0, max_ms1_rt = 1e6, min_ms2_intensity = 0.0):
         self.min_ms1_intensity = min_ms1_intensity
         self.peaklist = peaklist
@@ -363,6 +363,9 @@ class LoadMZML(Loader):
                                 best_intensity = frag_peak[2]
                                 best_ms1 = frag_peak[3]
                     old_ms1 = best_ms1
+                    print ms1_hits
+                    print best_intensity
+
                 else:
                     # Didn't find any
                     continue
