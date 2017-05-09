@@ -328,7 +328,7 @@ class LoadMZML(Loader):
             # make sure that we haven't ended up with ms1 objects without any ms2
             ms1 = []
             for m in ms2:
-                ms1.append(ms2[3])
+                ms1.append(m[3])
             ms1 = list(set(ms1))
 
 
