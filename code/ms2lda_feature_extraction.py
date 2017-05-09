@@ -368,8 +368,6 @@ class LoadMZML(Loader):
                                 best_intensity = frag_peak[2]
                                 best_ms1 = frag_peak[3]
                     old_ms1 = best_ms1
-                    print [m.name for m in ms1_hits]
-                    print best_intensity
 
                 else:
                     # Didn't find any
