@@ -325,6 +325,11 @@ class LoadMZML(Loader):
 
         if self.min_ms2_intensity > 0.0:
             ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
+            # make sure that we haven't ended up with ms1 objects without any ms2
+            ms1 = []
+            for m in ms2:
+                ms1.append(ms2[3])
+            ms1 = list(set(ms1))
 
 
         if self.peaklist:
@@ -363,7 +368,7 @@ class LoadMZML(Loader):
                                 best_intensity = frag_peak[2]
                                 best_ms1 = frag_peak[3]
                     old_ms1 = best_ms1
-                    print ms1_hits
+                    print [m.name for m in ms1_hits]
                     print best_intensity
 
                 else:
