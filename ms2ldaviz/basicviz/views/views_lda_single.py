@@ -1140,7 +1140,12 @@ def document_pca(request, experiment_id):
 def get_topic_pca_data(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     motifs = Mass2Motif.objects.filter(experiment=experiment)
-    features = Feature.objects.filter(experiment=experiment)
+
+    # features = Feature.objects.filter(experiment=experiment)
+    documents = Document.objects.filter(experiment = experiment)
+    featureinstance = FeatureInstance.objects.filter(document__in = documents)
+    features = set([f.feature for f in featureinstance])
+
 
     n_motifs = len(motifs)
     n_features = len(features)
@@ -1538,7 +1543,10 @@ def high_classyfire(request,experiment_id):
 
 def get_features(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
-    features = Feature.objects.filter(experiment = experiment)
+    documents = Document.objects.filter(experiment = experiment)
+    feature_instances = FeatureInstance.objects.filter(document__in = documents)
+    features = set([f.feature for f in feature_instances])
+    # features = Feature.objects.filter(experiment = experiment)
     output_features = [(f.name,f.min_mz,f.max_mz) for f in features]
     return HttpResponse(json.dumps(output_features), content_type='application/json')
 

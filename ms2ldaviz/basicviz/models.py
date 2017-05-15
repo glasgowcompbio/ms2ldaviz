@@ -26,6 +26,14 @@ def get_upload_folder(instance, filename):
     return os.path.abspath(os.path.join(settings.MEDIA_ROOT, upload_folder, filename))
 
 
+class BVFeatureSet(models.Model):
+    name = models.CharField(max_length=64,unique = True)
+    def __str__(self):
+        return self.name
+    def __unicode__(self):
+        return self.name
+
+
 class Experiment(models.Model):
     name = models.CharField(max_length=128, unique=True)
     description = models.CharField(max_length=1024, null=True)
@@ -72,6 +80,8 @@ class Experiment(models.Model):
 
 
     K = models.IntegerField(null=True, default=300)
+
+    featureset = models.ForeignKey(BVFeatureSet,null = True)
 
     def __unicode__(self):
         return self.name
@@ -215,12 +225,12 @@ class JobLog(models.Model):
     timestamp = models.DateField(default= datetime.date.today, null = False)
     tasktype = models.CharField(max_length=1028, null = True)
 
-
 class Feature(models.Model):
     name = models.CharField(max_length=64)
-    experiment = models.ForeignKey(Experiment)
+    experiment = models.ForeignKey(Experiment,null=True)
     min_mz = models.FloatField(null = True)
     max_mz = models.FloatField(null = True)
+    featureset = models.ForeignKey(BVFeatureSet,null = True)
 
     def __unicode__(self):
         return self.name
