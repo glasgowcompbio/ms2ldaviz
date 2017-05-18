@@ -721,7 +721,7 @@ class MS1(object):
 
 # TODO: comment this class!
 class MultiFileVariationalLDA(object):
-	def __init__(self,corpus_dictionary,word_index,topic_index = None,topic_metadata = None,K = 20,alpha=1,eta = 0.1,update_alpha=True):
+	def __init__(self,corpus_dictionary,word_index,topic_index = None,topic_metadata = None,K = 20,alpha=1,eta = 0.1,update_alpha=True,normalise = 1000.0):
 		self.word_index = word_index # this needs to be consistent across the instances
 		self.corpus_dictionary = corpus_dictionary
 		self.K = K
@@ -747,7 +747,10 @@ class MultiFileVariationalLDA(object):
 		for corpus_name in self.corpus_dictionary:
 			new_lda = VariationalLDA(corpus=self.corpus_dictionary[corpus_name],K=K,
 				alpha=alpha,eta=eta,word_index=word_index,
-				topic_index = self.topic_index,topic_metadata = self.topic_metadata,update_alpha=self.update_alpha)
+				topic_index = self.topic_index,
+				topic_metadata = self.topic_metadata,
+				update_alpha=self.update_alpha,
+				normalise = normalise)
 			self.individual_lda[corpus_name] = new_lda
 
 
@@ -826,14 +829,14 @@ class MultiFileVariationalLDA(object):
 
 		return multifile_dict
 
-def make_split_dictionary(mflda,filename,postfix):
+def make_split_dictionary(mflda,filename,postfix,features = None):
 	# Makes a multifile LDA into several individual dictionary files
 	multifile_dict = {}
 	multifile_dict['individual_lda'] = []
 	for lda_name in mflda.individual_lda:
 		outname = lda_name + postfix
 		multifile_dict['individual_lda'].append(outname)
-		mflda.individual_lda[lda_name].make_dictionary(filename = outname + '.dict')
+		mflda.individual_lda[lda_name].make_dictionary(filename = outname + '.dict',features = features)
 	multifile_dict['word_index'] = mflda.word_index
 	multifile_dict['K'] = mflda.K
 	with open(filename,'w') as f:

@@ -241,8 +241,11 @@ class LoadMZML(Loader):
                     current_ms1_scan_rt,units = spectrum['scan start time']
                     if units == 'minute':
                         current_ms1_scan_rt *= 60.0
+                    if current_ms1_scan_rt < self.min_ms1_rt or current_ms1_scan_rt > self.max_ms1_rt:
+                        current_ms1_scan_mz = None
+                        current_ms1_scan_intensity = None
                     # Note can sometimes get empty scans at the start. If this happens we should ignore.
-                    if len(spectrum.peaks) > 0:
+                    elif len(spectrum.peaks) > 0:
                         current_ms1_scan_mz,current_ms1_scan_intensity = zip(*spectrum.peaks)
                     else:
                         current_ms1_scan_mz = None
@@ -297,39 +300,46 @@ class LoadMZML(Loader):
                                         break
                                 # print current_ms1_scan_mz[max_intensity_pos],current_ms1_scan_rt
                             # Make the new MS1 object
-                            if not max_intensity_pos == None:
+                            if (max_intensity > self.min_ms1_intensity) and (not max_intensity_pos == None):
                             # mz,rt,intensity,file_name,scan_number = None):
                                 new_ms1 = MS1(ms1_id,current_ms1_scan_mz[max_intensity_pos],
                                               current_ms1_scan_rt,max_intensity,file_name,scan_number = nc)
-                                metadata[new_ms1.name] = {'parentmass':current_ms1_scan_mz[max_intensity_pos],
-                                                          'parentrt':current_ms1_scan_rt,'scan_number':nc,
-                                                          'precursor_mass':precursor_mz}
-
-                                
-                                previous_ms1 = new_ms1 # used for merging energies
-                                previous_precursor_mz = new_ms1.mz
 
 
-                                ms1.append(new_ms1)
-                                ms1_id += 1
+                                # ms1.append(new_ms1)
+                                # ms1_id += 1
 
                                 # Make the ms2 objects:
+                                n_found = 0
                                 for mz,intensity in spectrum.centroidedPeaks:
-                                    ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id)))
-                                    ms2_id += 1
+                                    if intensity > self.min_ms2_intensity:
+                                        ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id)))
+                                        ms2_id += 1
+                                        n_found += 1
+                                if n_found > 0:
+                                    ms1.append(new_ms1)
+                                    ms1_id += 1
+                                    metadata[new_ms1.name] = {'parentmass':current_ms1_scan_mz[max_intensity_pos],
+                                                              'parentrt':current_ms1_scan_rt,'scan_number':nc,
+                                                              'precursor_mass':precursor_mz}
+
+                                
+                                    previous_ms1 = new_ms1 # used for merging energies
+                                    previous_precursor_mz = new_ms1.mz
+
 
         print "Found {} ms2 spectra, and {} individual ms2 objects".format(len(ms1),len(ms2))
 
-        if self.min_ms1_intensity>0.0:
-            ms1,ms2 = filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
+        # if self.min_ms1_intensity>0.0:
+        #     ms1,ms2 = filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
 
-        if self.min_ms2_intensity > 0.0:
-            ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
-            # make sure that we haven't ended up with ms1 objects without any ms2
-            ms1 = []
-            for m in ms2:
-                ms1.append(m[3])
-            ms1 = list(set(ms1))
+        # if self.min_ms2_intensity > 0.0:
+        #     ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
+        #     # make sure that we haven't ended up with ms1 objects without any ms2
+        #     ms1 = []
+        #     for m in ms2:
+        #         ms1.append(m[3])
+        #     ms1 = list(set(ms1))
 
 
         if self.peaklist:
@@ -417,8 +427,8 @@ class LoadMZML(Loader):
 
 
         ## class refactor, put filtering inside of the class
-        ms1 = filter(lambda x: x.rt > self.min_ms1_rt and x.rt < self.max_ms1_rt, ms1)
-        ms2 = filter(lambda x: x[3] in set(ms1),ms2)
+        # ms1 = filter(lambda x: x.rt > self.min_ms1_rt and x.rt < self.max_ms1_rt, ms1)
+        # ms2 = filter(lambda x: x[3] in set(ms1),ms2)
         # ms2 = filter(lambda x: x[3].rt > self.min_ms1_rt and x[3].rt < self.max_ms1_rt, ms2)
 
         # Chop out filtered docs from metadata
