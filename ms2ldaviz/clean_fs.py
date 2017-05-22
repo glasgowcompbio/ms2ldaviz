@@ -34,3 +34,5 @@ for name,subfs in names.items():
 				ndeleted += 1
 		if ndeleted == 0:
 			print "Problem: ",name
+			for f in subfs:
+				print '\t',[q.document.experiment for q in f.featureinstance_set.all()]
