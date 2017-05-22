@@ -4,9 +4,32 @@ import sys
 import jsonpickle
 
 from basicviz.models import Experiment,Document,Feature,FeatureInstance,Mass2Motif,Mass2MotifInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Alpha
-
+from basicviz.models import BVFeatureSet
 from basicviz.views import compute_overlap_score
 from ms1analysis.models import Sample, DocSampleIntensity
+
+
+
+def add_all_features_set(experiment,features,featureset):
+    # Used when we have a dictionary of features with their min and max mz values
+    nfeatures = len(features)
+
+    current_features = Feature.objects.filter(featureset = featureset)
+    current_names = [f.name for f in current_features]
+    ndone = 0
+    for feature in features:
+        if not feature in current_names:
+            mz_vals = features[feature]
+            f = add_feature_set(feature,featureset)
+            f.min_mz = mz_vals[0]
+            f.max_mz = mz_vals[1]
+            f.save()
+        else:
+            pass
+        ndone+=1
+        if ndone % 100 == 0:
+            print "Done {} of {}".format(ndone,nfeatures)
+
 
 
 def add_all_features(experiment,features):
@@ -36,6 +59,14 @@ def add_feature(name,experiment):
         sys.exit(0)
     return f
 
+def add_feature_set(name,featureset):
+    try:
+        f = Feature.objects.get_or_create(name = name,featureset = featureset)[0]
+    except:
+        print name,featureset
+        sys.exit(0)
+    return f
+
 def add_feature_instance(document,feature,intensity):
     try:
         fi = FeatureInstance.objects.get_or_create(document=document,feature=feature,intensity=intensity)[0]
@@ -51,6 +82,16 @@ def add_topic(topic,experiment,metadata,lda_dict):
         Mass2MotifInstance.objects.get_or_create(feature = feature,mass2motif = m2m,probability = lda_dict['beta'][topic][word])[0]
     topic_pos = lda_dict['topic_index'][topic]
     alp = Alpha.objects.get_or_create(mass2motif = m2m,value = lda_dict['alpha'][topic_pos])
+
+
+def add_topic_set(topic,experiment,metadata,lda_dict,featureset):
+    m2m = Mass2Motif.objects.get_or_create(name = topic,experiment = experiment,metadata = metadata)[0]
+    for word,probability in lda_dict['beta'][topic].items():
+        feature = Feature.objects.get(name = word,featureset = featureset)
+        Mass2MotifInstance.objects.get_or_create(feature = feature,mass2motif = m2m,probability = probability)[0]
+    topic_pos = lda_dict['topic_index'][topic]
+    alp = Alpha.objects.get_or_create(mass2motif = m2m,value = lda_dict['alpha'][topic_pos])
+
 
 def add_theta(doc_name,experiment,lda_dict):
     document = Document.objects.get(name = doc_name,experiment=experiment)
@@ -69,12 +110,32 @@ def load_phi(doc_name,experiment,lda_dict):
             FeatureMass2MotifInstance.objects.get_or_create(featureinstance = feature_instance,mass2motif = mass2motif,probability = probability)[0]
     
 
+def load_phi_set(doc_name,experiment,lda_dict,featureset):
+    document = Document.objects.get(name = doc_name,experiment=experiment)
+    for word in lda_dict['phi'][doc_name]:
+        feature = Feature.objects.get(name=word,featureset = featureset)
+        feature_instance = FeatureInstance.objects.get(document=document,feature=feature)
+        for topic in lda_dict['phi'][doc_name][word]:
+            mass2motif = Mass2Motif.objects.get(name=topic,experiment=experiment)
+            probability = lda_dict['phi'][doc_name][word][topic]
+            FeatureMass2MotifInstance.objects.get_or_create(featureinstance = feature_instance,mass2motif = mass2motif,probability = probability)[0]
+    
+
 def add_document_words(document,doc_name,experiment,lda_dict):
     for word in lda_dict['corpus'][doc_name]:
         feature = add_feature(word,experiment)
         # feature = Feature.objects.get_or_create(name=word,experiment=experiment)[0]
         # fi = FeatureInstance.objects.get_or_create(document = d,feature = feature, intensity = lda_dict['corpus'][doc][word])
         add_feature_instance(document,feature,lda_dict['corpus'][doc_name][word])
+
+def add_document_words_set(document,doc_name,experiment,lda_dict,featureset):
+    for word,intensity in lda_dict['corpus'][doc_name].items():
+        feature = Feature.objects.get(name = word,featureset = featureset)
+        try:
+            fi = FeatureInstance.objects.get_or_create(document = document,feature=feature,intensity = intensity)
+        except:
+            print document,word,experiment
+            sys.exit(0)
 
 def add_sample(sample_name, experiment):
     sample = Sample.objects.get_or_create(name = sample_name, experiment = experiment)[0]
@@ -94,9 +155,14 @@ def load_sample_intensity(document, experiment, metadata):
                 add_doc_sample_intensity(sample, document, intensity)
 
 def load_dict(lda_dict,experiment,verbose = True):
+
+    # Hard-coded to use the binned 005 featureset
+    featureset = BVFeatureSet.objects.get(name = 'binned_005')
+
     if 'features' in lda_dict:
         print "Explicit feature object: loading them all at once"
-        add_all_features(experiment,lda_dict['features'])
+        add_all_features_set(experiment,lda_dict['features'],featureset = featureset)
+
 
     print "Loading corpus, samples and intensities"
     n_done = 0
@@ -115,7 +181,9 @@ def load_dict(lda_dict,experiment,verbose = True):
             print doc,experiment,metdat
         d = add_document(doc,experiment,metdat)
         # d = Document.objects.get_or_create(name=doc,experiment=experiment,metadata=metdat)[0]
-        add_document_words(d,doc,experiment,lda_dict)
+
+        add_document_words_set(d,doc,experiment,lda_dict,featureset)
+
 
         load_sample_intensity(d, experiment, lda_dict['doc_metadata'][doc])
 
@@ -136,8 +204,7 @@ def load_dict(lda_dict,experiment,verbose = True):
             experiment.save()
         metadata = {}
         metadata = lda_dict['topic_metadata'].get(topic,{})
-        add_topic(topic,experiment,jsonpickle.encode(metadata),lda_dict)
-
+        add_topic_set(topic,experiment,jsonpickle.encode(metadata),lda_dict,featureset)
         # m2m = Mass2Motif.objects.get_or_create(name = topic,experiment = experiment,metadata = jsonpickle.encode(metadata))[0]
         # for word in lda_dict['beta'][topic]:
         #   feature = Feature.objects.get(name = word,experiment=experiment)
@@ -169,7 +236,7 @@ def load_dict(lda_dict,experiment,verbose = True):
             print "Done {}/{}".format(n_done,to_do)
             experiment.status = "Done {}/{} phi".format(n_done,to_do)
             experiment.save()
-        load_phi(doc,experiment,lda_dict)
+        load_phi_set(doc,experiment,lda_dict,featureset)
         # document = Document.objects.get(name = doc,experiment=experiment)
         # for word in lda_dict['phi'][doc]:
         #   feature = Feature.objects.get(name=word,experiment=experiment)
