@@ -36,3 +36,8 @@ for name,subfs in names.items():
 			print "Problem: ",name
 			for f in subfs:
 				print '\t',[q.document.experiment for q in f.featureinstance_set.all()]
+
+print len(features) - len(names)
+print len(todelete)
+for feature in todelete:
+	feature.delete()

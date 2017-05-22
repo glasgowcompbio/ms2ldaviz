@@ -71,7 +71,7 @@ if __name__ == '__main__':
 				fi.save()
 			mis = Mass2MotifInstance.objects.filter(feature = f)
 			for ms in mis:
-				ms.feature = gfeature
+				ms.feature = new_feature
 				ms.save()
 
 
