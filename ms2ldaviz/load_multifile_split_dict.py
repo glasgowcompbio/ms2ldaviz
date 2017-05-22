@@ -42,7 +42,7 @@ if __name__ == '__main__':
 		if len(current_e) > 0:
 			print "Experiment of this name already exists, exiting"
 			sys.exit(0)
-		experiment = Experiment(name=experiment_name)[0]
+		experiment = Experiment(name=experiment_name)
 		experiment.status = 'loading'
 		experiment.save()
 		ml = MultiLink.objects.get_or_create(experiment = experiment, multifileexperiment = mfe)
