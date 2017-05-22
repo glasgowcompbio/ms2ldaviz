@@ -20,7 +20,7 @@ def add_all_features_set(experiment,features,featureset):
     for feature in features:
         # round the name
         mz = float(feature.split('_')[1])
-        
+
         if not feature in current_names:
             mz_vals = features[feature]
             f = add_feature_set(feature,featureset)
@@ -64,11 +64,19 @@ def add_feature(name,experiment):
 
 def add_feature_set(name,featureset):
     try:
-        f = Feature.objects.get_or_create(name = name,featureset = featureset)[0]
+        current = Feature.objects.filter(name = name,featureset = featureset)
+        if len(current) == 0:
+            f = Feature(name = name,featureset = featureset)
+            return f
+        elif len(current) == 1:
+            return current[0]
+        elif len(current) > 1:
+            print "MULTIPLE FEATURE",name,featureset
+            sys.exit(0)
+        # f = Feature.objects.get_or_create(name = name,featureset = featureset)[0]
     except:
         print name,featureset
         sys.exit(0)
-    return f
 
 def add_feature_instance(document,feature,intensity):
     try:
