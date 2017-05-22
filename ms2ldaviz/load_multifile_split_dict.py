@@ -38,7 +38,11 @@ if __name__ == '__main__':
 		with open(individual_filename,'r') as f:
 			lda_dict = pickle.load(f)
 		print experiment_name
-		experiment = Experiment.objects.get_or_create(name=experiment_name)[0]
+		current_e = Experiment.objects.filter(name = experiment_name)
+		if len(current_e) > 0:
+			print "Experiment of this name already exists, exiting"
+			sys.exit(0)
+		experiment = Experiment(name=experiment_name)[0]
 		experiment.status = 'loading'
 		experiment.save()
 		ml = MultiLink.objects.get_or_create(experiment = experiment, multifileexperiment = mfe)
