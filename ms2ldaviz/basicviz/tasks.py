@@ -27,6 +27,9 @@ def match_motifs(experiment_id,base_experiment_id,min_score_to_save = 0.5):
     features = sorted(features,key = lambda x: x.min_mz)
     base_features = sorted(base_features,key = lambda x: x.min_mz)
 
+    print len(features)
+    print len(base_features)
+
     feature_name_dict = {}
     base_feature_name_dict = {}
     for feature in features:
