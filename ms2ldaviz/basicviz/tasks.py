@@ -4,6 +4,13 @@ import numpy as np
 from ms2ldaviz.celery_tasks import app
 from basicviz.models import Experiment,Mass2MotifInstance,MotifMatch
 
+
+def get_experiment_features(experiment):
+    motifs = experiment.motif_set.all()
+    feature_instances = Mass2MotifInstance.objects.filter(mass2motif__in = motifs)
+    features = set([fi.feature for fi in feature_instances])
+    return features
+
 @app.task
 def match_motifs(experiment_id,base_experiment_id,min_score_to_save = 0.5):
     
@@ -13,8 +20,12 @@ def match_motifs(experiment_id,base_experiment_id,min_score_to_save = 0.5):
 
 
     # Get the features associated with this experiment for matching
-    features = experiment.feature_set.all().order_by('min_mz')
-    base_features = base_experiment.feature_set.all().order_by('min_mz')
+    # features = experiment.feature_set.all().order_by('min_mz')
+    # base_features = base_experiment.feature_set.all().order_by('min_mz')
+    features = get_experiment_features(experiment)
+    base_features = get_experiment_features(base_experiment)
+    features = sorted(features,key = lambda x: x.min_mz)
+    base_features = sorted(base_features,key = lambda x: x.min_mz)
 
     feature_name_dict = {}
     base_feature_name_dict = {}
