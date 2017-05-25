@@ -6,7 +6,7 @@ from basicviz.models import Experiment,Mass2MotifInstance,MotifMatch
 
 
 def get_experiment_features(experiment):
-    motifs = experiment.motif_set.all()
+    motifs = experiment.mass2motif_set.all()
     feature_instances = Mass2MotifInstance.objects.filter(mass2motif__in = motifs)
     features = set([fi.feature for fi in feature_instances])
     return features
