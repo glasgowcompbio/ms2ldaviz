@@ -1087,6 +1087,9 @@ class LoadMGF(Loader):
                             else:
                                 temp_metadata[key] = val
                         else:
+                            if 'mslevel' in temp_metadata and temp_metadata['mslevel'] == '1':
+                                continue
+
                             if not in_doc:
                                 in_doc = True
                                 new_ms1 = MS1(ms1_id,parentmass,parentrt,parentintensity,file_name)
