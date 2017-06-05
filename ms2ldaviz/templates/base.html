@@ -47,21 +47,21 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-left">
-            <li><a href="/basicviz"><strong>Experiments</strong></a></li>
-            <li role="separator" class="divider"></li>
-            <li><a href="/people"><strong>People</strong></a></li>
-            <li><a href="/api"><strong>API</strong></a></li>
-            <li><a href="/user_guide"><strong>User Guide</strong></a></li>
+            <li><a href="/basicviz"><small>Experiments</small></a></li>
+              <li><a href="/decomposition/decompose_spectrum"><small>Quick Decomposition</small></a></li>
+            <li><a href="/people"><small>People</small></a></li>
+            <li><a href="/api"><small>API</small></a></li>
+            <li><a href="/user_guide"><small>User Guide</small></a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             {% if user.is_authenticated %}
                 <li>
-                    <a href="/registration/logout" class="pull-right"><strong>Log out {{ user }}</strong></a>
+                    <a href="/registration/logout" class="pull-right"><small>Log out {{ user }}</small></a>
                     {% ifnotequal request.user.username "guest" %}
-                        <a href="/registration/profile" class="pull-right"><strong>Update Profile</strong></a>
+                        <a href="/registration/profile" class="pull-right"><small>Update Profile</small></a>
                     {% endifnotequal %}
                     {% if request.user.is_staff %}
-                        <a href="/basicviz/list_log" class="pull-right"><strong>View Job Logs</strong></a>
+                        <a href="/basicviz/list_log" class="pull-right"><small>View Job Logs</small></a>
                     {% endif %}
                 </li>
             {% else %}

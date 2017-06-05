@@ -30,11 +30,19 @@
 
 {% block body_block %}
 
-<h2>Decompose your spectra</h2>
-
+<h2>Quick Decomposition</h2>
 
 {% if spectrum_form %}
-    <p>You must enter the mass of the parent ion and the spectrum. Spectrum should be entered as pairs of mass intensity values with the mass and intensity separated by a colon (:) or a space ( ). Pairs should be separated by a space, or a newline.</p>
+    <p>
+        The following page provides a functionality to quickly decompose a single fragmentation
+        spectrum only (alternatively, to decompose all spectra in a dataset, please create a "Decomposition"
+        experiment from the <a href="/basicviz">Experiments</a> page).
+    </p>
+    <p>
+        Enter the mass of the parent ion and the spectrum in the "Parentmass" and "Spectrum" fields, and choose a set of
+        Mass2Motifs to decompose against in the "Motifset" field. Spectrum should be entered as pairs of mass intensity values with the mass and intensity separated by a colon (:)
+        or a space ( ). Pairs should be separated by a space, or a newline. An example is provided below.
+    </p>
     <form id="spectrum_form" method="post" action="/decomposition/decompose_spectrum/">
         {% csrf_token %}
         {% for hidden in spectrum_form.hidden_fields %}
@@ -53,7 +61,8 @@
 {% if result_url %}
     <h4>Job Submitted</h4>
     <p>
-    Your results will be available as a json object at <A href="/decomposition/api/batch_results/{{result_id}}">{{result_url}}</A> (format described below), and in a prettier way <A href="/decomposition/api/pretty_results/{{result_id}}/">here</A>.
+    When finished, your results will be available <A href="/decomposition/api/pretty_results/{{result_id}}/">here</A>
+    or as a JSON object at <A href="/decomposition/api/batch_results/{{result_id}}">{{result_url}}</A> (format described in the <a href="/api"><strong>API</strong> page</a>).
     </p>
     <p>
     Keep these urls safe!
