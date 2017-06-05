@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^$', views.home, name='home'),
     url(r'^people/', views.people, name='people'),
     url(r'^api/', views.api, name='people'),
+    url(r'^user_guide/', views.user_guide, name='user_guide'),
     url(r'^grappelli/', include('grappelli.urls')),  # grappelli URLS
     url(r'^admin/', include(admin.site.urls)),
     url(r'^basicviz/', include('basicviz.urls')),
