@@ -47,21 +47,26 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-left">
-            <li><a href="/basicviz"><small>Experiments</small></a></li>
-              <li><a href="/decomposition/decompose_spectrum"><small>Quick Decomposition</small></a></li>
-            <li><a href="/people"><small>People</small></a></li>
-            <li><a href="/api"><small>API</small></a></li>
-            <li><a href="/user_guide"><small>User Guide</small></a></li>
+            <li><a href="/basicviz"><strong>Experiments</strong></a></li>
+            <li><a href="/decomposition/decompose_spectrum"><strong>Quick Decomposition</strong></a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">More <span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                <li><a href="/people"><strong>People</strong></a></li>
+                <li><a href="/api"><strong>API</strong></a></li>
+                <li><a href="/user_guide"><strong>User Guide</strong></a></li>
+              </ul>
+            </li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             {% if user.is_authenticated %}
                 <li>
-                    <a href="/registration/logout" class="pull-right"><small>Log out {{ user }}</small></a>
+                    <a href="/registration/logout" class="pull-right"><strong>Log out {{ user }}</strong></a>
                     {% ifnotequal request.user.username "guest" %}
-                        <a href="/registration/profile" class="pull-right"><small>Update Profile</small></a>
+                        <a href="/registration/profile" class="pull-right"><strong>Update Profile</strong></a>
                     {% endifnotequal %}
                     {% if request.user.is_staff %}
-                        <a href="/basicviz/list_log" class="pull-right"><small>View Job Logs</small></a>
+                        <a href="/basicviz/list_log" class="pull-right"><strong>View Job Logs</strong></a>
                     {% endif %}
                 </li>
             {% else %}
@@ -87,6 +92,11 @@
     <script type='text/javascript' src='{% static "js/bootstrap.min.js" %}'></script>
     <script type='text/javascript' src='{% static "js/flat-ui.js" %}'></script>
     <script type='text/javascript' src='{% static "js/jquery.blockUI.js" %}'></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(".dropdown-toggle").dropdown();
+        });
+    </script>
     {% block js_block %}
     {% endblock %}
 
