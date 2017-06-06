@@ -110,9 +110,13 @@
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>Fragmentation Spectra Explained by Mass2Motif</h4>
+                <p>
+                    The following table lists all fragmentation spectra that are explained by this Mass2Motif
+                    at the threshold specified in the <a href="/options/view_experiment_options/{{experiment.id}}">experiment option</a>.
+                </p>
                 <table class='table' id='doctable'>
                     <thead>
-                        <tr><th>Document name</th><th>Doc Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
+                        <tr><th>Fragmentation spectra</th><th>Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
                     </thead>
                     <tbody>
                         {% for dm2m in dm2ms %}
@@ -130,6 +134,13 @@
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>Fragmentation Spectra Plot</h4>
+                <p>
+                    The fragmentation spectra of molecules explained by this Mass2Motif are plotted below.
+                    Features (fragments and losses) explained by this Mass2Motif will be coloured red,
+                    while parent ion is coloured in blue.
+                    Click <strong>Next</strong> and <strong>Previous</strong> to cycle through
+                    the fragmentation spectra.
+                </p>
             	<div id="spectra" border="20" padding="20"></div>
             </div>
         </div>

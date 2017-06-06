@@ -284,6 +284,7 @@ def view_parents(request, motif_id):
     total_prob = sum([m.probability for m in motif_features])
     context_dict['motif_features'] = motif_features
     context_dict['total_prob'] = total_prob
+    context_dict['experiment'] = experiment
 
     # Get the taxa or substituent terms (if there are any)
     taxa_terms = motif.taxainstance_set.filter(probability__gte = 0.2).order_by('-probability')

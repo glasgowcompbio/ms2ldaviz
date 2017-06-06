@@ -41,9 +41,15 @@
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>Fragmentation Spectra Details</h4>
+                <p>
+                    The following table lists the fragmentation spectra of molecules
+                    in this dataset. Click the links in the <strong>Name</strong> column
+                    for more information on that molecule, including associated Mass2Motifs
+                    that explain the features of the spectra.
+                </p>
                 <table class="table" id="parenttable">
                 <thead>
-                <tr><th>Name</th><th>Mass</th><th>link</th><th>Annotation</th></tr>
+                <tr><th>Name</th><th>Precursor Mass</th><th>link</th><th>Display Name</th></tr>
                 </thead>
                 <tbody>
                 {% for doc in documents %}
@@ -63,6 +69,10 @@
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>Mass2Motif Details</h4>
+                <p>
+                    The following table lists the Mass2Motifs that have been inferred for this
+                    dataset, including their degree (number of associated molecules) and annotations.
+                </p>
                 <table class='table' id='summarytable'>
                     <thead>
                         <tr><th>Name</th><th>Degree</th><th>Annotation</th></tr>
@@ -83,7 +93,11 @@
         </div>
         <div class="panel panel-default">
             <div class="panel-body">
-                <h4>Feature Table (filtered to show only features with probability > 0.05)</h4>
+                <h4>Extracted Fragment and Loss Features</h4>
+                <p>
+                    The following table lists all features extracted from the dataset,
+                    that can be explained by any inferred Mass2Motif with probability > 0.05.
+                </p>
                 <table class='table' id = 'featuretable'>
                     <thead>
                         <tr><th>Motif</th><th>Feature</th><th>Min m/z</th><th>Max m/z</th><th>Probability</th></tr>
@@ -135,7 +149,7 @@
 			buttons: [
 		        'csv',
 	        ],
-	        "order": [[ 0, "asc" ]],
+	        "order": [[ 1, "asc" ]],
 	    });
 		$('#parenttable').DataTable({
 			dom: 'Bfrtip',

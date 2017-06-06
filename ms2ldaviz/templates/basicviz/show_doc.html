@@ -29,7 +29,12 @@
         {% if mass2motifs %}
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <h4>Linked Mass2Motifs</h4>
+                    <h4>Associated Mass2Motifs</h4>
+                    <p>
+                        The following table lists all Mass2Motifs that explain features
+                        extracted from this fragmentation spectra -- at the threshold specified
+                        in the <a href="/options/view_experiment_options/{{experiment.id}}">experiment option</a>.
+                    </p>
                     <table class="table" id="motiftable">
                         <thead>
                             <tr>
@@ -66,6 +71,11 @@
             <div class="panel panel-default">
                 <div class="panel-body">
                     <h4>Features</h4>
+                    <p>
+                        The following table lists all features extracted from this fragmentation spectra --
+                        alongside Mass2Motifs that explain these features at the threshold specified
+                        in the <a href="/options/view_experiment_options/{{experiment.id}}">experiment option</a>.
+                    </p>
                     <table class="table" id="parenttable">
                     <thead>
                     <tr>
@@ -79,7 +89,7 @@
                         <tr><td>{{feature.feature.name}}</td><td>{{feature.intensity}}</td>
                         <td>
                             {% for m2minstance in m2minstances %}
-                                ({{m2minstance.mass2motif}}, {{m2minstance.probability|floatformat:"3"}})
+                                {{m2minstance.mass2motif}}, ({{m2minstance.probability|floatformat:"3"}})
                             {% endfor %}
                         </td>
                         </tr>
@@ -91,7 +101,12 @@
         {% endif %}
         <div class="panel panel-default">
             <div class="panel-body">
-                <h4>Fragmentation Spectra Plot</h4>
+                <h4>Fragmentation Spectrum Plot</h4>
+                <p>
+                    The fragmentation spectrum of this molecules is plotted below, alongside
+                    associated Mass2Motifs. Features (fragments and losses) explained by the linked
+                    Mass2Motif are coloured in red, while the parent ion is coloured in blue.
+                </p>
                 <div id="spectra" border="20" padding="20">
                 </div>
             </div>
