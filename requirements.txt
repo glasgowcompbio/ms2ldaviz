@@ -7,4 +7,4 @@ celery==4.0.2
 pymzml==0.7.7
 django-grappelli==2.9.1
 django-ipware==1.1.6
-markdown2==2.3.4
+django-markdown2==0.3.0
