@@ -353,6 +353,7 @@ body {
   line-height: 1.72222;
   color: #34495e;
   background-color: #ffffff;
+  background: url(../img/cream_pixels.png) repeat 0 0;
 }
 a {
   color: #16a085;

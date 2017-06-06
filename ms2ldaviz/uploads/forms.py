@@ -44,7 +44,7 @@ class CreateExperimentForm(forms.ModelForm):
         model = Experiment
         widgets = {
             'name': forms.TextInput(attrs={'style': 'width:300px'}),
-            'description': forms.Textarea(attrs={'rows': 4, 'cols': 100}),
+            'description': forms.Textarea(attrs={'rows': 3, 'cols': 56}),
             'csv_file': forms.ClearableFileInput(),
             'ms2_file': forms.ClearableFileInput()
         }

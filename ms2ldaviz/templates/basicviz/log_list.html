@@ -21,7 +21,9 @@
 	{% for log in logs %}
 	<tr>
         <td>{{log.experiment.id}}</td>
-		<td><a href="/basicviz/show_log_file/{{log.experiment.id}}">{{log.experiment}}</a></td>
+		<td>
+            <a href="/basicviz/show_log_file/{{log.experiment.id}}">{{log.experiment}}</a>
+        </td>
 		<td>{{log.user.username}}</td>
 		<td>{{log.timestamp}}</td>
 		<td>{{log.tasktype}}</td>
@@ -50,6 +52,7 @@
 			buttons: [
 		        'csv',
 	        ],
+	        "order": [[ 3, "desc" ]],
 	    });
 	</script>
 {% endblock %}

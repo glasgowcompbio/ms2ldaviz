@@ -39,15 +39,23 @@
 
     {% if show_lda %}
         <h5>LDA Experiments</h5>
-        <p>The following are LDA experiments where substructures have been discovered in a completely unsupervised manner.</p>
+        <p>
+            The following are LDA experiments where motifs have been discovered in a completely
+            unsupervised manner. Experiments in <strong>bold</strong> are editable, while the rest
+            can only be viewed in read-only mode.
+        </p>
         <div id="accordion">
         {% for experiment in experiments|sort_experiment_by_id %}
             {% ifequal experiment.0.experiment_type '0' %}
-                <h3><b>{{experiment.0.name}}</b> ({{experiment.0.description}}) ({{experiment.1}}) ({{experiment.0.id}})</h3>
+                {% ifequal experiment.1 'view' %}
+                    <h3>{{experiment.0.name}} ({{experiment.0.id}})</h3>
+                {% else %}
+                    <h3><strong>{{experiment.0.name}}</strong> ({{experiment.0.id}})</h3>
+                {% endifequal %}
                 <div>
                     <a href="/basicviz/summary/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Summary page</a>
-                    <a href="/basicviz/show_docs/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-export"></span>&nbsp;Show Parents</a>
-                    <a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show Motifs</a>
+                    <!-- a href="/basicviz/show_docs/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-export"></span>&nbsp;Show Parents</a -->
+                    <!-- a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show Motifs</a -->
                     {% if experiment.1 == 'edit' %}
                         <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-option-horizontal"></span>&nbsp;View Experiment Options</a>
                         <a href="/ms1analysis/create_ms1analysis/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-tasks"></span>&nbsp;Create MS1 Analysis</a>
@@ -75,11 +83,17 @@
 
     {% if show_decomposition %}
         <h5>Decomposition Experiments</h5>
-        <p>The following are decomposition experiments where substructures have been discovered with respect to our annotated Mass2Motifs.</p>
+        <p>
+            The following are decomposition experiments where motifs in the data have been inferred using
+            a previously defined set of Mass2Motifs (allowing for rapid decomposition of molecular
+            spectra based on the presence of Mass2Motifs from our database).
+            Experiments in <strong>bold</strong> are editable, while the rest
+            can only be viewed in read-only mode.
+        </p>
         <div id="accordion2">
         {% for experiment in experiments|sort_experiment_by_id %}
             {% ifequal experiment.0.experiment_type '1' %}
-                <h3><b>{{experiment.0.name}}</b> ({{experiment.0.description}}) ({{experiment.1}}) ({{experiment.0.id}})</h3>
+                <h3><b>{{experiment.0.name}}</b> ({{experiment.1}}) ({{experiment.0.id}})</h3>
                 <div> <!-- div for each accordion section -->
                     <div>
                         {% if experiment.1 == 'edit' %}
@@ -89,6 +103,11 @@
                     </div>
                     {% for decomposition in experiment.0.decomposition_set.all %}
                         <br/>
+                        {% if experiment.1 == 'edit' %}
+                            <p><em>{{decomposition.name}}</em></p>
+                        {% else %}
+                            <p>{{decomposition.name}}</p>
+                        {% endif %}
                         <p><em>{{decomposition.name}}</em></p>
                         {% if decomposition.status == '0' %}
                             <div>Decomposition Pending, check back later...</div>
@@ -124,11 +143,16 @@
   <div id="tabs-2">
     <h4>Create MS2LDA+ Experiments</h4>
     <p>
-        MS2LDA+ experiments share the Mass2Motifs across multiple samples, allowing us to
+        MS2LDA+ experiments share Mass2Motifs across multiple samples, allowing us to
         infer the prevalence of that motif in a particular sample.
+
     </p>
     {% if extra_user %}
-        <p>The following experiments are ready for analysis. After clicking on an experiment, you use the arrow keys to navigate to other experiments in the list. Press <b>Enter</b> to open or close an experiment.</p>
+        <p>
+            The following are MS2LDA+ experiments where motifs across samples have been discovered
+            in a completely unsupervised manner. Experiments in <strong>bold</strong> are editable, while the rest
+            can only be viewed in read-only mode.
+        </p>
         <div id="accordion3">
             {% for mf in mfe|sort_by:'name' %}
                 <h3><b>{{mf.name}}</b> ({{mf.description}})</h3>

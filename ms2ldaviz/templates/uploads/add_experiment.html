@@ -8,79 +8,40 @@
 {% block body_block %}
 
 	<h3>Add a new experiment</h3>
-    <p>
-        You can choose either to decompose your spectra in a completely
-        unsupervised manner (experiment type <strong>LDA</strong>) or with respect to
-        existing Mass2Motifs that we have annotated
-        (experiment type <strong>Decomposition</strong>). Please scroll down for more detailed instructions.
-    </p>
-    <p>
-        If an MS1 CSV file is provided, it will be used to seed the precursor peaks during the extraction of fragmentation spectra.
-        The uploaded MS2 file has to be in mzML format for now.
-    </p>
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p>
+                    You can choose either to decompose your spectra in a completely
+                    unsupervised manner (experiment type <strong>LDA</strong>) or with respect to
+                    existing Mass2Motifs that we have annotated
+                    (experiment type <strong>Decomposition</strong>). Please scroll down for more detailed instructions.
+                </p>
+                <p>
+                    If an <a href="{%  url 'ms1_format' %}" target="_blank">MS1 CSV file</a> is provided, it will be used to seed the precursor peaks during the extraction of fragmentation spectra.
+                    The uploaded MS2 file has to be in mzML/MSP/MGF format for now.
+                </p>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <form id="experiment_form" method="post" action="/uploads/create_experiment/" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% for hidden in experiment_form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
 
-    <form id="experiment_form" method="post" action="/uploads/create_experiment/" enctype="multipart/form-data">
-        {% csrf_token %}
-        {% for hidden in experiment_form.hidden_fields %}
-            {{ hidden }}
-        {% endfor %}
+                    {% for field in experiment_form.visible_fields %}
+                        <p>{{ field.errors }}</p>
+                        <p>  {{field.label}} {% if field.field.required %} * {% endif %} {{ field }}</p>
+                    {% endfor %}
+                    <input type="submit" name="submit" value="Submit Your Experiment" class="btn btn-primary" />
+                </form>
+            </div>
+        </div>
+    </div>
 
-        {% for field in experiment_form.visible_fields %}
-            <p>{{ field.errors }}</p>
-            <p>  {{field.label}} {% if field.field.required %} * {% endif %} {{ field }}</p>
-        {% endfor %}
-        <input type="submit" name="submit" value="Submit Your Experiment" class="btn btn-primary" />
-    </form>
-    <hr />
-    <h5>MS1 Peaklist File Format</h5>
-    <p>
-        <small>
-            <a href="{% static "txt/example_peaklist.csv" %}">Download an example here</a>.
-        </small>
-    </p>
-    <p>
-        <small>
-            The required file format for the MS1 peak list is as follows:
-        </small>
-    </p>
-    <p>
-        <small>
-            A .CSV file with header line:
-        </small>
-    </p>
-    <blockquote>
-        ("..., mass, RT, samplename_1, samplename_2,..."), delimiter: '.
-    </blockquote>
-    <p>
-        <small>
-            The <strong>mass</strong> column must have the column header of either 'mass' or 'mz' (case-insensitive).
-            Retention time is assumed to be the column immediately after mass, and should be in seconds.
-            Any columns before <strong>mass</strong> (e.g. containing peak IDs from other software) will be ignored.
-        </small>
-    </p>
-    <p>
-        <small>
-            All columns after retention time will be interpreted as MS1 intensities, with one column per sample.
-            In the .CSV file, missing data can be stored as empty, e.g.
-        </small>
-    </p>
-    <blockquote>
-        123.45,,567.89
-    </blockquote>
-    <p>
-        <small>
-            or NA, e.g.
-        </small>
-    </p>
-    <blockquote>
-        123.45,NA,567.89
-    </blockquote>
-    <p>
-        <small>
-            Any intensities that are negative values, cannot be interpreted as a float, or are empty will be ignored
-            and not be stored for further analysis.
-        </small>
-    </p>
+
 {% endblock %}
 
 {% block js_block %}

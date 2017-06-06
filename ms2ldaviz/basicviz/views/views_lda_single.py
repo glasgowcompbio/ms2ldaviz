@@ -312,7 +312,7 @@ def view_parents(request, motif_id):
     dm2m = get_docm2m(motif)
     context_dict['dm2ms'] = dm2m
 
-    context_dict['status'] = 'Edit metadata...'
+    context_dict['status'] = None
     if request.method == 'POST':
         form = Mass2MotifMetadataForm(request.POST)
         if form.is_valid():
@@ -329,7 +329,7 @@ def view_parents(request, motif_id):
                 del md['short_annotation']
             motif.metadata = jsonpickle.encode(md)
             motif.save()
-            context_dict['status'] = 'Metadata saved...'
+            context_dict['status'] = 'Annotation saved.'
 
     permission = check_user(request,experiment)
     if permission == 'edit':
@@ -1631,12 +1631,15 @@ def summary(request,experiment_id):
 
     motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment = experiment,probability__gte = 0.05)
 
+    documents = Document.objects.filter(experiment=experiment)
 
     context_dict = {}
     context_dict['experiment'] = experiment
     context_dict['user_experiments'] = user_experiments
     context_dict['motif_tuples'] = motif_tuples
     context_dict['motif_features'] = motif_features
+    context_dict['documents'] = documents
+    context_dict['n_docs'] = len(documents)
 
     return render(request,'basicviz/summary.html',context_dict)
 
@@ -1653,7 +1656,7 @@ def start_match_motifs(request,experiment_id):
             base_experiment_id = base_experiment.id
             minimum_score_to_save = float(match_motif_form.cleaned_data['min_score_to_save'])
             match_motifs.delay(experiment.id,base_experiment_id,min_score_to_save = minimum_score_to_save)
-            return redirect('/basicviz/')
+            return manage_motif_matches(request, experiment_id)
     else:
         match_motif_form = MatchMotifForm(request.user)
     context_dict['match_motif_form'] = match_motif_form

@@ -13,7 +13,7 @@ function plot_word_graph(url, mass2motif_id, motif_name){
 function plot(mass2motif_id, total_dataset){
 	var height = 350;
 	var width = 600;
-	var margin = {top: 30, right: 10, bottom: 30, left: 150}	
+	var margin = {top: 30, right: 10, bottom: 30, left: 200}
 
 	//data
 	var names = []

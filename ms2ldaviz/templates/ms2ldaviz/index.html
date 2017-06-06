@@ -3,65 +3,78 @@
 {% load staticfiles %}
 
 {% block body_block %}
-<h3>Welcome!</h3>
-<p>
-    <img src="{% static 'images/banner.png' %}" alt="Banner" width="100%"/>
-</p>
-<div class="well well-sm">
-    <p>
-        <a href="/basicviz" class="btn btn-primary">Go to Experiments</a>
-    </p>
-    <hr/>
-    <h4>Metabolomics</h4>
-    <p>
-        <a href="https://en.wikipedia.org/wiki/Metabolomics">Metabolomics</a> is the large-scale, untargeted studies of the small molecules involved in essential life-sustaining chemical processes (metabolites). Untargeted metabolomics has provided insights into a wide array of fields, such as medical diagnostics, drug discovery, personalised medicine and many others.
-        Measurements in metabolomics studies are routinely performed using <a href="https://en.wikipedia.org/wiki/Liquid_chromatography%E2%80%93mass_spectrometry">liquid chromatography mass spectrometry</a> (LC-MS) instruments.
-        Using <a href="https://en.wikipedia.org/wiki/Tandem_mass_spectrometry">tandem mass spectrometry</a>, fragmentation peaks characteristic to a compound can be obtained and used to help establish the identity of the compound.
-    </p>
-    <hr/>
-    <h4>Unsupervised Substructure Discovery</h4>
-    <p>
-        <a href="https://en.wikipedia.org/wiki/Fragmentation_(mass_spectrometry)">Fragmentation spectra</a>, which provide the characteristic fingerprints of compounds, also contain structural information where a subset of fragment peaks may correspond to a shared chemical substructure in a class of compounds.
-        The aim of this site is to provide an online platform that allows users to perform unsupervised substructure discovery in fragmentation experiments,
-        decompose fragmentation experiments into characterized substructures (Mass2Motifs) found in MS/MS spectra of reference compounds,
-        and integrate fragmentation analysis with comparative metabolomics experiments.
-    </p>
-    <p>
-        <b>How does it work?</b> In our proposed method (<a href='http://www.pnas.org/content/113/48/13738.abstract'>MS2LDA</a>), discrete fragment and neutral loss features are extracted from fragmentation spectra. Related features that tend to co-occur are detected using the <a href="https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation">Latent Dirichlet Allocation</a> model.
-        The figure below shows the analogy between LDA for text and MS2LDA for fragment and neutral loss features. LDA finds topics interpreted as ‘football related’, ‘business-related’ and ‘environment related’. MS2LDA finds sets of concurring mass fragments or losses (Mass2Motifs) that can be interpreted as ‘Asparagine-related’, ‘Hexose-related’ and ‘Adenine-related’.
-    </p>
-    <p>
-        <img src="{% static 'images/text2frags.png' %}" alt="Text2Frags" width="80%"/>
-    </p>
-    <p>
-        The tool currently accepts the fragmentation experiments in .mzML and .MSP formats and optionally an MS1 peak list can be added to which the MS1 peaks found in the fragmentation experiment are then matched prior to running LDA or Decomposition.
-    </p>
-
-    <h4>Features</h4>
-    <p>
-        Ms2lda.org provides access to the LDA and Decomposition models and includes the following visualisation features:
-    </p>
-    <ul>
-        <li>Network display of discovered substructures (Mass2Motifs) and fragmented molecules</li>
-        <li>Mass2Motif pages with spectra of fragmented molecules and characteristic fragment/loss features</li>
-        <li>Parent pages displaying all Mass2Motifs found in fragmentation spectra</li>
-    </ul>
-    <p>
-        In addition, the following features are provided to facilitate integration with metabolomics experiments by:
-    </p>
-    <ul>
-        <li>Mapping fold changes onto fragmented molecules</li>
-        <li>Computing differentially expressed Mass2Motifs</li>
-        <li>Highlighting changing molecules and differential Mass2Motifs in the network display</li>
-    </ul>
-    <h4>Links</h4>
-    <p>
-        The data and codes for the paper can be found at <a href="http://dx.doi.org/10.5525/gla.researchdata.313">http://dx.doi.org/10.5525/gla.researchdata.313</a>.
-        A new version of MS2LDA that allows for topics (i.e. Mass2Motifs) to be inferred across multiple document collections (i.e. fragmentation files) at once
-        can be found at <a href="http://github.com/sdrogers/lda">http://github.com/sdrogers/lda</a>.
-        The rest of the pipeline codes to process and load fragmentation data into the pipeline can also be found there.
-        The codes for this website itself, alongside various visualisation modules, can be found at <a href="http://github.com/sdrogers/ms2ldaviz">http://github.com/sdrogers/ms2ldaviz</a>
-    </p>
+<div>
+    <img class="img-responsive" style="margin-top: 30px; margin-bottom: 30px" src="{% static 'images/banner.png' %}" alt="Banner" width="100%"/>
+</div>
+<div class="text-center" style="margin-top: 30px; margin-bottom: 30px">
+    <a href="/basicviz" class="btn btn-primary">Go to Experiments</a>
+    <a href="/decomposition/decompose_spectrum" class="btn btn-info">Quick Decomposition</a>
+</div>
+<div class="panel-group">
+  <div class="panel panel-default">
+    <div class="panel-body">
+        <h4>Metabolomics</h4>
+        <p>
+            <a href="https://en.wikipedia.org/wiki/Metabolomics">Metabolomics</a> is the large-scale, untargeted studies of the small molecules involved in essential life-sustaining chemical processes (metabolites). Untargeted metabolomics has provided insights into a wide array of fields, such as medical diagnostics, drug discovery, personalised medicine and many others.
+            Measurements in metabolomics studies are routinely performed using <a href="https://en.wikipedia.org/wiki/Liquid_chromatography%E2%80%93mass_spectrometry">liquid chromatography mass spectrometry</a> (LC-MS) instruments.
+            Using <a href="https://en.wikipedia.org/wiki/Tandem_mass_spectrometry">tandem mass spectrometry</a>, fragmentation peaks characteristic to a compound can be obtained and used to help establish the identity of the compound.
+        </p>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-body">
+        <h4>Unsupervised Substructure Discovery</h4>
+        <p>
+            <a href="https://en.wikipedia.org/wiki/Fragmentation_(mass_spectrometry)">Fragmentation spectra</a>, which provide the characteristic fingerprints of compounds, also contain structural information where a subset of fragment peaks may correspond to a shared chemical substructure in a class of compounds.
+            The aim of this site is to provide an online platform that allows users to perform unsupervised substructure discovery in fragmentation experiments,
+            decompose fragmentation experiments into characterized substructures (Mass2Motifs) found in MS/MS spectra of reference compounds,
+            and integrate fragmentation analysis with comparative metabolomics experiments.
+        </p>
+        <p>
+            <b>How does it work?</b> In our proposed method (<a href='http://www.pnas.org/content/113/48/13738.abstract'>MS2LDA</a>), discrete fragment and neutral loss features are extracted from fragmentation spectra. Related features that tend to co-occur are detected using the <a href="https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation">Latent Dirichlet Allocation</a> model.
+            The figure below shows the analogy between LDA for text and MS2LDA for fragment and neutral loss features. LDA finds topics interpreted as ‘football related’, ‘business-related’ and ‘environment related’. MS2LDA finds sets of concurring mass fragments or losses (Mass2Motifs) that can be interpreted as ‘Asparagine-related’, ‘Hexose-related’ and ‘Adenine-related’.
+        </p>
+        <p>
+            <img src="{% static 'images/text2frags.png' %}" alt="Text2Frags" width="80%"/>
+        </p>
+        <p>
+            The tool currently accepts the fragmentation experiments in various formats (mzML, MSP, MGF) and optionally an MS1 peak list can be added to which the MS1 peaks found in the fragmentation experiment are then matched prior to running LDA or Decomposition.
+        </p>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-body">
+        <h4>Features</h4>
+        <p>
+            Ms2lda.org provides access to the LDA and Decomposition models and includes the following visualisation features:
+        </p>
+        <ul>
+            <li>Network display of discovered substructures (Mass2Motifs) and fragmented molecules</li>
+            <li>Mass2Motif pages with spectra of fragmented molecules and characteristic fragment/loss features</li>
+            <li>Parent pages displaying all Mass2Motifs found in fragmentation spectra</li>
+        </ul>
+        <p>
+            In addition, the following features are provided to facilitate integration with metabolomics experiments by:
+        </p>
+        <ul>
+            <li>Mapping fold changes onto fragmented molecules</li>
+            <li>Computing differentially expressed Mass2Motifs</li>
+            <li>Highlighting changing molecules and differential Mass2Motifs in the network display</li>
+        </ul>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-body">
+        <h4>Links</h4>
+        <p>
+            The data and codes for the paper can be found at <a href="http://dx.doi.org/10.5525/gla.researchdata.313">http://dx.doi.org/10.5525/gla.researchdata.313</a>.
+            A new version of MS2LDA that allows for topics (i.e. Mass2Motifs) to be inferred across multiple document collections (i.e. fragmentation files) at once
+            can be found at <a href="http://github.com/sdrogers/lda">http://github.com/sdrogers/lda</a>.
+            The rest of the pipeline codes to process and load fragmentation data into the pipeline can also be found there.
+            The codes for this website itself, alongside various visualisation modules, can be found at <a href="http://github.com/sdrogers/ms2ldaviz">http://github.com/sdrogers/ms2ldaviz</a>
+        </p>
+    </div>
+  </div>
 </div>
 
 {% endblock %}

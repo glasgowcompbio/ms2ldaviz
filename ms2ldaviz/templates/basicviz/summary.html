@@ -6,82 +6,106 @@
 
 {% block body_block %}
 
-	<h3>Experiment summary information</h3>
-	<div>
-		<ul>
-			<li><b>Name:</b> {{experiment.name}}</li>
-			<li><b>Details:</b> {{experiment.description}}</li>
-			<li><b>Users:</b> {% for user_experiment in user_experiments %} {{user_experiment.user.username}} ({{user_experiment.permission}}), {% endfor %}</li>
-		</ul>
-	</div>
-	<hr />
-	<div>
-		<h4>Upload options (if experiment uploaded and run on ms2lda.org)</h4>
-		<ul>
-			<li><b>MS2 file</b>: {{experiment.ms2_file}}</li>
-			<li><b>Peaklist file</b>: {{experiment.csv_file}}</li>
-			<li><b>isolation_window</b>: {{experiment.isolation_window}}</li>
-			<li><b>mz_tol</b>: {{experiment.mz_tol}}</li>
-			<li><b>rt_tol</b>: {{experiment.rt_tol}}</li>
-			<li><b>min_ms1_rt (s)</b>: {{experiment.min_ms1_rt}}</li>
-			<li><b>max_ms1_rt (s)</b>: {{experiment.max_ms1_rt}}</li>
-			<li><b>min_ms2_intensity</b>: {{experiment.min_ms2_intensity}}</li>
-			<li><b>filter duplicates</b>: {{experiment.filter_duplicates}}</li>
-			<li><b>min_ms1_intensity</b>: {{experiment.min_ms1_intensity}}</li>
-			<li><b>duplicate_filter_mz_tol</b>: {{experiment.duplicate_filter_mz_tol}}</li>
-			<li><b>duplicate_filter_rt_tol</b>: {{experiment.duplicate_filter_rt_tol}}</li>
-			<li><b>n_its (if LDA)</b>: {{experiment.n_its}}</li>
-			<li><b>K (if LDA)</b>: {{experiment.K}}</li>
-		</ul>
-	</div>
-	<hr />
-	<div>
-		<h4>Fragmentation Spectra Details</h4>
-        <p>
-            <a href="/basicviz/show_docs/{{experiment.id}}" class="btn btn-info"><span class="glyphicon glyphicon-export"></span>Show Documents</a>
-        </p>
-    </div>
-	<div>
-		<h4>Mass2Motif Details</h4>
-		<table class='table' id='summarytable'>
-			<thead>
-				<tr><th>Name</th><th>Degree</th><th>Annotation</th></tr>
-			</thead>
-				{% for motif_tuple in motif_tuples %}
-					<tr>
-						<td>
-                            <a href="/basicviz/view_parents/{{motif_tuple.0.id}}">{{ motif_tuple.0.name }}</a>
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h3>Experiment Summary</h3>
+                <ul>
+                    <li><b>Name:</b> {{experiment.name}}</li>
+                    <li><b>Details:</b> {{experiment.description}}</li>
+                    <li><b>Users:</b> {% for user_experiment in user_experiments %} {{user_experiment.user.username}} ({{user_experiment.permission}}), {% endfor %}</li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Experiment options (if run on Ms2lda.org)</h4>
+                <ul>
+                    <li><b>MS2 file</b>: {{experiment.ms2_file}}</li>
+                    <li><b>Peaklist file</b>: {{experiment.csv_file}}</li>
+                    <li><b>isolation_window</b>: {{experiment.isolation_window}}</li>
+                    <li><b>mz_tol</b>: {{experiment.mz_tol}}</li>
+                    <li><b>rt_tol</b>: {{experiment.rt_tol}}</li>
+                    <li><b>min_ms1_rt (s)</b>: {{experiment.min_ms1_rt}}</li>
+                    <li><b>max_ms1_rt (s)</b>: {{experiment.max_ms1_rt}}</li>
+                    <li><b>min_ms2_intensity</b>: {{experiment.min_ms2_intensity}}</li>
+                    <li><b>filter duplicates</b>: {{experiment.filter_duplicates}}</li>
+                    <li><b>min_ms1_intensity</b>: {{experiment.min_ms1_intensity}}</li>
+                    <li><b>duplicate_filter_mz_tol</b>: {{experiment.duplicate_filter_mz_tol}}</li>
+                    <li><b>duplicate_filter_rt_tol</b>: {{experiment.duplicate_filter_rt_tol}}</li>
+                    <li><b>n_its (if LDA)</b>: {{experiment.n_its}}</li>
+                    <li><b>K (if LDA)</b>: {{experiment.K}}</li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Fragmentation Spectra Details</h4>
+                <table class="table" id="parenttable">
+                <thead>
+                <tr><th>Name</th><th>Mass</th><th>link</th><th>Annotation</th></tr>
+                </thead>
+                <tbody>
+                {% for doc in documents %}
+                    <tr><td><a href="/basicviz/show_doc/{{doc.id}}">{{doc.name}}</a></td>
+                        <td>{{doc.mass}}</td>
+                        <td>{% if doc.csid %}
+                            <a href="http://www.chemspider.com/Chemical-Structure.{{doc.csid}}.html" target=new>View on ChemSpider</a>
+                            {% endif %}
                         </td>
-						<td>{{motif_tuple.1}}</td>
-						<td>{{motif_tuple.0.annotation}}</td>
- 					</tr>
-				{% endfor %}
-			<tbody>
-			</tbody>
-		</table>
-	</div>
-	<hr />
-	<div>
-	<h4>Feature Table (filtered to show only features with probability > 0.05)</h4>
-	<table class='table' id = 'featuretable'>
-		<thead>
-			<tr><th>Motif</th><th>Feature</th><th>Min m/z</th><th>Max m/z</th><th>Probability</th></tr>
-		</thead>
-		<tbody>
-			{% for motif_feature in motif_features %}
-				<tr>
-					<td>
-                        <a href="/basicviz/view_parents/{{motif_feature.mass2motif.id}}">{{ motif_feature.mass2motif.name }}</a>
-                    </td>
-					<td>{{motif_feature.feature.name}}</td>
-					<td>{{motif_feature.feature.min_mz}}</td>
-					<td>{{motif_feature.feature.max_mz}}</td>
-					<td>{{motif_feature.probability}}</td>
-				</tr>
-			{% endfor %}
-		</tbody>
-	</table>
-	</div>
+                        <td>{{doc.display_name}}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Mass2Motif Details</h4>
+                <table class='table' id='summarytable'>
+                    <thead>
+                        <tr><th>Name</th><th>Degree</th><th>Annotation</th></tr>
+                    </thead>
+                        {% for motif_tuple in motif_tuples %}
+                            <tr>
+                                <td>
+                                    <a href="/basicviz/view_parents/{{motif_tuple.0.id}}">{{ motif_tuple.0.name }}</a>
+                                </td>
+                                <td>{{motif_tuple.1}}</td>
+                                <td>{{motif_tuple.0.annotation}}</td>
+                            </tr>
+                        {% endfor %}
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Feature Table (filtered to show only features with probability > 0.05)</h4>
+                <table class='table' id = 'featuretable'>
+                    <thead>
+                        <tr><th>Motif</th><th>Feature</th><th>Min m/z</th><th>Max m/z</th><th>Probability</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for motif_feature in motif_features %}
+                            <tr>
+                                <td>
+                                    <a href="/basicviz/view_parents/{{motif_feature.mass2motif.id}}">{{ motif_feature.mass2motif.name }}</a>
+                                </td>
+                                <td>{{motif_feature.feature.name}}</td>
+                                <td>{{motif_feature.feature.min_mz}}</td>
+                                <td>{{motif_feature.feature.max_mz}}</td>
+                                <td>{{motif_feature.probability|floatformat:"3"}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block js_block %}
@@ -111,7 +135,14 @@
 			buttons: [
 		        'csv',
 	        ],
-	        "order": [[ 0, "desc" ]],
+	        "order": [[ 0, "asc" ]],
+	    });
+		$('#parenttable').DataTable({
+			dom: 'Bfrtip',
+			buttons: [
+		        'csv',
+	        ],
+	        "order": [[ 1, "asc" ]],
 	    });
 
 	</script>

@@ -11,8 +11,22 @@
 <h4>Motif matches for {{experiment}}</h4>
 
 <div>
-<p>Below are listed all matches that have been found using searches for this experiment. Use the buttons in the final column to add or remove the discovered links. When a link is added, any annotations in the <i>linked to</i> motif will be shown on the <i>linked</i> motif.</p>
-<p>Note that the system defers to manual annotations so if motif A has been manually annotated as 'great motif' and then linked to motif B which is annotated as 'even better one' then it is 'great motif' that will be shown. If the manual annotation is removed from motif A, it will now be annotated as 'even better one'.</p>
+    <p>
+        Below are listed all matches that have been found using searches for this experiment.
+        <strong>If the table is empty, that means the searches is still being processed.</strong>
+        Periodically check the link below for this page until results are shown.
+        <a href="/basicviz/manage_motif_matches/{{experiment.id}}" class = "btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;Manage Motif Matches</a>
+    </p>
+    <p>
+        Use the buttons in the final column to add or remove the discovered links. When a link is added,
+        any annotations in the <i>linked to</i> motif will be shown on the <i>linked</i> motif.
+    </p>
+    <p>
+        Note that the system defers to manual annotations so if motif A has been manually annotated
+        as 'great motif' and then linked to motif B which is annotated as 'even better one' then
+        it is 'great motif' that will be shown. If the manual annotation is removed from motif A,
+        it will now be annotated as 'even better one'.
+    </p>
 </div>
 
 <table class='table' id='matchtable'>

@@ -4,80 +4,89 @@
 
 {% block body_block %}
 <h3>Interfacing with Ms2lda.org</h3>
-<div class="well well-sm">
-    <h4>Application Programming Interface (API)</h4>
-    <p>
-        The API batch decomposition features allows a user to send a bunch of spectra to the server to be decomposed onto a particular <strong>motifset</strong>.
-        The spectra are passed as the arguments to a POST request to the following URL:
-    </p>
-    <blockquote>
-        http://ms2lda.org/decomposition/api/batch_decompose/
-    </blockquote>
-    <p>
-        The argument should be a dictionary with the following two <strong>'&lt;key, value&gt;'</strong> pairs:
-    </p>
-    <ul>
-        <li>Key: ‘motifset’ Value: name of the motifset to decompose onto, e.g. ‘massbank_motifset’</li>
-        <li>Key: ‘spectra’ Value: the spectral information, pickled into a string (using e.g. json.dumps)</li>
-    </ul>
-    <p>
-        The spectra value should be a list, with one item per spectra. The item should be a tuple with three elements:
-    </p>
-    <blockquote>
-        (string: doc_name, float: parentmass, list: peaks)
-    </blockquote>
-    <p>
-        Peaks is a list of tuples, each representing a peak in the form
-    </p>
-    <blockquote>
-        (float: mz, float: intensity)
-    </blockquote>
-    <hr/>
-    <h4>Python Example</h4>
-    <p>
-        For example in Python, using the <a href="http://docs.python-requests.org/en/master/">requests</a> package:
-    </p>
-
-<!-- HTML generated using hilite.me --><div style="background: #f8f8f8; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">requests</span>
-<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">json</span>
-
-spectrum <span style="color: #666666">=</span> (<span style="color: #BA2121">&#39;spec_name&#39;</span>,<span style="color: #666666">188.0818</span>,[(<span style="color: #666666">53.0384</span>,<span style="color: #666666">331117.7</span>),
-(<span style="color: #666666">57.0447</span>,<span style="color: #666666">798106.4</span>),
-(<span style="color: #666666">65.0386</span>,<span style="color: #666666">633125.7</span>),
-(<span style="color: #666666">77.0385</span>,<span style="color: #666666">5916789.799999999</span>),
-(<span style="color: #666666">81.0334</span>,<span style="color: #666666">27067.0</span>),
-(<span style="color: #666666">85.0396</span>,<span style="color: #666666">740633.6</span>)])
-
-spectra <span style="color: #666666">=</span> [spectrum] <span style="color: #408080; font-style: italic"># or add more to the list</span>
-
-args <span style="color: #666666">=</span> {<span style="color: #BA2121">&#39;spectra&#39;</span>: json<span style="color: #666666">.</span>dumps(spectra), <span style="color: #BA2121">&#39;motifset&#39;</span>: <span style="color: #BA2121">&#39;massbank_motifset&#39;</span>}
-
-url <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;http://ms2lda.org/decomposition/api/batch_decompose/&#39;</span>
-
-r <span style="color: #666666">=</span> requests<span style="color: #666666">.</span>post(url,args)
-</pre></div>
-
+<div class="panel-group">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <p>
+                The API batch decomposition features allows a user to send a bunch of spectra to the server to be decomposed onto a particular <strong>motifset</strong>.
+                The spectra are passed as the arguments to a POST request to the following URL:
+            </p>
+            <blockquote>
+                http://ms2lda.org/decomposition/api/batch_decompose/
+            </blockquote>
+            <p>
+                The argument should be a dictionary with the following two <strong>'&lt;key, value&gt;'</strong> pairs:
+            </p>
+            <ul>
+                <li>Key: ‘motifset’ Value: name of the motifset to decompose onto, e.g. ‘massbank_motifset’</li>
+                <li>Key: ‘spectra’ Value: the spectral information, pickled into a string (using e.g. json.dumps)</li>
+            </ul>
+            <p>
+                The spectra value should be a list, with one item per spectra. The item should be a tuple with three elements:
+            </p>
+            <blockquote>
+                (string: doc_name, float: parentmass, list: peaks)
+            </blockquote>
+            <p>
+                Peaks is a list of tuples, each representing a peak in the form
+            </p>
+            <blockquote>
+                (float: mz, float: intensity)
+            </blockquote>
+        </div>
+    </div>
 </div>
+<div class="panel-group">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <h4>Python Example</h4>
+            <p>
+                For example in Python, using the <a href="http://docs.python-requests.org/en/master/">requests</a> package:
+            </p>
 
-    <p>
-    Because this is computationally intensive, the decomposition is run as a scheduled task.
-        Therefore the POST request doesn’t return the results immediately. Instead it returns some summary, including the ID of the results entry. To get the results (in JSON), do the following:
-    </p>
+        <!-- HTML generated using hilite.me --><div style="background: #f8f8f8; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">requests</span>
+        <span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">json</span>
 
-<!-- HTML generated using hilite.me --><div style="background: #f8f8f8; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">result_id <span style="color: #666666">=</span> r<span style="color: #666666">.</span>json()[<span style="color: #BA2121">&#39;result_id&#39;</span>]
-url2 <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;http://ms2lda.org/decomposition/api/batch_results/{}/.format(result_id)</span>
-r2 <span style="color: #666666">=</span> requests<span style="color: #666666">.</span>get(url2)
-<span style="color: #008000; font-weight: bold">print</span> r2<span style="color: #666666">.</span>json()
-</pre></div>
+        spectrum <span style="color: #666666">=</span> (<span style="color: #BA2121">&#39;spec_name&#39;</span>,<span style="color: #666666">188.0818</span>,[(<span style="color: #666666">53.0384</span>,<span style="color: #666666">331117.7</span>),
+        (<span style="color: #666666">57.0447</span>,<span style="color: #666666">798106.4</span>),
+        (<span style="color: #666666">65.0386</span>,<span style="color: #666666">633125.7</span>),
+        (<span style="color: #666666">77.0385</span>,<span style="color: #666666">5916789.799999999</span>),
+        (<span style="color: #666666">81.0334</span>,<span style="color: #666666">27067.0</span>),
+        (<span style="color: #666666">85.0396</span>,<span style="color: #666666">740633.6</span>)])
 
-    <br/>
-    <p>
-        If <strong>'r2.json()'</strong> has a <strong>'status'</strong> field, it means the job is still running or waiting.
-        If not, you get a dictionary back with the document names as keys and a list as the value.
-        Each list element has the form:
-    </p>
-    <blockquote>
-        '(string:globalmotifname, string:originalmotifname, float:theta, float:overlap_score)'
-    </blockquote>
+        spectra <span style="color: #666666">=</span> [spectrum] <span style="color: #408080; font-style: italic"># or add more to the list</span>
+
+        args <span style="color: #666666">=</span> {<span style="color: #BA2121">&#39;spectra&#39;</span>: json<span style="color: #666666">.</span>dumps(spectra), <span style="color: #BA2121">&#39;motifset&#39;</span>: <span style="color: #BA2121">&#39;massbank_motifset&#39;</span>}
+
+        url <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;http://ms2lda.org/decomposition/api/batch_decompose/&#39;</span>
+
+        r <span style="color: #666666">=</span> requests<span style="color: #666666">.</span>post(url,args)
+        </pre></div>
+
+        </div>
+
+            <p>
+            Because this is computationally intensive, the decomposition is run as a scheduled task.
+                Therefore the POST request doesn’t return the results immediately. Instead it returns some summary, including the ID of the results entry. To get the results (in JSON), do the following:
+            </p>
+
+        <!-- HTML generated using hilite.me --><div style="background: #f8f8f8; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">result_id <span style="color: #666666">=</span> r<span style="color: #666666">.</span>json()[<span style="color: #BA2121">&#39;result_id&#39;</span>]
+        url2 <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;http://ms2lda.org/decomposition/api/batch_results/{}/.format(result_id)</span>
+        r2 <span style="color: #666666">=</span> requests<span style="color: #666666">.</span>get(url2)
+        <span style="color: #008000; font-weight: bold">print</span> r2<span style="color: #666666">.</span>json()
+        </pre></div>
+
+            <br/>
+            <p>
+                If <strong>'r2.json()'</strong> has a <strong>'status'</strong> field, it means the job is still running or waiting.
+                If not, you get a dictionary back with the document names as keys and a list as the value.
+                Each list element has the form:
+            </p>
+            <blockquote>
+                '(string:globalmotifname, string:originalmotifname, float:theta, float:overlap_score)'
+            </blockquote>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

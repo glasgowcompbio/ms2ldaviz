@@ -6,25 +6,59 @@
 {% endblock %}
 
 {% block body_block %}
-    <div class="ui-widget" style="padding-top: 10px; padding-bottom: 10px">
-        <input id="searchText">
-        <button id="searchBtn" type="button">Search</button>&nbsp;
-        <button id="resetBtn" type="button">Reset</button>
-   </div>
+    <h3>Visualisation Panels</h3>
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div id="network"><h4>Network Visualisation</h4>
+                <p>
+                    The network will appear below. Squares indicate molecules, circles Mass2Motifs (topics).
+                    Edges are coloured according to probability or overlap score (the darker, the higher the probability/score).
+                    Hover over a node to see information. Double-click on a Mass2Motif to see its molecules.
+                    You can search for any node in the network by names through the search box below.
+                </p>
+                <div class="ui-widget" style="padding-top: 10px; padding-bottom: 10px">
+                    <input id="searchText">
+                    <button id="searchBtn" type="button">Search</button>&nbsp;
+                    <button id="resetBtn" type="button">Reset</button>
+               </div>
+                <p><div id="status">Loading...</div></div></p>
+                <div id="show_ms1_div">
+                    <label>
+                        <input type="checkbox" name="show_ms1" id="show_ms1">&nbsp;Show MS1 analysis in the network
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Fragmentation Spectra Plot</h4>
+                <p>
+                    When you double-click on a Mass2Motif in the network visualisation above, the
+                    spectra of the molecules associated with it will appear in the fragmentation spectra plot below.
+                    Features (fragments and losses) explained by this Mass2Motif will be coloured red.
+                    Click <strong>Next</strong> and <strong>Previous</strong> to cycle through
+                    the fragmentation spectra.</p></div>
+                <div id="spectra">
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div id="graphs">
+                    <h4>Counts of Mass2Motif Features</h4>
+                    <p>
+                        When you double-click on a Mass2Motif, two bar plots will appear below this message.
+                        The first shows the proportion of the total intensity of these features explained by
+                        this Mass2Motif. Red bars show the total intensity (across the whole dataset),
+                        blue bars show the proportion explained by the selected Mass2Motif. The second shows
+                        the number of times each feature in this Mass2Motif appears in the documents associated
+                        with this Mass2Motif.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <div id="network"><h4>Network</h4>
-    <p>The network will appear below. Squares indicate molecules, circles Mass2Motifs (topics). Edges are coloured according to probability (the darker, the higher the probability). Hover over a node to see information. Double-click on a Mass2Motif to see its molecules.</p><div id="status">Loading...</div></div>
-    <div id="show_ms1_div">
-        <label>
-            <input type="checkbox" name="show_ms1" id="show_ms1">&nbsp;Show MS1 analysis in the network
-        </label>
-    </div>
-    <div id="spectra">
-    <h4>Spectra</h4>
-    <p>When you double-click on a Mass2Motif, the spectra of the molecules associated with it will appear here. Features (fragments and losses) explained by this Mass2Motif will be coloured red. Click 'next' and 'previous' to cycle through the molecules.</p></div>
-    <div id="graphs"><h4>Features</h4>
-    <p>When you double-click on a Mass2Motif, two bar plots will appear below this message. The first shows the proportion of the total intensity of these features explained by this Mass2Motif. Dark blue bars show the total intensity (across the whole dataset), light blue show the proportion explained by the selected Mass2Motif. The second shows the number of times each feature in this Mass2Motif appears in the documents associated with this Mass2Motif.</p>
-    </div>
 {% endblock %}
 
 {% block js_block %}

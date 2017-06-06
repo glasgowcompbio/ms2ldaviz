@@ -34,65 +34,142 @@
 
 {% block body_block %}
 	<h3>Mass2Motif: {{mass2motif.name}} ({{mass2motif.experiment.name}})</h3>
-	<h4>{{mass2motif.annotation}}</h4>
-	<!-- a href="/basicviz/view_mass2motifs/{{mass2motif.experiment.id}}">return to mass2motif list for {{mass2motif.experiment.name}}</a -->
- 	<hr />
-    {% if metadata_form %}
-	<div>
-    	<p>{{ status }}</p>
-    	<form id="mass2motifmetadata_form" method="post" action="/basicviz/view_parents/{{mass2motif.id}}/">
-    		{% csrf_token %}
-    	{% for hidden in metadata_form.hidden_fields %}
-    	 	{{ hidden }}
-    	{% endfor %}
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                {% if metadata_form %}
+                    <h4>Mass2Motif Annotation</h4>
+                    <p>
+                        You can assign a label (annotate) this Mass2Motif
+                        from the <strong>Annotation</strong>
+                        field below. Additionally, a shorter annotation can also be assigned through the
+                        <strong>Short Annotation</strong> field. This will be used in the
+                        network visualisation.
+                    </p>
+                    {% if status %}
+                        <p><strong>{{ status }}</strong></p>
+                    {% endif %}
+                    <form id="mass2motifmetadata_form" method="post" action="/basicviz/view_parents/{{mass2motif.id}}/">
+                        {% csrf_token %}
+                    {% for hidden in metadata_form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
 
-    	{% for field in metadata_form.visible_fields %}
-    		{{ field.errors }}
-    		{{ field }}
-    	{% endfor %}
-    	<input type="submit" name="submit" value="Modify metadata" />
-    	</form>
-	</div>
-	<hr />
-    {% endif %}
+                    {% for field in metadata_form.visible_fields %}
+                        <p>{{ field.errors }}</p>
+                        <p>  {{field.label}} {% if field.field.required %} * {% endif %} {{ field }}</p>
+                    {% endfor %}
+                    <input type="submit" name="submit" value="Save" class="btn btn-primary" />
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Mass2Motif Details</h4>
+                <p>
+                    The following table shows the fragment and loss features that are explained by this
+                    Mass2Motifs and their corresponding probabilities.
+                    After thresholding to save the model, the total probability left in this motif is
+                    {{total_prob}}
+                </p>
+                    <table class='table' id='featuretable'>
+                        <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Probability</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for motif_feature in motif_features %}
+                            <tr>
+                                <td><a href="/basicviz/mass2motif_feature/{{motif_feature.id}}">{{motif_feature.feature.name}}</a></td>
+                                <td>{{motif_feature.probability|floatformat:"3"}}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Counts of Mass2Motif Features</h4>
+                <p>
+                    Two bar plots will appear below this message.
+                    The first shows the proportion of the total intensity of these features explained by
+                    this Mass2Motif. Red bars show the total intensity (across the whole dataset),
+                    blue bars show the proportion explained by the selected Mass2Motif. The second shows
+                    the number of times each feature in this Mass2Motif appears in the documents associated
+                    with this Mass2Motif.
+                </p>
+                <div id="graphs">
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Fragmentation Spectra Explained by Mass2Motif</h4>
+                <table class='table' id='doctable'>
+                    <thead>
+                        <tr><th>Document name</th><th>Doc Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for dm2m in dm2ms %}
+                            <tr>
+                                <td><a href="/basicviz/show_doc/{{dm2m.document.id}}">{{dm2m.document.name}}</a></td>
+                                <td>{{dm2m.document.annotation}}</td>
+                                <td>{{dm2m.probability|floatformat:"3"}}</td>
+                                <td>{{dm2m.overlap_score|floatformat:"3"}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Fragmentation Spectra Plot</h4>
+            	<div id="spectra" border="20" padding="20"></div>
+            </div>
+        </div>
+        <!-- Classyfire terms for this motif, if they exist -->
+        {% if taxa_terms %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>Classyfire Taxa Terms</h4>
+                    <table class='table' id='taxa_table'>
+                        <thead>
+                            <tr><th>Taxa Term</th><th>Probability</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for term_instance in taxa_terms %}
+                                <tr><td>{{term_instance.taxterm.name}}</td><td>{{term_instance.probability|floatformat:"3"}}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+        {% if substituent_terms %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>Classyfire Substituent Terms</h4>
+                    <table class='table' id='subst_table'>
+                        <thead>
+                            <tr><th>Substituent Term</th><th>Probability</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for term_instance in substituent_terms %}
+                                <tr><td>{{term_instance.subterm.name}}</td><td>{{term_instance.probability|floatformat:"3"}}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
 
-	<div id="spectra" border="20" padding="20"></div>
-
-	<div>
-	<h3>Mass2Motif Details</h3>
-	<p>After thresholding to save the model, the total probability left in this motif is {{total_prob}}</p>
-		<table class='table' id='featuretable'>
-			<thead>
-			<tr><th>Name</th><th>Probability</th><th>link</th></tr>
-			</thead>
-			<tbody>
-			{% for motif_feature in motif_features %}
-				<tr><td>{{motif_feature.feature.name}}</td><td>{{motif_feature.probability}}</td>
-				<td><a href="/basicviz/mass2motif_feature/{{motif_feature.id}}">details</a></td></tr>
-			{% endfor %}
-			</tbody>
-		</table>
-	</div>
-
-	<hr />
-
-	<div>
-	<h3>Documents in Mass2Motif</h3>
-		<table class='table' id='doctable'>
-			<thead>
-				<tr><th>Document name</th><th>Doc Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
-			</thead>
-			<tbody>
-				{% for dm2m in dm2ms %}
-					<tr><td><a href="/basicviz/show_doc/{{dm2m.document.id}}">{{dm2m.document.name}}</a></td><td>{{dm2m.document.annotation}}</td><td>{{dm2m.probability}}</td><td>{{dm2m.overlap_score}}</td></tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	<hr />
-
-
-	<div id="graphs">
-	</div>
+    </div>
 
     <div id="dialog-massbank" title="Generate Massbank Record">
         <form class="massbank-form" id="mass2motifmassbank_form" method="post" action="/massbank/generate_massbank/">
@@ -120,29 +197,6 @@
             <button id="download_button" onclick="saveTextAsFile('massbank_str')">Download</button>
         </div>
     </div>
-
-
-
-    <!-- Classyfire terms for this motif, if they exist -->
-    {% if taxa_terms %}
-        <h3>Classyfire Taxa Terms</h3>
-        <ul>
-            {% for term_instance in taxa_terms %}
-                <li>{{term_instance.taxterm.name}},{{term_instance.probability}}
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-    {% if substituent_terms %}
-        <h3>Classyfire Substituent Terms</h3>
-        <ul>
-            {% for term_instance in substituent_terms %}
-                <li>{{term_instance.subterm.name}},{{term_instance.probability}}
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-
 
 {% endblock %}
 
@@ -207,6 +261,20 @@
 			        'csv',
 		        ],
 		        "order": [[ 2, "desc" ]],
+		    });
+			$('#taxa_table').DataTable({
+				dom: 'Bfrtip',
+				buttons: [
+			        'csv',
+		        ],
+		        "order": [[ 1, "desc" ]],
+		    });
+			$('#subst_table').DataTable({
+				dom: 'Bfrtip',
+				buttons: [
+			        'csv',
+		        ],
+		        "order": [[ 1, "desc" ]],
 		    });
 
 		});

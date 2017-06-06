@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block head_block %}
+{% endblock %}
+
+{% block body_block %}
+
+	<h3>MS1 Peaklist File Format</h3>
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a name="ms1_format" />
+                <p>
+                    <a href="{% static "txt/example_peaklist.csv" %}">Download an example here</a>.
+                </p>
+                <p>
+                    The required file format for the MS1 peak list is as follows:
+                </p>
+                <p>
+                    A .CSV file with header line:
+                </p>
+                <blockquote>
+                    ("..., mass, RT, samplename_1, samplename_2,..."), delimiter: '.
+                </blockquote>
+                <p>
+                    The <strong>mass</strong> column must have the column header of either 'mass' or 'mz' (case-insensitive).
+                    Retention time is assumed to be the column immediately after mass, and should be in seconds.
+                    Any columns before <strong>mass</strong> (e.g. containing peak IDs from other software) will be ignored.
+                </p>
+                <p>
+                    All columns after retention time will be interpreted as MS1 intensities, with one column per sample.
+                    In the .CSV file, missing data can be stored as empty, e.g.
+                </p>
+                <blockquote>
+                    123.45,,567.89
+                </blockquote>
+                <p>
+                    or NA, e.g.
+                </p>
+                <blockquote>
+                    123.45,NA,567.89
+                </blockquote>
+                <p>
+                    Any intensities that are negative values, cannot be interpreted as a float, or are empty will be ignored
+                    and not be stored for further analysis.
+                </p>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

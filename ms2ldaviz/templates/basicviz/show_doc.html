@@ -22,53 +22,82 @@
 
 {% block body_block %}
 	{% if document %}
-		<h3>Document {{document.name}} -- {{document.display_name}}</h3>
+		<h3>{{document.name}} -- {{document.display_name}}</h3>
 	{% endif %}
 
-	{% if mass2motifs %}
-		<table class="table" id="motiftable">
-			<thead>
-				<tr><th>Motif</th><th>Probability</th><th>Overlap Score</th><th>Annotation</th></tr>
-			</thead>
-		<tbody>
-			{% for mass2motif in mass2motifs %}
-			<tr>
-				<td>{{mass2motif.mass2motif.name}}</td>
-				<td>{{mass2motif.probability}}</td>
-				<td>{{mass2motif.overlap_score}}</td>
-				<td>{{mass2motif.mass2motif.annotation}}</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-		</table>
-	{% endif %}
+    <div class="panel-group">
+        {% if mass2motifs %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>Linked Mass2Motifs</h4>
+                    <table class="table" id="motiftable">
+                        <thead>
+                            <tr>
+                                <th>Motif</th>
+                                <th>Probability</th>
+                                <th>Overlap Score</th>
+                                <th>Annotation</th>
+                            </tr>
+                        </thead>
+                    <tbody>
+                        {% for mass2motif in mass2motifs %}
+                        <tr>
+                            <td>{{mass2motif.mass2motif.name}}</td>
+                            <td>{{mass2motif.probability|floatformat:"3"}}</td>
+                            <td>{{mass2motif.overlap_score|floatformat:"3"}}</td>
+                            <td>{{mass2motif.mass2motif.annotation}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+            {% if image_url %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>ChemSpider</h4>
+                    <img src="{{image_url}}">
+                    <a href="http://www.chemspider.com/Chemical-Structure.{{csid}}.html" target=new>View on ChemSpider</a>
+                </div>
+            </div>
+        {% endif %}
+        {% if features %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>Features</h4>
+                    <table class="table" id="parenttable">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Intensity</th>
+                        <th>Mass2Motif (Probability)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for feature,m2minstances in fm2m %}
+                        <tr><td>{{feature.feature.name}}</td><td>{{feature.intensity}}</td>
+                        <td>
+                            {% for m2minstance in m2minstances %}
+                                ({{m2minstance.mass2motif}}, {{m2minstance.probability|floatformat:"3"}})
+                            {% endfor %}
+                        </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Fragmentation Spectra Plot</h4>
+                <div id="spectra" border="20" padding="20">
+                </div>
+            </div>
+        </div>
+    </div>
 
-	{% if image_url %}
-		<img src="{{image_url}}">
-		<a href="http://www.chemspider.com/Chemical-Structure.{{csid}}.html" target=new>View on ChemSpider</a>
-	{% endif %}
-
-	{% if features %}
-		<table class="table" id="parenttable">
-		<thead>
-		<tr><th>Name</th><th>Intensity</th><th>Topics</th></tr>
-		</thead>
-		<tbody>
-		{% for feature,m2minstances in fm2m %}
-			<tr><td>{{feature.feature.name}}</td><td>{{feature.intensity}}</td>
-			<td>
-				{% for m2minstance in m2minstances %}
-					({{m2minstance.mass2motif}},{{m2minstance.probability}})
-				{% endfor %}
-			</td>
-			</tr>
-		{% endfor %}
-		</tbody>
-		</table>
-	{% endif %}
-	<a href="/basicviz/show_docs/{{experiment.id}}">return to parent list for {{experiment.name}}</a>
-	<div id="spectra" border="20" padding="20">
-	</div>
 {% endblock %}
 
 {% block js_block %}
@@ -104,7 +133,7 @@
 	    	buttons: [
 	    		'csv',
 	    	],
-	    	"order": [[1, "desc"]],
+	    	"order": [[ 2, "desc"]],
 	    });
 
 		load_parent('/basicviz/get_doc_topics/{{document.id}}');

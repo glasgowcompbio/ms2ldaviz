@@ -1,8 +1,8 @@
 {% load staticfiles %}
 
-# Getting started
+### 1. Getting Started
 
-## Logging in to Ms2lda.org:
+#### Logging in to Ms2lda.org:
 
 To log in to Ms2lda.org, go to the <a href="http://ms2lda.org/registration/login/" target="_blank" title="PiMP">Login</a> page.
 
@@ -27,8 +27,7 @@ Or log in as guest.
 
 You should find yourself in the main page. From here you can see ...
 
-Prerequisites
--------------
+#### Prerequisites
 
 To analyse your data, you first need:
 1. Your fragmentation data in mzML .. formats
@@ -43,7 +42,19 @@ Once you have these things available, please click on ‘Create Experiment’.
 
 ---
 
-## Create Experiment:
+#### How to analyse your data
+
+To view an analysis, click on the tab. You'll see all the functionlaties, described below.
+
+CLick on the summary page to see the summary.
+
+Start the vis to see all the connections and browse through the spectra.
+
+The following sections desrbie all the functionalties.
+
+### 2. Functionalities
+
+#### Create Experiment:
 
 To create your experiment, first give it a title, then a description. The description is useful as it allows you to tag your projects so they are easily browsable. Then click 'Create project'.
 
@@ -55,15 +66,21 @@ To create your experiment, first give it a title, then a description. The descri
 ---
 
 
-## Motif Matching
+#### Motif Matching
 
-## Motif Annotations
+#### Motif Annotations
 
-## Visualisation
+#### Visualisation
 
-## Decomposition
+#### Decomposition
 
-## MS1 Analysis
+#### MS1 Analysis
+
+### 3. Running Your Own Analysis
+
+To submit your own data, do the following ...
+
+### 4. Guest Data
 
 
 [create_project]:{% static 'userguide/img/Create_Project_Button.png' %}
