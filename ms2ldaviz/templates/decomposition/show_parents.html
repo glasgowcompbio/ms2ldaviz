@@ -1,35 +1,51 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block body_block %}
-	{% if experiment %}
-		<h4>Experiment {{ experiment.name }}</h4>
-		<div><b>Decomposition:</b> {{ decomposition.name }}</div>
-		<div><b>motifset:</b> {{decomposition.motifset.name}}</div>
-	{% endif %}
-	<a href="/basicviz">return to visualisation menu</a>
-	<p>{{ n_docs }} documents in total</p>
-	{% if documents %}
-		<h3>Documents</h3>
-		<table class="table" id="parenttable">
-		<thead>
-		<tr><th>Name</th><th>Mass</th><th>link</th><th>Annotation</th></tr>
-		</thead>
-		<tbody>
-		{% for doc in documents %}
-			<tr><td><a href="/decomposition/show_doc/{{decomposition.id}}/{{doc.id}}/">{{doc.name}}</a></td>
-				<td>{{doc.mass}}</td>
-				<td>{% if doc.csid %}
-					<a href="http://www.chemspider.com/Chemical-Structure.{{doc.csid}}.html" target=new>View on ChemSpider</a>
-					{% endif %}
-				</td>
-				<td>{{doc.display_name}}</td>
-			</tr>
-		{% endfor %}
-		</tbody>
-		</table>
-	{% endif %}
-{% endblock %}
 
+    <div class="panel-group">
+    	{% if experiment %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h3>Experiment: {{experiment.name}}</h3>
+                    <div><b>Decomposition:</b> {{ decomposition.name }}</div>
+                    <div><b>motifset:</b> {{decomposition.motifset.name}}</div>
+                    <a href="/basicviz">Return to Experiment List</a>
+                </div>
+            </div>
+        {% endif %}
+        {% if documents %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>Fragmentation Spectra Details</h4>
+                    <p>
+                        The following table lists the fragmentation spectra of molecules
+                        in this dataset. Click the links in the <strong>Name</strong> column
+                        for more information on that molecule, including associated Mass2Motifs
+                        that explain the features of the spectra.
+                    </p>
+                    <table class="table" id="parenttable">
+                    <thead>
+                    <tr><th>Name</th><th>Precursor Mass</th><th>link</th><th>Display Name</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for doc in documents %}
+                        <tr><td><a href="/decomposition/show_doc/{{decomposition.id}}/{{doc.id}}/">{{doc.name}}</a></td>
+                            <td>{{doc.mass}}</td>
+                            <td>{% if doc.csid %}
+                                <a href="http://www.chemspider.com/Chemical-Structure.{{doc.csid}}.html" target=new>View on ChemSpider</a>
+                                {% endif %}
+                            </td>
+                            <td>{{doc.display_name}}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+{% endblock %}
 
 {% block js_block %}
 	

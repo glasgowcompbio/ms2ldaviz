@@ -89,7 +89,7 @@
                         <tr><td>{{feature.feature.name}}</td><td>{{feature.intensity}}</td>
                         <td>
                             {% for m2minstance in m2minstances %}
-                                {{m2minstance.mass2motif}}, ({{m2minstance.probability|floatformat:"3"}})
+                                {{m2minstance.mass2motif}} ({{m2minstance.probability|floatformat:"3"}}),
                             {% endfor %}
                         </td>
                         </tr>
@@ -104,7 +104,7 @@
                 <h4>Fragmentation Spectrum Plot</h4>
                 <p>
                     The fragmentation spectrum of this molecules is plotted below, alongside
-                    associated Mass2Motifs. Features (fragments and losses) explained by the linked
+                    associated Mass2Motifs. Features (fragments and losses) explained by the associated
                     Mass2Motif are coloured in red, while the parent ion is coloured in blue.
                 </p>
                 <div id="spectra" border="20" padding="20">

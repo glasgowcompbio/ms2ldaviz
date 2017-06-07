@@ -35,9 +35,9 @@
 {% block body_block %}
 	<h3>Mass2Motif: {{mass2motif.name}} ({{mass2motif.experiment.name}})</h3>
     <div class="panel-group">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                {% if metadata_form %}
+        {% if metadata_form %}
+            <div class="panel panel-default">
+                <div class="panel-body">
                     <h4>Mass2Motif Annotation</h4>
                     <p>
                         You can assign a label (annotate) this Mass2Motif
@@ -61,9 +61,9 @@
                     {% endfor %}
                     <input type="submit" name="submit" value="Save" class="btn btn-primary" />
                     </form>
-                {% endif %}
+                </div>
             </div>
-        </div>
+        {% endif %}
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>Mass2Motif Details</h4>

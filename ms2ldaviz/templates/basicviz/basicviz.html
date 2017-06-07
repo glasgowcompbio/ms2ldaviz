@@ -117,8 +117,8 @@
                             <div>Decomposition Pending, check back later...</div>
                         {% else %}
                             <div>
-                                <a href="/decomposition/show_parents/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-export"></span>&nbsp;Show Parents</a>
-                                <a href="/decomposition/show_motifs/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show Motifs</a>
+                                <a href="/decomposition/show_parents/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-export"></span>&nbsp;Show Fragmentation Spectra</a>
+                                <a href="/decomposition/show_motifs/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show Mass2Motifs</a>
                                 {% if experiment.1 == 'edit' %}
                                     <a href="/ms1analysis/create_ms1analysis_decomposition/{{decomposition.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-tasks"></span>&nbsp;Create MS1 Analysis</a>
                                 {% endif %}

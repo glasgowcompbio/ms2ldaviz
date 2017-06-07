@@ -18,131 +18,162 @@
 		  font-family: sans-serif;
 		  font-size: 14px;
 		}
-
-        /* for massbank dialog */
-        .required:after {
-            content:" *";
-            color:#FF0000;
-        }
-        .massbank-form { padding:20px; }
-        .massbank-form .field { padding: 4px; margin:1px; background: #eee; }
-        .massbank-form .field label { display:inline-block; width:200px; margin-left:5px; }
-        .massbank-form .field input { display:inline-block; }
-
 	</style>
 {% endblock %}
 
 {% block body_block %}
-	<h3>Mass2Motif: {{mass2motif.name}} (Original experiment = {{mass2motif.originalmotif.experiment.name}})</h3>
-	<h4>{{mass2motif.annotation}}</h4>
-	<a href="/basicviz/view_mass2motifs/{{experiment.id}}">return to mass2motif list for {{experiment.name}}</a>
- 	<hr />
-    {% if metadata_form %}
-	<div>
-    	<p>{{ status }}</p>
-    	<form id="mass2motifmetadata_form" method="post" action="/basicviz/view_parents/{{mass2motif.id}}/">
-    		{% csrf_token %}
-    	{% for hidden in metadata_form.hidden_fields %}
-    	 	{{ hidden }}
-    	{% endfor %}
+    <h3>Mass2Motif: {{mass2motif.name}}</h3>
+    <h6>Original annotation: {{mass2motif.annotation}}</h6>
+    <h6>Original experiment: {{mass2motif.originalmotif.experiment.name}})</h6>
+    <div class="panel-group">
+        {% if metadata_form %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>Mass2Motif Annotation</h4>
+                    <p>
+                        You can assign a label (annotate) this Mass2Motif
+                        from the <strong>Annotation</strong>
+                        field below. Additionally, a shorter annotation can also be assigned through the
+                        <strong>Short Annotation</strong> field. This will be used in the
+                        network visualisation.
+                    </p>
+                    {% if status %}
+                        <p><strong>{{ status }}</strong></p>
+                    {% endif %}
+                    <form id="mass2motifmetadata_form" method="post" action="/basicviz/view_parents/{{mass2motif.id}}/">
+                        {% csrf_token %}
+                    {% for hidden in metadata_form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
 
-    	{% for field in metadata_form.visible_fields %}
-    		{{ field.errors }}
-    		{{ field }}
-    	{% endfor %}
-    	<input type="submit" name="submit" value="Modify metadata" />
-    	</form>
-	</div>
-	<hr />
-    {% endif %}
-
-	<div id="spectra" border="20" padding="20"></div>
-
-	<div>
-	<h3>Mass2Motif Details</h3>
-	<p>After thresholding to save the model, the total probability left in this motif is {{total_prob}}</p>
-		<table class='table' id='featuretable'>
-			<thead>
-			<tr><th>Name</th><th>Probability</th><th>link</th></tr>
-			</thead>
-			<tbody>
-			{% for motif_feature in motif_features %}
-				<tr><td>{{motif_feature.feature.name}}</td><td>{{motif_feature.probability}}</td>
-				<td><a href="/basicviz/mass2motif_feature/{{motif_feature.id}}">details (in original experiment)</a></td></tr>
-			{% endfor %}
-			</tbody>
-		</table>
-	</div>
-
-	<hr />
-
-	<div>
-	<h3>Documents in Mass2Motif</h3>
-		<table class='table' id='doctable'>
-			<thead>
-				<tr><th>Document name</th><th>Doc Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
-			</thead>
-			<tbody>
-				{% for dm2m in dm2ms %}
-					<tr><td><a href="/decomposition/show_doc/{{decomposition.id}}/{{dm2m.document.id}}/">{{dm2m.document.name}}</a></td><td>{{dm2m.document.annotation}}</td><td>{{dm2m.probability}}</td><td>{{dm2m.overlap_score}}</td></tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	<hr />
-
-
-	<div id="graphs">
-	</div>
-
-    <div id="dialog-massbank" title="Generate Massbank Record">
-        <form class="massbank-form" id="mass2motifmassbank_form" method="post" action="/massbank/generate_massbank/">
-            {% for hidden in massbank_form.hidden_fields %}
-                {{ hidden }}
-            {% endfor %}
-            {% for field in massbank_form.visible_fields %}
-                {% if field.field.required %}
-                    <div class="field required">
-                        {{ field.errors }}
-                        {{ field.label_tag }} {{ field }}
-                    </div>
-                {% else %}
-                    <div class="field">
-                        {{ field.errors }}
-                        {{ field.label_tag }} {{ field }}
-                    </div>
-                {% endif %}
-
-            {% endfor %}
-        </form>
-        <div style="margin: 20px">
-            <div id="status">Result goes here: </div><textarea name="massbank_str" id="massbank_str" rows="10" cols="100"></textarea>
-            <button id="copy_button" onclick="copyToClipboard('#massbank_str')">Copy</button>
-            <button id="download_button" onclick="saveTextAsFile('massbank_str')">Download</button>
+                    {% for field in metadata_form.visible_fields %}
+                        <p>{{ field.errors }}</p>
+                        <p>  {{field.label}} {% if field.field.required %} * {% endif %} {{ field }}</p>
+                    {% endfor %}
+                    <input type="submit" name="submit" value="Save" class="btn btn-primary" />
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Mass2Motif Details</h4>
+                <p>
+                    The following table shows the fragment and loss features that are explained by this
+                    Mass2Motifs and their corresponding probabilities.
+                    After thresholding to save the model, the total probability left in this motif is
+                    {{total_prob}}
+                </p>
+                    <table class='table' id='featuretable'>
+                        <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Probability</th>
+                            <th>Link</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for motif_feature in motif_features %}
+            			<tr>
+                            <td>{{motif_feature.feature.name}}</td>
+                            <td>{{motif_feature.probability}}</td>
+            				<td><a href="/basicviz/mass2motif_feature/{{motif_feature.id}}">Details (in original experiment)</a></td>
+                        </tr>
+            			{% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Counts of Mass2Motif Features</h4>
+                <p>
+                    Two bar plots will appear below this message.
+                    The first shows the proportion of the total intensity of these features explained by
+                    this Mass2Motif. Red bars show the total intensity (across the whole dataset),
+                    blue bars show the proportion explained by the selected Mass2Motif. The second shows
+                    the number of times each feature in this Mass2Motif appears in the documents associated
+                    with this Mass2Motif.
+                </p>
+                <div id="graphs">
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Fragmentation Spectra Explained by Mass2Motif</h4>
+                <p>
+                    The following table lists all fragmentation spectra that are explained by this Mass2Motif
+                    at the threshold specified in the <a href="/options/view_experiment_options/{{experiment.id}}">experiment option</a>.
+                </p>
+                <table class='table' id='doctable'>
+                    <thead>
+                        <tr><th>Fragmentation spectra</th><th>Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for dm2m in dm2ms %}
+                            <tr>
+                                <td><a href="/decomposition/show_doc/{{decomposition.id}}/{{dm2m.document.id}}/">{{dm2m.document.name}}</a></td>
+                                <td>{{dm2m.document.annotation}}</td>
+                                <td>{{dm2m.probability|floatformat:"3"}}</td>
+                                <td>{{dm2m.overlap_score|floatformat:"3"}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Fragmentation Spectra Plot</h4>
+                <p>
+                    The fragmentation spectra of molecules explained by this Mass2Motif are plotted below.
+                    Features (fragments and losses) explained by this Mass2Motif will be coloured red,
+                    while parent ion is coloured in blue.
+                    Click <strong>Next</strong> and <strong>Previous</strong> to cycle through
+                    the fragmentation spectra.
+                </p>
+            	<div id="spectra" border="20" padding="20"></div>
+            </div>
+        </div>
+        <!-- Classyfire terms for this motif, if they exist -->
+        {% if taxa_terms %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>Classyfire Taxa Terms</h4>
+                    <table class='table' id='taxa_table'>
+                        <thead>
+                            <tr><th>Taxa Term</th><th>Probability</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for term_instance in taxa_terms %}
+                                <tr><td>{{term_instance.taxterm.name}}</td><td>{{term_instance.probability|floatformat:"3"}}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+        {% if substituent_terms %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>Classyfire Substituent Terms</h4>
+                    <table class='table' id='subst_table'>
+                        <thead>
+                            <tr><th>Substituent Term</th><th>Probability</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for term_instance in substituent_terms %}
+                                <tr><td>{{term_instance.subterm.name}}</td><td>{{term_instance.probability|floatformat:"3"}}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+
     </div>
-
-
-
-    <!-- Classyfire terms for this motif, if they exist -->
-    {% if taxa_terms %}
-        <h3>Classyfire Taxa Terms</h3>
-        <ul>
-            {% for term_instance in taxa_terms %}
-                <li>{{term_instance.taxterm.name}},{{term_instance.probability}}
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-    {% if substituent_terms %}
-        <h3>Classyfire Substituent Terms</h3>
-        <ul>
-            {% for term_instance in substituent_terms %}
-                <li>{{term_instance.subterm.name}},{{term_instance.probability}}
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-
 
 {% endblock %}
 
@@ -164,42 +195,22 @@
 
 	<script type="text/javascript">
 
-		var current_pos = 0;
-		var motif_name = '{{mass2motif.name}}';
-		var motif_id = '{{mass2motif.id}}';
+        var current_pos = 0;
+        var motif_name = '{{mass2motif.name}}';
+        var motif_id = '{{mass2motif.id}}';
         var experiment_id = '{{experiment.id}}';
         var decomposition_id = '{{decomposition.id}}';
-		load_parents_decomposition(motif_id,motif_name,decomposition_id);
-		var url = '/decomposition/get_word_graph/{{mass2motif.id}}/nan/{{decomposition.id}}/';
-		plot_word_graph(url,motif_id,motif_name);
-		url = '/decomposition/get_intensity_graph/{{mass2motif.id}}/nan/{{decomposition.id}}/';
-		plot_word_graph(url,motif_id,motif_name);
+        load_parents_decomposition(motif_id,motif_name,decomposition_id);
+        var url = '/decomposition/get_word_graph/{{mass2motif.id}}/nan/{{decomposition.id}}/';
+        plot_word_graph(url,motif_id,motif_name);
+        url = '/decomposition/get_intensity_graph/{{mass2motif.id}}/nan/{{decomposition.id}}/';
+        plot_word_graph(url,motif_id,motif_name);
 
 		$(document).ready(function() {
 			$('#featuretable').DataTable({
 				dom: 'Bfrtip',
 				buttons: [
-			        'csv',
-                    {
-                        text: 'MassBank Record',
-                        action: function ( e, dt, node, config ) {
-                            $( "#dialog-massbank" ).dialog({
-                                resizable: false,
-                                height: "auto",
-                                width: 800,
-                                buttons: {
-                                    'Generate': function () {
-                                        $('#mass2motifmassbank_form').submit()
-                                        // $(this).dialog('close');
-                                    },
-                                    'Close': function () {
-                                        $(this).dialog('close');
-                                    }
-                                }
-                                }).css({height:"600px", overflow:"auto"})
-
-                        }
-                    }
+			        'csv'
 		        ],
 		        "order": [[ 1, "desc" ]],
 		    });
@@ -210,97 +221,22 @@
 		        ],
 		        "order": [[ 2, "desc" ]],
 		    });
+			$('#taxa_table').DataTable({
+				dom: 'Bfrtip',
+				buttons: [
+			        'csv',
+		        ],
+		        "order": [[ 1, "desc" ]],
+		    });
+			$('#subst_table').DataTable({
+				dom: 'Bfrtip',
+				buttons: [
+			        'csv',
+		        ],
+		        "order": [[ 1, "desc" ]],
+		    });
 
 		});
-
-    $('#mass2motifmassbank_form').on('submit', function(event){
-
-        $form = $(this);
-        var action = $form.attr('action');
-        event.preventDefault();
-
-        $('#status').text('Processing ... please wait.');
-        $.ajax({
-            url : action,
-            type : "POST",
-            data : {
-                'csrfmiddlewaretoken': '{{csrf_token}}',
-                'motif_id' : $('#motif_id').val(),
-                'accession' : $('#accession').val(),
-                'authors' : $('#authors').val(),
-                'comments' : $('#comments').val(),
-                'ch_name' : $('#ch_name').val(),
-                'ch_compound_class' : $('#ch_compound_class').val(),
-                'ch_formula' : $('#ch_formula').val(),
-                'ch_exact_mass' : $('#ch_exact_mass').val(),
-                'ch_smiles' : $('#ch_smiles').val(),
-                'ch_iupac' : $('#ch_iupac').val(),
-                'ch_link' : $('#ch_link').val(),
-                'ac_instrument' : $('#ac_instrument').val(),
-                'ac_instrument_type' : $('#ac_instrument_type').val(),
-                'ac_mass_spectrometry_ion_mode' : $('#ac_mass_spectrometry_ion_mode').val(),
-                'min_rel_int' : $('#min_rel_int').val(),
-
-            },
-
-            success : function(json) {
-
-                var massbank_str = json['massbank_str'];
-                var status = json['status'];
-                $('#status').text(status);
-                $('#massbank_str').text(massbank_str);
-                console.log(status);
-                console.log(massbank_str);
-                $("#copy_button").show();
-                $("#download_button").show();
-
-            },
-
-            error : function(xhr,errmsg, err) {
-                console.log(xhr.status + ": " + xhr.responseText);
-            }
-        });
-
-    });
-
-    // hidden by default when the page loads
-    $('#dialog-massbank').hide()
-    // $('#massbank_str').hide()
-    $("#copy_button").hide();
-    $("#download_button").hide();
-
-    function copyToClipboard(element) {
-        var $temp = $("<textarea>");
-        $("body").append($temp);
-        $temp.val($(element).text()).select();
-        document.execCommand("copy");
-        $temp.remove();
-    }
-
-    // see http://stackoverflow.com/questions/35148578/download-a-text-file-from-textarea-on-button-click
-   function saveTextAsFile(element_id) {
-
-        var textToWrite = document.getElementById(element_id).value;
-        var accession = document.getElementById('accession').value;
-        var textFileAsBlob = new Blob([textToWrite], { type: 'text/plain' });
-        var fileNameToSaveAs = accession + '.txt';
-
-        var downloadLink = document.createElement("a");
-        downloadLink.download = fileNameToSaveAs;
-        downloadLink.innerHTML = "My Hidden Link";
-        window.URL = window.URL || window.webkitURL;
-        downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
-        downloadLink.onclick = destroyClickedElement;
-        downloadLink.style.display = "none";
-        document.body.appendChild(downloadLink);
-
-        downloadLink.click();
-
-    }
-
-    function destroyClickedElement(event) {
-        document.body.removeChild(event.target);
-    }
 
 	</script>
 
