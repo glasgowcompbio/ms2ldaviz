@@ -77,6 +77,7 @@
                     <thead>
                         <tr><th>Name</th><th>Degree</th><th>Annotation</th></tr>
                     </thead>
+                    <tbody>
                         {% for motif_tuple in motif_tuples %}
                             <tr>
                                 <td>
@@ -86,7 +87,6 @@
                                 <td>{{motif_tuple.0.annotation}}</td>
                             </tr>
                         {% endfor %}
-                    <tbody>
                     </tbody>
                 </table>
             </div>

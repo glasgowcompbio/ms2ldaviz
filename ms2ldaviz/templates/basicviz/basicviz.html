@@ -54,8 +54,8 @@
                 {% endifequal %}
                 <div>
                     <a href="/basicviz/summary/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Summary page</a>
-                    <!-- a href="/basicviz/show_docs/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-export"></span>&nbsp;Show Parents</a -->
-                    <!-- a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show Motifs</a -->
+                    <a href="/basicviz/show_docs/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-export"></span>&nbsp;Show Fragmentation Spectra</a>
+                    <a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show Mass2Motifs</a>
                     {% if experiment.1 == 'edit' %}
                         <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-option-horizontal"></span>&nbsp;View Experiment Options</a>
                         <a href="/ms1analysis/create_ms1analysis/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-tasks"></span>&nbsp;Create MS1 Analysis</a>
@@ -93,7 +93,11 @@
         <div id="accordion2">
         {% for experiment in experiments|sort_experiment_by_id %}
             {% ifequal experiment.0.experiment_type '1' %}
-                <h3><b>{{experiment.0.name}}</b> ({{experiment.1}}) ({{experiment.0.id}})</h3>
+                {% ifequal experiment.1 'view' %}
+                    <h3>{{experiment.0.name}} ({{experiment.0.id}})</h3>
+                {% else %}
+                    <h3><strong>{{experiment.0.name}}</strong> ({{experiment.0.id}})</h3>
+                {% endifequal %}
                 <div> <!-- div for each accordion section -->
                     <div>
                         {% if experiment.1 == 'edit' %}

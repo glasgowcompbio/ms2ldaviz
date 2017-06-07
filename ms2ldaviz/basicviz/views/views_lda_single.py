@@ -581,8 +581,12 @@ def view_mass2motifs(request, experiment_id):
     if not check_user(request,experiment):
         return HttpResponse("You do not have permission to access this page")
     if experiment.experiment_type == '0':
-        mass2motifs = Mass2Motif.objects.filter(experiment=experiment).order_by('name')
-        context_dict = {'mass2motifs': mass2motifs}
+        motifs = Mass2Motif.objects.filter(experiment=experiment)
+        motif_tuples = []
+        for motif in motifs:
+            dm2ms = get_docm2m(motif)
+            motif_tuples.append((motif, len(dm2ms)))
+        context_dict = {'motif_tuples': motif_tuples}
         context_dict['experiment'] = experiment
         return render(request, 'basicviz/view_mass2motifs.html', context_dict)
     elif experiment.experiment_type == '1': #decomp

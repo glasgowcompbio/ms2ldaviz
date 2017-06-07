@@ -2,22 +2,42 @@
 {% load static %}
 
 {% block body_block %}
-<h2>Experiment: {{experiment.name}}</h2>
-<a href="/basicviz">return to experiment list</a>
-<table class="table" id='m2mtable'>
-<thead>
-	<tr><th>Name</th><th>Annotation</th><th>Actions</th></tr>
-</thead>
-<tbody>
-{% for mass2motif in mass2motifs %}
-	<tr><td>{{mass2motif.name}}</td><td>{{mass2motif.annotation}}</td><td><a class = "btn btn-xs btn-default" role="button" href="/basicviz/view_parents/{{mass2motif.id}}">view parents</a></td>
-	</tr>
-	<!-- &nbsp;<a href="/basicviz/show_docs/{{experiment.id}}">show parents</a>&nbsp;<a href="/basicviz/start_viz/{{experiment.id}}">start viz</a>&nbsp;<a href="/basicviz/view_mass2motifs/{{experiment.id}}">show mass2motifs</a></li> -->
-{% endfor %}
-</tbody>
-</table>
 
-</ul>
+    <div class="panel-group">
+    	{% if experiment %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h3>Experiment: {{experiment.name}}</h3>
+                    <a href="/basicviz">Return to Experiment List</a>
+                </div>
+            </div>
+        {% endif %}
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Mass2Motif Details</h4>
+                <p>
+                    The following table lists the Mass2Motifs that have been inferred for this
+                    dataset, including their degree (number of associated molecules) and annotations.
+                </p>
+                <table class='table' id='m2mtable'>
+                    <thead>
+                        <tr><th>Name</th><th>Degree</th><th>Annotation</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for motif_tuple in motif_tuples %}
+                            <tr>
+                                <td>
+                                    <a href="/basicviz/view_parents/{{motif_tuple.0.id}}">{{ motif_tuple.0.name }}</a>
+                                </td>
+                                <td>{{motif_tuple.1}}</td>
+                                <td>{{motif_tuple.0.annotation}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
 
@@ -39,6 +59,7 @@ $(document).ready(function() {
 		buttons: [
         'csv',
         ],
+        "order": [[ 1, "desc" ]],
     });   
 });
 </script>
