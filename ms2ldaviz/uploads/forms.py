@@ -55,7 +55,7 @@ class CreateExperimentForm(forms.ModelForm):
             'ms2_file': '(Required) MS2 file (mzML, msp, or mgf)',
             'isolation_window': 'Fragmentation isolation window. Used to match fragment spectra with MS1 peaks.',
             'mz_tol': 'Mass tolerance when linking peaks from the peaklist to those found in the mzML (ppm)',
-            'rt_tol': 'Retention time tolerance when peaks from the peaklist to those found in the mzML (seconds)',
+            'rt_tol': 'Retention time tolerance when linking peaks from the peaklist to those found in the mzML (seconds)',
             'min_ms1_rt': 'Minimum retention time of MS1 peaks to store (seconds)',
             'max_ms1_rt': 'Maximum retention time of MS1 peaks to store (seconds)',
             'min_ms1_intensity': 'Minimum intensity of MS1 peaks to store',

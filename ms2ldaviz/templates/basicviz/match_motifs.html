@@ -13,7 +13,7 @@
 <div>
     <p>
         Below are listed all matches that have been found using searches for this experiment.
-        <strong>If the table is empty, that means the searches is still being processed.</strong>
+        <strong>If the table is empty, that means the matching is still being processed.</strong>
         Periodically check the link below for this page until results are shown.
         <a href="/basicviz/manage_motif_matches/{{experiment.id}}" class = "btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;Manage Motif Matches</a>
     </p>
@@ -31,14 +31,22 @@
 
 <table class='table' id='matchtable'>
     <thead>
-        <tr><th>Mass2Motif (annotation)</th><th>Best match (Experiment, annotation) </th><th>Match score</th><th>Current link</th><th>Actions</th></tr>
+        <tr>
+            <th>Mass2Motif (Annotation)</th>
+            <th>Best Match (Annotation)</th>
+            <th>Best Match (Experiment)</th>
+            <th>Match Score</th>
+            <th>Current Link</th>
+            <th>Actions</th>
+        </tr>
     </thead>
     <tbody>
         {% for match in matches %}
             <tr>
-                <td><a href="/basicviz/view_parents/{{match.frommotif.id}}/">{{match.frommotif}} ({{match.frommotif.annotation}})</a></td>
-                <td><a href="/basicviz/view_parents/{{match.tomotif.id}}/">{{match.tomotif}} ({{match.tomotif.experiment}},{{match.tomotif.annotation}})</a></td>
-                <td>{{match.score}}</td>
+                <td><a href="/basicviz/view_parents/{{match.frommotif.id}}/"><strong>{{match.frommotif}}</strong> ({{match.frommotif.annotation}})</a></td>
+                <td><a href="/basicviz/view_parents/{{match.tomotif.id}}/"><strong>{{match.tomotif}}</strong> ({{match.tomotif.annotation}})</a></td>
+                <td>{{match.tomotif.experiment}}</td>
+                <td>{{match.score|floatformat:"3"}}</td>
                 <td>{{match.frommotif.linkmotif}} ({{match.frommotif.linkmotif.experiment}},{{match.frommotif.linkmotif.annotation}})</td>
                 <td>
                     <a href="/basicviz/add_link/{{match.frommotif.id}}/{{match.tomotif.id}}/">Add link</a>
@@ -72,7 +80,7 @@
 				buttons: [
 			        'csv',
 		        ],
-		        "order": [[ 2, "desc" ]],
+		        "order": [[ 3, "desc" ]],
 		    });
 
 		});

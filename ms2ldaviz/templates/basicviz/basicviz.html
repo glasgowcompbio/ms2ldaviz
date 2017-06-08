@@ -17,17 +17,21 @@
   </ul>
   <div id="tabs-1">
     <h4>Create LDA &amp; Decomposition Experiments</h4>
-    <p>
-        Create a new LDA or Decomposition experiment by clicking the button below.
-        Once submitted, wait for the file to have uploaded completely after which
-        the browser returns to this page and the experiment will appear as 'Pending'.
-        All functionalities can then be used as normal.
-        Once finished, the experiment will appear in the 'LDA Experiments' or
-        'Decomposition Experiments' sections.
-    </p>
-    <p>
-        <a href="/uploads/create_experiment" class="btn btn-default btn-primary" style="color: white">Create Experiment</a>
-    </p>
+    {% if show_create_experiment %}
+        <p>
+            Create a new LDA or Decomposition experiment by clicking the button below.
+            Once submitted, wait for the file to have uploaded completely after which
+            the browser returns to this page and the experiment will appear as 'Pending'.
+            All functionalities can then be used as normal.
+            Once finished, the experiment will appear in the 'LDA Experiments' or
+            'Decomposition Experiments' sections.
+        </p>
+        <p>
+            <a href="/uploads/create_experiment" class="btn btn-default btn-primary" style="color: white">Create Experiment</a>
+        </p>
+    {% else %}
+        <p>To create an experiment so, please log in using a normal account.</p>
+    {% endif %}
     {% if show_pending %}
         <h5>Pending Experiments</h5>
         <p>The following experiments have been created but are still being processed.
@@ -53,7 +57,7 @@
                     <h3><strong>{{experiment.0.name}}</strong> ({{experiment.0.id}})</h3>
                 {% endifequal %}
                 <div>
-                    <a href="/basicviz/summary/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Summary page</a>
+                    <a href="/basicviz/summary/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Summary Page</a>
                     <a href="/basicviz/show_docs/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-export"></span>&nbsp;Show Fragmentation Spectra</a>
                     <a href="/basicviz/view_mass2motifs/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show Mass2Motifs</a>
                     {% if experiment.1 == 'edit' %}

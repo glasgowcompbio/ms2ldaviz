@@ -50,12 +50,18 @@ def index(request):
         permissions.append(ue.permission)
     experiments = zip(experiments,permissions)
 
+    # hide the create experiment button for guest user
+    show_create_experiment = True
+    if request.user.username.lower() == 'guest':
+        show_create_experiment = False
+
     context_dict = {'experiments': experiments}
     context_dict['user'] = request.user
     context_dict['pending_experiments'] = pending_individuals
     context_dict['show_pending'] = show_pending
     context_dict['show_lda'] = show_lda
     context_dict['show_decomposition'] = show_decomposition
+    context_dict['show_create_experiment'] = show_create_experiment
 
     # to display additional links on the basicviz index page
     eu = ExtraUsers.objects.filter(user=request.user)
