@@ -18,5 +18,15 @@ def api(request):
 
 
 def user_guide(request):
-    user_guide_str = render_to_string('user_guide/user_guide.md')
-    return render(request, 'user_guide/user_guide.html', {'user_guide_str':user_guide_str})
+    markdown_str = render_to_string('markdowns/user_guide.md')
+    return render(request, 'markdowns/user_guide.html', {'markdown_str':markdown_str})
+
+
+def disclaimer(request):
+    markdown_str = render_to_string('markdowns/disclaimer.md')
+    return render(request, 'markdowns/disclaimer.html', {'markdown_str':markdown_str})
+
+
+def confidence(request):
+    markdown_str = render_to_string('markdowns/confidence.md')
+    return render(request, 'markdowns/confidence.html', {'markdown_str':markdown_str})

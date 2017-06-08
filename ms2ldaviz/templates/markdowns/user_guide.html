@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% load md2 %}
+
+{% block body_block %}
+    {{  markdown_str|markdown }}
+{% endblock %}
