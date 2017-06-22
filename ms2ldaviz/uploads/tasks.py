@@ -1,21 +1,21 @@
 from __future__ import absolute_import, unicode_literals
 
+import logging
 import os
 import shutil
-import logging
 import sys
 import traceback
 
-from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_DECOMPOSITION_SOURCE
-from basicviz.models import Document, Experiment
-from decomposition.decomposition_functions import decompose,load_mzml_and_make_documents
-from .lda_functions import run_lda
-from .lda_functions import load_mzml_and_make_documents as lda_load_mzml_and_make_documents
-from decomposition.models import Beta,MotifSet,Decomposition
-from ms2ldaviz.celery_tasks import app
+from celery.utils.log import get_task_logger
 
-# Import the load dict method
+from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_DECOMPOSITION_SOURCE
+from basicviz.models import Experiment
+from decomposition.decomposition_functions import decompose, load_mzml_and_make_documents
+from decomposition.models import MotifSet, Decomposition
 from load_dict_functions import load_dict
+from ms2ldaviz.celery_tasks import app
+from .lda_functions import load_mzml_and_make_documents as lda_load_mzml_and_make_documents
+from .lda_functions import run_lda
 
 
 def delete_analysis_dir(exp):
@@ -27,9 +27,11 @@ def delete_analysis_dir(exp):
 
 
 # see http://stackoverflow.com/questions/29712938/python-celery-how-to-separate-log-files
+# see http://oriolrius.cat/blog/2013/09/06/celery-logs-through-syslog/
 def custom_logger(exp):
+
     experiment_id = 'experiment_%d' % exp.id
-    logger = logging.getLogger(__name__)
+    logger = get_task_logger(__name__)
     logger.setLevel(logging.DEBUG)
 
     upload_folder = os.path.dirname(exp.ms2_file.path)
