@@ -6,7 +6,7 @@
 
 ###### Mass2Motifs are collections of co-occurring mass fragments and/or neutral losses
 
-Mass2Motifs do not represent *real fragmentation spectra* – they are groups of mass fragments and/or neutral losses that often co-occur in a large collection of fragmentation spectra, i.e., from a set of reference compounds or from a LC-MS/MS run. Whilst we can *reconstruct* those collections in a spectral format, these are ‘fragmentation spectra’ without precursor mass and if present neutral losses usually do not ‘match’ to a Mass2Motif fragment unlike in real fragmentation spectra. 
+Mass2Motifs do not represent *real fragmentation spectra* – they are groups of mass fragments and/or neutral losses that often co-occur in a large collection of fragmentation spectra, i.e., from a set of reference compounds or from a LC-MS/MS run. Whilst we can *reconstruct* those collections in a spectral format, these are ‘fragmentation spectra’ without precursor mass and, if present, neutral losses usually do not ‘match’ to a Mass2Motif fragment unlike in real fragmentation spectra. 
 
 ---
 

@@ -2,11 +2,11 @@
 
 #### Structural Characterization Confidence Levels
  
-Given that i) no complete metabolites are structurally elucidated, but mass spectrometry detectable substructures or structural features<sup>+</sup>, and ii) the confidence levels as proposed by the Metabolomics Standards Initiative, the MassBank consortium, and others were used as blueprint, the following structural characterization confidence levels are proposed when communicating Mass2Motifs in databases: 
- 
+Given that *mass spectrometry detectable* substructures or structural features<sup>+</sup> are elucidated, not complete metabolites, the following structural characterization confidence levels are proposed when communicating Mass2Motifs in databases, considering the confidence levels proposed by the Metabolomics Standards Initiative, the RMassBank authors, and others. 
+
 - **Level 3A – specific substructure/structural feature**. 
 
-    Several mass fragments or neutral losses containing one or more specific mass values that can only point to a one specific substructure or structural feature.
+    Several mass fragments or neutral losses containing one or more specific mass values that point to a one specific substructure or structural feature.
 
 - **Level 3B – substructure/structural feature with possible isomers**. 
 
