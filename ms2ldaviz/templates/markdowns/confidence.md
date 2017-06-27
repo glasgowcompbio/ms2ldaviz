@@ -10,7 +10,7 @@ Given that *mass spectrometry detectable* substructures or structural features<s
 
 - **Level 3B – substructure/structural feature with possible isomers**. 
 
-    Several isomers are possible – this is often a match based on elemental formula (EF) for one specific mass fragments or neutral loss.
+    Several isomers are possible – this is often a match based on elemental formula (EF) for one specific mass fragment or neutral loss.
     
 - **Level 3C – classification based on Mass2Motif possible**. 
 
