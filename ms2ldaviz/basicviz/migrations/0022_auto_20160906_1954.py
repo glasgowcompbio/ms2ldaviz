@@ -11,22 +11,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='vizoptions',
-            name='discrete_colour',
-            field=models.BooleanField(default=False),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='vizoptions',
-            name='lower_colour_perc',
-            field=models.IntegerField(default=10),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='vizoptions',
-            name='upper_colour_perc',
-            field=models.IntegerField(default=90),
-            preserve_default=False,
-        ),
     ]

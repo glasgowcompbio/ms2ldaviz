@@ -11,11 +11,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='alphacorroptions',
-            name='multifileexperiment',
-        ),
-        migrations.DeleteModel(
-            name='AlphaCorrOptions',
-        ),
     ]

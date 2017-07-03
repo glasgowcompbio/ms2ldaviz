@@ -11,10 +11,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='multifileexperiment',
-            name='degree_matrix',
-            field=models.TextField(null=True),
-            preserve_default=True,
-        ),
     ]
