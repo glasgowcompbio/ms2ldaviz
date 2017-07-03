@@ -23,4 +23,7 @@ class BatchDecompositionForm(forms.Form):
 class SpectrumForm(forms.Form):
     parentmass = forms.FloatField(required = True,initial = 188.0818)
     spectrum = forms.CharField(required = True,widget = forms.Textarea(attrs={'rows': 20, 'cols': 120}),initial = example_spectrum)
-    motifset = forms.ChoiceField(required = True,choices = [(m.id,m.name) for m in MotifSet.objects.all()])
+
+    def __init__(self, *args, **kwargs):
+        super(SpectrumForm, self).__init__(*args, **kwargs)
+        self.fields['motifset'] = forms.ChoiceField(required = True,choices = [(m.id,m.name) for m in MotifSet.objects.all()])
