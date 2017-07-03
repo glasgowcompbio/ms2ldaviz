@@ -58,7 +58,19 @@
                 </div>
             </div>
         {% endif %}
-            {% if image_url %}
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Fragmentation Spectrum Plot</h4>
+                <p>
+                    The fragmentation spectrum of this molecules is plotted below, alongside
+                    associated Mass2Motifs. Features (fragments and losses) explained by the associated
+                    Mass2Motif are coloured in red, while the parent ion is coloured in blue.
+                </p>
+                <div id="spectra" border="20" padding="20">
+                </div>
+            </div>
+        </div>
+        {% if image_url %}
             <div class="panel panel-default">
                 <div class="panel-body">
                     <h4>ChemSpider</h4>
@@ -99,18 +111,6 @@
                 </div>
             </div>
         {% endif %}
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <h4>Fragmentation Spectrum Plot</h4>
-                <p>
-                    The fragmentation spectrum of this molecules is plotted below, alongside
-                    associated Mass2Motifs. Features (fragments and losses) explained by the associated
-                    Mass2Motif are coloured in red, while the parent ion is coloured in blue.
-                </p>
-                <div id="spectra" border="20" padding="20">
-                </div>
-            </div>
-        </div>
     </div>
 
 {% endblock %}
