@@ -8,7 +8,7 @@ import networkx as nx
 from networkx.readwrite import json_graph
 from decomposition.models import DocumentGlobalFeature,GlobalFeature,GlobalMotif,DocumentGlobalMass2Motif,DocumentFeatureMass2Motif,FeatureSet,Decomposition,FeatureMap,Beta
 from basicviz.models import VizOptions,Experiment,Document,Mass2MotifInstance
-
+from annotation.models import TaxaInstance,SubstituentInstance
 from options.views import get_option
 from ms1analysis.models import Sample, DocSampleIntensity
 from ms1analysis.models import DecompositionAnalysis, DecompositionAnalysisResult, DecompositionAnalysisResultPlage
@@ -821,10 +821,12 @@ def api_decomposition(doc_dict,motifset):
 
     results = {}
     results['decompositions'] = {}
+    results['terms'] = {}
     g_term = np.zeros(K)
 
     for i,doc in enumerate(doc_dict.keys()):
         results['decompositions'][doc] = []
+        results['terms'][doc] = []
         document = doc_dict[doc]
         print '%d/%d: %s' % (i, total_docs, doc)
 
@@ -868,13 +870,41 @@ def api_decomposition(doc_dict,motifset):
         theta_motif = sorted(theta_motif,key = lambda x : x[0],reverse = True)
         pos = 0
         cum_prob = 0.0
+
+        sub_terms = {}
+        tax_terms = {}
+
         while cum_prob < 0.99:
             theta,motif = theta_motif[pos]
             motif_pos = motif_index[motif]
             overlap_score = compute_overlap(phi_matrix,motif_pos,beta_matrix[motif_pos,:],word_index)
+
+
+            tax_term_instances = TaxaInstance.objects.filter(motif = motif.originalmotif)
+            sub_term_instances = SubstituentInstance.objects.filter(motif = motif.originalmotif)
+
+            for t in tax_term_instances:
+                if not t.taxterm in tax_terms:
+                    tax_terms[t.taxterm] = 0.0
+                tax_terms[t.taxterm] += overlap_score * t.probability
+            for s in sub_term_instances:
+                if not s.subterm in sub_terms:
+                    sub_terms[s.subterm] = 0.0
+                sub_terms[s.subterm] += overlap_score * s.probability
+
             results['decompositions'][doc].append((motif.name,motif.originalmotif.name,theta,overlap_score,motif.originalmotif.annotation))
+
             cum_prob += theta
             pos += 1
+
+        for s in sub_terms:
+            if sub_terms[s] >= 0.5:
+                results['terms'][doc].append((s.name,'substituent',sub_terms[s]))
+        for t in tax_terms:
+            if tax_terms[t] >= 0.5:
+                results['terms'][doc].append((t.name,'taxa',tax_terms[t]))
+
+
     # Do the alpha optimisation
     if total_docs > 1:
         M = len(doc_dict)
