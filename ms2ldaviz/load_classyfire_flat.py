@@ -20,7 +20,7 @@ if __name__=='__main__':
 
 
 	experiment = Experiment.objects.get(name = experiment_name)
-	motifs = Mass2Motif.objecte.get(experiment = experiment)
+	motifs = Mass2Motif.objects.get(experiment = experiment)
 	if term_type == 'sub':
 		current_terms = SubstituentInstance.objects.filter(motif__in = motifs)
 	else:
