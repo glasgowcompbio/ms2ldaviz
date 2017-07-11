@@ -1,4 +1,4 @@
-import os
+  import os
 import sys
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 
@@ -9,12 +9,14 @@ import numpy as np
 import bisect
 import jsonpickle
 from decomposition.models import FeatureSet,GlobalFeature,Decomposition,FeatureMap,GlobalMotif,Beta,DocumentGlobalFeature
-from basicviz.models import Experiment,Feature,Mass2Motif,Mass2MotifInstance,Alpha,Document
+from basicviz.models import Experiment,Feature,Mass2Motif,Mass2MotifInstance,Alpha,Document,BVFeatureSet
 
 if __name__ == '__main__':
     # Match all of the features in massbank to this experiment
-    massbank_experiment = Experiment.objects.get(name = 'massbank_binned_005_alpha')
-    massbank_features = Feature.objects.filter(experiment = massbank_experiment)
+    massbank_experiment = Experiment.objects.get(name = 'CD_11_A_FrPOS.mzML_fmf_2e6')
+    bfs = BVFeatureSet.objects.get(name = 'binned_005')
+    # massbank_features = Feature.objects.filter(experiment = massbank_experiment)
+    massbank_features = Feature.objects.filter(featureset = bvs)
     fs = FeatureSet.objects.get_or_create(name='binned_005')[0]
 
     n_done = 0
