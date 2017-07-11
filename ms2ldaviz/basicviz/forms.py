@@ -90,5 +90,8 @@ class MatchMotifForm(forms.Form):
 
         # Select only the experiments that belong to this user (through UserExperiment)
         # and also not a multi-file experiment (through MultiLink), because there are too many of them
+        # self.fields['other_experiment'].queryset = Experiment.objects.filter(
+        #     userexperiment__user=user, multilink__isnull=True).order_by('name')
         self.fields['other_experiment'].queryset = Experiment.objects.filter(
-            userexperiment__user=user, multilink__isnull=True).order_by('name')
+            userexperiment__user=user).order_by('name')
+
