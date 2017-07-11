@@ -6,7 +6,7 @@ import django
 django.setup()
 
 from decomposition.models import MotifSet,FeatureSet,GlobalFeature,GlobalMotifsToSets,Beta,FeatureMap
-from basicviz.models import Alpha,Mass2MotifInstance,Experiment,Document,Mass2Motif,FeatureInstance
+from basicviz.models import Alpha,Mass2MotifInstance,Experiment,Document,Mass2Motif,FeatureInstance,Feature
 
 
 # Script to transform an experiment into a motifset for decomposition
