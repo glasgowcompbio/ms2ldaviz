@@ -11,20 +11,20 @@ from basicviz.models import Alpha,Mass2MotifInstance,Experiment,Document,Mass2Mo
 
 # Script to transform an experiment into a motifset for decomposition
 if __name__ == '__main__':
-	experiment_name = sys.argv[1]
-	original_experiment = Experiment.objects.get(name = experiment_name)
-	docs = Document.objects.filter(experiment = original_experiment)
-	
-
-	# Find out the featureset
-	temp_doc = docs[0]
-	fi = FeatureInstance.objects.filter(document = temp_doc)[0]
-	bfs = fi.feature.featureset
-
-	original_features = Feature.objects.filter(featureset = bfs)
+    experiment_name = sys.argv[1]
+    original_experiment = Experiment.objects.get(name = experiment_name)
+    docs = Document.objects.filter(experiment = original_experiment)
     
 
-	# Get the decomposition featureset - hardcoded
+    # Find out the featureset
+    temp_doc = docs[0]
+    fi = FeatureInstance.objects.filter(document = temp_doc)[0]
+    bfs = fi.feature.featureset
+
+    original_features = Feature.objects.filter(featureset = bfs)
+    
+
+    # Get the decomposition featureset - hardcoded
     fs = FeatureSet.objects.get_or_create(name='binned_005')[0]
 
     n_done = 0
