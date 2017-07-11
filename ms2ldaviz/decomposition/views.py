@@ -274,6 +274,7 @@ def pretty_results(request,result_id):
         context_dict['alpha'] = result_json['alpha']
         motifset = MotifSet.objects.get(name = result_json['motifset'])
         context_dict['motifset'] = motifset
+        doc_name = result_json['terms'].keys()[0]
         decomps = result_json['decompositions']
 
         all_global_motifs = GlobalMotifsToSets.objects.filter(motifset = motifset)
@@ -291,6 +292,16 @@ def pretty_results(request,result_id):
             doc_list = sorted(doc_list,key = lambda x: x[1],reverse = True)
             decomp_list.append((doc_name,doc_list))
         context_dict['decomp_list'] = decomp_list
+
+        term_list = []
+        for doc_name,terms in result_json['terms'].items():
+            doc_term_list = []
+            for term_name,term_type,term_score in terms:
+                doc_term_list.append((term_name,term_type,term_score))
+            doc_term_list = sorted(doc_term_list,key = lambda x: x[2],reverse = True)
+            term_list.append((doc_name,doc_term_list))
+        context_dict['terms'] = term_list
+
         context_dict['finished'] = True
     except:
         context_dict['finished'] = False

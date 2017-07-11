@@ -13,25 +13,43 @@
 
 {% if finished %}
 
-<h4>Decomposition results</h4>
+    <h4>Decomposition results</h4>
 
-<div><b>Motifset:</b> {{motifset.name}}</div>
-<div><b>Featureset:</b> {{motifset.featureset.name}}</div>
+    <div><b>Motifset:</b> {{motifset.name}}</div>
+    <div><b>Featureset:</b> {{motifset.featureset.name}}</div>
 
-{% for decomp_doc in decomp_list %}
-    <hr />
-    <p><b>{{decomp_doc.0}}</b></p>
-    <table class="table" id="dtable">
-    <thead>
-        <tr><th>Motif</th><th>Probability</th><th>Overlap</th><th>Annotation</th></tr>
-    </thead>
-    <tbody>
-    {% for decomp_item in decomp_doc.1 %}
-        <tr><td><a href="/basicviz/view_parents/{{decomp_item.0.originalmotif.id}}">{{decomp_item.0}}</a></td><td>{{decomp_item.1}}</td><td>{{decomp_item.2}}</td><td>{{decomp_item.0.annotation}}</td></tr>
+    {% for decomp_doc in decomp_list %}
+        <hr />
+        <p><b>{{decomp_doc.0}}</b></p>
+        <table class="table" id="dtable">
+        <thead>
+            <tr><th>Motif</th><th>Probability</th><th>Overlap</th><th>Annotation</th></tr>
+        </thead>
+        <tbody>
+        {% for decomp_item in decomp_doc.1 %}
+            <tr><td><a href="/basicviz/view_parents/{{decomp_item.0.originalmotif.id}}">{{decomp_item.0}}</a></td><td>{{decomp_item.1}}</td><td>{{decomp_item.2}}</td><td>{{decomp_item.0.annotation}}</td></tr>
+        {% endfor %}
+        </tbody>
+        </table>
+
     {% endfor %}
-    </tbody>
-    </table>
-{% endfor %}
+
+    <h4>Classyfire terms [experimental]</h4>
+    {% for decomp_doc in terms %}
+        <hr />
+        <p><b>{{decomp_doc.0}}</b></p>
+        <table class="table" id="ttable">
+        <thead>
+            <tr><th>Term</th><th>Term type</th><th>Score</th></tr>
+        </thead>
+        <tbody>
+        {% for decomp_item in decomp_doc.1 %}
+            <tr><td>{{decomp_item.0}}</td><td>{{decomp_item.1}}</td><td>{{decomp_item.2}}</td></tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    {% endfor %}
+
 
 {% else %}
     <p>Decomposition hasn't finished</p>
@@ -62,6 +80,13 @@ $(document).ready(function() {
                 'csv',
             ],
             "order": [[ 1, "desc" ]],
+        });
+    $('#ttable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                'csv',
+            ],
+            "order": [[ 2, "desc" ]],
         });
 });
 </script>
