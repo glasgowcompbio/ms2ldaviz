@@ -92,6 +92,7 @@ class MatchMotifForm(forms.Form):
         # and also not a multi-file experiment (through MultiLink), because there are too many of them
         # self.fields['other_experiment'].queryset = Experiment.objects.filter(
         #     userexperiment__user=user, multilink__isnull=True).order_by('name')
+        # Modified by SR to include the multifile ones - 11/7/17
         self.fields['other_experiment'].queryset = Experiment.objects.filter(
             userexperiment__user=user).order_by('name')
 
