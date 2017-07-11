@@ -28,21 +28,21 @@ if __name__ == '__main__':
     fs = FeatureSet.objects.get_or_create(name='binned_005')[0]
 
     n_done = 0
-    for localfeature in original_features:
-      gf = GlobalFeature.objects.get_or_create(name = localfeature.name,
-                                          min_mz = localfeature.min_mz,
-                                          max_mz = localfeature.max_mz,
-                                          featureset = fs)[0]
-      FeatureMap.objects.get_or_create(localfeature = localfeature,
-                                      globalfeature = gf)
-      n_done += 1
-      if n_done % 100 == 0:
-          print n_done,len(original_features)
+    # for localfeature in original_features:
+    #   gf = GlobalFeature.objects.get_or_create(name = localfeature.name,
+    #                                       min_mz = localfeature.min_mz,
+    #                                       max_mz = localfeature.max_mz,
+    #                                       featureset = fs)[0]
+    #   FeatureMap.objects.get_or_create(localfeature = localfeature,
+    #                                   globalfeature = gf)
+    #   n_done += 1
+    #   if n_done % 100 == 0:
+    #       print n_done,len(original_features)
 
     # Create the motif links
     global_motifs = []
     original_motifs = Mass2Motif.objects.filter(experiment = original_experiment)
-    for motif in massbank_motifs:
+    for motif in original_motifs:
       gm = GlobalMotif.objects.get_or_create(originalmotif = motif)[0]
       global_motifs.append(gm)
 
