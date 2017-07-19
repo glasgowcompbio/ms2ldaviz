@@ -1383,61 +1383,54 @@ def dump_topic_molecules(request, m2m_id):
 
     return response
 
-
-def get_docm2m(mass2motif, default_score=None, doc_m2m_threshold=None):
+## updaetd get_docm2m function, use threshold for probability and overlap respectively
+def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
     experiment = mass2motif.experiment
-    if not default_score:
-        default_score = get_option('default_doc_m2m_score', experiment=experiment)
-        if not default_score:
-            default_score = 'probability'
-    if not doc_m2m_threshold:
-        doc_m2m_threshold = get_option('doc_m2m_threshold', experiment=experiment)
-        if doc_m2m_threshold:
-            doc_m2m_threshold = float(doc_m2m_threshold)
+
+    ## default prob_threshold 0.05, default overlap_threshld 0.0
+    if not doc_m2m_prob_threshold:
+        doc_m2m_prob_threshold = get_option('doc_m2m_prob_threshold', experiment = experiment)
+        if doc_m2m_prob_threshold:
+            doc_m2m_prob_threshold = float(doc_m2m_prob_threshold)
         else:
-            doc_m2m_threshold = 0.0  # Default
+            doc_m2m_prob_threshold = 0.05
 
-    if default_score == 'probability':
-        dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=doc_m2m_threshold).order_by(
-            '-probability')
-    elif default_score == 'overlap_score':
-        dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, overlap_score__gte=doc_m2m_threshold).order_by(
-            '-overlap_score')
-    elif default_score == 'both': 
-        dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=doc_m2m_threshold,
-                                                 overlap_score__gte=doc_m2m_threshold).order_by('-probability')
-    else:
-        dm2m = []
+    if not doc_m2m_overlap_threshold:
+        doc_m2m_overlap_threshold = get_option('doc_m2m_overlap_threshold', experiment = experiment)
+        if doc_m2m_overlap_threshold:
+            doc_m2m_overlap_threshold = float(doc_m2m_overlap_threshold)
+        else:
+            doc_m2m_overlap_threshold = 0.0
 
+    dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=doc_m2m_prob_threshold,
+                                                 overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
 
     return dm2m
 
 
-def get_docm2m_bydoc(document, default_score=None, doc_m2m_threshold=None):
+def get_docm2m_bydoc(document, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
     experiment = document.experiment
-    if not default_score:
-        default_score = get_option('default_doc_m2m_score', experiment=experiment)
-        if not default_score:
-            default_score = 'probability'
-    if not doc_m2m_threshold:
-        doc_m2m_threshold = get_option('doc_m2m_threshold', experiment=experiment)
-        if doc_m2m_threshold:
-            doc_m2m_threshold = float(doc_m2m_threshold)
-        else:
-            doc_m2m_threshold = 0.0  # Default
 
-    if default_score == 'probability':
-        dm2m = DocumentMass2Motif.objects.filter(document=document, probability__gte=doc_m2m_threshold).order_by(
-            '-probability')
-    elif default_score == 'overlap_score':
-        dm2m = DocumentMass2Motif.objects.filter(document=document, overlap_score__gte=doc_m2m_threshold).order_by(
-            '-overlap_score')
-    elif default_score == 'both':
-        dm2m = DocumentMass2Motif.objects.filter(document=document, probability__gte=doc_m2m_threshold,
-                                                 overlap_score__gte=doc_m2m_threshold).order_by('-probability')
-    else:
-        dm2m = []
+    ## default prob_threshold 0.05, default overlap_threshld 0.0
+    if not doc_m2m_prob_threshold:
+        doc_m2m_prob_threshold = get_option('doc_m2m_prob_threshold', experiment = experiment)
+        if doc_m2m_prob_threshold:
+            doc_m2m_prob_threshold = float(doc_m2m_prob_threshold)
+        else:
+            doc_m2m_prob_threshold = 0.05
+
+    if not doc_m2m_overlap_threshold:
+        doc_m2m_overlap_threshold = get_option('doc_m2m_overlap_threshold', experiment = experiment)
+        if doc_m2m_overlap_threshold:
+            doc_m2m_overlap_threshold = float(doc_m2m_overlap_threshold)
+        else:
+            doc_m2m_overlap_threshold = 0.0
+
+    dm2m = DocumentMass2Motif.objects.filter(document=document, probability__gte=doc_m2m_prob_threshold,
+                                                 overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
+
     return dm2m
+
 
 @login_required(login_url='/registration/login/')
 def extract_docs(request, experiment_id):
