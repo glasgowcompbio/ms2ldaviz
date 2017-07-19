@@ -1043,33 +1043,27 @@ def parse_spectrum_string(spectrum_string):
                 intensity = None
     return peaks
 
-def get_docglobalm2m(globalm2m, decomposition, default_score=None, doc_m2m_threshold=None):
+def get_docglobalm2m(globalm2m, decomposition, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
     # experiment = mass2motif.experiment
     experiment = Experiment.objects.get(pk=decomposition.experiment_id)
-    if not default_score:
-        default_score = get_option('default_doc_m2m_score', experiment=experiment)
-        if not default_score:
-            default_score = 'probability'
-    if not doc_m2m_threshold:
-        doc_m2m_threshold = get_option('doc_m2m_threshold', experiment=experiment)
-        if doc_m2m_threshold:
-            doc_m2m_threshold = float(doc_m2m_threshold)
+    ## default prob_threshold 0.05, default overlap_threshld 0.0
+    if not doc_m2m_prob_threshold:
+        doc_m2m_prob_threshold = get_option('doc_m2m_prob_threshold', experiment = experiment)
+        if doc_m2m_prob_threshold:
+            doc_m2m_prob_threshold = float(doc_m2m_prob_threshold)
         else:
-            doc_m2m_threshold = 0.0  # Default
+            doc_m2m_prob_threshold = 0.05
+
+    if not doc_m2m_overlap_threshold:
+        doc_m2m_overlap_threshold = get_option('doc_m2m_overlap_threshold', experiment = experiment)
+        if doc_m2m_overlap_threshold:
+            doc_m2m_overlap_threshold = float(doc_m2m_overlap_threshold)
+        else:
+            doc_m2m_overlap_threshold = 0.0
 
     ## Notice need to add *decomposition* when search database for *DocumentGlobalMass2Motif*
     ## For LDA experiment,  *DocumentMass2Motif* does not have *experiment* entry, so does not need to do that
-    if default_score == 'probability':
-        dm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif=globalm2m, decomposition=decomposition, probability__gte=doc_m2m_threshold).order_by(
-            '-probability')
-    elif default_score == 'overlap_score':
-        dm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif=globalm2m, decomposition=decomposition, overlap_score__gte=doc_m2m_threshold).order_by(
-            '-overlap_score')
-    elif default_score == 'both':
-        dm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif=globalm2m, decomposition=decomposition, probability__gte=doc_m2m_threshold,
-                                                 overlap_score__gte=doc_m2m_threshold).order_by('-probability')
-    else:
-        dm2m = []
-
+    dm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif=globalm2m, decomposition=decomposition, probability__gte=doc_m2m_prob_threshold,
+                                                 overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
 
     return dm2m
