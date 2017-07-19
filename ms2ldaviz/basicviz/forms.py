@@ -15,7 +15,9 @@ class DocFilterForm(forms.Form):
 
 class ValidationForm(forms.Form):
     p_thresh = forms.DecimalField(required=True, initial=0.05,
-                                  label='Enter document -> mass2motif membership threshold')
+                                  label='Enter probability threshold')
+    overlap_thresh = forms.DecimalField(required=True, initial=0.0,
+                                  label='Enter overlap threshold')
     just_annotated = forms.BooleanField(required=False, initial=False, label='just show annotated docs?')
 
 

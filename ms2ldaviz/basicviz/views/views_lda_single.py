@@ -1270,6 +1270,7 @@ def validation(request, experiment_id):
         form = ValidationForm(request.POST)
         if form.is_valid():
             p_thresh = form.cleaned_data['p_thresh']
+            overlap_thresh = form.cleaned_data['overlap_thresh']
             just_annotated = form.cleaned_data['just_annotated']
             mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
             annotated_mass2motifs = []
@@ -1287,7 +1288,7 @@ def validation(request, experiment_id):
                     #     dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = p_thresh)
                     # else:
                     #     dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,ovelap_score__gte = p_thresh)
-                    dm2ms = get_docm2m(mass2motif, doc_m2m_threshold=p_thresh)
+                    dm2ms = get_docm2m(mass2motif, doc_m2m_prob_threshold=p_thresh, doc_m2m_overlap_threshold=overlap_thresh)
                     tot = 0
                     val = 0
                     for d in dm2ms:
@@ -1302,6 +1303,7 @@ def validation(request, experiment_id):
             context_dict['annotated_mass2motifs'] = annotated_mass2motifs
             context_dict['counts'] = counts
             context_dict['p_thresh'] = p_thresh
+            context_dict['overlap_thresh'] = overlap_thresh
             context_dict['just_annotated'] = just_annotated
 
         else:
