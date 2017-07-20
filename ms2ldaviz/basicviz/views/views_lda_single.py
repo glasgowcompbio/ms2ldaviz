@@ -1043,7 +1043,8 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
 
     print "Second"
 
-    edge_choice = get_option('default_doc_m2m_score',experiment)
+    # edge_choice = get_option('default_doc_m2m_score',experiment)
+    edge_choice = 'probability'
 
 
     for docm2m in docm2mset:
