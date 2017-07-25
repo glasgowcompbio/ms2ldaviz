@@ -723,7 +723,7 @@ class LoadGNPS(Loader):
                 for line in f:
                     rline = line.rstrip()
                     if len(rline) > 0:
-                        if rline.startswith('>'):
+                        if rline.startswith('>') or rline.startswith('#'):
                             keyval = rline[1:].split(' ')[0]
                             valval = rline[len(keyval)+2:]
                             if not keyval == 'ms2peaks':
@@ -734,12 +734,14 @@ class LoadGNPS(Loader):
                                 self.ms1[-1].mz = float(valval)
                             if keyval == 'intensity':
                                 self.ms1[-1].intensity = float(valval)
+                            if keyval == 'inchikey':
+                                self.metadata[doc_name]['InChIKey'] = valval
                         else:
                             # If it gets here, its a fragment peak
                             sr = rline.split(' ')
                             mass = float(sr[0])
                             intensity = float(sr[1])
-                            if intensity > self.min_intensity:
+                            if intensity >= self.min_intensity:
                                 if self.merge_energies and len(temp_mass)>0:
                                     errs = 1e6*np.abs(mass-np.array(temp_mass))/mass
                                     if errs.min() < self.merge_ppm:
