@@ -600,7 +600,7 @@ def view_mass2motifs(request, experiment_id):
 
 
 def get_doc_for_plot(doc_id, motif_id=None, get_key=False,score_type = None):
-    colours = ['red', 'green', 'black', 'yellow']
+    colours = ['red', 'green', 'black', 'yellow', 'purple', 'silver']
     document = Document.objects.get(id=doc_id)
     features = FeatureInstance.objects.filter(document=document)
     plot_fragments = []
@@ -620,40 +620,27 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False,score_type = None):
     else:
         parent_mass = 0.0
     probability = "na"
+    overlap_score = "na"
 
-    default_score = get_option('default_doc_m2m_score', experiment=document.experiment)
-    if not default_score:
-        default_score = 'probability'
-
+    ## show both probability and overlap into the title
     if not motif_id == None:
         m2m = Mass2Motif.objects.get(id=motif_id)
         dm2m = DocumentMass2Motif.objects.get(mass2motif=m2m, document=document)
-        if not score_type:
-            if default_score == 'probability':
-                probability = dm2m.probability
-            else:
-                probability = dm2m.overlap_score
-        else:
-            if score_type == 'probability':
-                probability = dm2m.probability
-            else:
-                probability = dm2m.overlap_score
+        probability = dm2m.probability
+        overlap_score = dm2m.overlap_score
 
-    parent_data = (parent_mass, 100.0, document.display_name, document.annotation, probability)
+    parent_data = (parent_mass, 100.0, document.display_name, document.annotation, probability, overlap_score)
     plot_fragments.append(parent_data)
     child_data = []
 
     # Only colours the first five
     if motif_id == None:
         topic_colours = {}
-        if default_score == 'probability':
-            topics = sorted(DocumentMass2Motif.objects.filter(document=document), key=lambda x: x.probability,
-                            reverse=True)
-        else:
-            topics = sorted(DocumentMass2Motif.objects.filter(document=document), key=lambda x: x.overlap_score,
+        ## colour topics only by probability now
+        topics = sorted(DocumentMass2Motif.objects.filter(document=document), key=lambda x: x.probability,
                             reverse=True)
         topics_to_plot = []
-        for i in range(4):
+        for i in range(6):
             if i == len(topics):
                 break
             topics_to_plot.append(topics[i].mass2motif)
@@ -687,7 +674,9 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False,score_type = None):
                         proportion = phi_value.probability * this_intensity
                         other_topics += proportion
                 child_data.append((mass, mass, this_intensity - other_topics, this_intensity, 1, 'gray', feature_name))
-            else:
+            ## add elif 'loss' condition here, instead of use "else" 
+            ## otherwise 'massdiff' will be detected as 'loss'
+            elif feature_name.startswith('loss'):
                 cum_pos = parent_mass - mass
                 other_topics = 0.0
                 for phi_value in phi_values:

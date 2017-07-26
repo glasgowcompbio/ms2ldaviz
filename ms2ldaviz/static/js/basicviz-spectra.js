@@ -68,6 +68,7 @@ function plot_parent(total_dataset,motif_name) {
     var parent_name = total_dataset[current_pos][0][2]
     var parent_annotation = total_dataset[current_pos][0][3]
     var parent_probability = total_dataset[current_pos][0][4]
+    var parent_overlap_score = total_dataset[current_pos][0][5]
     var dataset = total_dataset[current_pos][1]
     var max_mass = d3.max(dataset,function(d) {return d[0]+50})
 
@@ -188,7 +189,7 @@ function plot_parent(total_dataset,motif_name) {
     frag_graph_titlebar_svg.append("text")
                 .attr("x",plot_width-500)
                 .attr("y",60)
-                .text("Probability: " + parent_probability);
+                .text("Probability: " + parent_probability + ", Overlap: " + parent_overlap_score);
 
     var frag_graph_svg = d3.select("#spectra")
                .append("svg")
