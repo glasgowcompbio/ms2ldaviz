@@ -13,7 +13,7 @@ from options.views import get_option
 
 from ms1analysis.models import DecompositionAnalysis
 
-from decomposition_functions import get_parents_decomposition,get_decomp_doc_context_dict,get_parent_for_plot_decomp,make_word_graph,make_intensity_graph,make_decomposition_graph,parse_spectrum_string
+from decomposition_functions import get_parents_decomposition,get_decomp_doc_context_dict,get_parent_for_plot_decomp,make_word_graph,make_intensity_graph,make_decomposition_graph,parse_spectrum_string,get_docglobalm2m
 from decomposition.tasks import api_batch_task
 from basicviz.views import views_lda_single
 
@@ -35,18 +35,19 @@ def view_parents(request,mass2motif_id,decomposition_id):
     context_dict['decomposition'] = decomposition
 
     # Thought -- should these options be decomposition specific?
-    edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
-    edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
+    # edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
+    # edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
 
-    if edge_choice == 'probability':
-        dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, probability__gte = edge_thresh,decomposition = decomposition).order_by('-probability')
-    elif edge_choice == 'overlap_score':
-        dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, overlap_score__gte = edge_thresh, decomposition = decomposition).order_by('-overlap_score')
-    elif edge_choice == 'both':
-        dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, overlap_score__gte = edge_thresh, probability__gte = edge_thresh,decomposition = decomposition).order_by('-overlap_score')
-    else:
-        dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, probability__gte = edge_thresh,decomposition = decomposition).order_by('-probability')
+    # if edge_choice == 'probability':
+    #     dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, probability__gte = edge_thresh,decomposition = decomposition).order_by('-probability')
+    # elif edge_choice == 'overlap_score':
+    #     dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, overlap_score__gte = edge_thresh, decomposition = decomposition).order_by('-overlap_score')
+    # elif edge_choice == 'both':
+    #     dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, overlap_score__gte = edge_thresh, probability__gte = edge_thresh,decomposition = decomposition).order_by('-overlap_score')
+    # else:
+    #     dm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = mass2motif, probability__gte = edge_thresh,decomposition = decomposition).order_by('-probability')
 
+    dm2ms = get_docglobalm2m(mass2motif, decomposition)
     originalfeatures = Mass2MotifInstance.objects.filter(mass2motif = mass2motif.originalmotif)
 
     context_dict['motif_features'] = originalfeatures
@@ -56,7 +57,7 @@ def view_parents(request,mass2motif_id,decomposition_id):
 def get_parents(request,decomposition_id,mass2motif_id):
     decomposition = Decomposition.objects.get(id = decomposition_id)
     experiment = decomposition.experiment
-    parent_data = get_parents_decomposition(mass2motif_id,decomposition,vo_id = None,experiment = experiment)
+    parent_data = get_parents_decomposition(mass2motif_id,decomposition,experiment = experiment)
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
 
 def get_word_graph(request,mass2motif_id,vo_id,decomposition_id):
@@ -115,8 +116,8 @@ def show_motifs(request,decomposition_id):
 def get_doc_topics(request, decomposition_id,doc_id):
     document = Document.objects.get(id = doc_id)
     decomposition = Decomposition.objects.get(id = decomposition_id)
-    score_type = get_option('default_doc_m2m_score',experiment = document.experiment)
-    plot_fragments = [get_parent_for_plot_decomp(decomposition,document,edge_choice=score_type,get_key = True)]
+    # score_type = get_option('default_doc_m2m_score',experiment = document.experiment)
+    plot_fragments = [get_parent_for_plot_decomp(decomposition,document,get_key = True)]
     return HttpResponse(json.dumps(plot_fragments), content_type='application/json')
 
 def start_viz(request,decomposition_id):

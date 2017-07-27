@@ -301,61 +301,73 @@ def compute_overlap(phi_matrix,motif_pos,beta_row,word_index):
     return overlap_score
 
 
-def get_parents_decomposition(motif_id,decomposition,vo_id = None,experiment = None):
-    if vo_id:
-        viz_options = VizOptions.objects.get(id = vo_id)
-        edge_choice = viz_options.edge_choice
-        edge_thresh = viz_options.edge_thresh
-    elif experiment:
-        edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
-        edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
-    else:
-        edge_choice = 'probability'
-        edge_thresh = 0.05
+def get_parents_decomposition(motif_id,decomposition,experiment = None):
+    # if vo_id:
+    #     viz_options = VizOptions.objects.get(id = vo_id)
+    #     edge_choice = viz_options.edge_choice
+    #     edge_thresh = viz_options.edge_thresh
+    # elif experiment:
+    #     edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
+    #     edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
+    # else:
+    #     edge_choice = 'probability'
+    #     edge_thresh = 0.05
     motif = GlobalMotif.objects.get(id = motif_id)
     parent_data = []
-    if edge_choice == 'probability':
-        docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition).order_by('-probability')
-    elif edge_choice == 'overlap_score':
-        docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,decomposition = decomposition).order_by('-overlap_score')
-    elif edge_choice == 'both':
-        docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,probability__gte = edge_thresh,decomposition = decomposition).order_by('-overlap_score')
+    docm2m = get_docglobalm2m(motif, decomposition)
+    # if edge_choice == 'probability':
+    #     docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition).order_by('-probability')
+    # elif edge_choice == 'overlap_score':
+    #     docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,decomposition = decomposition).order_by('-overlap_score')
+    # elif edge_choice == 'both':
+    #     docm2m = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,probability__gte = edge_thresh,decomposition = decomposition).order_by('-overlap_score')
     for dm in docm2m:
         document = dm.document
-        parent_data.append(get_parent_for_plot_decomp(decomposition,document,motif = motif,edge_choice = edge_choice))
+        parent_data.append(get_parent_for_plot_decomp(decomposition,document,motif = motif))
 
     return parent_data
 
 
-def get_parent_for_plot_decomp(decomposition,document,motif = None,edge_choice = 'probability',get_key = False):
+## this function is used to get data for preperation of spectrum plot for decomposition experiments
+## need to construct *plot_fragments* list, which is [parent_data, child_data]
+## parent_data (tuple)
+## child_data (list of tuples)
+## we show both probability and overlap scores in title of plot
+## and choose topics with highest probability scores (up to 6) when colouring
+def get_parent_for_plot_decomp(decomposition,document,motif = None,get_key = False):
     plot_data = []
-    colours = ['red', 'green', 'black', 'yellow']
-    edge_order = edge_choice
-    if edge_choice == 'both':
-        edge_order = 'probability'
-    docm2m = DocumentGlobalMass2Motif.objects.filter(decomposition = decomposition,document = document).order_by('-'+edge_order)
-    docfeatures = DocumentGlobalFeature.objects.filter(document = document)
+    colours = ['red', 'green', 'black', 'yellow', 'purple', 'silver']
+    # edge_order = edge_choice
+    # if edge_choice == 'both':
+    #     edge_order = 'probability'
+
     # Add the parent data
     score = "na"
     top_motifs = []
     if not motif == None:
         topdm2m = DocumentGlobalMass2Motif.objects.get(decomposition = decomposition,document = document,mass2motif = motif)
         top_motifs.append(topdm2m.mass2motif)
-        if edge_choice == 'probability':
-            score = topdm2m.probability
-        else:
-            score = topdm2m.overlap_score
-    else:
+        probability = topdm2m.probability
+        overlap_score = topdm2m.overlap_score
+        # if edge_choice == 'probability':
+        #     score = topdm2m.probability
+        # else:
+        #     score = topdm2m.overlap_score
+
+
+    parent_data = (document.mass, 100.0, document.display_name, document.annotation, probability, overlap_score)
+    plot_fragments = []
+    plot_data.append(parent_data)
+
+    ## prepare child data
+    docm2m = DocumentGlobalMass2Motif.objects.filter(decomposition = decomposition,document = document).order_by('-probability')
+    docfeatures = DocumentGlobalFeature.objects.filter(document = document)
+
+    if motif == None:
         for dm in docm2m:
             top_motifs.append(dm.mass2motif)
             if len(top_motifs) == len(colours):
                 break
-
-    parent_data = (document.mass, 100.0, document.display_name, document.annotation, score)
-    plot_fragments = []
-    plot_data.append(parent_data)
-
-
     # get the max intensity for normalisation
     maxi = 0.0
     for docfeature in docfeatures:
@@ -463,17 +475,17 @@ def get_decomp_doc_context_dict(decomposition,document):
 def make_word_graph(request, motif_id, vo_id, decomposition_id):
     decomposition = Decomposition.objects.get(id = decomposition_id)
     experiment = decomposition.experiment
-    if not vo_id == 'nan':
-        viz_options = VizOptions.objects.get(id = vo_id)
-        experiment = viz_options.experiment
-        edge_thresh = viz_options.edge_thresh
-        edge_choice = viz_options.edge_choice
-    elif experiment:
-        edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
-        edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
-    else:
-        edge_choice = 'probability'
-        edge_thresh = 0.05
+    # if not vo_id == 'nan':
+    #     viz_options = VizOptions.objects.get(id = vo_id)
+    #     experiment = viz_options.experiment
+    #     edge_thresh = viz_options.edge_thresh
+    #     edge_choice = viz_options.edge_choice
+    # elif experiment:
+    #     edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
+    #     edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
+    # else:
+    #     edge_choice = 'probability'
+    #     edge_thresh = 0.05
  
     data_for_json = []
     motif = GlobalMotif.objects.get(id = motif_id)
@@ -481,14 +493,16 @@ def make_word_graph(request, motif_id, vo_id, decomposition_id):
     originalfeatures = Mass2MotifInstance.objects.filter(mass2motif = originalmotif,probability__gte = 0.01)
     globalfeatures = FeatureMap.objects.filter(localfeature__in = [o.feature for o in originalfeatures])
     globalfeatures = [g.globalfeature for g in globalfeatures]
-    if edge_choice == 'probability':
-        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
-    elif edge_choice == 'overlap_score':
-        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,decomposition = decomposition)
-    elif edge_choice == 'both':
-        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,probability__gte = edge_thresh,decomposition = decomposition)
-    else:
-        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
+    # if edge_choice == 'probability':
+    #     docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
+    # elif edge_choice == 'overlap_score':
+    #     docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,decomposition = decomposition)
+    # elif edge_choice == 'both':
+    #     docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,probability__gte = edge_thresh,decomposition = decomposition)
+    # else:
+    #     docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
+    
+    docm2ms = get_docglobalm2m(globalm2m = motif, decomposition = decomposition)
     data_for_json.append(len(docm2ms))
     feat_counts = {}
     for feature in globalfeatures:
@@ -516,14 +530,14 @@ def make_intensity_graph(request, motif_id, vo_id, decomposition_id):
     if not vo_id == 'nan':
         viz_options = VizOptions.objects.get(id = vo_id)
         experiment = viz_options.experiment
-        edge_thresh = viz_options.edge_thresh
-        edge_choice = viz_options.edge_choice
-    elif experiment:
-        edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
-        edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
-    else:
-        edge_choice = 'probability'
-        edge_thresh = 0.05
+    #     edge_thresh = viz_options.edge_thresh
+    #     edge_choice = viz_options.edge_choice
+    # elif experiment:
+    #     edge_choice = get_option('default_doc_m2m_score',experiment = experiment)
+    #     edge_thresh = get_option('doc_m2m_threshold',experiment = experiment)
+    # else:
+    #     edge_choice = 'probability'
+    #     edge_thresh = 0.05
 
     colours = ['#404080', '#0080C0']
     colours = ['red','blue']
@@ -536,14 +550,15 @@ def make_intensity_graph(request, motif_id, vo_id, decomposition_id):
     originalfeatures = Mass2MotifInstance.objects.filter(mass2motif = originalmotif,probability__gte = 0.01)
     globalfeatures = FeatureMap.objects.filter(localfeature__in = [o.feature for o in originalfeatures])
     globalfeatures = [g.globalfeature for g in globalfeatures]
-    if edge_choice == 'probability':
-        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
-    elif edge_choice == 'overlap_score':
-        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,decomposition = decomposition)
-    elif edge_choice == 'both':
-        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,probability__gte = edge_thresh,decomposition = decomposition)
-    else:
-        docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
+    # if edge_choice == 'probability':
+    #     docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
+    # elif edge_choice == 'overlap_score':
+    #     docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,decomposition = decomposition)
+    # elif edge_choice == 'both':
+    #     docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,probability__gte = edge_thresh,decomposition = decomposition)
+    # else:
+    #     docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
+    docm2ms = get_docglobalm2m(motif, decomposition)
     documents = [d.document for d in docm2ms]
     
     feat_total_intensity = {}
@@ -699,8 +714,9 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,
 
     print "Second"
 
-    edge_choice = get_option('default_doc_m2m_score', experiment)
-
+    ## do this change, because in LDA plot, it has fixed the edge_choice to be 'probability'
+    # edge_choice = get_option('default_doc_m2m_score', experiment)
+    edge_choice = 'probability'
 
     for docm2m in docm2mset:
         # if docm2m.mass2motif in topics:

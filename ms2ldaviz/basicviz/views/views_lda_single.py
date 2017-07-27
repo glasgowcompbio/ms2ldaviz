@@ -257,7 +257,7 @@ def get_doc_context_dict(document):
     context_dict = {}
     context_dict['features'] = features
     experiment = document.experiment
-    doc_m2m_threshold = get_option('doc_m2m_threshold', experiment=experiment)
+    # doc_m2m_threshold = get_option('doc_m2m_threshold', experiment=experiment)
     
     mass2motif_instances = get_docm2m_bydoc(document)
     context_dict['mass2motifs'] = mass2motif_instances
@@ -376,7 +376,7 @@ def mass2motif_feature(request, fm2m_id):
 def get_parents(request, motif_id, vo_id):
     viz_options = VizOptions.objects.get(id=vo_id)
     experiment = viz_options.experiment
-    edge_choice = get_option('default_doc_m2m_score',experiment)
+    # edge_choice = get_option('default_doc_m2m_score',experiment)
     if experiment.experiment_type == '0': #ms2lda
         motif = Mass2Motif.objects.get(id=motif_id)
 
@@ -392,9 +392,9 @@ def get_parents(request, motif_id, vo_id):
         parent_data = []
         for dm in docm2m:
             document = dm.document
-            parent_data.append(get_doc_for_plot(document.id, motif_id,score_type = edge_choice))
+            parent_data.append(get_doc_for_plot(document.id, motif_id))
     else: # decomposition
-        parent_data = get_parents_decomposition(motif_id,vo_id = vo_id,experiment = experiment)
+        parent_data = get_parents_decomposition(motif_id,experiment = experiment)
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
 
 
@@ -598,8 +598,13 @@ def view_mass2motifs(request, experiment_id):
         return render(request, 'decomposition/view_mass2motifs.html',context_dict)
 
 
-
-def get_doc_for_plot(doc_id, motif_id=None, get_key=False,score_type = None):
+## this function is used to get data for preperation of spectrum plot for LDA experiments
+## need to construct *plot_fragments* list, which is [parent_data, child_data]
+## parent_data (tuple)
+## child_data (list of tuples)
+## we show both probability and overlap scores in title of plot
+## and choose topics with highest probability scores (up to 6) when colouring
+def get_doc_for_plot(doc_id, motif_id=None, get_key=False):
     colours = ['red', 'green', 'black', 'yellow', 'purple', 'silver']
     document = Document.objects.get(id=doc_id)
     features = FeatureInstance.objects.filter(document=document)
@@ -711,7 +716,7 @@ def get_doc_topics(request, doc_id):
         # score_type = get_option('default_doc_m2m_score',experiment = document.experiment)
         # if not score_type:
         #     score_type = 'probability'
-        # plot_fragments = [get_parent_for_plot_decomp(document,edge_choice=score_type,get_key = True)]
+        # plot_fragments = [get_parent_for_plot_decomp(document,get_key = True)]
     else:
         plot_fragments = []
     return HttpResponse(json.dumps(plot_fragments), content_type='application/json')
@@ -1375,10 +1380,9 @@ def dump_topic_molecules(request, m2m_id):
 
     return response
 
-## updaetd get_docm2m function, use threshold for probability and overlap respectively
-def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
-    experiment = mass2motif.experiment
-
+## this function is used to refactor *get_docm2m* and *get_docm2m_bydoc* function
+def get_prob_and_overlap_thresh(experiment, doc_m2m_prob_threshold, doc_m2m_overlap_threshold):
+    
     ## default prob_threshold 0.05, default overlap_threshld 0.0
     if not doc_m2m_prob_threshold:
         doc_m2m_prob_threshold = get_option('doc_m2m_prob_threshold', experiment = experiment)
@@ -1394,6 +1398,14 @@ def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshol
         else:
             doc_m2m_overlap_threshold = 0.0
 
+    return doc_m2m_prob_threshold, doc_m2m_overlap_threshold
+
+
+
+## updaetd get_docm2m function, use threshold for probability and overlap respectively
+def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
+    experiment = mass2motif.experiment
+    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_and_overlap_thresh(experiment, doc_m2m_prob_threshold, doc_m2m_overlap_threshold)
     dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=doc_m2m_prob_threshold,
                                                  overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
 
@@ -1402,22 +1414,7 @@ def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshol
 
 def get_docm2m_bydoc(document, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
     experiment = document.experiment
-
-    ## default prob_threshold 0.05, default overlap_threshld 0.0
-    if not doc_m2m_prob_threshold:
-        doc_m2m_prob_threshold = get_option('doc_m2m_prob_threshold', experiment = experiment)
-        if doc_m2m_prob_threshold:
-            doc_m2m_prob_threshold = float(doc_m2m_prob_threshold)
-        else:
-            doc_m2m_prob_threshold = 0.05
-
-    if not doc_m2m_overlap_threshold:
-        doc_m2m_overlap_threshold = get_option('doc_m2m_overlap_threshold', experiment = experiment)
-        if doc_m2m_overlap_threshold:
-            doc_m2m_overlap_threshold = float(doc_m2m_overlap_threshold)
-        else:
-            doc_m2m_overlap_threshold = 0.0
-
+    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_and_overlap_thresh(experiment, doc_m2m_prob_threshold, doc_m2m_overlap_threshold)
     dm2m = DocumentMass2Motif.objects.filter(document=document, probability__gte=doc_m2m_prob_threshold,
                                                  overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
 
