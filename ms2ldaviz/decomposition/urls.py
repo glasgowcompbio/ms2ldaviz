@@ -18,4 +18,5 @@ urlpatterns = [
 	url(r'^api/batch_results/(?P<result_id>\w+)/$',views.batch_results,name = 'batch_results'),
 	url(r'^api/pretty_results/(?P<result_id>\w+)/$',views.pretty_results,name = 'pretty_results'),
 	url(r'^decompose_spectrum/$',views.decompose_spectrum,name = 'decompose_spectrum'),
+	url(r'^api/get_motifset_annotations/$',views.get_motifset_annotations,name = 'get_motifset_annotations'),
 	]

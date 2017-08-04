@@ -16,6 +16,9 @@ class NewDecompositionForm(forms.ModelForm):
 
 		# todo: add something here so that only motifsets with the correct feature set can be seen
 
+class MotifsetAnnotationForm(forms.Form):
+	motifset = forms.CharField(required = True)
+
 class BatchDecompositionForm(forms.Form):
 	spectra = forms.CharField(required = True)
 	motifset = forms.CharField(required = True)

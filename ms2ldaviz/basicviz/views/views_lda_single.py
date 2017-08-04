@@ -621,24 +621,28 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False,score_type = None):
         parent_mass = 0.0
     probability = "na"
 
-    default_score = get_option('default_doc_m2m_score', experiment=document.experiment)
-    if not default_score:
-        default_score = 'probability'
+    # default_score = get_option('default_doc_m2m_score', experiment=document.experiment)
+    # if not default_score:
+    #     default_score = 'probability'
+
+    # following is only used now when we're getting the multi-colour plot
+    default_score = 'probability'
 
     if not motif_id == None:
         m2m = Mass2Motif.objects.get(id=motif_id)
         dm2m = DocumentMass2Motif.objects.get(mass2motif=m2m, document=document)
-        if not score_type:
-            if default_score == 'probability':
-                probability = dm2m.probability
-            else:
-                probability = dm2m.overlap_score
-        else:
-            if score_type == 'probability':
-                probability = dm2m.probability
-            else:
-                probability = dm2m.overlap_score
-
+        probability = "Probability: {}, overlap: {}".format(dm2m.probability,dm2m.overlap_score)
+        # if not score_type:
+        #     if default_score == 'probability':
+        #         probability = dm2m.probability
+        #     else:
+        #         probability = dm2m.overlap_score
+        # else:
+        #     if score_type == 'probability':
+        #         probability = dm2m.probability
+        #     else:
+        #         probability = dm2m.overlap_score
+    
     parent_data = (parent_mass, 100.0, document.display_name, document.annotation, probability)
     plot_fragments.append(parent_data)
     child_data = []

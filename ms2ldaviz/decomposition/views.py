@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 
 from decomposition.models import GlobalMotif,DocumentGlobalMass2Motif,Decomposition,GlobalMotifsToSets,MotifSet,FeatureSet,APIBatchResult
-from decomposition.forms import DecompVizForm,NewDecompositionForm,BatchDecompositionForm,SpectrumForm
+from decomposition.forms import DecompVizForm,NewDecompositionForm,BatchDecompositionForm,SpectrumForm,MotifsetAnnotationForm
 from basicviz.models import Mass2MotifInstance,Experiment,Document,JobLog,VizOptions
 from basicviz.forms import VizForm
 from options.views import get_option
@@ -187,6 +187,37 @@ def new_decomposition(request,experiment_id):
         form = NewDecompositionForm()
         context_dict['form'] = form
     return render(request,'decomposition/new_decomposition.html',context_dict)
+
+@csrf_exempt
+def get_motifset_annotations(request):
+    json_data = {'status':'FAILED'}
+    if request.method == 'POST':
+        maform = MotifsetAnnotationForm(request.POST)
+        if maform.is_valid():
+            json_data = {}
+            motifset_name = maform.cleaned_data['motifset']
+            json_data['motifset'] = motifset_name
+            try:
+                motifset = MotifSet.objects.get(name = motifset_name)
+            except:
+                all_motifsets = MotifSet.objects.all()
+                status_string = 'unknown motifset, try: ' + ' '.join([m.name for m in all_motifsets])
+                json_data = {'status':status_string}
+                return JsonResponse(json_data)
+
+            global_motif_links = GlobalMotifsToSets.objects.filter(motifset = motifset)
+            global_motifs = [g.motif for g in global_motif_links]
+            original_motifs = [g.originalmotif for g in global_motifs]
+            ma = []
+            for o in original_motifs:
+                if o.annotation:
+                    ma.append([o.name,o.annotation])
+            json_data['annotations'] = ma
+            json_data['status'] = 'SUCCESS'
+    return JsonResponse(json_data)
+
+
+
 
 @csrf_exempt
 def batch_decompose(request):

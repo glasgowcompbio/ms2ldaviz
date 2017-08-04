@@ -188,7 +188,7 @@ function plot_parent(total_dataset,motif_name) {
     frag_graph_titlebar_svg.append("text")
                 .attr("x",plot_width-500)
                 .attr("y",60)
-                .text("Probability: " + parent_probability);
+                .text(parent_probability);
 
     var frag_graph_svg = d3.select("#spectra")
                .append("svg")
