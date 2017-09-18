@@ -231,7 +231,9 @@ class LoadMZML(Loader):
             current_ms1_scan_mz = None
             current_ms1_scan_intensity = None
             current_ms1_scan_rt = None
-            run = pymzml.run.Reader(input_file, MS1_Precision=5e-6, extraAccessions = [('MS:1000016' , ['value','unitName'] )])
+            run = pymzml.run.Reader(input_file, MS1_Precision=5e-6,
+                                    extraAccessions=[('MS:1000016', ['value', 'unitName'])],
+                                    obo_version='4.0.1')
             file_name = input_file.split('/')[-1]
             previous_precursor_mz = -10
             previous_ms1 = None
@@ -323,7 +325,7 @@ class LoadMZML(Loader):
                                                               'parentrt':current_ms1_scan_rt,'scan_number':nc,
                                                               'precursor_mass':precursor_mz}
 
-                                
+
                                     previous_ms1 = new_ms1 # used for merging energies
                                     previous_precursor_mz = new_ms1.mz
 
@@ -507,7 +509,9 @@ class LoadEmma(Loader):
         for input_file in input_set:
 
             # Load the mzml object
-            run = pymzml.run.Reader(input_file, MS1_Precision=5e-6, extraAccessions = [('MS:1000016' , ['value','unitName'] )])
+            run = pymzml.run.Reader(input_file, MS1_Precision=5e-6,
+                                    extraAccessions=[('MS:1000016', ['value', 'unitName'])],
+                                    obo_version='4.0.1')
             nspec = 0
             nmatch = 0
             parent_scan_number = None
@@ -801,7 +805,7 @@ class LoadMSP(Loader):
                 ##             ...]
                 inchikey_ms2_dict = {}
 
-                ## in case that msp file does not contains *inchikey*, with key-value pairs: 
+                ## in case that msp file does not contains *inchikey*, with key-value pairs:
                 ## new_ms1=>[(mz1, intensity1), (mz2, intensity2), ...]
                 ms2_dict = {}
 
@@ -836,7 +840,7 @@ class LoadMSP(Loader):
                     ## parse block
                     else:
                         ## bug fixed: some msp files has ';' in ms2 spectra
-                        ## filter it out before parsing 
+                        ## filter it out before parsing
                         rline = re.sub('[;,]', '', rline)
                         tokens = rline.split()
                         ## parse ms2 spectra
@@ -846,7 +850,7 @@ class LoadMSP(Loader):
                                     # One tuple per line
                                     mz = float(tokens[0])
                                     intensity = float(tokens[1])
-                                    ## bug fixed: 
+                                    ## bug fixed:
                                     ## if msp file does not contains inchikey, should not store values to inchikey_ms2_dict
                                     ## and intensity value to ms2_dict, for normalization later
                                     if inchikey:
@@ -976,7 +980,7 @@ class LoadMSP(Loader):
 
             ## do normalization
             ## normalise them first then combine and then normalise again.
-            ## Some seem to have been normalised so that max peak is 999 and some 100. So, make the max 100, then combine. 
+            ## Some seem to have been normalised so that max peak is 999 and some 100. So, make the max 100, then combine.
             ## Once all combination done, make max 100 again in combined spectrum.
             for inchikey, value in inchikey_ms2_dict.items():
                 block_max_intensity_dict = {}
@@ -1250,7 +1254,7 @@ class MakeBinnedFeatures(MakeFeatures):
                         self.corpus[file_name][doc_name][word] = 0.0
                         self.word_counts[word] += 1
                     self.corpus[file_name][doc_name][word] += intensity
-                    
+
 
         # TODO: Test code to remove blank words!!!!!
         to_remove = []
@@ -1809,7 +1813,7 @@ def filter_ms1(ms1,ms2,mz_tol = 0.5,rt_tol = 16):
     print "Filtering MS1 to remove duplicates"
     # Filters the loaded ms1s to reduce the number of times that the same molecule has been fragmented
 
-   
+
     # Sort the remaining ones by intensity
     ms1_by_intensity = sorted(ms1,key = lambda x: x.intensity,reverse=True)
 
@@ -1837,9 +1841,9 @@ def filter_ms1(ms1,ms2,mz_tol = 0.5,rt_tol = 16):
         for hit in hits:
             pos = ms1_by_intensity.index(hit)
             del ms1_by_intensity[pos]
-        
 
-    print "{} MS1 remaining".format(len(final_ms1_list))    
+
+    print "{} MS1 remaining".format(len(final_ms1_list))
     for m in ms2:
         if m[3] in final_ms1_list:
             final_ms2_list.append(m)
