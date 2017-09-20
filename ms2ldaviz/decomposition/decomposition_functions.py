@@ -15,7 +15,7 @@ from ms1analysis.models import DecompositionAnalysis, DecompositionAnalysisResul
 
 import sys
 sys.path.append('../lda/code')
-from ms2lda_feature_extraction import LoadMZML, LoadMSP
+from ms2lda_feature_extraction import LoadMZML, LoadMSP, LoadMGF
 
 def add_sample(sample_name, experiment):
     sample = Sample.objects.get_or_create(name = sample_name, experiment = experiment)[0]
