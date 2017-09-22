@@ -45,9 +45,263 @@ class MS1(object):
 
 
 # Abstract loader class
+## Refactored Sep 21, 2017
+## class LoadMZML, LoadMSP, LoadMGF will inhereit from class Loader
+## Three sub-classes will implement their own *load_spectra* function based on different input ms2 files(mzml, msp, mgf)
+
+## *load_spectra* functions are too long, refactor and split when having time
 class Loader(object):
+    def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 0.5,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False,repeated_precursor_match = None,
+                    min_ms1_rt = 0.0, max_ms1_rt = 1e6, min_ms2_intensity = 0.0):
+        self.min_ms1_intensity = min_ms1_intensity
+        self.peaklist = peaklist
+        self.isolation_window = isolation_window
+        self.mz_tol = mz_tol
+        self.rt_tol = rt_tol
+        self.duplicate_filter = duplicate_filter
+        self.duplicate_filter_mz_tol = duplicate_filter_mz_tol
+        self.duplicate_filter_rt_tol = duplicate_filter_rt_tol
+        self.min_ms1_rt = min_ms1_rt
+        self.max_ms1_rt = max_ms1_rt
+        self.min_ms2_intensity = min_ms2_intensity
+        if repeated_precursor_match:
+            self.repeated_precursor_match = repeated_precursor_match
+        else:
+            self.repeated_precursor_match = 2*self.isolation_window
+
+    def __str__(self):
+        return "loader class"
+
     def load_spectra(self,input_set):
         raise NotImplementedError("load spectra method must be implemented")
+
+    ## modify peaklist function
+    ## try to detect "featureid", store it in ms1_peaks used for in for mgf ms1 analysis
+    ## ms1_peaks: [featid, mz,rt,intensity], featid will be None if "FeatureId" not exist
+    def _load_peak_list(self):
+        self.ms1_peaks = []
+        with open(self.peaklist,'r') as f:
+            heads = f.readline()
+            tokens = heads.strip().split(',')
+            index = -1
+            featid_index = None
+            for i in range(len(tokens)):
+                index = i
+                if tokens[i].lower() == "featureid":
+                    featid_index = i
+                if tokens[i].lower() in ['mass', 'mz']:
+                    break
+
+            ## if any sample names missing, use "Sample_*" to replace
+            empty_sample_name_id = 0
+            for i in range(index+2, len(tokens)):
+                if not tokens[i]:
+                    tokens[i] = "Sample_" + str(empty_sample_name_id)
+                    empty_sample_name_id += 1
+
+            self.sample_names = tokens[index+2:]
+
+            for line in f:
+                tokens_tuple= line.strip().split(',', index+2)
+                featid = None
+                if featid_index != None:
+                    featid = tokens_tuple[featid_index]
+                mz = tokens_tuple[index]
+                rt = tokens_tuple[index+1]
+                samples = tokens_tuple[index+2]
+                # store (featid, mz,rt,intensity)
+                self.ms1_peaks.append((featid, float(mz), float(rt), samples))
+
+        # sort them by mass
+        self.ms1_peaks = sorted(self.ms1_peaks,key = lambda x: x[1])
+        print "Loaded {} ms1 peaks from {}".format(len(self.ms1_peaks),self.peaklist)
+
+    ## read in peaklist file (.csv)
+    ## ("..., mass, RT, samplename_1, samplename_2,..."), delimiter: '.
+    ## find the most suitable ms1 hit
+    ## then update ms1, ms2, metadata
+    def process_peaklist(self, ms1, ms2, metadata):
+
+        print ms1[0], metadata.values()[0]
+
+        ms1_peaks = self._load_peak_list()
+        ms1 = sorted(ms1,key = lambda x: x.mz)
+        new_ms1_list = []
+        new_ms2_list = []
+        new_metadata = {}
+        # ms1_mz = [x.mz for z in ms1]
+        n_peaks_checked = 0
+
+        ## generate a dict (featid_ms1_dict)to store featid: ms1 pair
+        ## O(N) complexisity
+        ## build a dict (doc_ms1)for doc_name: ms1 pair first
+        doc_ms1, featid_ms1_dict = {}, {}
+        for el in ms1:
+            doc_name = el.name
+            doc_ms1[doc_name] = el
+        for k,v in metadata.items():
+            if 'featid' in v:
+                featid = v['featid']
+                featid_ms1_dict[featid] = doc_ms1[k]
+
+        ## build ms1_ms2 dict, to make searching O(1) in the following loop
+        ## key: ms1 object
+        ## value: list of ms2
+        ms1_ms2_dict = {}
+        for el in ms2:
+            ms1_ms2_dict.setdefault(el[3], [])
+            ms1_ms2_dict[el[3]].append(el)
+
+        for n_peaks_checked,peak in enumerate(self.ms1_peaks):
+            if n_peaks_checked % 500 == 0:
+                print n_peaks_checked
+            featid = peak[0]
+            peak_mz = peak[1]
+            peak_rt = peak[2]
+            peak_intensity = None if ',' in peak[3] else float(peak[3])
+
+            ## first check FeatureId matching
+            ## if featureId not exist, then do "mz/rt matching"
+            if featid != None and featid in featid_ms1_dict:
+                old_ms1 = featid_ms1_dict[featid]
+
+            else:
+                min_mz = peak_mz - self.mz_tol*peak_mz/1e6
+                max_mz = peak_mz + self.mz_tol*peak_mz/1e6
+                min_rt = peak_rt - self.rt_tol
+                max_rt = peak_rt + self.rt_tol
+
+
+                ms1_hits = filter(lambda x: x.mz >= min_mz and x.mz <= max_mz and x.rt >= min_rt and x.rt <= max_rt,ms1)
+
+                if len(ms1_hits) == 1:
+                    # Found one hit, easy
+                    old_ms1 = ms1_hits[0]
+                elif len(ms1_hits) > 1:
+                    # Find the one with the most intense MS2 peak
+                    best_ms1 = None
+                    best_intensity = 0.0
+                    for frag_peak in ms2:
+                        if frag_peak[3] in ms1_hits:
+                            if frag_peak[2] > best_intensity:
+                                best_intensity = frag_peak[2]
+                                best_ms1 = frag_peak[3]
+                    old_ms1 = best_ms1
+
+                else:
+                    # Didn't find any
+                    continue
+
+            from time import time
+            # make a new ms1 object
+            new_ms1 = MS1(old_ms1.id,peak_mz,peak_rt,peak_intensity,old_ms1.file_name,old_ms1.scan_number)
+            new_ms1_list.append(new_ms1)
+            new_metadata[new_ms1.name] = metadata[old_ms1.name]
+
+            if ',' in peak[3]:
+                # print "process sample", str(peak[0]), str(peak[1])
+                tokens = []
+                for token in peak[3].split(','):
+                    try:
+                        token = float(token)
+                    except:
+                        token = None
+                    if token <= 0:
+                        token = None
+                    tokens.append(token)
+                # tokens = [float(token) for token in peak[2].split(',')]
+                new_metadata[new_ms1.name]['intensities'] = dict(zip(self.sample_names, tokens))
+
+            # Delete the old one so it can't be picked again - removed this, maybe it's not a good idea?
+            # pos = ms1.index(old_ms1)
+            # del ms1[pos]
+
+            # Change the reference in the ms2 objects to the new ms1 object
+
+            ## Use a dictionary outside the loop to replace the following method, O(N^2) => O(N)
+            # ms2_objects = filter(lambda x: x[3] == old_ms1,ms2)
+            ms2_objects = []
+            if old_ms1 in ms1_ms2_dict:
+                ms2_objects = ms1_ms2_dict[old_ms1]
+
+            for frag_peak in ms2_objects:
+                new_frag_peak = (frag_peak[0],peak_rt,frag_peak[2],new_ms1,frag_peak[4],frag_peak[5])
+                new_ms2_list.append(new_frag_peak)
+
+        # replace the ms1,ms2 and metadata with the new versions
+        ms1 = new_ms1_list
+        ms2 = new_ms2_list
+        metadata = new_metadata
+        print "Peaklist filtering results in {} documents".format(len(ms1))
+        return ms1, ms2, metadata
+
+
+    def filter_ms1_intensity(self,ms1,ms2,min_ms1_intensity = 1e6):
+        ## Use filter function to simplify code
+        print "Filtering MS1 on intensity"
+        ## Sometimes ms1 intensity could be None
+        ms1 = filter(lambda x: False if x.intensity and x.intensity < min_ms1_intensity else True, ms1)
+        print "{} MS1 remaining".format(len(ms1))
+        ms2 = filter(lambda x: x[3] in set(ms1), ms2)
+        print "{} MS2 remaining".format(len(ms2))
+        return ms1, ms2
+
+    def filter_ms2_intensity(self,ms2, min_ms2_intensity = 1e6):
+        print "Filtering MS2 on intensity"
+        ms2 = filter(lambda x: x[2] >= min_ms2_intensity, ms2)
+        print "{} MS2 remaining".format(len(ms2))
+        return ms2
+
+    def filter_ms1(self,ms1,ms2,mz_tol = 0.5,rt_tol = 16):
+        print "Filtering MS1 to remove duplicates"
+        # Filters the loaded ms1s to reduce the number of times that the same molecule has been fragmented
+
+
+        # Sort the remaining ones by intensity
+        ms1_by_intensity = sorted(ms1,key = lambda x: x.intensity,reverse=True)
+
+
+        final_ms1_list = []
+        final_ms2_list = []
+        while True:
+            if len(ms1_by_intensity) == 0:
+                break
+            # Take the highest intensity one, find things within the window and remove them
+            current_ms1 = ms1_by_intensity[0]
+            final_ms1_list.append(current_ms1)
+            del ms1_by_intensity[0]
+
+            current_mz = current_ms1.mz
+            mz_err = mz_tol*1.0*current_mz/(1.0*1e6)
+            min_mz = current_mz - mz_err
+            max_mz = current_mz + mz_err
+
+            min_rt = current_ms1.rt - rt_tol
+            max_rt = current_ms1.rt + rt_tol
+
+            # find things inside this region
+            hits = filter(lambda x: x.mz > min_mz and x.mz < max_mz and x.rt > min_rt and x.rt < max_rt,ms1_by_intensity)
+            for hit in hits:
+                pos = ms1_by_intensity.index(hit)
+                del ms1_by_intensity[pos]
+
+
+        print "{} MS1 remaining".format(len(final_ms1_list))
+        for m in ms2:
+            if m[3] in final_ms1_list:
+                final_ms2_list.append(m)
+
+        print "{} MS2 remaining".format(len(final_ms2_list))
+        return final_ms1_list,final_ms2_list
+
+    def process_metadata(self, ms1, metadata):
+        filtered_metadata = {}
+        for m in ms1:
+            if m.name in metadata:
+                filtered_metadata[m.name] = metadata[m.name]
+        metadata = filtered_metadata
+
+        return metadata
 
 
 # A class to load the data from the metfamily paper
@@ -193,25 +447,10 @@ class LoadCSV(Loader):
 # If a peak list is provided it then tries to match the peaks in the peaklist to the ms1 objects, just
 # keeping the ms1 objects that can be matched. The matching is done with plus and minus the mz_tol (ppm)
 # and plus and minus the rt_tol
-class LoadMZML(Loader):
-    def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 0.5,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False,repeated_precursor_match = None,
-                    min_ms1_rt = 0.0, max_ms1_rt = 1e6, min_ms2_intensity = 0.0):
-        self.min_ms1_intensity = min_ms1_intensity
-        self.peaklist = peaklist
-        self.isolation_window = isolation_window
-        self.mz_tol = mz_tol
-        self.rt_tol = rt_tol
-        self.duplicate_filter = duplicate_filter
-        self.duplicate_filter_mz_tol = duplicate_filter_mz_tol
-        self.duplicate_filter_rt_tol = duplicate_filter_rt_tol
-        self.min_ms1_rt = min_ms1_rt
-        self.max_ms1_rt = max_ms1_rt
-        self.min_ms2_intensity = min_ms2_intensity
-        if repeated_precursor_match:
-            self.repeated_precursor_match = repeated_precursor_match
-        else:
-            self.repeated_precursor_match = 2*self.isolation_window
 
+## Refactored Sep 21, 2017
+## move __init__, and peaklist processing part to parent class *Loader*
+class LoadMZML(Loader):
     def __str__(self):
         return "mzML loader"
     def load_spectra(self,input_set):
@@ -345,86 +584,10 @@ class LoadMZML(Loader):
 
 
         if self.peaklist:
-            ms1_peaks = self._load_peak_list()
-            ms1 = sorted(ms1,key = lambda x: x.mz)
-            new_ms1_list = []
-            new_ms2_list = []
-            new_metadata = {}
-            # ms1_mz = [x.mz for z in ms1]
-            n_peaks_checked = 0
-            for n_peaks_checked,peak in enumerate(self.ms1_peaks):
-                if n_peaks_checked % 500 == 0:
-                    print n_peaks_checked
-                peak_mz = peak[0]
-                peak_rt = peak[1]
-                peak_intensity = None if ',' in peak[2] else float(peak[2])
-
-                min_mz = peak_mz - self.mz_tol*peak_mz/1e6
-                max_mz = peak_mz + self.mz_tol*peak_mz/1e6
-                min_rt = peak_rt - self.rt_tol
-                max_rt = peak_rt + self.rt_tol
-
-
-                ms1_hits = filter(lambda x: x.mz >= min_mz and x.mz <= max_mz and x.rt >= min_rt and x.rt <= max_rt,ms1)
-
-                if len(ms1_hits) == 1:
-                    # Found one hit, easy
-                    old_ms1 = ms1_hits[0]
-                elif len(ms1_hits) > 1:
-                    # Find the one with the most intense MS2 peak
-                    best_ms1 = None
-                    best_intensity = 0.0
-                    for frag_peak in ms2:
-                        if frag_peak[3] in ms1_hits:
-                            if frag_peak[2] > best_intensity:
-                                best_intensity = frag_peak[2]
-                                best_ms1 = frag_peak[3]
-                    old_ms1 = best_ms1
-
-                else:
-                    # Didn't find any
-                    continue
-
-                # make a new ms1 object
-                new_ms1 = MS1(old_ms1.id,peak_mz,peak_rt,peak_intensity,old_ms1.file_name,old_ms1.scan_number)
-                new_ms1_list.append(new_ms1)
-                new_metadata[new_ms1.name] = metadata[old_ms1.name]
-
-                if ',' in peak[2]:
-                    # print "process sample", str(peak[0]), str(peak[1])
-                    tokens = []
-                    for token in peak[2].split(','):
-                        try:
-                            token = float(token)
-                        except:
-                            token = None
-                        if token <= 0:
-                            token = None
-                        tokens.append(token)
-                    # tokens = [float(token) for token in peak[2].split(',')]
-                    new_metadata[new_ms1.name]['intensities'] = dict(zip(self.sample_names, tokens))
-
-                # Delete the old one so it can't be picked again - removed this, maybe it's not a good idea?
-                # pos = ms1.index(old_ms1)
-                # del ms1[pos]
-
-                # Change the reference in the ms2 objects to the new ms1 object
-                ms2_objects = filter(lambda x: x[3] == old_ms1,ms2)
-                for frag_peak in ms2_objects:
-                    new_frag_peak = (frag_peak[0],peak_rt,frag_peak[2],new_ms1,frag_peak[4],frag_peak[5])
-                    new_ms2_list.append(new_frag_peak)
-
-            # replace the ms1,ms2 and metadata with the new versions
-            ms1 = new_ms1_list
-            ms2 = new_ms2_list
-            metadata = new_metadata
-            print "Peaklist filtering results in {} documents".format(len(ms1))
-
-
-
+            ms1, ms2, metadata = self.process_peaklist(ms1, ms2, metadata)
 
         if self.duplicate_filter:
-            ms1,ms2 = filter_ms1(ms1,ms2,mz_tol = self.duplicate_filter_mz_tol,rt_tol = self.duplicate_filter_rt_tol)
+            ms1,ms2 = self.filter_ms1(ms1,ms2,mz_tol = self.duplicate_filter_mz_tol,rt_tol = self.duplicate_filter_rt_tol)
 
 
 
@@ -434,45 +597,11 @@ class LoadMZML(Loader):
         # ms2 = filter(lambda x: x[3].rt > self.min_ms1_rt and x[3].rt < self.max_ms1_rt, ms2)
 
         # Chop out filtered docs from metadata
-        filtered_metadata = {}
-        for m in ms1:
-            if m.name in metadata:
-                filtered_metadata[m.name] = metadata[m.name]
-        metadata = filtered_metadata
+        metadata = self.process_metadata(ms1, metadata)
 
         return ms1,ms2,metadata
 
-    def _load_peak_list(self):
-        self.ms1_peaks = []
-        with open(self.peaklist,'r') as f:
-            heads = f.readline()
-            tokens = heads.strip().split(',')
-            index = -1
-            for i in range(len(tokens)):
-                index = i
-                if tokens[i].lower() in ['mass', 'mz']:
-                    break
 
-            ## if any sample names missing, use "Sample_*" to replace
-            empty_sample_name_id = 0
-            for i in range(index+2, len(tokens)):
-                if not tokens[i]:
-                    tokens[i] = "Sample_" + str(empty_sample_name_id)
-                    empty_sample_name_id += 1
-
-            self.sample_names = tokens[index+2:]
-
-            for line in f:
-                tokens_tuple= line.strip().split(',', index+2)
-                mz = tokens_tuple[index]
-                rt = tokens_tuple[index+1]
-                samples = tokens_tuple[index+2]
-                # get mx,rt,intensity
-                self.ms1_peaks.append((float(mz), float(rt), samples))
-
-        # sort them by mass
-        self.ms1_peaks = sorted(self.ms1_peaks,key = lambda x: x[0])
-        print "Loaded {} ms1 peaks from {}".format(len(self.ms1_peaks),self.peaklist)
 
 
 # A class to load Emma's data
@@ -775,10 +904,6 @@ class LoadGNPS(Loader):
 
 # A class to load spectra that sit in MSP files
 class LoadMSP(Loader):
-    def __init__(self, min_ms1_intensity = 0.0, min_ms2_intensity = 0.0, normalizer = 100.0):
-        self.min_ms1_intensity = min_ms1_intensity
-        self.min_ms2_intensity = min_ms2_intensity
-        self.normalizer = normalizer
 
     def __str__(self):
         return "msp loader"
@@ -789,6 +914,7 @@ class LoadMSP(Loader):
         metadata = {}
         ms2_id = 0
         ms1_id = 0
+        self.normalizer = 100.0
 
         for input_file in input_set:
             ## Use built-in method to get file_name
@@ -1013,9 +1139,15 @@ class LoadMSP(Loader):
 
         ## add ms1, ms2 intensity filtering for msp input
         if self.min_ms1_intensity > 0.0:
-            ms1,ms2 = filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
+            ms1,ms2 = self.filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
         if self.min_ms2_intensity > 0.0:
-            ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
+            ms2 = self.filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
+
+        if self.peaklist:
+            ms1, ms2, metadata = self.process_peaklist(ms1,ms2,metadata)
+
+        # Chop out filtered docs from metadata
+        metadata = self.process_metadata(ms1, metadata)
 
         return ms1,ms2,metadata
 
@@ -1023,9 +1155,6 @@ class LoadMSP(Loader):
 
 # A class to load spectra that sit in MGF files
 class LoadMGF(Loader):
-    def __init__(self, min_ms1_intensity = 0.0, min_ms2_intensity = 0.0):
-        self.min_ms1_intensity = min_ms1_intensity
-        self.min_ms2_intensity = min_ms2_intensity
 
     def __str__(self):
         return "mgf loader"
@@ -1065,7 +1194,12 @@ class LoadMGF(Loader):
                             if len(val) == 0:
                                 continue
 
-                            if key == "rtinseconds":
+                            featid = None
+                            if key in ["featureid", "feature_id"]:
+                                featid = val
+                                temp_metadata['featid'] = val
+
+                            elif key == "rtinseconds":
                                 # val = float(val) if isinstance(val, float) else None
                                 try:
                                     val = float(val)
@@ -1115,14 +1249,18 @@ class LoadMGF(Loader):
 
         # add ms1, ms2 intensity filtering for msp input
         if self.min_ms1_intensity > 0.0:
-            ms1,ms2 = filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
+            ms1,ms2 = self.filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
         if self.min_ms2_intensity > 0.0:
-            ms2 = filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
+            ms2 = self.filter_ms2_intensity(ms2, min_ms2_intensity = self.min_ms2_intensity)
+
+
+        if self.peaklist:
+            ms1, ms2, metadata = self.process_peaklist(ms1,ms2,metadata)
+
+        # Chop out filtered docs from metadata
+        metadata = self.process_metadata(ms1, metadata)
 
         return ms1,ms2,metadata
-
-
-
 
 
 
@@ -1793,63 +1931,6 @@ class MS2LDAFeatureExtractor(object):
         return self.corpus[first_file_name]
 
 
-def filter_ms1_intensity(ms1,ms2,min_ms1_intensity = 1e6):
-    ## Use filter function to simplify code
-    print "Filtering MS1 on intensity"
-    ## Sometimes ms1 intensity could be None
-    ms1 = filter(lambda x: False if x.intensity and x.intensity < min_ms1_intensity else True, ms1)
-    print "{} MS1 remaining".format(len(ms1))
-    ms2 = filter(lambda x: x[3] in set(ms1), ms2)
-    print "{} MS2 remaining".format(len(ms2))
-    return ms1, ms2
-
-def filter_ms2_intensity(ms2, min_ms2_intensity = 1e6):
-    print "Filtering MS2 on intensity"
-    ms2 = filter(lambda x: x[2] >= min_ms2_intensity, ms2)
-    print "{} MS2 remaining".format(len(ms2))
-    return ms2
-
-def filter_ms1(ms1,ms2,mz_tol = 0.5,rt_tol = 16):
-    print "Filtering MS1 to remove duplicates"
-    # Filters the loaded ms1s to reduce the number of times that the same molecule has been fragmented
-
-
-    # Sort the remaining ones by intensity
-    ms1_by_intensity = sorted(ms1,key = lambda x: x.intensity,reverse=True)
-
-
-    final_ms1_list = []
-    final_ms2_list = []
-    while True:
-        if len(ms1_by_intensity) == 0:
-            break
-        # Take the highest intensity one, find things within the window and remove them
-        current_ms1 = ms1_by_intensity[0]
-        final_ms1_list.append(current_ms1)
-        del ms1_by_intensity[0]
-
-        current_mz = current_ms1.mz
-        mz_err = mz_tol*1.0*current_mz/(1.0*1e6)
-        min_mz = current_mz - mz_err
-        max_mz = current_mz + mz_err
-
-        min_rt = current_ms1.rt - rt_tol
-        max_rt = current_ms1.rt + rt_tol
-
-        # find things inside this region
-        hits = filter(lambda x: x.mz > min_mz and x.mz < max_mz and x.rt > min_rt and x.rt < max_rt,ms1_by_intensity)
-        for hit in hits:
-            pos = ms1_by_intensity.index(hit)
-            del ms1_by_intensity[pos]
-
-
-    print "{} MS1 remaining".format(len(final_ms1_list))
-    for m in ms2:
-        if m[3] in final_ms1_list:
-            final_ms2_list.append(m)
-
-    print "{} MS2 remaining".format(len(final_ms2_list))
-    return final_ms1_list,final_ms2_list
 
 
 
