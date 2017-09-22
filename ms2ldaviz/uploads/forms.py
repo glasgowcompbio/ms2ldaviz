@@ -51,7 +51,7 @@ class CreateExperimentForm(forms.ModelForm):
         labels = {
             'name': '(Required) Experiment name. Note that this must be unique in the system',
             'description':'(Required) Experiment description.',
-            'csv_file': 'MS1 file (CSV) [see below for formatting instructions]',
+            'csv_file': 'MS1 file (CSV) [see above for formatting instructions]',
             'ms2_file': '(Required) MS2 file (mzML, msp, or mgf)',
             'isolation_window': 'Fragmentation isolation window. Used to match fragment spectra with MS1 peaks.',
             'mz_tol': 'Mass tolerance when linking peaks from the peaklist to those found in MS2 file (ppm)',
