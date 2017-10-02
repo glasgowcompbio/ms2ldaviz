@@ -63,6 +63,9 @@
                     {% if experiment.1 == 'edit' %}
                         <a href="/options/view_experiment_options/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-option-horizontal"></span>&nbsp;View Experiment Options</a>
                         <a href="/ms1analysis/create_ms1analysis/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-tasks"></span>&nbsp;Create MS1 Analysis</a>
+                        {% if experiment.0.id in show_ms1_set %}
+                            <a href="/ms1analysis/show_ms1analysis/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-list"></span>&nbsp;Show MS1 Analysis</a>
+                        {% endif %}
                         <a href="/basicviz/start_match_motifs/{{experiment.0.id}}" class = "btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-random"></span>&nbsp;Start Motif Matching</a>
                         <a href="/basicviz/manage_motif_matches/{{experiment.0.id}}" class = "btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;Manage Motif Matches</a>
                     {% endif %}

@@ -4,6 +4,7 @@ from django.shortcuts import render
 from basicviz.models import UserExperiment, ExtraUsers, \
     MultiFileExperiment, MultiLink
 from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_TYPE
+from ms1analysis.models import Analysis
 
 @login_required(login_url='/registration/login/')
 def index(request):
@@ -17,6 +18,7 @@ def index(request):
     pending_individuals = []
     show_lda = False
     show_decomposition = False
+    show_ms1_set = set() ## dictionary to record whether to show ms1 result option in main page
     for experiment in experiments:
 
         # Remove those that are multi ones
@@ -34,6 +36,8 @@ def index(request):
             decomposition_code, _ = EXPERIMENT_TYPE[1]
             if experiment.experiment_type == lda_code:
                 show_lda = True
+                if len(Analysis.objects.filter(experiment_id = experiment.id)) > 0:
+                    show_ms1_set.add(experiment.id)
             if experiment.experiment_type == decomposition_code:
                 show_decomposition = True
 
@@ -62,6 +66,7 @@ def index(request):
     context_dict['show_lda'] = show_lda
     context_dict['show_decomposition'] = show_decomposition
     context_dict['show_create_experiment'] = show_create_experiment
+    context_dict['show_ms1_set'] = show_ms1_set
 
     # to display additional links on the basicviz index page
     eu = ExtraUsers.objects.filter(user=request.user)
