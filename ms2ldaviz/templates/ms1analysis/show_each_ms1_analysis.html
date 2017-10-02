@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_block %}
+{% endblock %}
+
+{% block body_block %}
+
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h3>MS1 Analysis Details</h3>
+                <ul>
+                    <li><b>Name:</b> {{analysis.name}}</li>
+                    <li><b>Description:</b> {{analysis.description}}</li>
+                    <li><b>Group 1:</b> {{analysis.group1}}</li>
+                    <li><b>Group 2:</b> {{analysis.group2}}</li>
+                    <li><b>Use logarithm:</b> {{analysis.use_logarithm}}</li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Molecule Details</h4>
+                <p>
+                    The following table lists the result of MS1 analysis for molecules
+                    in this dataset. Click the links in the <strong>Name</strong> column
+                    for more information on that molecule, including associated Mass2Motifs
+                    that explain the features of the spectra.
+                </p>
+                <table class="table" id="moleculetable">
+                <thead>
+                <tr><th>Name</th><th>p-Value</th><th>Fold Change</th></tr>
+                </thead>
+                <tbody>
+                {% for res in molecule_results %}
+                    <tr><td><a href="/basicviz/show_doc/{{res.document.id}}">{{res.document}}</a></td>
+                        <td>{{res.pValue}}</td>
+                        <td>{{res.foldChange}}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Mass2Motif Details</h4>
+                <p>
+                    The following table lists the result of MS1 analysis for Mass2Motifs
+                    in this dataset. Click the links in the <strong>Name</strong> column
+                    for more information on that Mass2Motif.
+                </p>
+                <table class="table" id="m2mtable">
+                <thead>
+                <tr><th>Name</th><th>Plage p-value</th><th>Plage t-value</th></tr>
+                </thead>
+                <tbody>
+                {% for res in m2m_results %}
+                    <tr><td><a href="/basicviz/view_parents/{{res.mass2motif.id}}">{{res.mass2motif}}</a></td>
+                        <td>{{res.plage_p_value}}</td>
+                        <td>{{res.plage_t_value}}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block js_block %}
+
+	<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+	<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+	<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+	<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
+
+	<script type="text/javascript">
+
+		$('#moleculetable').DataTable({
+			dom: 'Bfrtip',
+			buttons: [
+		        'csv',
+	        ],
+	        "order": [[ 2, "desc" ]],
+	    });
+		$('#m2mtable').DataTable({
+			dom: 'Bfrtip',
+			buttons: [
+		        'csv',
+	        ],
+	        "order": [[ 1, "desc" ]],
+	    });
+
+	</script>
+
+{% endblock %}
+
