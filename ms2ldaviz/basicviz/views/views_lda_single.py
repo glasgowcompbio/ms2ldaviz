@@ -1390,10 +1390,9 @@ def dump_topic_molecules(request, m2m_id):
 
     return response
 
-## updaetd get_docm2m function, use threshold for probability and overlap respectively
-def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
-    experiment = mass2motif.experiment
-
+## Refactored on Oct 11th, 2017
+## to be re-used by different docm2m fetching methods
+def get_prob_overlap_thresholds(experiment, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
     ## default prob_threshold 0.05, default overlap_threshld 0.0
     if not doc_m2m_prob_threshold:
         doc_m2m_prob_threshold = get_option('doc_m2m_prob_threshold', experiment = experiment)
@@ -1408,6 +1407,15 @@ def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshol
             doc_m2m_overlap_threshold = float(doc_m2m_overlap_threshold)
         else:
             doc_m2m_overlap_threshold = 0.0
+
+    return doc_m2m_prob_threshold, doc_m2m_overlap_threshold
+
+## updated get_docm2m function, use threshold for probability and overlap respectively
+## function is used to get MocumentMassMass2Motif by motif only
+def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
+    experiment = mass2motif.experiment
+
+    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
 
     dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=doc_m2m_prob_threshold,
                                                  overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
@@ -1415,23 +1423,23 @@ def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshol
     return dm2m
 
 
+## function is used to get all MocumentMassMass2Motif matchings by experiment
+def get_docm2m_all(experiment, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
+    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
+
+    mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
+
+    dm2m = DocumentMass2Motif.objects.filter(mass2motif__in = mass2motifs, probability__gte=doc_m2m_prob_threshold,
+                                                 overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
+
+    return dm2m
+
+
+## function is used to get MocumentMassMass2Motif by document only
 def get_docm2m_bydoc(document, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
     experiment = document.experiment
 
-    ## default prob_threshold 0.05, default overlap_threshld 0.0
-    if not doc_m2m_prob_threshold:
-        doc_m2m_prob_threshold = get_option('doc_m2m_prob_threshold', experiment = experiment)
-        if doc_m2m_prob_threshold:
-            doc_m2m_prob_threshold = float(doc_m2m_prob_threshold)
-        else:
-            doc_m2m_prob_threshold = 0.05
-
-    if not doc_m2m_overlap_threshold:
-        doc_m2m_overlap_threshold = get_option('doc_m2m_overlap_threshold', experiment = experiment)
-        if doc_m2m_overlap_threshold:
-            doc_m2m_overlap_threshold = float(doc_m2m_overlap_threshold)
-        else:
-            doc_m2m_overlap_threshold = 0.0
+    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
 
     dm2m = DocumentMass2Motif.objects.filter(document=document, probability__gte=doc_m2m_prob_threshold,
                                                  overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
@@ -1638,6 +1646,8 @@ def summary(request,experiment_id):
 
     documents = Document.objects.filter(experiment=experiment)
 
+    all_docs_motifs = get_docm2m_all(experiment=experiment)
+
     context_dict = {}
     context_dict['experiment'] = experiment
     context_dict['user_experiments'] = user_experiments
@@ -1645,6 +1655,8 @@ def summary(request,experiment_id):
     context_dict['motif_features'] = motif_features
     context_dict['documents'] = documents
     context_dict['n_docs'] = len(documents)
+    context_dict['all_docs_motifs'] = all_docs_motifs
+
 
     return render(request,'basicviz/summary.html',context_dict)
 
