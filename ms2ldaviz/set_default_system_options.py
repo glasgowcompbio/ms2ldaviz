@@ -33,12 +33,20 @@ if __name__ == '__main__':
 	s.value = 'true'
 	s.save()
 
-	s = SystemOptions.objects.get_or_create(key = 'doc_m2m_threshold',experiment = None)[0]
+	# s = SystemOptions.objects.get_or_create(key = 'doc_m2m_threshold',experiment = None)[0]
+	# s.value = '0.05'
+	# s.save()
+
+	# s = SystemOptions.objects.get_or_create(key = 'default_doc_m2m_score',experiment = None)[0]
+	# s.value = 'probability'
+	# s.save()
+
+	s = SystemOptions.objects.get_or_create(key = 'doc_m2m_prob_threshold',experiment = None)[0]
 	s.value = '0.05'
 	s.save()
 
-	s = SystemOptions.objects.get_or_create(key = 'default_doc_m2m_score',experiment = None)[0]
-	s.value = 'probability'
+	s = SystemOptions.objects.get_or_create(key = 'doc_m2m_overlap_threshold',experiment = None)[0]
+	s.value = '0.0'
 	s.save()
 
 	s = SystemOptions.objects.get_or_create(key = 'heatmap_normalisation',experiment = None)[0]
