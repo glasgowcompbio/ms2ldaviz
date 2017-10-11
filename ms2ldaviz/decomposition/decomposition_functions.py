@@ -15,7 +15,7 @@ from ms1analysis.models import DecompositionAnalysis, DecompositionAnalysisResul
 
 import sys
 sys.path.append('../lda/code')
-from ms2lda_feature_extraction import LoadMZML, LoadMSP
+from ms2lda_feature_extraction import LoadMZML, LoadMSP, LoadMGF
 
 def add_sample(sample_name, experiment):
     sample = Sample.objects.get_or_create(name = sample_name, experiment = experiment)[0]
@@ -52,10 +52,16 @@ def load_mzml_and_make_documents(experiment,motifset):
                           min_ms2_intensity = experiment.min_ms2_intensity)
     elif experiment.experiment_ms2_format == '1':
         loader = LoadMSP(min_ms1_intensity = experiment.min_ms1_intensity,
-                        min_ms2_intensity = experiment.min_ms2_intensity)
+                        min_ms2_intensity = experiment.min_ms2_intensity,
+                        mz_tol=experiment.mz_tol,
+                        rt_tol=experiment.rt_tol,
+                        peaklist=peaklist)
     elif experiment.experiment_ms2_format == '2':
         loader = LoadMGF(min_ms1_intensity = experiment.min_ms1_intensity,
-                        min_ms2_intensity = experiment.min_ms2_intensity)
+                        min_ms2_intensity = experiment.min_ms2_intensity,
+                        mz_tol=experiment.mz_tol,
+                        rt_tol=experiment.rt_tol,
+                        peaklist=peaklist)
 
     print "Loading peaks from {} using peaklist {}".format(experiment.ms2_file.path,peaklist)
     ms1,ms2,metadata = loader.load_spectra([experiment.ms2_file.path])
