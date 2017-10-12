@@ -5,12 +5,12 @@ import jsonpickle
 import networkx as nx
 import numpy as np
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse,Http404
-from django.shortcuts import render,redirect
+from django.http import HttpResponse, Http404
+from django.shortcuts import render, redirect
 from networkx.readwrite import json_graph
 from sklearn.decomposition import PCA
 
-from annotation.models import TaxaInstance,SubstituentInstance
+from annotation.models import TaxaInstance, SubstituentInstance
 from basicviz.forms import DocFilterForm, ValidationForm, VizForm, \
     TopicScoringForm, MatchMotifForm
 from massbank.forms import Mass2MotifMetadataForm
@@ -19,19 +19,20 @@ from basicviz.models import Feature, Experiment, Document, FeatureInstance, Docu
 from basicviz.tasks import match_motifs
 from massbank.views import get_massbank_form
 from options.views import get_option
-from decomposition.models import DocumentGlobalMass2Motif,GlobalMotif,DocumentGlobalFeature,FeatureMap
-from decomposition.decomposition_functions import get_parents_decomposition,get_parent_for_plot_decomp,get_decomp_doc_context_dict
+from decomposition.models import DocumentGlobalMass2Motif, GlobalMotif, DocumentGlobalFeature, FeatureMap
+from decomposition.decomposition_functions import get_parents_decomposition, get_parent_for_plot_decomp, \
+    get_decomp_doc_context_dict
 from basicviz.views import index as basicviz_index
 from ms1analysis.models import Analysis, AnalysisResult, AnalysisResultPlage
 from basicviz.constants import EXPERIMENT_STATUS_CODE
 
 
-def check_user(request,experiment):
+def check_user(request, experiment):
     user = request.user
     try:
-        ue = UserExperiment.objects.get(experiment = experiment,user = user)
+        ue = UserExperiment.objects.get(experiment=experiment, user=user)
         return ue.permission
-    except: 
+    except:
         # User can't see this one
         return None
 
@@ -212,10 +213,11 @@ def compute_topic_scores(request, experiment_id):
 
     return render(request, 'basicviz/compute_topic_scores.html', context_dict)
 
+
 @login_required(login_url='/registration/login/')
 def show_docs(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
-    if not check_user(request,experiment):
+    if not check_user(request, experiment):
         return HttpResponse("You don't have permission to access this page")
     documents = Document.objects.filter(experiment=experiment)
     print len(documents)
@@ -225,12 +227,13 @@ def show_docs(request, experiment_id):
     context_dict['n_docs'] = len(documents)
     return render(request, 'basicviz/show_docs.html', context_dict)
 
+
 @login_required(login_url='/registration/login/')
 def show_doc(request, doc_id):
     document = Document.objects.get(id=doc_id)
     experiment = document.experiment
 
-    if not check_user(request,experiment):
+    if not check_user(request, experiment):
         return index(request)
     print document.experiment.experiment_type
     if document.experiment.experiment_type == '0':
@@ -245,7 +248,7 @@ def show_doc(request, doc_id):
 
     if document.csid:
         context_dict['csid'] = document.csid
-        
+
     if document.image_url:
         context_dict['image_url'] = document.image_url
 
@@ -257,8 +260,8 @@ def get_doc_context_dict(document):
     context_dict = {}
     context_dict['features'] = features
     experiment = document.experiment
-    # doc_m2m_threshold = get_option('doc_m2m_threshold', experiment=experiment)
-    
+    doc_m2m_threshold = get_option('doc_m2m_threshold', experiment=experiment)
+
     mass2motif_instances = get_docm2m_bydoc(document)
     context_dict['mass2motifs'] = mass2motif_instances
     feature_mass2motif_instances = []
@@ -271,11 +274,12 @@ def get_doc_context_dict(document):
     context_dict['fm2m'] = feature_mass2motif_instances
     return context_dict
 
+
 @login_required(login_url='/registration/login/')
 def view_parents(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     experiment = motif.experiment
-    if not check_user(request,experiment):
+    if not check_user(request, experiment):
         return HttpResponse("You don't have permission to access this page")
     print 'Motif metadata', motif.metadata
 
@@ -287,8 +291,8 @@ def view_parents(request, motif_id):
     context_dict['experiment'] = experiment
 
     # Get the taxa or substituent terms (if there are any)
-    taxa_terms = motif.taxainstance_set.filter(probability__gte = 0.2).order_by('-probability')
-    substituent_terms = motif.substituentinstance_set.filter(probability__gte = 0.2).order_by('-probability')
+    taxa_terms = motif.taxainstance_set.filter(probability__gte=0.2).order_by('-probability')
+    substituent_terms = motif.substituentinstance_set.filter(probability__gte=0.2).order_by('-probability')
 
     if len(taxa_terms) > 0:
         context_dict['taxa_terms'] = taxa_terms
@@ -332,7 +336,7 @@ def view_parents(request, motif_id):
             motif.save()
             context_dict['status'] = 'Annotation saved.'
 
-    permission = check_user(request,experiment)
+    permission = check_user(request, experiment)
     if permission == 'edit':
         metadata_form = Mass2MotifMetadataForm(
             initial={'metadata': motif.annotation, 'short_annotation': motif.short_annotation})
@@ -342,6 +346,7 @@ def view_parents(request, motif_id):
     context_dict['massbank_form'] = massbank_form
 
     return render(request, 'basicviz/view_parents.html', context_dict)
+
 
 @login_required(login_url='/registration/login/')
 def mass2motif_feature(request, fm2m_id):
@@ -376,8 +381,8 @@ def mass2motif_feature(request, fm2m_id):
 def get_parents(request, motif_id, vo_id):
     viz_options = VizOptions.objects.get(id=vo_id)
     experiment = viz_options.experiment
-    # edge_choice = get_option('default_doc_m2m_score',experiment)
-    if experiment.experiment_type == '0': #ms2lda
+    edge_choice = get_option('default_doc_m2m_score', experiment)
+    if experiment.experiment_type == '0':  # ms2lda
         motif = Mass2Motif.objects.get(id=motif_id)
 
         docm2m = get_docm2m(motif)
@@ -392,12 +397,10 @@ def get_parents(request, motif_id, vo_id):
         parent_data = []
         for dm in docm2m:
             document = dm.document
-            parent_data.append(get_doc_for_plot(document.id, motif_id))
-    else: # decomposition
-        parent_data = get_parents_decomposition(motif_id,experiment = experiment)
+            parent_data.append(get_doc_for_plot(document.id, motif_id, score_type=edge_choice))
+    else:  # decomposition
+        parent_data = get_parents_decomposition(motif_id, vo_id=vo_id, experiment=experiment)
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
-
-
 
 
 def get_parents_no_vo(request, motif_id):
@@ -425,15 +428,16 @@ def get_parents_no_vo(request, motif_id):
         parent_data.append(get_doc_for_plot(document.id, motif_id))
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
 
+
 # Method to get the metadata for all parent ions in an experiment
 # Returns a json object
-def get_all_parents_metadata(request,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    documents = Document.objects.filter(experiment = experiment)
+def get_all_parents_metadata(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    documents = Document.objects.filter(experiment=experiment)
     parent_data = []
     for document in documents:
         parent_data.append(jsonpickle.decode(document.metadata))
-    return HttpResponse(json.dumps(parent_data), content_type =  'application/json')
+    return HttpResponse(json.dumps(parent_data), content_type='application/json')
 
 
 def get_parents_metadata(request, motif_id):
@@ -459,18 +463,17 @@ def get_parents_metadata(request, motif_id):
 #                 parent_data.append(get_doc_for_plot(document.id,motif_id))
 #     return HttpResponse(json.dumps(parent_data),content_type = 'application/json')
 
-def get_word_graph(request, motif_id, vo_id, experiment = None):
+def get_word_graph(request, motif_id, vo_id, experiment=None):
     if not vo_id == 'nan':
-        viz_options = VizOptions.objects.get(id = vo_id)
-        experiment =  viz_options.experiment
+        viz_options = VizOptions.objects.get(id=vo_id)
+        experiment = viz_options.experiment
     else:
-        motif = Mass2Motif.objects.get(id = motif_id)
+        motif = Mass2Motif.objects.get(id=motif_id)
         experiment = motif.experiment
 
-
-    if experiment.experiment_type == "0": # standard LDA
-        motif = Mass2Motif.objects.get(id = motif_id)
-        m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte = 0.01)
+    if experiment.experiment_type == "0":  # standard LDA
+        motif = Mass2Motif.objects.get(id=motif_id)
+        m2mIns = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01)
         docm2ms = get_docm2m(motif)
         # if edge_choice == 'probability':
         #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
@@ -482,7 +485,7 @@ def get_word_graph(request, motif_id, vo_id, experiment = None):
         for feature in m2mIns:
             feat_counts[feature.feature] = 0
         for dm2m in docm2ms:
-            fi = FeatureInstance.objects.filter(document = dm2m.document)
+            fi = FeatureInstance.objects.filter(document=dm2m.document)
             for ft in fi:
                 if ft.feature in feat_counts:
                     feat_counts[ft.feature] += 1
@@ -491,13 +494,13 @@ def get_word_graph(request, motif_id, vo_id, experiment = None):
         for feature in feat_counts:
             feat_type = feature.name.split('_')[0]
             feat_mz = feature.name.split('_')[1]
-            short_name = "{}_{:.4f}".format(feat_type,float(feat_mz))
-            feat_list.append([short_name,feat_counts[feature],colours])
-        feat_list = sorted(feat_list,key = lambda x: x[1],reverse = True)
+            short_name = "{}_{:.4f}".format(feat_type, float(feat_mz))
+            feat_list.append([short_name, feat_counts[feature], colours])
+        feat_list = sorted(feat_list, key=lambda x: x[1], reverse=True)
         data_for_json.append(feat_list)
     else:
         data_for_json = []
- 
+
     return HttpResponse(json.dumps(data_for_json), content_type='application/json')
 
 
@@ -506,26 +509,24 @@ def view_word_graph(request, motif_id):
     context_dict = {'mass2motif': motif}
     motif_features = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by('-probability')
 
-
     context_dict['motif_features'] = motif_features
     return render(request, 'basicviz/view_word_graph.html', context_dict)
 
 
-def get_intensity(request, motif_id, vo_id, experiment = None):
+def get_intensity(request, motif_id, vo_id, experiment=None):
     if not vo_id == 'nan':
-        viz_options = VizOptions.objects.get(id = vo_id)
+        viz_options = VizOptions.objects.get(id=vo_id)
         experiment = viz_options.experiment
     else:
-        motif = Mass2Motif.objects.get(id = motif_id)
+        motif = Mass2Motif.objects.get(id=motif_id)
         experiment = motif.experiment
 
     colours = ['#404080', '#0080C0']
-    colours = ['red','blue']
+    colours = ['red', 'blue']
 
-
-    if experiment.experiment_type == "0": # standard LDA
-        motif = Mass2Motif.objects.get(id = motif_id)
-        m2mIns = Mass2MotifInstance.objects.filter(mass2motif = motif, probability__gte = 0.01)
+    if experiment.experiment_type == "0":  # standard LDA
+        motif = Mass2Motif.objects.get(id=motif_id)
+        m2mIns = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01)
         docm2ms = get_docm2m(motif)
         # if edge_choice == 'probability':
         #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
@@ -540,21 +541,21 @@ def get_intensity(request, motif_id, vo_id, experiment = None):
             feat_total_intensity[feature] = 0.0
             feat_motif_intensity[feature] = 0.0
         for feature in features:
-            fi = FeatureInstance.objects.filter(feature = feature)
+            fi = FeatureInstance.objects.filter(feature=feature)
             for ft in fi:
                 feat_total_intensity[feature] += ft.intensity
                 if ft.document in documents:
                     feat_motif_intensity[feature] += ft.intensity
 
         feat_list = []
-        feat_tot_intensity = zip(feat_total_intensity.keys(),feat_total_intensity.values())
-        feat_tot_intensity = sorted(feat_tot_intensity,key = lambda x: x[1],reverse = True)
-        for feature,tot_intensity in feat_tot_intensity:
+        feat_tot_intensity = zip(feat_total_intensity.keys(), feat_total_intensity.values())
+        feat_tot_intensity = sorted(feat_tot_intensity, key=lambda x: x[1], reverse=True)
+        for feature, tot_intensity in feat_tot_intensity:
             feat_type = feature.name.split('_')[0]
             feat_mz = feature.name.split('_')[1]
-            short_name = "{}_{:.4f}".format(feat_type,float(feat_mz))
-            feat_list.append([short_name,feat_total_intensity[feature],colours[0]])
-            feat_list.append(['',feat_motif_intensity[feature],colours[1]])
+            short_name = "{}_{:.4f}".format(feat_type, float(feat_mz))
+            feat_list.append([short_name, feat_total_intensity[feature], colours[0]])
+            feat_list.append(['', feat_motif_intensity[feature], colours[1]])
             feat_list.append(('', 0, ''))
         data_for_json.append(feat_tot_intensity[0][1])
         data_for_json.append(feat_list)
@@ -562,6 +563,7 @@ def get_intensity(request, motif_id, vo_id, experiment = None):
         data_for_json = []
 
     return HttpResponse(json.dumps(data_for_json), content_type='application/json')
+
 
 @login_required(login_url='/registration/login/')
 def view_intensity(request, motif_id):
@@ -575,10 +577,11 @@ def view_intensity(request, motif_id):
     context_dict['motif_features'] = motif_features
     return render(request, 'basicviz/view_intensity.html', context_dict)
 
+
 @login_required(login_url='/registration/login/')
 def view_mass2motifs(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
-    if not check_user(request,experiment):
+    if not check_user(request, experiment):
         return HttpResponse("You do not have permission to access this page")
     if experiment.experiment_type == '0':
         motifs = Mass2Motif.objects.filter(experiment=experiment)
@@ -589,23 +592,17 @@ def view_mass2motifs(request, experiment_id):
         context_dict = {'motif_tuples': motif_tuples}
         context_dict['experiment'] = experiment
         return render(request, 'basicviz/view_mass2motifs.html', context_dict)
-    elif experiment.experiment_type == '1': #decomp
+    elif experiment.experiment_type == '1':  # decomp
         raise Http404('Page not found')
         # documents = Document.objects.filter(experiment = experiment)
         # dm2m = DocumentGlobalMass2Motif.objects.filter(document__in = documents)
         # mass2motifs = list(set([d.mass2motif for d in dm2m]))
         # context_dict = {'mass2motifs':mass2motifs,'experiment':experiment}
-        return render(request, 'decomposition/view_mass2motifs.html',context_dict)
+        return render(request, 'decomposition/view_mass2motifs.html', context_dict)
 
 
-## this function is used to get data for preperation of spectrum plot for LDA experiments
-## need to construct *plot_fragments* list, which is [parent_data, child_data]
-## parent_data (tuple)
-## child_data (list of tuples)
-## we show both probability and overlap scores in title of plot
-## and choose topics with highest probability scores (up to 6) when colouring
-def get_doc_for_plot(doc_id, motif_id=None, get_key=False):
-    colours = ['red', 'green', 'black', 'yellow', 'purple', 'silver']
+def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
+    colours = ['red', 'green', 'black', 'yellow']
     document = Document.objects.get(id=doc_id)
     features = FeatureInstance.objects.filter(document=document)
     plot_fragments = []
@@ -625,29 +622,44 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False):
     else:
         parent_mass = 0.0
     probability = "na"
-    overlap_score = "na"
 
+    # default_score = get_option('default_doc_m2m_score', experiment=document.experiment)
+    # if not default_score:
+    #     default_score = 'probability'
 
-    ## show both probability and overlap into the title
+    # following is only used now when we're getting the multi-colour plot
+    default_score = 'probability'
+
     if not motif_id == None:
         m2m = Mass2Motif.objects.get(id=motif_id)
         dm2m = DocumentMass2Motif.objects.get(mass2motif=m2m, document=document)
-        probability = dm2m.probability
-        overlap_score = dm2m.overlap_score
+        probability = "Probability: {}, overlap: {}".format(dm2m.probability, dm2m.overlap_score)
+        # if not score_type:
+        #     if default_score == 'probability':
+        #         probability = dm2m.probability
+        #     else:
+        #         probability = dm2m.overlap_score
+        # else:
+        #     if score_type == 'probability':
+        #         probability = dm2m.probability
+        #     else:
+        #         probability = dm2m.overlap_score
 
-    parent_data = (parent_mass, 100.0, document.display_name, document.annotation, probability, overlap_score)
-
+    parent_data = (parent_mass, 100.0, document.display_name, document.annotation, probability)
     plot_fragments.append(parent_data)
     child_data = []
 
     # Only colours the first five
     if motif_id == None:
         topic_colours = {}
-        ## colour topics only by probability now
-        topics = sorted(DocumentMass2Motif.objects.filter(document=document), key=lambda x: x.probability,
+        if default_score == 'probability':
+            topics = sorted(DocumentMass2Motif.objects.filter(document=document), key=lambda x: x.probability,
+                            reverse=True)
+        else:
+            topics = sorted(DocumentMass2Motif.objects.filter(document=document), key=lambda x: x.overlap_score,
                             reverse=True)
         topics_to_plot = []
-        for i in range(6):
+        for i in range(4):
             if i == len(topics):
                 break
             topics_to_plot.append(topics[i].mass2motif)
@@ -681,9 +693,7 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False):
                         proportion = phi_value.probability * this_intensity
                         other_topics += proportion
                 child_data.append((mass, mass, this_intensity - other_topics, this_intensity, 1, 'gray', feature_name))
-            ## add elif 'loss' condition here, instead of use "else" 
-            ## otherwise 'massdiff' will be detected as 'loss'
-            elif feature_name.startswith('loss'):
+            else:
                 cum_pos = parent_mass - mass
                 other_topics = 0.0
                 for phi_value in phi_values:
@@ -710,29 +720,31 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False):
 
 
 def get_doc_topics(request, doc_id):
-    document = Document.objects.get(id = doc_id)
+    document = Document.objects.get(id=doc_id)
     if document.experiment.experiment_type == '0':
         plot_fragments = [get_doc_for_plot(doc_id, get_key=True)]
-    elif document.experiment.experiment_type == '1': # decomposition
+    elif document.experiment.experiment_type == '1':  # decomposition
         raise Http404('Page not found')
         # score_type = get_option('default_doc_m2m_score',experiment = document.experiment)
         # if not score_type:
         #     score_type = 'probability'
-        # plot_fragments = [get_parent_for_plot_decomp(document,get_key = True)]
+        # plot_fragments = [get_parent_for_plot_decomp(document,edge_choice=score_type,get_key = True)]
     else:
         plot_fragments = []
     return HttpResponse(json.dumps(plot_fragments), content_type='application/json')
 
-@login_required(login_url = '/registration/login/')
+
+@login_required(login_url='/registration/login/')
 def start_viz(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
-    if not check_user(request,experiment):
+    if not check_user(request, experiment):
         return HttpResponse("You do not have permission to access this page")
     context_dict = {'experiment': experiment}
 
     ## Only show analysis choices done through celery
     ready, _ = EXPERIMENT_STATUS_CODE[1]
-    choices = [(analysis.id, analysis.name + '(' + analysis.description + ')') for analysis in Analysis.objects.filter(experiment=experiment, status=ready)]
+    choices = [(analysis.id, analysis.name + '(' + analysis.description + ')') for analysis in
+               Analysis.objects.filter(experiment=experiment, status=ready)]
     if request.method == 'POST':
         viz_form = VizForm(choices, request.POST)
         if viz_form.is_valid():
@@ -779,11 +791,12 @@ def start_viz(request, experiment_id):
         # context_dict['initial_motif'] = initial_motif
         return render(request, 'basicviz/graph.html', context_dict)
 
-@login_required(login_url = '/registration/login/')
+
+@login_required(login_url='/registration/login/')
 def start_annotated_viz(request, experiment_id):
     # Is this function ever called??
     experiment = Experiment.objects.get(id=experiment_id)
-    if not check_user(request,experiment):
+    if not check_user(request, experiment):
         return HttpResponse("You do not have permission to access this page")
 
     context_dict = {'experiment': experiment}
@@ -893,9 +906,8 @@ def get_graph(request, vo_id):
 #                topic_scale_factor=5, edge_scale_factor=5, just_annotated_docs=False,
 #                colour_by_logfc=False, discrete_colour=False, lower_colour_perc=10, upper_colour_perc=90,
 #                colour_topic_by_score=False, edge_choice='probability', ms1_analysis_id = None, doc_max_size = 200, motif_max_size = 1000):
-def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=5,
-                ms1_analysis_id = None, doc_max_size = 200, motif_max_size = 1000):
-
+def make_graph(experiment, min_degree=5, topic_scale_factor=5, edge_scale_factor=5,
+               ms1_analysis_id=None, doc_max_size=200, motif_max_size=1000):
     mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
     documents = Document.objects.filter(experiment=experiment)
     # Find the degrees
@@ -917,7 +929,6 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
             to_remove.append(topic)
     for topic in to_remove:
         del topics[topic]
-
 
     docm2mset = []
     for topic in topics:
@@ -958,7 +969,6 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
             max_plage = np.max(all_plage_vals)
         else:
             do_plage_flag = False
-
 
     print "First"
     # Add the topics to the graph
@@ -1005,16 +1015,16 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
                 na += ' (' + topic.name + ')'
             else:
                 na = topic.name
-            G.add_node(topic.name, group=2, name=na+", "+str(plage_t_value) + ", "+str(plage_p_value),
+            G.add_node(topic.name, group=2, name=na + ", " + str(plage_t_value) + ", " + str(plage_p_value),
                        # size=topic_scale_factor * topics[topic],
-                       size= size,
+                       size=size,
                        special=True, in_degree=topics[topic],
                        highlight_colour=col,
                        score=1, node_id=topic.id, is_topic=True)
 
         else:
             if topic.short_annotation:
-            # if 'annotation' in metadata:
+                # if 'annotation' in metadata:
                 G.add_node(topic.name, group=2, name=topic.short_annotation,
                            size=topic_scale_factor * topics[topic],
                            special=True, in_degree=topics[topic],
@@ -1024,8 +1034,6 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
                            size=topic_scale_factor * topics[topic],
                            special=False, in_degree=topics[topic],
                            score=1, node_id=topic.id, is_topic=True)
-
-
 
     # if just_annotated_docs:
     #     new_documents = []
@@ -1041,7 +1049,6 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
 
     # edge_choice = get_option('default_doc_m2m_score',experiment)
     edge_choice = 'probability'
-
 
     for docm2m in docm2mset:
         # if docm2m.mass2motif in topics:
@@ -1077,7 +1084,7 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
                     if logfc < 0:
                         # if logfc < -3:
                         #     logfc = -3
-                        pos = logfc/ min_logfc
+                        pos = logfc / min_logfc
                         r = midcol[0] + int(pos * (lowcol[0] - midcol[0]))
                         g = midcol[1] + int(pos * (lowcol[1] - midcol[1]))
                         b = midcol[2] + int(pos * (lowcol[2] - midcol[2]))
@@ -1106,7 +1113,6 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
 
             doc_nodes.append(docm2m.document)
 
-
         if edge_choice == 'probability':
             weight = edge_scale_factor * docm2m.probability
         elif edge_choice == 'both':
@@ -1117,20 +1123,22 @@ def make_graph(experiment, min_degree=5,topic_scale_factor=5, edge_scale_factor=
     print "Third"
     return G
 
+
 @login_required(login_url='/registration/login/')
 def topic_pca(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
-    if not check_user(request,experiment):
+    if not check_user(request, experiment):
         return HttpResponse("You do not have permission to access this page")
     context_dict = {'experiment': experiment}
     url = '/basicviz/get_topic_pca_data/' + str(experiment.id)
     context_dict['url'] = url
     return render(request, 'basicviz/pca.html', context_dict)
 
+
 @login_required(login_url='/registration/login/')
 def document_pca(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
-    if not check_user(request,experiment):
+    if not check_user(request, experiment):
         return HttpResponse("You do not have permission to access this page")
     context_dict = {}
     context_dict['experiment'] = experiment
@@ -1144,10 +1152,9 @@ def get_topic_pca_data(request, experiment_id):
     motifs = Mass2Motif.objects.filter(experiment=experiment)
 
     # features = Feature.objects.filter(experiment=experiment)
-    documents = Document.objects.filter(experiment = experiment)
-    featureinstance = FeatureInstance.objects.filter(document__in = documents)
+    documents = Document.objects.filter(experiment=experiment)
+    featureinstance = FeatureInstance.objects.filter(document__in=documents)
     features = set([f.feature for f in featureinstance])
-
 
     n_motifs = len(motifs)
     n_features = len(features)
@@ -1257,10 +1264,11 @@ def get_pca_data(request, experiment_id):
     # pca_data = []
     return HttpResponse(json.dumps(pca_data), content_type='application/json')
 
+
 @login_required(login_url='/registration/login/')
 def validation(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
-    if not check_user(request,experiment):
+    if not check_user(request, experiment):
         return HttpResponse("You do not have permission to access this page")
     context_dict = {}
     if request.method == 'POST':
@@ -1285,7 +1293,8 @@ def validation(request, experiment_id):
                     #     dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,probability__gte = p_thresh)
                     # else:
                     #     dm2ms = DocumentMass2Motif.objects.filter(mass2motif = mass2motif,ovelap_score__gte = p_thresh)
-                    dm2ms = get_docm2m(mass2motif, doc_m2m_prob_threshold=p_thresh, doc_m2m_overlap_threshold=overlap_thresh)
+                    dm2ms = get_docm2m(mass2motif, doc_m2m_prob_threshold=p_thresh,
+                                       doc_m2m_overlap_threshold=overlap_thresh)
                     tot = 0
                     val = 0
                     for d in dm2ms:
@@ -1312,8 +1321,9 @@ def validation(request, experiment_id):
     context_dict['experiment'] = experiment
     return render(request, 'basicviz/validation.html', context_dict)
 
+
 def toggle_dm2m(request, experiment_id, dm2m_id):
-    permission = check_user(request,experiment)
+    permission = check_user(request, experiment)
     dm2m = DocumentMass2Motif.objects.get(id=dm2m_id)
     jd = []
     if permission == 'edit':
@@ -1367,7 +1377,8 @@ def dump_topic_molecules(request, m2m_id):
     response['Content-Disposition'] = 'attachment; filename="topic_molecules_{}.csv"'.format(mass2motif.id)
     writer = csv.writer(response)
     writer.writerow(
-        ['m2m_id', 'm2m_name', 'm2m_annotation', 'doc_id', 'doc_annotation', 'valid', 'probability', 'overlap_score', 'doc_csid',
+        ['m2m_id', 'm2m_name', 'm2m_annotation', 'doc_id', 'doc_annotation', 'valid', 'probability', 'overlap_score',
+         'doc_csid',
          'doc_inchi'])
 
     dm2ms = get_docm2m(mass2motif)
@@ -1377,26 +1388,26 @@ def dump_topic_molecules(request, m2m_id):
         doc_name = '"' + dm2m.document.display_name + '"'
         annotation = '"' + mass2motif.annotation + '"'
         writer.writerow([mass2motif.id, mass2motif.name, mass2motif.annotation.encode('utf8'), dm2m.document.id,
-                         doc_name.encode('utf8'), dm2m.validated, dm2m.probability, dm2m.overlap_score, dm2m.document.csid,
+                         doc_name.encode('utf8'), dm2m.validated, dm2m.probability, dm2m.overlap_score,
+                         dm2m.document.csid,
                          dm2m.document.inchikey])
 
     return response
 
 
-## this function is used to refactor *get_docm2m* and *get_docm2m_bydoc* function
-def get_prob_and_overlap_thresh(experiment, doc_m2m_prob_threshold, doc_m2m_overlap_threshold):
-    
-
+## Refactored on Oct 11th, 2017
+## to be re-used by different docm2m fetching methods
+def get_prob_overlap_thresholds(experiment, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
     ## default prob_threshold 0.05, default overlap_threshld 0.0
     if not doc_m2m_prob_threshold:
-        doc_m2m_prob_threshold = get_option('doc_m2m_prob_threshold', experiment = experiment)
+        doc_m2m_prob_threshold = get_option('doc_m2m_prob_threshold', experiment=experiment)
         if doc_m2m_prob_threshold:
             doc_m2m_prob_threshold = float(doc_m2m_prob_threshold)
         else:
             doc_m2m_prob_threshold = 0.05
 
     if not doc_m2m_overlap_threshold:
-        doc_m2m_overlap_threshold = get_option('doc_m2m_overlap_threshold', experiment = experiment)
+        doc_m2m_overlap_threshold = get_option('doc_m2m_overlap_threshold', experiment=experiment)
         if doc_m2m_overlap_threshold:
             doc_m2m_overlap_threshold = float(doc_m2m_overlap_threshold)
         else:
@@ -1405,13 +1416,15 @@ def get_prob_and_overlap_thresh(experiment, doc_m2m_prob_threshold, doc_m2m_over
     return doc_m2m_prob_threshold, doc_m2m_overlap_threshold
 
 
-## updaetd get_docm2m function, use threshold for probability and overlap respectively
+## updated get_docm2m function, use threshold for probability and overlap respectively
+## function is used to get MocumentMassMass2Motif by motif only
 def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
     experiment = mass2motif.experiment
-    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_and_overlap_thresh(experiment, doc_m2m_prob_threshold, doc_m2m_overlap_threshold)
+
+    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
 
     dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=doc_m2m_prob_threshold,
-                                                 overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
+                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
 
     return dm2m
 
@@ -1420,10 +1433,10 @@ def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshol
 def get_docm2m_all(experiment, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
     doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
 
-    mass2motifs = Mass2Motif.objects.filter(experiment = experiment)
+    mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
 
-    dm2m = DocumentMass2Motif.objects.filter(mass2motif__in = mass2motifs, probability__gte=doc_m2m_prob_threshold,
-                                                 overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
+    dm2m = DocumentMass2Motif.objects.filter(mass2motif__in=mass2motifs, probability__gte=doc_m2m_prob_threshold,
+                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
 
     return dm2m
 
@@ -1432,10 +1445,10 @@ def get_docm2m_all(experiment, doc_m2m_prob_threshold=None, doc_m2m_overlap_thre
 def get_docm2m_bydoc(document, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
     experiment = document.experiment
 
-    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_and_overlap_thresh(experiment, doc_m2m_prob_threshold, doc_m2m_overlap_threshold)
+    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
 
     dm2m = DocumentMass2Motif.objects.filter(document=document, probability__gte=doc_m2m_prob_threshold,
-                                                 overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
+                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
 
     return dm2m
 
@@ -1443,7 +1456,7 @@ def get_docm2m_bydoc(document, doc_m2m_prob_threshold=None, doc_m2m_overlap_thre
 @login_required(login_url='/registration/login/')
 def extract_docs(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
-    if not check_user(request,experiment):
+    if not check_user(request, experiment):
         return HttpResponse("You do not have permission to view this page")
     context_dict = {}
     if request.method == 'POST':
@@ -1504,15 +1517,14 @@ def compute_overlap_score(mass2motif, document):
             score += feature_mass2motif_instance.probability * m2m_feature[0].probability
     return score
 
+
 @login_required(login_url='/registration/login/')
 def rate_by_conserved_motif_rating(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
-    if not check_user(request,experiment):
+    if not check_user(request, experiment):
         return HttpResponse("You do not have permission to access this page")
     mass2motifs = experiment.mass2motif_set.all()
     motif_scores = []
-
-    
 
     for motif in mass2motifs:
         # motif_docs = motif.documentmass2motif_set.all()
@@ -1535,30 +1547,33 @@ def rate_by_conserved_motif_rating(request, experiment_id):
 
     return render(request, 'basicviz/rate_by_conserved_motif.html', context_dict)
 
+
 @login_required(login_url='/registration/login/')
-def high_classyfire(request,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    motifs = Mass2Motif.objects.filter(experiment = experiment)
-    taxa_instances = TaxaInstance.objects.filter(motif__in = motifs,probability__gte = 0.2)
-    substituent_instances = SubstituentInstance.objects.filter(motif__in = motifs,probability__gte = 0.2)
+def high_classyfire(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    motifs = Mass2Motif.objects.filter(experiment=experiment)
+    taxa_instances = TaxaInstance.objects.filter(motif__in=motifs, probability__gte=0.2)
+    substituent_instances = SubstituentInstance.objects.filter(motif__in=motifs, probability__gte=0.2)
     context_dict = {}
     context_dict['taxa_instances'] = taxa_instances
     context_dict['substituent_instances'] = substituent_instances
     context_dict['experiment'] = experiment
-    return render(request,'basicviz/high_classyfire.html',context_dict)
+    return render(request, 'basicviz/high_classyfire.html', context_dict)
 
-def get_features(request,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    documents = Document.objects.filter(experiment = experiment)
-    feature_instances = FeatureInstance.objects.filter(document__in = documents)
+
+def get_features(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    documents = Document.objects.filter(experiment=experiment)
+    feature_instances = FeatureInstance.objects.filter(document__in=documents)
     features = set([f.feature for f in feature_instances])
     # features = Feature.objects.filter(experiment = experiment)
-    output_features = [(f.name,f.min_mz,f.max_mz) for f in features]
+    output_features = [(f.name, f.min_mz, f.max_mz) for f in features]
     return HttpResponse(json.dumps(output_features), content_type='application/json')
 
-def get_annotated_topics(request,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    motifs = Mass2Motif.objects.filter(experiment = experiment)
+
+def get_annotated_topics(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    motifs = Mass2Motif.objects.filter(experiment=experiment)
     output_motifs = []
     for motif in motifs:
         if motif.annotation:
@@ -1567,52 +1582,54 @@ def get_annotated_topics(request,experiment_id):
     output_metadata = []
     output_beta = []
     for motif in output_motifs:
-        output_metadata.append((motif.name,motif.annotation))
+        output_metadata.append((motif.name, motif.annotation))
         betas = []
         beta_vals = motif.mass2motifinstance_set.all()
         for b in beta_vals:
-            betas.append((b.feature.name,b.probability))
-        output_beta.append((motif.name,betas))
+            betas.append((b.feature.name, b.probability))
+        output_beta.append((motif.name, betas))
 
-    output = (output_metadata,output_beta)
+    output = (output_metadata, output_beta)
 
+    return HttpResponse(json.dumps(output), content_type='application/json')
 
-    return HttpResponse(json.dumps(output),content_type = 'application/json')
 
 # Gets the document <-> m2m links for a particular experiment as a json object
-def get_doc_m2m(request,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    dm2m = DocumentMass2Motif.objects.filter(document__experiment = experiment)
+def get_doc_m2m(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    dm2m = DocumentMass2Motif.objects.filter(document__experiment=experiment)
     output_data = []
     for d in dm2m:
-        output_data.append([d.mass2motif.name,d.document.name,d.probability,d.overlap_score])
-    return HttpResponse(json.dumps(output_data),content_type = 'application/json')
+        output_data.append([d.mass2motif.name, d.document.name, d.probability, d.overlap_score])
+    return HttpResponse(json.dumps(output_data), content_type='application/json')
 
-def get_beta(request,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    mi = Mass2MotifInstance.objects.filter(mass2motif__experiment = experiment)
+
+def get_beta(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    mi = Mass2MotifInstance.objects.filter(mass2motif__experiment=experiment)
     output_data = []
     for m in mi:
-        output_data.append([m.mass2motif.name,m.feature.name,m.probability])
-    return HttpResponse(json.dumps(output_data),content_type = 'application/json')
+        output_data.append([m.mass2motif.name, m.feature.name, m.probability])
+    return HttpResponse(json.dumps(output_data), content_type='application/json')
 
 
-def get_all_doc_data(request,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    documents = Document.objects.filter(experiment = experiment)
+def get_all_doc_data(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    documents = Document.objects.filter(experiment=experiment)
     out_data = []
     for document in documents:
-        doc_feat = FeatureInstance.objects.filter(document = document)
-        doc_features = [(d.feature.name,d.intensity) for d in doc_feat]
-        doc_motif = DocumentMass2Motif.objects.filter(document = document)
-        doc_motifs = [(d.mass2motif.name,d.probability,d.overlap_score) for d in doc_motif]
-        out_data.append([document.name,doc_features,doc_motifs])
-    return HttpResponse(json.dumps(out_data),content_type = 'application/json')
+        doc_feat = FeatureInstance.objects.filter(document=document)
+        doc_features = [(d.feature.name, d.intensity) for d in doc_feat]
+        doc_motif = DocumentMass2Motif.objects.filter(document=document)
+        doc_motifs = [(d.mass2motif.name, d.probability, d.overlap_score) for d in doc_motif]
+        out_data.append([document.name, doc_features, doc_motifs])
+    return HttpResponse(json.dumps(out_data), content_type='application/json')
 
-def get_proportion_annotated_docs(request,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
+
+def get_proportion_annotated_docs(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
     output_data = []
-    documents = Document.objects.filter(experiment = experiment)
+    documents = Document.objects.filter(experiment=experiment)
     n_docs = len(documents)
     n_annotated = 0
     for document in documents:
@@ -1621,21 +1638,22 @@ def get_proportion_annotated_docs(request,experiment_id):
             if dm.mass2motif.annotation:
                 n_annotated += 1
                 break
-    output_data.append((experiment.name,n_docs,n_annotated))
-    return HttpResponse(json.dumps(output_data),content_type = 'application/json')
+    output_data.append((experiment.name, n_docs, n_annotated))
+    return HttpResponse(json.dumps(output_data), content_type='application/json')
+
 
 # Renders a page summarising a particular experiment
-def summary(request,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    user_experiments = UserExperiment.objects.filter(experiment = experiment)
+def summary(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    user_experiments = UserExperiment.objects.filter(experiment=experiment)
 
-    motifs = Mass2Motif.objects.filter(experiment = experiment)
+    motifs = Mass2Motif.objects.filter(experiment=experiment)
     motif_tuples = []
     for motif in motifs:
         dm2ms = get_docm2m(motif)
-        motif_tuples.append((motif,len(dm2ms)))
+        motif_tuples.append((motif, len(dm2ms)))
 
-    motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment = experiment,probability__gte = 0.05)
+    motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment=experiment, probability__gte=0.05)
 
     documents = Document.objects.filter(experiment=experiment)
 
@@ -1650,14 +1668,14 @@ def summary(request,experiment_id):
     context_dict['n_docs'] = len(documents)
     context_dict['all_docs_motifs'] = all_docs_motifs
 
+    return render(request, 'basicviz/summary.html', context_dict)
 
-    return render(request,'basicviz/summary.html',context_dict)
 
 # Matches motifs in one experiment with those in another
 # TODO: move to celery, create form
-def start_match_motifs(request,experiment_id):
+def start_match_motifs(request, experiment_id):
     context_dict = {}
-    experiment = Experiment.objects.get(id = experiment_id)
+    experiment = Experiment.objects.get(id=experiment_id)
     context_dict['experiment'] = experiment
     if request.method == 'POST':
         match_motif_form = MatchMotifForm(request.user, request.POST)
@@ -1665,32 +1683,35 @@ def start_match_motifs(request,experiment_id):
             base_experiment = match_motif_form.cleaned_data['other_experiment']
             base_experiment_id = base_experiment.id
             minimum_score_to_save = float(match_motif_form.cleaned_data['min_score_to_save'])
-            match_motifs.delay(experiment.id,base_experiment_id,min_score_to_save = minimum_score_to_save)
+            match_motifs.delay(experiment.id, base_experiment_id, min_score_to_save=minimum_score_to_save)
             return manage_motif_matches(request, experiment_id)
     else:
         match_motif_form = MatchMotifForm(request.user)
     context_dict['match_motif_form'] = match_motif_form
-    return render(request,'basicviz/start_match_motifs.html',context_dict)
+    return render(request, 'basicviz/start_match_motifs.html', context_dict)
 
-def manage_motif_matches(request,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    matches = MotifMatch.objects.filter(frommotif__experiment = experiment)
+
+def manage_motif_matches(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    matches = MotifMatch.objects.filter(frommotif__experiment=experiment)
     context_dict = {}
     context_dict['matches'] = matches
     context_dict['experiment'] = experiment
-    return render(request,'basicviz/match_motifs.html',context_dict)
+    return render(request, 'basicviz/match_motifs.html', context_dict)
 
-def add_link(request,from_motif_id,to_motif_id):
-    from_motif = Mass2Motif.objects.get(id = from_motif_id)
-    to_motif = Mass2Motif.objects.get(id = to_motif_id)
+
+def add_link(request, from_motif_id, to_motif_id):
+    from_motif = Mass2Motif.objects.get(id=from_motif_id)
+    to_motif = Mass2Motif.objects.get(id=to_motif_id)
     from_motif.linkmotif = to_motif
     from_motif.save()
     experiment_id = from_motif.experiment.id
-    return manage_motif_matches(request,experiment_id)
+    return manage_motif_matches(request, experiment_id)
 
-def remove_link(request,from_motif_id):
-    from_motif = Mass2Motif.objects.get(id = from_motif_id)
+
+def remove_link(request, from_motif_id):
+    from_motif = Mass2Motif.objects.get(id=from_motif_id)
     from_motif.linkmotif = None
     from_motif.save()
-    experiment_id =from_motif.experiment.id
-    return manage_motif_matches(request,experiment_id)
+    experiment_id = from_motif.experiment.id
+    return manage_motif_matches(request, experiment_id)
