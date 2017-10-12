@@ -19,7 +19,7 @@ if __name__ == '__main__':
     mfname = sys.argv[1]
     mfe = MultiFileExperiment.objects.get(name = mfname)
     links = MultiLink.objects.filter(multifileexperiment = mfe)
-    individuals = [l.experiment for l in links if l.experiment.status == 'all loaded']
+    individuals = [l.experiment for l in links]
     motifs = Mass2Motif.objects.filter(experiment = individuals[0]).order_by('name')
     alp_vals = make_alpha_matrix(individuals,normalise = True)
     np_alp = np.array(alp_vals)
