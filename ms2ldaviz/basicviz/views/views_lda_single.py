@@ -234,7 +234,7 @@ def show_doc(request, doc_id):
     experiment = document.experiment
 
     if not check_user(request, experiment):
-        return index(request)
+        return HttpResponse("You don't have permission to access this page")
     print document.experiment.experiment_type
     if document.experiment.experiment_type == '0':
         context_dict = get_doc_context_dict(document)
