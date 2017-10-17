@@ -165,10 +165,10 @@ def load_sample_intensity(document, experiment, metadata):
                 sample = add_sample(sample_name, experiment)
                 add_doc_sample_intensity(sample, document, intensity)
 
-def load_dict(lda_dict,experiment,verbose = True):
+def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'):
 
     # Hard-coded to use the binned 005 featureset
-    featureset = BVFeatureSet.objects.get(name = 'binned_005')
+    featureset = BVFeatureSet.objects.get(name = feature_set_name)
 
     if 'features' in lda_dict:
         print "Explicit feature object: loading them all at once"
