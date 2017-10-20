@@ -432,7 +432,7 @@ def get_all_parents_metadata(request,experiment_id):
     documents = Document.objects.filter(experiment = experiment)
     parent_data = []
     for document in documents:
-        parent_data.append(jsonpickle.decode(document.metadata))
+        parent_data.append((document.name,jsonpickle.decode(document.metadata)))
     return HttpResponse(json.dumps(parent_data), content_type =  'application/json')
 
 

@@ -108,4 +108,3 @@ def create_ms1analysis_decomposition(request, decomposition_id):
         context_dict['sample_choices'] = sample_choices
 
     return render(request, 'ms1analysis/add_ms1_analysis.html', context_dict)
-
