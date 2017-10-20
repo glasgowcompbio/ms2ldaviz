@@ -120,6 +120,37 @@
                 </table>
             </div>
         </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>All Fragmentation Spectra and Mass2Motifs matching details</h4>
+                <p>
+                    The following table lists all matchings of Fragmentation Spectra and Mass2Motifs extracted from the dataset.
+                </p>
+                <table class='table' id = 'docmotiftable'>
+                    <thead>
+                        <tr><th>Document</th><th>Motif</th><th>Probability</th><th>Overlap Score</th><th>Precursor Mass</th><th>Retention Time</th><th>Document Annotation</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for dm2m in all_docs_motifs %}
+                            <tr>
+                                <td>
+                                    <a href="/basicviz/show_doc/{{dm2m.document.id}}">{{ dm2m.document.name }}</a>
+                                </td>
+                                <td>
+                                    <a href="/basicviz/view_parents/{{dm2m.mass2motif.id}}">{{ dm2m.mass2motif.name }}</a>
+                                </td>
+                                <td>{{dm2m.probability|floatformat:"3"}}</td>
+                                <td>{{dm2m.overlap_score|floatformat:"3"}}</td>
+                                <td>{{dm2m.document.mass|floatformat:"4"}}</td>
+                                <td>{{dm2m.document.rt}}</td>
+                                <td>{{dm2m.document.annotation}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
 {% endblock %}
@@ -160,7 +191,13 @@
 	        ],
 	        "order": [[ 1, "asc" ]],
 	    });
-
+        $('#docmotiftable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                'csv',
+            ],
+            "order": [[ 0, "asc" ]],
+        });
 	</script>
 
 {% endblock %}

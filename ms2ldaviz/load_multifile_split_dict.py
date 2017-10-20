@@ -18,6 +18,7 @@ if __name__ == '__main__':
 
 	directory_path = sys.argv[1]
 	filename = sys.argv[2]
+	fs_name = sys.argv[3]
 	
 	verbose = False
 	if 'verbose' in sys.argv:
@@ -46,7 +47,7 @@ if __name__ == '__main__':
 		experiment.status = 'loading'
 		experiment.save()
 		ml = MultiLink.objects.get_or_create(experiment = experiment, multifileexperiment = mfe)
-		load_dict(lda_dict,experiment,verbose)
+		load_dict(lda_dict,experiment,verbose,feature_set_name = fs_name)
 
 	n_loaded += 1
 	mfe.status = 'loaded {} of {}'.format(n_loaded,len(multi_lda_dict['individual_lda']))

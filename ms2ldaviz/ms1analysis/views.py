@@ -8,7 +8,7 @@ from basicviz.models import Experiment
 from decomposition.models import Decomposition
 from .forms import AnalysisForm
 from .models import DecompositionAnalysis
-from .models import Sample, Analysis
+from .models import Sample, Analysis, AnalysisResult, AnalysisResultPlage
 from .tasks import process_ms1_analysis, process_ms1_analysis_decomposition
 
 
@@ -108,3 +108,26 @@ def create_ms1analysis_decomposition(request, decomposition_id):
         context_dict['sample_choices'] = sample_choices
 
     return render(request, 'ms1analysis/add_ms1_analysis.html', context_dict)
+
+
+@login_required(login_url='/registration/login/')
+def show_ms1analysis(request, experiment_id):
+    ms1_analyses = Analysis.objects.filter(experiment_id = experiment_id)
+    context_dict = {}
+    context_dict["ms1_analyses"] = ms1_analyses
+    context_dict["experiment_id"] = experiment_id
+    return render(request, 'ms1analysis/show_ms1_analysis.html', context_dict)
+
+
+@login_required(login_url='/registration/login/')
+def show_each_ms1analysis(request, analysis_id):
+    analysis = Analysis.objects.get(id = analysis_id)
+    molecule_results = AnalysisResult.objects.filter(analysis_id = analysis_id)
+    m2m_results = AnalysisResultPlage.objects.filter(analysis_id = analysis_id)
+
+    context_dict = {}
+    context_dict["analysis"] = analysis
+    context_dict["molecule_results"] = molecule_results
+    context_dict["m2m_results"] = m2m_results
+    return render(request, 'ms1analysis/show_each_ms1_analysis.html', context_dict)
+
