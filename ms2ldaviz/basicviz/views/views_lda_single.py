@@ -493,8 +493,11 @@ def get_word_graph(request, motif_id, vo_id, experiment=None):
         feat_list = []
         for feature in feat_counts:
             feat_type = feature.name.split('_')[0]
-            feat_mz = feature.name.split('_')[1]
-            short_name = "{}_{:.4f}".format(feat_type, float(feat_mz))
+            try:
+                feat_mz = feature.name.split('_')[1]
+                short_name = "{}_{:.4f}".format(feat_type, float(feat_mz))
+            except:
+                short_name = feature.name
             feat_list.append([short_name, feat_counts[feature], colours])
         feat_list = sorted(feat_list, key=lambda x: x[1], reverse=True)
         data_for_json.append(feat_list)
@@ -552,8 +555,11 @@ def get_intensity(request, motif_id, vo_id, experiment=None):
         feat_tot_intensity = sorted(feat_tot_intensity, key=lambda x: x[1], reverse=True)
         for feature, tot_intensity in feat_tot_intensity:
             feat_type = feature.name.split('_')[0]
-            feat_mz = feature.name.split('_')[1]
-            short_name = "{}_{:.4f}".format(feat_type, float(feat_mz))
+            try:
+                feat_mz = feature.name.split('_')[1]
+                short_name = "{}_{:.4f}".format(feat_type, float(feat_mz))
+            except:
+                short_name = feature.name
             feat_list.append([short_name, feat_total_intensity[feature], colours[0]])
             feat_list.append(['', feat_motif_intensity[feature], colours[1]])
             feat_list.append(('', 0, ''))

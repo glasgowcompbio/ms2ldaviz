@@ -19,7 +19,7 @@ def add_all_features_set(experiment,features,featureset):
     ndone = 0
     for feature in features:
         # round the name
-        mz = float(feature.split('_')[1])
+        # mz = float(feature.split('_')[1])
 
         if not feature in current_names:
             mz_vals = features[feature]

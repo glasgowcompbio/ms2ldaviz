@@ -67,102 +67,104 @@ def get_massbank_form(motif, motif_features, mf_id=None):
 
 
 def get_massbank_dict(data, motif, motif_features, min_rel_int):
-    default_accession = 'GP%06d' % int(data['motif_id'])
-    accession = data.get('accession', default_accession)
-    ms_type = 'MS2'
-
-    if 'ac_mass_spectrometry_ion_mode' in data:
-        ion_mode = data['ac_mass_spectrometry_ion_mode']
-    else:
-        # attempt to auto-detect from the experiment description
-        exp_desc = get_description(motif)
-        if exp_desc is not None:
-            exp_desc = exp_desc.upper()
-            ion_mode = 'POSITIVE' if 'POS' in exp_desc else 'NEGATIVE' if 'NEG' in exp_desc else 'Unknown'
-        else:
-            ion_mode = 'Unknown'
-
-    # select the fragment/loss features to include
-    peak_list = []
-    for m2m in motif_features:
-        tokens = m2m.feature.name.split('_')
-        f_type = tokens[0]  # 'loss' or 'fragment'
-        mz = float(tokens[1])
-        if f_type == 'loss':  # represent neutral loss as negative m/z value
-            mz = -mz
-        abs_intensity = m2m.probability
-        rel_intensity = m2m.probability
-        row = (mz, abs_intensity, rel_intensity)
-        peak_list.append(row)
-
-    # this is [m/z, absolute intensity, relative intensity]
-    peaks = np.array(peak_list)
-
     try:
+        default_accession = 'GP%06d' % int(data['motif_id'])
+        accession = data.get('accession', default_accession)
+        ms_type = 'MS2'
 
-        # sort by first (m/z) column
-        mz = peaks[:, 0]
-        peaks = peaks[mz.argsort()]
+        if 'ac_mass_spectrometry_ion_mode' in data:
+            ion_mode = data['ac_mass_spectrometry_ion_mode']
+        else:
+            # attempt to auto-detect from the experiment description
+            exp_desc = get_description(motif)
+            if exp_desc is not None:
+                exp_desc = exp_desc.upper()
+                ion_mode = 'POSITIVE' if 'POS' in exp_desc else 'NEGATIVE' if 'NEG' in exp_desc else 'Unknown'
+            else:
+                ion_mode = 'Unknown'
 
-        # the probabilities * scale_fact are set to be the absolute intensities,
-        # while the relative intensities are scaled from 1 ... 999 (from the manual)??
-        scale_fact = 1000
-        rel_range = [1, 999]
-        abs_intensities = peaks[:, 1]
-        min_prob = np.min(abs_intensities)
-        max_prob = np.max(abs_intensities)
-        rel_intensities = interp(abs_intensities, [min_prob, max_prob], rel_range)
-        abs_intensities *= scale_fact  # do this only after computing the rel. intensities
-        peaks[:, 2] = rel_intensities
-        peaks[:, 1] = abs_intensities
+        # select the fragment/loss features to include
+        peak_list = []
+        for m2m in motif_features:
+            tokens = m2m.feature.name.split('_')
+            f_type = tokens[0]  # 'loss' or 'fragment'
+            mz = float(tokens[1])
+            if f_type == 'loss':  # represent neutral loss as negative m/z value
+                mz = -mz
+            abs_intensity = m2m.probability
+            rel_intensity = m2m.probability
+            row = (mz, abs_intensity, rel_intensity)
+            peak_list.append(row)
 
-        # filter features by the minimum relative intensity specified by the user
-        pos = np.where(rel_intensities > min_rel_int)[0]
-        peaks = peaks[pos, :]
-        hash = get_splash(peaks)
+        # this is [m/z, absolute intensity, relative intensity]
+        peaks = np.array(peak_list)
 
-        ch_name = motif.get_short_annotation()
-        if ch_name is None:
-            ch_name = ''
-        comments = data.get('comments', '').splitlines()
-        ch_exact_mass = data.get('ch_exact_mass', '0')
-        ch_links = data.get('ch_link', '').splitlines()
+        try:
 
+            # sort by first (m/z) column
+            mz = peaks[:, 0]
+            peaks = peaks[mz.argsort()]
+
+            # the probabilities * scale_fact are set to be the absolute intensities,
+            # while the relative intensities are scaled from 1 ... 999 (from the manual)??
+            scale_fact = 1000
+            rel_range = [1, 999]
+            abs_intensities = peaks[:, 1]
+            min_prob = np.min(abs_intensities)
+            max_prob = np.max(abs_intensities)
+            rel_intensities = interp(abs_intensities, [min_prob, max_prob], rel_range)
+            abs_intensities *= scale_fact  # do this only after computing the rel. intensities
+            peaks[:, 2] = rel_intensities
+            peaks[:, 1] = abs_intensities
+
+            # filter features by the minimum relative intensity specified by the user
+            pos = np.where(rel_intensities > min_rel_int)[0]
+            peaks = peaks[pos, :]
+            hash = get_splash(peaks)
+
+            ch_name = motif.get_short_annotation()
+            if ch_name is None:
+                ch_name = ''
+            comments = data.get('comments', '').splitlines()
+            ch_exact_mass = data.get('ch_exact_mass', '0')
+            ch_links = data.get('ch_link', '').splitlines()
+
+            massbank_dict = {}
+            massbank_dict['accession'] = accession
+            massbank_dict['record_date'] = datetime.date.today().strftime('%Y.%m.%d')
+            massbank_dict['authors'] = data.get('authors', constants.MASSBANK_AUTHORS)
+            massbank_dict['license'] = constants.MASSBANK_LICENSE
+            massbank_dict['copyright'] = constants.MASSBANK_COPYRIGHT
+            massbank_dict['publication'] = constants.MASSBANK_PUBLICATION
+            massbank_dict['ch_name'] = ch_name
+            massbank_dict['ac_instrument'] = data.get('ac_instrument', constants.MASSBANK_AC_INSTRUMENT)
+            massbank_dict['ac_instrument_type'] = data.get('ac_instrument_type', constants.MASSBANK_AC_INSTRUMENT_TYPE)
+            massbank_dict['ms_type'] = ms_type
+            massbank_dict['comments'] = comments
+            massbank_dict['ch_link'] = ch_links
+            massbank_dict['ac_mass_spectrometry_ion_mode'] = ion_mode
+            massbank_dict['ac_ionisation'] = constants.MASSBANK_IONISATION
+            massbank_dict['ms_data_processing'] = constants.MASSBANK_MS_DATA_PROCESSING
+            massbank_dict['hash'] = hash
+            massbank_dict['peaks'] = peaks
+
+            tokens = [
+                massbank_dict['ch_name'],
+                massbank_dict['ac_instrument_type'],
+                massbank_dict['ms_type']
+            ]
+            massbank_dict['record_title'] = ';'.join(tokens)
+            massbank_dict['ch_compound_class'] = data.get('ch_compound_class', '')
+            massbank_dict['ch_formula'] = data.get('ch_formula', 'NA')
+            massbank_dict['ch_smiles'] = data.get('ch_smiles', 'NA')
+            massbank_dict['ch_iupac'] = data.get('ch_iupac', 'NA')
+            massbank_dict['ch_exact_mass'] = data.get('ch_exact_mass', 'NA')
+            massbank_dict['min_rel_int'] = min_rel_int
+
+        except IndexError:
+            massbank_dict = {}
+    except:
         massbank_dict = {}
-        massbank_dict['accession'] = accession
-        massbank_dict['record_date'] = datetime.date.today().strftime('%Y.%m.%d')
-        massbank_dict['authors'] = data.get('authors', constants.MASSBANK_AUTHORS)
-        massbank_dict['license'] = constants.MASSBANK_LICENSE
-        massbank_dict['copyright'] = constants.MASSBANK_COPYRIGHT
-        massbank_dict['publication'] = constants.MASSBANK_PUBLICATION
-        massbank_dict['ch_name'] = ch_name
-        massbank_dict['ac_instrument'] = data.get('ac_instrument', constants.MASSBANK_AC_INSTRUMENT)
-        massbank_dict['ac_instrument_type'] = data.get('ac_instrument_type', constants.MASSBANK_AC_INSTRUMENT_TYPE)
-        massbank_dict['ms_type'] = ms_type
-        massbank_dict['comments'] = comments
-        massbank_dict['ch_link'] = ch_links
-        massbank_dict['ac_mass_spectrometry_ion_mode'] = ion_mode
-        massbank_dict['ac_ionisation'] = constants.MASSBANK_IONISATION
-        massbank_dict['ms_data_processing'] = constants.MASSBANK_MS_DATA_PROCESSING
-        massbank_dict['hash'] = hash
-        massbank_dict['peaks'] = peaks
-
-        tokens = [
-            massbank_dict['ch_name'],
-            massbank_dict['ac_instrument_type'],
-            massbank_dict['ms_type']
-        ]
-        massbank_dict['record_title'] = ';'.join(tokens)
-        massbank_dict['ch_compound_class'] = data.get('ch_compound_class', '')
-        massbank_dict['ch_formula'] = data.get('ch_formula', 'NA')
-        massbank_dict['ch_smiles'] = data.get('ch_smiles', 'NA')
-        massbank_dict['ch_iupac'] = data.get('ch_iupac', 'NA')
-        massbank_dict['ch_exact_mass'] = data.get('ch_exact_mass', 'NA')
-        massbank_dict['min_rel_int'] = min_rel_int
-
-    except IndexError:
-        massbank_dict = {}
-
     return massbank_dict
 
 

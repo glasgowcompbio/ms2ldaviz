@@ -1,5 +1,5 @@
 import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings_simon")
 
 import django
 django.setup()
@@ -10,6 +10,7 @@ from load_dict_functions import *
 if __name__ == '__main__':
 
     filename = sys.argv[1]
+    featureset = sys.argv[2]
     verbose = False
     if 'verbose' in sys.argv:
         verbose = True
@@ -25,4 +26,4 @@ if __name__ == '__main__':
     experiment.status = 'loading'
     experiment.save()
 
-    load_dict(lda_dict,experiment,verbose)
+    load_dict(lda_dict,experiment,verbose,featureset)
