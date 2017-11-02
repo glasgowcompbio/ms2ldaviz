@@ -16,7 +16,7 @@ if __name__ == '__main__':
 		sys.exit(0)
 
 	experiment_list = ['Beer6_POS_IPA_MS1_comparisons',
-	    'Urine37_POS_StandardLDA_200Mass2Motifs_MS1peaklist_MS1duplicatefilter',
+	    'Urine37_POS_StandardLDA_300Mass2Motifs_MS1peaklist_MS1duplicatefilter',
 	    'Beer3_POS_Decomposition_MassBankGNPScombinedset_MS1peaklist_MS1duplicatefilter',
 	    'massbank_binned_005',
 	    'gnps_binned_005',
