@@ -25,10 +25,10 @@ if __name__ == '__main__':
 	experiments = []
 	for ename in experiment_list:
 		try:
-	 	e = Experiment.objects.get(name = ename)
-	 	experiments.append(e)
-	 except:
-	 	print "No such experiment: {}".format(ename)
+			e = Experiment.objects.get(name = ename)
+			experiments.append(e)
+		except:
+			print "No such experiment: {}".format(ename)
 
 	for e in experiments:
 		ue = UserExperiment.objects.filter(user = user,experiment = e)
