@@ -33,4 +33,7 @@ if __name__ == '__main__':
 	for e in experiments:
 		ue = UserExperiment.objects.filter(user = user,experiment = e)
 		if len(ue) == 0:
-			UserExperiment.objects.create(user = user,experiment = e,permission = 'view')
+			if e.name.startswith('Beer6'):
+				UserExperiment.objects.create(user = user,experiment = e,permission = 'edit')
+			else:	
+				UserExperiment.objects.create(user = user,experiment = e,permission = 'view')
