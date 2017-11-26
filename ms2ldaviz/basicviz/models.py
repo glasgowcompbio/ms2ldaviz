@@ -207,6 +207,13 @@ class Document(models.Model):
         else:
             return None
 
+    def get_user_cols(self):
+        md = jsonpickle.decode(self.metadata)
+        if 'user_cols' in md:
+            return md['user_cols']
+        else:
+            return None
+
     rt = property(get_rt)
     logfc = property(get_logfc)
     mass = property(get_mass)
@@ -215,6 +222,7 @@ class Document(models.Model):
     annotation = property(get_annotation)
     display_name = property(get_display_name)
     image_url = property(get_image_url)
+    user_cols = property(get_user_cols)
 
     def __unicode__(self):
         return self.name
