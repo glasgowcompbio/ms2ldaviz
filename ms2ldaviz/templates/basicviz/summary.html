@@ -49,11 +49,23 @@
                 </p>
                 <table class="table" id="parenttable">
                 <thead>
-                <tr><th>Name</th><th>Precursor Mass</th><th>link</th><th>Display Name</th></tr>
+                <tr>
+                    {% if documents.0.user_cols %}
+                        {% for user_col_name, user_col_value in documents.0.user_cols %}
+                            <th>{{ user_col_name }}</th>
+                        {% endfor %}
+                    {% endif %}
+                    <th>Name</th><th>Precursor Mass</th><th>link</th><th>Display Name</th></tr>
                 </thead>
                 <tbody>
                 {% for doc in documents %}
-                    <tr><td><a href="/basicviz/show_doc/{{doc.id}}">{{doc.name}}</a></td>
+                    <tr>
+                        {% if documents.0.user_cols %}
+                            {% for user_col_name, user_col_value in doc.user_cols %}
+                                <td>{{ user_col_value }}</td>
+                            {% endfor %}
+                        {% endif %}
+                        <td><a href="/basicviz/show_doc/{{doc.id}}">{{doc.name}}</a></td>
                         <td>{{doc.mass}}</td>
                         <td>{% if doc.csid %}
                             <a href="http://www.chemspider.com/Chemical-Structure.{{doc.csid}}.html" target=new>View on ChemSpider</a>
@@ -128,11 +140,23 @@
                 </p>
                 <table class='table' id = 'docmotiftable'>
                     <thead>
-                        <tr><th>Document</th><th>Motif</th><th>Probability</th><th>Overlap Score</th><th>Precursor Mass</th><th>Retention Time</th><th>Document Annotation</th></tr>
+                        <tr>
+                            {% if all_docs_motifs.0.document.user_cols %}
+                                {% for user_col_name, user_col_value in all_docs_motifs.0.document.user_cols %}
+                                    <th>{{ user_col_name }}</th>
+                                {% endfor %}
+                            {% endif %}
+                            <th>Document</th><th>Motif</th><th>Probability</th><th>Overlap Score</th><th>Precursor Mass</th><th>Retention Time</th><th>Document Annotation</th>
+                        </tr>
                     </thead>
                     <tbody>
                         {% for dm2m in all_docs_motifs %}
                             <tr>
+                                {% if all_docs_motifs.0.document.user_cols %}
+                                    {% for user_col_name, user_col_value in dm2m.document.user_cols %}
+                                        <td>{{ user_col_value }}</td>
+                                    {% endfor %}
+                                {% endif %}
                                 <td>
                                     <a href="/basicviz/show_doc/{{dm2m.document.id}}">{{ dm2m.document.name }}</a>
                                 </td>
