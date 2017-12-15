@@ -309,7 +309,7 @@ function plot_graph(vo_id,random_seed,show_ms1) {
                 graph.nodes.forEach(function(o) {
                     if (isConnected(d, o)) {
                         if ( (isTopicNode(d) && !isTopicNode(o)) || (!isTopicNode(d) && isTopicNode(o)) ) {
-                            target = document.getElementById(o.name + '_label');
+                            target = document.getElementById(o.id + '_label');
                             // target.style.display = 'inline';
                         }
                     }
@@ -332,12 +332,12 @@ function plot_graph(vo_id,random_seed,show_ms1) {
         }
 
         function showToolTip(d) {
-            target = document.getElementById(d.name + '_label');
+            target = document.getElementById(d.id + '_label');
             target.style.display = 'inline';
         }
 
         function hideToolTip(d) {
-            target = document.getElementById(d.name + '_label');
+            target = document.getElementById(d.id + '_label');
             target.style.display = 'none';
         }
 
@@ -370,7 +370,11 @@ function plot_graph(vo_id,random_seed,show_ms1) {
                 .attr('class', 'link')
                 .style("stroke-width", function(d) { return d.weight; });
 
-        var node = node.data(graph.nodes)
+        // solve issue # 115: (hover issues for molecules)
+        // sort nodes in graph based on "group" in descending to force circles under squares
+        // 'group' == 1 is molecuels (square)
+        // 'group' == 2 is motifs (circle)
+        var node = node.data(graph.nodes.sort(function(a, b) { return b.group - a.group; }))
             .enter().append('g')
                 .call(drag)
                 .on('dblclick', selectNode)
@@ -383,14 +387,14 @@ function plot_graph(vo_id,random_seed,show_ms1) {
                 .size(setNodeSize)
                 .type(function(d) { return d.type; })
             )
-            .attr('id', function(d) { return d.name + '_circle'; })
+            .attr('id', function(d) { return d['id'] + '_circle'; })
             .style('fill', setNodeColour);
 
         var text = node.append('text')
             .attr('class', 'node-label')
             .attr('dx', 10)
             .attr('dy', '.35em')
-            .attr('id', function(d) { return d.name + '_label'; })
+            .attr('id', function(d) { return d.id + '_label'; })
             .style('display', 'none') // initially all node labels are invisible
             .text(function(d) { return '\u2002' + d.name; });
 
@@ -632,7 +636,7 @@ function plot_decomposition_graph(decomposition_id,vo_id,random_seed) {
                 graph.nodes.forEach(function(o) {
                     if (isConnected(d, o)) {
                         if ( (isTopicNode(d) && !isTopicNode(o)) || (!isTopicNode(d) && isTopicNode(o)) ) {
-                            target = document.getElementById(o.name + '_label');
+                            target = document.getElementById(o.id + '_label');
                             target.style.display = 'inline';
                         }
                     }
@@ -655,12 +659,12 @@ function plot_decomposition_graph(decomposition_id,vo_id,random_seed) {
         }
 
         function showToolTip(d) {
-            target = document.getElementById(d.name + '_label');
+            target = document.getElementById(d.id + '_label');
             target.style.display = 'inline';
         }
 
         function hideToolTip(d) {
-            target = document.getElementById(d.name + '_label');
+            target = document.getElementById(d.id + '_label');
             target.style.display = 'none';
         }
 
@@ -706,14 +710,14 @@ function plot_decomposition_graph(decomposition_id,vo_id,random_seed) {
                 .size(setNodeSize)
                 .type(function(d) { return d.type; })
             )
-            .attr('id', function(d) { return d.name + '_circle'; })
+            .attr('id', function(d) { return d.id + '_circle'; })
             .style('fill', setNodeColour);
 
         var text = node.append('text')
             .attr('class', 'node-label')
             .attr('dx', 10)
             .attr('dy', '.35em')
-            .attr('id', function(d) { return d.name + '_label'; })
+            .attr('id', function(d) { return d.id + '_label'; })
             .style('display', 'none') // initially all node labels are invisible
             .text(function(d) { return '\u2002' + d.name; });
 
