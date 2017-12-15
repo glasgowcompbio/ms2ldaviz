@@ -1446,7 +1446,7 @@ class MakeBinnedFeatures(MakeFeatures):
         while min_word < max_mz:
             up_edge = min(max_mz,max_word)
             word_mean = 0.5*(min_word + up_edge)
-            new_word = '{}_{}'.format(prefix,word_mean)
+            new_word = '{}_{:.4f}'.format(prefix,word_mean) # 4dp
             word_list.append(new_word)
             self.word_mz_range[new_word] = (min_word,up_edge)
             min_word += self.bin_width
