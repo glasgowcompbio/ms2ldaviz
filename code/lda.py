@@ -201,7 +201,7 @@ class VariationalLDA(object):
 		else:
 			self.n_fixed_topics = 0
 
-		
+
 		self.alpha = alpha
 		#  If alpha is a single value, make it into a vector
 		if type(self.alpha) == int or type(self.alpha) == float:
@@ -222,8 +222,8 @@ class VariationalLDA(object):
 				self.topic_metadata[topic_name] = fixed_topics_metadata[topic_name]
 				self.topic_metadata[topic_name]['type'] = 'fixed'
 				topic_pos += 1
-
-		for topic_pos in range(self.K-self.n_fixed_topics,self.K):
+		
+		for topic_pos in range(self.n_fixed_topics,self.K):
 			topic_name = 'motif_{}'.format(topic_pos)
 			self.topic_index[topic_name] = topic_pos
 			self.topic_metadata[topic_name] = {'name':topic_name,'type':'learnt'}
@@ -614,9 +614,13 @@ class VariationalLDA(object):
 
 		# Initialise the betas
 		if self.n_fixed_topics == 0:
-			self.beta_matrix = np.random.rand(self.K,self.n_words)	
+			# self.beta_matrix = np.random.rand(self.K,self.n_words)
+			self.beta_matrix = np.zeros((self.K,self.n_words),np.double)
+			for k in range(self.K):
+				self.beta_matrix[k,:] = np.random.dirichlet(self.eta*np.ones(self.n_words))	
 		else:
-			self.beta_matrix[self.n_fixed_topics:,] = np.random.rand(self.K - self.n_fixed_topics,self.n_words)
+			for k in range(self.n_fixed_topics,self.K):
+				self.beta_matrix[k,:] = np.random.dirichlet(self.eta*np.ones(self.n_words))
 		self.beta_matrix /= self.beta_matrix.sum(axis=1)[:,None]
 
 	# Function to return a dictionary with keys equal to documents and values equal to the probability
