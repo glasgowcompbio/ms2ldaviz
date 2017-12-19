@@ -248,3 +248,115 @@ def alpha_report(vlda):
 	ta = sorted(ta,key = lambda x: x[1],reverse = True)
 	for t,a in ta:
 		print t,vlda.topic_metadata[t].get('SHORT_ANNOTATION',None),a
+
+
+def decompose(vlda,corpus):
+	# decompose the documents in corpus
+	# CHECK THE INTENSITY NORMALISATION
+	K = vlda.K
+	phi = {}
+	gamma_mat = {}
+	n_done = 0
+	n_total = len(corpus)
+	p_in = {}
+	for doc,spectrum in corpus.items():
+
+		intensity_in = 0.0
+		intensity_out = 0.0
+		max_i = 0.0
+		for word in spectrum:
+			if spectrum[word] > max_i:
+				max_i = spectrum[word]
+			if word in vlda.word_index:
+				intensity_in += spectrum[word]
+			else:
+				intensity_out += spectrum[word]
+		p_in[doc] = (1.0*intensity_in)/(intensity_in + intensity_out)
+		# print max_i
+
+		print "Decomposing document {} ({}/{})".format(doc,n_done,n_total)
+		phi[doc] = {}
+		# gamma_mat[doc] = np.zeros(K) + vlda.alpha
+		gamma_mat[doc] = np.ones(K)
+		for it in range(20):
+			# temp_gamma = np.zeros(K) + vlda.alpha
+			temp_gamma = np.ones(K)
+			for word in spectrum:
+				if word in vlda.word_index:
+					w = vlda.word_index[word] 
+					log_phi_matrix = np.log(vlda.beta_matrix[:,w]) + psi(gamma_mat[doc])
+					log_phi_matrix = np.exp(log_phi_matrix - log_phi_matrix.max())
+					phi[doc][word] = log_phi_matrix/log_phi_matrix.sum()
+					temp_gamma += phi[doc][word]*spectrum[word]
+			gamma_mat[doc]  = temp_gamma
+		n_done += 1
+	return gamma_mat,phi,p_in
+
+
+def decompose_overlap(vlda,decomp_phi):
+	# computes the overlap score for a decomposition phi
+	o = {}
+	K = vlda.K
+	for doc in decomp_phi:
+		o[doc] = {}
+		os = np.zeros(K)
+		for word,phi_vec in decomp_phi[doc].items():
+			word_pos = vlda.word_index[word]
+			os += phi_vec*vlda.beta_matrix[:,word_pos]
+
+		for topic,pos in vlda.topic_index.items():
+			o[doc][topic] = os[pos]
+	return o
+
+def decompose_from_dict(vlda_dict,corpus):
+	# step 1, get the betas into a matrix
+	K = vlda_dict['K']
+	skeleton = VariationalLDA({},K)
+	skeleton.word_index = vlda_dict['word_index']
+	skeleton.topic_index = vlda_dict['topic_index']
+	n_words = len(skeleton.word_index)
+	skeleton.beta_matrix = np.zeros((K,n_words),np.double) + 1e-6
+	beta_dict = vlda_dict['beta']
+	for topic in beta_dict:
+		topic_pos = skeleton.topic_index[topic]
+		for word,prob in beta_dict[topic].items():
+			word_pos = skeleton.word_index[word]
+			skeleton.beta_matrix[topic_pos,word_pos] = prob
+	# normalise
+	skeleton.beta_matrix /= skeleton.beta_matrix.sum(axis=1)[:,None]
+	g,phi,p_in = decompose(skeleton,corpus)
+
+	return g,phi,p_in,skeleton
+
+def doc_feature_counts(vlda_dict,p_thresh = 0.01,o_thresh = 0.3):
+	theta = vlda_dict['theta']
+	decomp_gamma,decomp_phi,decomp_p_in,skeleton = decompose_from_dict(vlda_dict,vlda_dict['corpus'])
+	overlap_scores = decompose_overlap(skeleton,vlda_dict['corpus'])
+	phi_thresh = 0.5
+	motif_doc_counts = {}
+	motif_word_counts = {}
+	for doc in theta:
+		for motif in theta[doc]:
+			if theta[doc][motif] >= p_thresh and overlap_scores[doc][motif] >= o_thresh:
+				if not motif in motif_doc_counts:
+					motif_doc_counts[motif] = 0
+				motif_doc_counts[motif] += 1
+				for word,phi_vec in decomp_phi[doc].items():
+					motif_pos = vlda_dict['topic_index'][motif]
+					if phi_vec[motif_pos] >= phi_thresh:
+						if not motif in motif_word_counts:
+							motif_word_counts[motif] = {}
+						if not word in motif_word_counts[motif]:
+							motif_word_counts[motif][word] = 0
+						motif_word_counts[motif][word] += 1
+	word_total_counts = {}
+	for doc,spectrum in vlda_dict['corpus'].items():
+		for word,intensity in spectrum.items():
+			if not word in word_total_counts:
+				word_total_counts[word] = 0
+			word_total_counts[word] += 1
+	return motif_doc_counts,motif_word_counts,word_total_counts
+
+
+
+
