@@ -241,7 +241,7 @@ def find_standards_in_dict(standards_file,lda_dict=None,lda_dict_file=None,mode=
 	return lda_dict
 
 
-def alpha_report(vlda,overlap_scores = None):
+def alpha_report(vlda,overlap_scores = None,overlap_thresh = 0.3):
 	ta = []
 	for topic,ti in vlda.topic_index.items():
 		ta.append((topic,vlda.alpha[ti]))
@@ -251,7 +251,7 @@ def alpha_report(vlda,overlap_scores = None):
 		if overlap_scores:
 			for doc in overlap_scores:
 				if t in overlap_scores[doc]:
-					if overlap_scores[doc][t]>=0.3:
+					if overlap_scores[doc][t]>=overlap_thresh:
 						to.append((doc,overlap_scores[doc][t]))
 		print t,vlda.topic_metadata[t].get('SHORT_ANNOTATION',None),a
 		to = sorted(to,key = lambda x: x[1],reverse = True)
@@ -381,3 +381,29 @@ def compute_overlap_scores(vlda):
             overlap_scores[doc][motif] = os[m_pos]
     return overlap_scores
 
+def write_csv(vlda,overlap_scores,filename,metadata,p_thresh=0.01,o_thresh=0.3):
+    import csv
+    probs = vlda.get_expect_theta()
+    motif_dict = {}
+    with open(filename,'w') as f:
+        writer = csv.writer(f)
+        heads = ['Document','Motif','Probability','Overlap Score','Precursor Mass','Retention Time','Document Annotation']
+        writer.writerow(heads)
+        all_rows = []
+        for doc,doc_pos in vlda.doc_index.items():
+            for motif,motif_pos in vlda.topic_index.items():
+                if probs[doc_pos,motif_pos] >= p_thresh and overlap_scores[doc][motif] >= o_thresh:
+                    new_row = []
+                    new_row.append(doc)
+                    new_row.append(motif)
+                    new_row.append(probs[doc_pos,motif_pos])
+                    new_row.append(overlap_scores[doc][motif])
+                    new_row.append(metadata[doc]['parentmass'])
+                    new_row.append("None")
+                    new_row.append(metadata[doc]['featid'])
+                    all_rows.append(new_row)
+                    motif_dict[motif] = True
+        all_rows = sorted(all_rows,key = lambda x:x[0])
+        for new_row in all_rows:
+            writer.writerow(new_row)
+    return motif_dict
