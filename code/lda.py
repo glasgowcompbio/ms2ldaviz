@@ -177,8 +177,7 @@ class LDA(object):
  # In single file it is created internally
 class VariationalLDA(object):
 	def __init__(self,corpus=None,K = 20,eta=0.1,
-		alpha=1,update_alpha=True,word_index=None,normalise = -1,
-		topic_index = None,topic_metadata = None):
+		alpha=1,update_alpha=True,word_index=None,normalise = -1,fixed_topics = None,fixed_topics_metadata = None):
 		self.corpus = corpus
 		self.word_index = word_index
 		self.normalise = normalise
@@ -195,6 +194,14 @@ class VariationalLDA(object):
 				self.normalise_intensities()
 		
 		self.K = K
+
+		if fixed_topics:
+			self.n_fixed_topics = len(fixed_topics)
+			self.K += self.n_fixed_topics
+		else:
+			self.n_fixed_topics = 0
+
+		
 		self.alpha = alpha
 		#  If alpha is a single value, make it into a vector
 		if type(self.alpha) == int or type(self.alpha) == float:
@@ -202,19 +209,48 @@ class VariationalLDA(object):
 		self.eta = eta # Smoothing parameter for beta
 		self.update_alpha = update_alpha
 		self.doc_metadata = None
-		self.n_fixed_topics = 0
+		
 
-		self.topic_index = topic_index
-		self.topic_metadata = topic_metadata
-		if self.topic_index == None:
-			self.topic_index = {}
-			for topic_pos in range(self.K):
-				topic_name = 'motif_{}'.format(topic_pos)
+		# self.topic_index = topic_index
+		# self.topic_metadata = topic_metadata
+		self.topic_index = {}
+		self.topic_metadata = {}
+		topic_pos = 0
+		if fixed_topics:
+			for topic_name in fixed_topics:
 				self.topic_index[topic_name] = topic_pos
-		if self.topic_metadata == None:
-			self.topic_metadata = {}
-			for topic in self.topic_index:
-				self.topic_metadata[topic] = {'name':topic,'type':'learnt'}
+				self.topic_metadata[topic_name] = fixed_topics_metadata[topic_name]
+				self.topic_metadata[topic_name]['type'] = 'fixed'
+				topic_pos += 1
+
+		for topic_pos in range(self.K-self.n_fixed_topics,self.K):
+			topic_name = 'motif_{}'.format(topic_pos)
+			self.topic_index[topic_name] = topic_pos
+			self.topic_metadata[topic_name] = {'name':topic_name,'type':'learnt'}
+
+		if fixed_topics:
+			self._add_exact_fixed_topics(fixed_topics)
+
+	def _add_exact_fixed_topics(self,fixed_topics):
+		# first add any missing words
+		word_pos = max(self.word_index.values())+1
+		for topic,spectrum in fixed_topics.items():
+			for word in spectrum:
+				if not word in self.word_index:
+					self.word_index[word] = word_pos
+					word_pos += 1
+		self.n_words = len(self.word_index)
+
+		# Now make the fixed rows of beta
+		self.beta_matrix = np.zeros((self.K,self.n_words),np.float) + SMALL_NUMBER
+		for topic,spectrum in fixed_topics.items():
+			topic_pos = self.topic_index[topic]
+			for word,intensity in spectrum.items():
+				word_pos = self.word_index[word]
+				self.beta_matrix[topic_pos,word_pos] = intensity
+			self.beta_matrix[topic_pos,:] /= self.beta_matrix[topic_pos,:].sum()
+
+
 
 	def add_fixed_topics_formulas(self,topics,prob_thresh = 0.5):
 		# Adds fixed topics by matching on chemical formulas

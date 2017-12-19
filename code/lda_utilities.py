@@ -239,3 +239,12 @@ def find_standards_in_dict(standards_file,lda_dict=None,lda_dict_file=None,mode=
 		print "Wrote annotated dictionary to {}".format(new_lda_file)
 
 	return lda_dict
+
+
+def alpha_report(vlda):
+	ta = []
+	for topic,ti in vlda.topic_index.items():
+		ta.append((topic,vlda.alpha[ti]))
+	ta = sorted(ta,key = lambda x: x[1],reverse = True)
+	for t,a in ta:
+		print t,vlda.topic_metadata[t].get('SHORT_ANNOTATION',None),a
