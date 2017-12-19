@@ -241,13 +241,22 @@ def find_standards_in_dict(standards_file,lda_dict=None,lda_dict_file=None,mode=
 	return lda_dict
 
 
-def alpha_report(vlda):
+def alpha_report(vlda,overlap_scores = None):
 	ta = []
 	for topic,ti in vlda.topic_index.items():
 		ta.append((topic,vlda.alpha[ti]))
 	ta = sorted(ta,key = lambda x: x[1],reverse = True)
 	for t,a in ta:
+		to = []
+		if overlap_scores:
+			for doc in overlap_scores:
+				if t in overlap_scores[doc]:
+					if overlap_scores[doc][t]>=0.3:
+						to.append((doc,overlap_scores[doc][t]))
 		print t,vlda.topic_metadata[t].get('SHORT_ANNOTATION',None),a
+		to = sorted(to,key = lambda x: x[1],reverse = True)
+		for t,o in to:
+			print '\t',t,o
 
 
 def decompose(vlda,corpus):
@@ -357,5 +366,18 @@ def doc_feature_counts(vlda_dict,p_thresh = 0.01,o_thresh = 0.3):
 			word_total_counts[word] += 1
 	return motif_doc_counts,motif_word_counts,word_total_counts
 
-
+def compute_overlap_scores(vlda):
+    import numpy as np
+    K = len(vlda.topic_index)
+    overlap_scores = {}
+    for doc in vlda.doc_index:
+        overlap_scores[doc] = {}
+        os = np.zeros(K)
+        pm = vlda.phi_matrix[doc]
+        for word,probs in pm.items():
+            word_index = vlda.word_index[word]
+            os += probs*vlda.beta_matrix[:,word_index]
+        for motif,m_pos in vlda.topic_index.items():
+            overlap_scores[doc][motif] = os[m_pos]
+    return overlap_scores
 
