@@ -1588,7 +1588,7 @@ def get_annotated_topics(request, experiment_id):
     output_metadata = []
     output_beta = []
     for motif in output_motifs:
-        output_metadata.append((motif.name, motif.annotation))
+        output_metadata.append((motif.name, motif.annotation, motif.short_annotation))
         betas = []
         beta_vals = motif.mass2motifinstance_set.all()
         for b in beta_vals:
