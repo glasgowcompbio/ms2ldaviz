@@ -83,7 +83,13 @@ class Loader(object):
         self.user_cols_names = []
         with open(self.peaklist,'r') as f:
             heads = f.readline()
-            tokens = heads.strip().split(',')
+
+            ## add this in case peaklist file is separated by ';'
+            self.separator = ','
+            if ';' in heads:
+                self.separator = ';'
+
+            tokens = heads.strip().split(self.separator)
             index = -1
             featid_index = None
             for i in range(len(tokens)):
@@ -104,7 +110,7 @@ class Loader(object):
             self.sample_names = tokens[index+2:]
 
             for line in f:
-                tokens_tuple= line.strip().split(',', index+2)
+                tokens_tuple= line.strip().split(self.separator, index+2)
                 featid = None
                 if featid_index != None:
                     featid = tokens_tuple[featid_index]
@@ -162,7 +168,7 @@ class Loader(object):
             featid = peak[0]
             peak_mz = peak[1]
             peak_rt = peak[2]
-            peak_intensity = None if ',' in peak[3] else float(peak[3])
+            peak_intensity = None if self.separator in peak[3] else float(peak[3])
             user_cols = peak[4]
 
             ## first check FeatureId matching
@@ -197,6 +203,13 @@ class Loader(object):
                     # Didn't find any
                     continue
 
+            ## Bug fix:
+            ## add these two lines to avoid the case that min_ms2_intensity has been set too high,
+            ## then most fragments will be removed, and we cannot find a hit for ms1, which will lead to bug:
+            ## AttributeError: 'NoneType' object has no attribute 'id'
+            if not old_ms1:
+                continue
+
             from time import time
             # make a new ms1 object
             new_ms1 = MS1(old_ms1.id,peak_mz,peak_rt,peak_intensity,old_ms1.file_name,old_ms1.scan_number)
@@ -206,10 +219,10 @@ class Loader(object):
             ## record user index columns before "mass" column in peaklist file into metadata
             new_metadata[new_ms1.name]['user_cols'] = zip(self.user_cols_names, user_cols)
 
-            if ',' in peak[3]:
+            if self.separator in peak[3]:
                 # print "process sample", str(peak[0]), str(peak[1])
                 tokens = []
-                for token in peak[3].split(','):
+                for token in peak[3].split(self.separator):
                     try:
                         token = float(token)
                     except:
@@ -217,7 +230,7 @@ class Loader(object):
                     if token <= 0:
                         token = None
                     tokens.append(token)
-                # tokens = [float(token) for token in peak[2].split(',')]
+                # tokens = [float(token) for token in peak[2].split(self.separator)]
                 new_metadata[new_ms1.name]['intensities'] = dict(zip(self.sample_names, tokens))
 
             # Delete the old one so it can't be picked again - removed this, maybe it's not a good idea?
