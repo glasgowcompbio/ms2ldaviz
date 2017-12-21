@@ -17,7 +17,8 @@ def process_ms1_analysis(new_analysis_id, params):
     group1 = params['group1']
     group2 = params['group2']
     experiment_id = params['experiment_id']
-    use_logarithm = new_analysis.use_logarithm
+    use_normalization = params['use_normalization']
+    # use_logarithm = new_analysis.use_logarithm
 
     group1_samples = [Sample.objects.filter(name=sample_name, experiment_id=experiment_id)[0] for sample_name in group1]
     group2_samples = [Sample.objects.filter(name=sample_name, experiment_id=experiment_id)[0] for sample_name in group2]
@@ -28,29 +29,46 @@ def process_ms1_analysis(new_analysis_id, params):
     mass2motifs = Mass2Motif.objects.filter(experiment_id=experiment_id)
     groups = group1 + group2
     samples = [Sample.objects.filter(name=sample_name, experiment_id=experiment_id)[0] for sample_name in groups]
+
+    document_intensity_dict = get_intensities(group1_samples, group2_samples, use_normalization)
+
     ## set up a dictionary to cache documents' intensities
-    document_intensities_dict = {}
+    document_intensitylist_dict = {}
     for mass2motif in mass2motifs:
         docm2ms = get_docm2m(mass2motif)
         # docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif)
         sub_mat = []
+        # for docm2m in docm2ms:
+        #     if docm2m.document in document_intensities_dict:
+        #         temp_list = document_intensities_dict[docm2m.document]
+        #         sub_mat.append(temp_list)
+        #     else:
+        #         temp_list = []
+        #         for sample in samples:
+        #             ## missing intensity will be set to 0.0
+        #             try:
+        #                 intensity = DocSampleIntensity.objects.filter(document=docm2m.document, sample=sample)[0].intensity
+        #             except:
+        #                 intensity = 0.0
+        #             temp_list.append(intensity)
+        #         ## documents with all missing values should still be omitted
+        #         if np.sum(temp_list) > 0.0:
+        #             document_intensities_dict[docm2m.document] = temp_list
+        #             sub_mat.append(temp_list)
+
+        for doc_id, sample_intensity_dict in document_intensity_dict.items():
+            intensity_list = []
+            for sample in samples:
+                if sample.id in sample_intensity_dict:
+                    intensity_list.append(sample_intensity_dict[sample.id])
+                else:
+                    intensity_list.append(0.0)
+            if np.sum(intensity_list) > 0.0:
+                document_intensitylist_dict[doc_id] = intensity_list
+
         for docm2m in docm2ms:
-            if docm2m.document in document_intensities_dict:
-                temp_list = document_intensities_dict[docm2m.document]
-                sub_mat.append(temp_list)
-            else:
-                temp_list = []
-                for sample in samples:
-                    ## missing intensity will be set to 0.0
-                    try:
-                        intensity = DocSampleIntensity.objects.filter(document=docm2m.document, sample=sample)[0].intensity
-                    except:
-                        intensity = 0.0
-                    temp_list.append(intensity)
-                ## documents with all missing values should still be omitted
-                if np.sum(temp_list) > 0.0:
-                    document_intensities_dict[docm2m.document] = temp_list
-                    sub_mat.append(temp_list)
+            if docm2m.document.id in document_intensitylist_dict:
+                sub_mat.append(document_intensitylist_dict[docm2m.document.id])
 
         sub_mat = np.array(sub_mat)
 
@@ -84,20 +102,18 @@ def process_ms1_analysis(new_analysis_id, params):
     ## do fold change and pValue here
     ## get all intensities in each group, then normalise
     ## 'None' intensities has not been stored in DB before, so no need to filter here
-    normalised_intensities = get_normalised_intensities(group1_samples, group2_samples, use_logarithm)
-
     group1_ids = [s.id for s in group1_samples]
     group2_ids = [s.id for s in group2_samples]
 
     for document in documents:
-        if document.id not in normalised_intensities:
+        if document.id not in document_intensity_dict:
             fold = 1
             pValue = None
             AnalysisResult.objects.get_or_create(analysis=new_analysis, document=document, foldChange=fold, pValue=pValue)
             continue
 
         ## parse the dict, get intensity list for group1 and group2
-        sample_intensity_dict = normalised_intensities[document.id]
+        sample_intensity_dict = document_intensity_dict[document.id]
         group1_intensities, group2_intensities = [], []
         for k,v in sample_intensity_dict.items():
             if k in group1_ids:
@@ -144,7 +160,8 @@ def process_ms1_analysis_decomposition(new_analysis_id, params):
     decomposition_id = params['decomposition_id']
     decomposition = Decomposition.objects.get(id=decomposition_id)
     experiment_id = Decomposition.objects.get(id=decomposition_id).experiment_id
-    use_logarithm = new_analysis.use_logarithm
+    use_normalization = params['use_normalization']
+    # use_logarithm = new_analysis.use_logarithm
 
     group1_samples = [Sample.objects.filter(name=sample_name, experiment_id=experiment_id)[0] for sample_name in group1]
     group2_samples = [Sample.objects.filter(name=sample_name, experiment_id=experiment_id)[0] for sample_name in group2]
@@ -160,28 +177,44 @@ def process_ms1_analysis_decomposition(new_analysis_id, params):
     # mass2motifs = Mass2Motif.objects.filter(experiment_id=experiment_id)
     groups = group1 + group2
     samples = [Sample.objects.filter(name=sample_name, experiment_id=experiment_id)[0] for sample_name in groups]
+
+    document_intensity_dict = get_intensities(group1_samples, group2_samples, use_normalization)
+
     ## set up a dictionary to cache documents' intensities
-    document_intensities_dict = {}
+    document_intensitylist_dict = {}
     for mass2motif in mass2motifs:
         docm2ms = get_docglobalm2m(mass2motif, decomposition)
         sub_mat = []
+        # for docm2m in docm2ms:
+        #     if docm2m.document in document_intensities_dict:
+        #         temp_list = document_intensities_dict[docm2m.document]
+        #         sub_mat.append(temp_list)
+        #     else:
+        #         temp_list = []
+        #         for sample in samples:
+        #             ## missing intensity will be set to 0.0
+        #             try:
+        #                 intensity = DocSampleIntensity.objects.filter(document=docm2m.document, sample=sample)[0].intensity
+        #             except:
+        #                 intensity = 0.0
+        #             temp_list.append(intensity)
+        #         ## documents with all missing values should still be omitted
+        #         if np.sum(temp_list) > 0.0:
+        #             document_intensities_dict[docm2m.document] = temp_list
+        #             sub_mat.append(temp_list)
+        for doc_id, sample_intensity_dict in document_intensity_dict.items():
+            intensity_list = []
+            for sample in samples:
+                if sample.id in sample_intensity_dict:
+                    intensity_list.append(sample_intensity_dict[sample.id])
+                else:
+                    intensity_list.append(0.0)
+            if np.sum(intensity_list) > 0.0:
+                document_intensitylist_dict[doc_id] = intensity_list
+
         for docm2m in docm2ms:
-            if docm2m.document in document_intensities_dict:
-                temp_list = document_intensities_dict[docm2m.document]
-                sub_mat.append(temp_list)
-            else:
-                temp_list = []
-                for sample in samples:
-                    ## missing intensity will be set to 0.0
-                    try:
-                        intensity = DocSampleIntensity.objects.filter(document=docm2m.document, sample=sample)[0].intensity
-                    except:
-                        intensity = 0.0
-                    temp_list.append(intensity)
-                ## documents with all missing values should still be omitted
-                if np.sum(temp_list) > 0.0:
-                    document_intensities_dict[docm2m.document] = temp_list
-                    sub_mat.append(temp_list)
+            if docm2m.document.id in document_intensitylist_dict:
+                sub_mat.append(document_intensitylist_dict[docm2m.document.id])
 
         sub_mat = np.array(sub_mat)
 
@@ -216,20 +249,18 @@ def process_ms1_analysis_decomposition(new_analysis_id, params):
     ## since the way we get Sample and DocSampleIntensity is identical to LDA
     ## the only difference here is the *new_analysis* object if from DecompositionAnalysis,
     ## so the result for *fold change* and *pValue* should be stored in DecompositionAnalysisResult
-    normalised_intensities = get_normalised_intensities(group1_samples, group2_samples, use_logarithm)
-
     group1_ids = [s.id for s in group1_samples]
     group2_ids = [s.id for s in group2_samples]
 
     for document in documents:
-        if document.id not in normalised_intensities:
+        if document.id not in document_intensity_dict:
             fold = 1
             pValue = None
             DecompositionAnalysisResult.objects.get_or_create(analysis=new_analysis, document=document, foldChange=fold, pValue=pValue)
             continue
 
         ## parse the dict, get intensity list for group1 and group2
-        sample_intensity_dict = normalised_intensities[document.id]
+        sample_intensity_dict = document_intensity_dict[document.id]
         group1_intensities, group2_intensities = [], []
         for k,v in sample_intensity_dict.items():
             if k in group1_ids:
@@ -265,41 +296,43 @@ def process_ms1_analysis_decomposition(new_analysis_id, params):
     new_analysis.save()
 
 
-def get_group_intensities(group_samples, document, use_logarithm='N'):
-    group_intensities = []
-    for sample in group_samples:
-        query_res = DocSampleIntensity.objects.filter(sample=sample, document=document)
-        if query_res:
-            if use_logarithm == 'Y':
-                group_intensities.append(np.log(query_res[0].intensity))
-            elif use_logarithm == 'N':
-                group_intensities.append(query_res[0].intensity)
-    return group_intensities
+# def get_group_intensities(group_samples, document, use_logarithm='N'):
+#     group_intensities = []
+#     for sample in group_samples:
+#         query_res = DocSampleIntensity.objects.filter(sample=sample, document=document)
+#         if query_res:
+#             if use_logarithm == 'Y':
+#                 group_intensities.append(np.log(query_res[0].intensity))
+#             elif use_logarithm == 'N':
+#                 group_intensities.append(query_res[0].intensity)
+#     return group_intensities
 
-def get_normalised_intensities(group1_samples, group2_samples, use_logarithm='N'):
+def get_intensities(group1_samples, group2_samples, use_normalization='N'):
     group_intensities = []
     all_intensities = DocSampleIntensity.objects.filter(sample__in = group1_samples + group2_samples)
     all_intensities_list = [model_to_dict(doc_sample_intensity) for doc_sample_intensity in all_intensities]
-    if use_logarithm == 'Y':
+    # if use_logarithm == 'Y':
+    #     for i in range(len(all_intensities_list)):
+    #         all_intensities_list[i]['intensity'] = np.log(all_intensities_list[i]['intensity'])
+
+    # do normalization if user set this choice
+    if use_normalization == 'Y':
+        total_intensity_dict = {}
+        for doc_sample_intensity in all_intensities_list:
+            sample = doc_sample_intensity['sample']
+            intensity = doc_sample_intensity['intensity']
+            total_intensity_dict.setdefault(sample, 0)
+            total_intensity_dict[sample] += intensity
+
+        avg_total_intensity = np.mean(total_intensity_dict.values())
+
         for i in range(len(all_intensities_list)):
-            all_intensities_list[i]['intensity'] = np.log(all_intensities_list[i]['intensity'])
-
-    total_intensity_dict = {}
-    for doc_sample_intensity in all_intensities_list:
-        sample = doc_sample_intensity['sample']
-        intensity = doc_sample_intensity['intensity']
-        total_intensity_dict.setdefault(sample, 0)
-        total_intensity_dict[sample] += intensity
-
-    avg_total_intensity = np.mean(total_intensity_dict.values())
-
-    for i in range(len(all_intensities_list)):
-        sample = all_intensities_list[i]['sample']
-        intensity = all_intensities_list[i]['intensity']
-        total_intensity = total_intensity_dict[sample]
-        ## do normalisation before MS1 analysis
-        intensity = intensity / total_intensity * avg_total_intensity
-        all_intensities_list[i]['intensity'] = intensity
+            sample = all_intensities_list[i]['sample']
+            intensity = all_intensities_list[i]['intensity']
+            total_intensity = total_intensity_dict[sample]
+            ## do normalisation before MS1 analysis
+            intensity = intensity / total_intensity * avg_total_intensity
+            all_intensities_list[i]['intensity'] = intensity
 
     ## contruction structure::
     ## dict: key: document, value: { key: sample, value: intensity }

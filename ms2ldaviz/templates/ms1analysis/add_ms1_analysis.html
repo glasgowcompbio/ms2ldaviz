@@ -86,6 +86,10 @@
         <p>{{analysis_form.description.label}} {% if analysis_form.description.field.required %} * {% endif %} </p>
         <p>{{ analysis_form.description }}</p>
 
+        <p>{{ analysis_form.use_normalization.errors }}</p>
+        <p>{{analysis_form.use_normalization.label}} {% if analysis_form.use_normalization.field.required %} * {% endif %} </p>
+        <p>{{ analysis_form.use_normalization }}</p>
+
         <p>Choose sample names for Group1(LEFT) and Group2(RIGHT) *</p>
 
         <div class="selector">
