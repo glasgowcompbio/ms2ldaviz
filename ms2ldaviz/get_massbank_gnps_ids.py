@@ -18,7 +18,7 @@ def get_doc_ids(experiment):
 	return doc_dict
 
 
-def get_doc_ids(experiment):
+def get_motif_ids(experiment):
 	docs = Mass2Motif.objects.filter(experiment = experiment)
 	doc_dict = {}
 	for doc in docs:
