@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'uploads',
     'decomposition',
     'ms1analysis',
+    'term_classifier',
 ]
 
 MIDDLEWARE_CLASSES = [
