@@ -19,6 +19,7 @@ from term_classifier.classification_functions import predict
 
 def make_classifiers():
     e = Experiment.objects.get(name = 'massbank_binned_005')
+    SubClassifier.objects.filter(experiment = e).delete()
     train_doc_file  = '/Users/simon/Dropbox/BioResearch/Meta_clustering/MS2LDA/classyfire/massbank_005_server.dict'
     with open(train_doc_file,'r') as f:
         train_doc_data = pickle.load(f)
@@ -66,22 +67,28 @@ def make_classifiers():
     d,t,v = zip(*sparse_term_data)
     train_terms = np.array(coo_matrix((v,(d,t)),shape=[len(doc_index),len(term_index)]).todense())
 
-    for i in range(10):
-        term = term_index.keys()[i]
+
+    for term in term_index:
         print "Making classifier for {}".format(term)
         term_pos = term_index[term]
         y = train_terms[:,term_pos]
-        bnb = BernoulliNB(alpha = .1,binarize = 0.05,fit_prior=True)
-        bnb.fit(train_o,y)
 
-        subterm = SubstituentTerm.objects.get(name = term)
+        n_train = len(doc_index)
+        n_term = train_terms[:,term_pos].sum()
+        proportion = (1.0*n_term)/(1.0*n_train)
+        if proportion >= 0.001 and proportion <= 0.8:
 
-        s,_ = SubClassifier.objects.get_or_create(term = subterm)
-        s.classifier = pickle.dumps(bnb)
-        s.feature_index = pickle.dumps(motif_index)
-        s.classifier_type = 'sklearn.naive_bayes.BernoulliNB'
-        s.experiment = e
-        s.save()
+            bnb = BernoulliNB(alpha = .1,binarize = 0.05,fit_prior=True)
+            bnb.fit(train_o,y)
+
+            subterm = SubstituentTerm.objects.get(name = term)
+
+            s,_ = SubClassifier.objects.get_or_create(term = subterm)
+            s.classifier = pickle.dumps(bnb)
+            s.feature_index = pickle.dumps(motif_index)
+            s.classifier_type = 'sklearn.naive_bayes.BernoulliNB'
+            s.experiment = e
+            s.save()
     
 
 
@@ -91,11 +98,12 @@ def test_classifier(classifier_model):
     test_data = {}
     for doc in docs:
         m2ms = DocumentMass2Motif.objects.filter(document = doc)
-        test_data[doc] = {}
+        test_data[doc.name] = {}
         for m in m2ms:
-            test_data[doc][m.mass2motif] = m.overlap_score
+            test_data[doc.name][m.mass2motif.name] = m.overlap_score
 
-    predict(classifier_model,test_data)
+    output = predict(classifier_model,test_data)
+    print output
 
 
 
@@ -103,4 +111,4 @@ def test_classifier(classifier_model):
 if __name__ == '__main__':
     # load the data
     # make_classifiers()
-    test_classifier(SubClassifier.objects.all()[5])
+    test_classifier(SubClassifier.objects.all()[100])
