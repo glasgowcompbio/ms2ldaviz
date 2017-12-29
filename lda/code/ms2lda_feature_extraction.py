@@ -80,6 +80,7 @@ class Loader(object):
     ## ms1_peaks: [featid, mz,rt,intensity], featid will be None if "FeatureId" not exist
     def _load_peak_list(self):
         self.ms1_peaks = []
+        self.user_cols_names = []
         with open(self.peaklist,'r') as f:
             heads = f.readline()
             tokens = heads.strip().split(',')
@@ -91,6 +92,7 @@ class Loader(object):
                     featid_index = i
                 if tokens[i].lower() in ['mass', 'mz']:
                     break
+                self.user_cols_names.append(tokens[i])
 
             ## if any sample names missing, use "Sample_*" to replace
             empty_sample_name_id = 0
@@ -110,7 +112,9 @@ class Loader(object):
                 rt = tokens_tuple[index+1]
                 samples = tokens_tuple[index+2]
                 # store (featid, mz,rt,intensity)
-                self.ms1_peaks.append((featid, float(mz), float(rt), samples))
+
+                ## record user defined index columns before "mass" column in peaklist file
+                self.ms1_peaks.append((featid, float(mz), float(rt), samples, tokens_tuple[:index]))
 
         # sort them by mass
         self.ms1_peaks = sorted(self.ms1_peaks,key = lambda x: x[1])
@@ -124,7 +128,7 @@ class Loader(object):
 
         print ms1[0], metadata.values()[0]
 
-        ms1_peaks = self._load_peak_list()
+        self._load_peak_list()
         ms1 = sorted(ms1,key = lambda x: x.mz)
         new_ms1_list = []
         new_ms2_list = []
@@ -159,6 +163,7 @@ class Loader(object):
             peak_mz = peak[1]
             peak_rt = peak[2]
             peak_intensity = None if ',' in peak[3] else float(peak[3])
+            user_cols = peak[4]
 
             ## first check FeatureId matching
             ## if featureId not exist, then do "mz/rt matching"
@@ -197,6 +202,9 @@ class Loader(object):
             new_ms1 = MS1(old_ms1.id,peak_mz,peak_rt,peak_intensity,old_ms1.file_name,old_ms1.scan_number)
             new_ms1_list.append(new_ms1)
             new_metadata[new_ms1.name] = metadata[old_ms1.name]
+
+            ## record user index columns before "mass" column in peaklist file into metadata
+            new_metadata[new_ms1.name]['user_cols'] = zip(self.user_cols_names, user_cols)
 
             if ',' in peak[3]:
                 # print "process sample", str(peak[0]), str(peak[1])
