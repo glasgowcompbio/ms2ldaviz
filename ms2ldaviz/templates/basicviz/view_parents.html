@@ -155,8 +155,11 @@
                         </thead>
                         <tbody>
                             {% for term_instance in taxa_terms %}
-                                <tr><td>{{term_instance.taxterm.name}}</td><td>{{term_instance.probability|floatformat:"3"}}</td>
-                                <td>{{term_instance.z_score|floatformat:"3"}}</td></tr>
+                                <tr>
+                                    <td>{{term_instance.taxterm.name}}</td>
+                                    <td>{{term_instance.probability|floatformat:"3"}}</td>
+                                    <td>{{term_instance.z_score|floatformat:"3"}}</td>
+                                </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -173,8 +176,10 @@
                         </thead>
                         <tbody>
                             {% for term_instance in substituent_terms %}
-                                <tr><td>{{term_instance.subterm.name}}</td><td>{{term_instance.probability|floatformat:"3"}}</td>
-                                <td>{{term_instance.z_score|floatformat:"3"}}</td>
+                                <tr>
+                                    <td>{{term_instance.subterm.name}}</td>
+                                    <td>{{term_instance.probability|floatformat:"3"}}</td>
+                                    <td>{{term_instance.z_score|floatformat:"3"}}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
