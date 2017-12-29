@@ -151,11 +151,12 @@
                     <h4>Classyfire Taxa Terms</h4>
                     <table class='table' id='taxa_table'>
                         <thead>
-                            <tr><th>Taxa Term</th><th>Probability</th></tr>
+                            <tr><th>Taxa Term</th><th>Probability</th><th>Z score</th></tr>
                         </thead>
                         <tbody>
                             {% for term_instance in taxa_terms %}
-                                <tr><td>{{term_instance.taxterm.name}}</td><td>{{term_instance.probability|floatformat:"3"}}</td></tr>
+                                <tr><td>{{term_instance.taxterm.name}}</td><td>{{term_instance.probability|floatformat:"3"}}</td>
+                                <td>{{term_instance.z_score|floatformat:"3"}}</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -168,11 +169,13 @@
                     <h4>Classyfire Substituent Terms</h4>
                     <table class='table' id='subst_table'>
                         <thead>
-                            <tr><th>Substituent Term</th><th>Probability</th></tr>
+                            <tr><th>Substituent Term</th><th>Probability</th><th>Z score</th></tr>
                         </thead>
                         <tbody>
                             {% for term_instance in substituent_terms %}
-                                <tr><td>{{term_instance.subterm.name}}</td><td>{{term_instance.probability|floatformat:"3"}}</td></tr>
+                                <tr><td>{{term_instance.subterm.name}}</td><td>{{term_instance.probability|floatformat:"3"}}</td>
+                                <td>{{term_instance.z_score|floatformat:"3"}}</td>
+                                </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -278,14 +281,14 @@
 				buttons: [
 			        'csv',
 		        ],
-		        "order": [[ 1, "desc" ]],
+		        "order": [[ 2, "desc" ]],
 		    });
 			$('#subst_table').DataTable({
 				dom: 'Bfrtip',
 				buttons: [
 			        'csv',
 		        ],
-		        "order": [[ 1, "desc" ]],
+		        "order": [[ 2, "desc" ]],
 		    });
 
 		});
