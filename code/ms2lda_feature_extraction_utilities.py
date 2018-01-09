@@ -40,3 +40,12 @@ def remove_features(corpus,to_remove):
 			del spectrum[f]
 	return corpus
 
+
+def bin_mass(mass,bin_width = 0.005):
+	import numpy as np
+	# return the name of the bin center for the mass given the specified bin width
+	bin_no = np.floor(mass / bin_width)
+	bin_lower = bin_no*bin_width
+	bin_upper = bin_lower + bin_width
+	bin_middle = (bin_lower + bin_upper)/2.0
+	return "{:.4f}".format(bin_middle)
