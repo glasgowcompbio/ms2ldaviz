@@ -36,12 +36,14 @@ def create_ms1analysis(request, experiment_id):
                                                           group2=group2_choices,
                                                           status=pending_code
                                                           )[0]
+            use_normalization = analysis_form.cleaned_data['use_normalization']
 
             context_dict['analysis'] = new_analysis
             params = {
                 'group1': group1_choices,
                 'group2': group2_choices,
-                'experiment_id': experiment_id
+                'experiment_id': experiment_id,
+                'use_normalization': use_normalization
             }
             process_ms1_analysis.delay(new_analysis.id, params)
             # process_ms1_analysis(new_analysis.id, params)
@@ -87,12 +89,13 @@ def create_ms1analysis_decomposition(request, decomposition_id):
                                                           group2=group2_choices,
                                                           status=pending_code
                                                           )[0]
-
+            use_normalization = analysis_form.cleaned_data['use_normalization']
             context_dict['analysis'] = new_analysis
             params = {
                 'group1': group1_choices,
                 'group2': group2_choices,
-                'decomposition_id': decomposition_id
+                'decomposition_id': decomposition_id,
+                'use_normalization': use_normalization
             }
             process_ms1_analysis_decomposition.delay(new_analysis.id, params)
             # process_ms1_analysis_decomposition(new_analysis.id, params)
