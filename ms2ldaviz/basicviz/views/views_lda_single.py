@@ -1721,3 +1721,23 @@ def remove_link(request, from_motif_id):
     from_motif.save()
     experiment_id = from_motif.experiment.id
     return manage_motif_matches(request, experiment_id)
+
+def feature_info(request,feature_id,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    feature = Feature.objects.get(id = feature_id)
+    context_dict = {}
+    context_dict['experiment'] = experiment
+    context_dict['feature'] = feature
+    documents = Document.objects.filter(experiment = experiment)
+    instances = FeatureInstance.objects.filter(feature = feature,document__in = documents)
+    context_dict['n_instances'] = len(instances)
+    context_dict['instances'] = instances
+
+    motifs = Mass2Motif.objects.filter(experiment = experiment)
+    motif_instances = Mass2MotifInstance.objects.filter(feature = feature,mass2motif__in = motifs)
+
+    context_dict['n_motif_instances'] = len(motif_instances)
+    context_dict['motif_instances'] = motif_instances
+    
+    print len(instances)
+    return render(request,'basicviz/feature_info.html',context_dict)

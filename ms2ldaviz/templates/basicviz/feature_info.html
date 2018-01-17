@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block head_block %}
+
+{% endblock %}
+
+{% block body_block %}
+
+<h4>Feature: {{feature.name}}</h4>
+<h4>Experiment: {{experiment.name}}</h4>
+<ul>
+    <li>{{feature.name}} appears in {{n_instances}} molecules in {{experiment.name}}</li>
+    <li>{{feature.name}} appears in {{n_motif_instances}} Mass2Motifs in {{experiment.name}}</li>
+</ul>
+<hr />
+<h3>Molecules</h3>
+    <table class='table' id='doctable'>
+        <thead>
+            <th>Molecule</th>
+            <th>Annotation</th>
+            <th>Intensity</th>
+        </thead>
+        <tbody>
+            {% for instance in instances %}
+                <tr>
+                    <td><a href="/basicviz/show_doc/{{instance.document.id}}">{{instance.document.name}}</a></td>
+                    <td>{{instance.document.annotation}}</td>
+                    <td>{{instance.intensity}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+<hr />
+<h3>Mass2Motifs</h3>
+    <table class='table' id='motif'>
+        <thead>
+            <th>Mass2Motif</th>
+            <th>Annotation</th>
+            <th>Probability</th>
+        </thead>
+        <tbody>
+            {% for instance in motif_instances %}
+                <tr>
+                    <td><a href="/basicviz/view_parents/{{instance.mass2motif.id}}">{{instance.mass2motif.name}}</a></td>
+                    <td>{{instance.mass2motif.annotation}}</td>
+                    <td>{{instance.probability}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+{% endblock %}
+
+{% block js_block %}
+	<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+	<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+	<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+	<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
+	<script type="text/javascript">
+
+		
+
+		$(document).ready(function() {
+			$('#doctable').DataTable({
+				dom: 'Bfrtip',
+				buttons: [
+			        'csv',
+		        ],
+		        "order": [[ 2, "desc" ]],
+		    });
+            $('#motiftable').DataTable({
+                dom: 'Bfrtip',
+                buttons: [
+                    'csv',
+                ],
+                "order": [[ 1, "desc" ]],
+            });
+
+		});
+
+  
+	</script>
+
+{% endblock %}
