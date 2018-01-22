@@ -54,6 +54,7 @@ lda_single_patterns = [
     url(r'^manage_motif_matches/(?P<experiment_id>\w+)/$',views.manage_motif_matches,name = 'manage_motif_matches'),
     url(r'^add_link/(?P<from_motif_id>\w+)/(?P<to_motif_id>\w+)/$',views.add_link,name = 'add_link'),
     url(r'^remove_link/(?P<from_motif_id>\w+)/$',views.remove_link,name = 'remove_link'),
+    url(r'^feature_info/(?P<feature_id>\w+)/(?P<experiment_id>\w+)/$',views.feature_info,name = 'feature_info'),
 ]
 
 # for multi-file LDA experiments
