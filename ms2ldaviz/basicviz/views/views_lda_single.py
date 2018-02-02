@@ -681,6 +681,21 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
             max_intensity = feature_instance.intensity
 
     if len(features) > 0:
+
+        # find positions of the diffs
+        diff_feature_names = [f.feature.name for f in features if f.feature.name.startswith('mzdiff')]
+        frag_feature_names = [f.feature.name for f in features if f.feature.name.startswith('fragment')]
+        diff_masses = [f.split('_')[1] for f in diff_feature_names]
+        frag_masses=  [f.split('_')[1] for f in frag_feature_names]
+        diff_instances = {}
+        for d in diff_masses:
+            diff_instances[d] = []
+            temp = ["{:.4f}".format(float(d) + float(f)) for f in frag_masses]
+            diff_instances[d] = [(t,frag_masses[i]) for i,t in enumerate(temp) if t in set(frag_masses)]
+        print diff_instances
+
+        diff_pos = 100
+
         for feature_instance in features:
             phi_values = FeatureMass2MotifInstance.objects.filter(featureinstance=feature_instance)
             mass = float(feature_instance.feature.name.split('_')[1])
@@ -699,7 +714,7 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
                         proportion = phi_value.probability * this_intensity
                         other_topics += proportion
                 child_data.append((mass, mass, this_intensity - other_topics, this_intensity, 1, 'gray', feature_name))
-            else:
+            elif feature_name.startswith('loss'):
                 cum_pos = parent_mass - mass
                 other_topics = 0.0
                 for phi_value in phi_values:
@@ -714,6 +729,17 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
                         other_topics += proportion
                 child_data.append(
                     (parent_mass - other_topics, parent_mass, this_intensity, this_intensity, 0, 'gray', feature_name))
+            elif feature_name.startswith('mzdiff'):
+                diff_mass = feature_name.split('_')[1]
+                if len(diff_instances[diff_mass]) > 0:
+                    for start,stop in diff_instances[diff_mass]:
+                        for phi_value in phi_values:
+                            if phi_value.mass2motif in topics_to_plot:
+                                colour = topic_colours[phi_value.mass2motif]
+                                child_data.append((float(start),float(stop),diff_pos,diff_pos,2,colour,feature_name)
+                                    )
+                                diff_pos -= 5
+
     plot_fragments.append(child_data)
 
     if get_key:
