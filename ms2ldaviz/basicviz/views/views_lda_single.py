@@ -608,7 +608,7 @@ def view_mass2motifs(request, experiment_id):
 
 
 def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
-    colours = ['red', 'green', 'black', 'yellow']
+    colours = ['red', 'green', 'black', 'orange']
     document = Document.objects.get(id=doc_id)
     features = FeatureInstance.objects.filter(document=document)
     plot_fragments = []
@@ -685,13 +685,19 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
         # find positions of the diffs
         diff_feature_names = [f.feature.name for f in features if f.feature.name.startswith('mzdiff')]
         frag_feature_names = [f.feature.name for f in features if f.feature.name.startswith('fragment')]
+        frag_intensities = [f.intensity for f in features if f.feature.name.startswith('fragment')]
         diff_masses = [f.split('_')[1] for f in diff_feature_names]
         frag_masses=  [f.split('_')[1] for f in frag_feature_names]
         diff_instances = {}
+
+
+
         for d in diff_masses:
             diff_instances[d] = []
             temp = ["{:.4f}".format(float(d) + float(f)) for f in frag_masses]
-            diff_instances[d] = [(t,frag_masses[i]) for i,t in enumerate(temp) if t in set(frag_masses)]
+            # temp is a vector of length number frag features, including all the frags transformed by this diff
+
+            diff_instances[d] = [(i,frag_masses.index(t)) for i,t in enumerate(temp) if t in frag_masses]
         print diff_instances
 
         diff_pos = 100
@@ -730,15 +736,26 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
                 child_data.append(
                     (parent_mass - other_topics, parent_mass, this_intensity, this_intensity, 0, 'gray', feature_name))
             elif feature_name.startswith('mzdiff'):
+                # note we only plot them in the correct colour if they have phi > 0.5
                 diff_mass = feature_name.split('_')[1]
                 if len(diff_instances[diff_mass]) > 0:
                     for start,stop in diff_instances[diff_mass]:
+                        start_mass = frag_masses[start]
+                        stop_mass = frag_masses[stop]
+                        print start_mass,stop_mass
+                        intensity = min(frag_intensities[start],frag_intensities[stop])*100.0/max_intensity
+                        plotted = False
                         for phi_value in phi_values:
-                            if phi_value.mass2motif in topics_to_plot:
+                            if phi_value.mass2motif in topics_to_plot and phi_value.probability >= 0.5:
                                 colour = topic_colours[phi_value.mass2motif]
-                                child_data.append((float(start),float(stop),diff_pos,diff_pos,2,colour,feature_name)
+                                child_data.append((float(start_mass),float(stop_mass),0.9*intensity,0.9*intensity,2,colour,feature_name)
                                     )
                                 diff_pos -= 5
+                                plotted = True
+                        if not plotted:
+                            # doesn't belong to any of the dominant topics
+                            child_data.append((float(start_mass),float(stop_mass),0.9*intensity,0.9*intensity,2,'gray',feature_name)
+                                )
 
     plot_fragments.append(child_data)
 

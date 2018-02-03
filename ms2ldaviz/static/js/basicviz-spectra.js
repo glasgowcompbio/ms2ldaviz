@@ -222,7 +222,7 @@ function plot_parent(total_dataset,motif_name) {
           .attr("y2",function(d) {return yScale(d[3])})
           .attr("stroke",function(d) {return d[5]})
           .attr("stroke-width",2)
-        .attr("stroke-dasharray",function(d) {if(d[4]==1) {return "0.0";} else {return "5.5";}})
+        .attr("stroke-dasharray",function(d) {if(d[4]==1) {return "0.0";} else if(d[4]==0) {return "5.5";} else {return "10,3,3,3";}})
         .on("mouseover",function(d) {
 
             d3.select(this)
