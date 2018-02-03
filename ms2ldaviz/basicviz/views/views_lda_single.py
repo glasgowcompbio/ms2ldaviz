@@ -5,6 +5,7 @@ import jsonpickle
 import networkx as nx
 import numpy as np
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
 from networkx.readwrite import json_graph
@@ -1784,3 +1785,56 @@ def feature_info(request,feature_id,experiment_id):
     
     print len(instances)
     return render(request,'basicviz/feature_info.html',context_dict)
+
+@csrf_exempt
+def get_doc_annotation(request):
+    response = {}
+    if request.method == 'POST':
+        experiment_name = request.POST['experiment_name']
+        try:
+            experiment = Experiment.objects.get(name = experiment_name)
+        except:
+            response['status'] = 'invalid experiment name'
+            return HttpResponse(json.dumps(response), content_type='application/json')
+        document_name = request.POST['document_name']
+        try:
+            document = Document.objects.get(name = document_name,experiment = experiment)
+        except:
+            response['status'] = 'invalid document name'
+            return HttpResponse(json.dumps(response), content_type='application/json')
+        annotation = jsonpickle.decode(document.metadata).get('annotation',None)
+        response['status'] = 'ok'
+        response['annotation'] = annotation
+    else:
+        response['status'] = 'not a post request'
+    return HttpResponse(json.dumps(response), content_type='application/json')
+
+
+@csrf_exempt
+def set_doc_annotation(request):
+    response = {}  
+    if request.method == 'POST':
+        experiment_name = request.POST['experiment_name']
+        try:
+            experiment = Experiment.objects.get(name = experiment_name)
+        except:
+            response['status'] = 'invalid experiment name'
+            return HttpResponse(json.dumps(response), content_type='application/json')
+        document_name = request.POST['document_name']
+        try:
+            document = Document.objects.get(name = document_name,experiment = experiment)
+        except:
+            response['status'] = 'invalid document name'
+            return HttpResponse(json.dumps(response), content_type='application/json')
+        # document = Document.objects.get(experiment = experiment,name = document_name)
+        
+        annotation = request.POST.get('annotation',None)
+
+        metadata = jsonpickle.decode(document.metadata)
+        metadata['annotation'] = annotation
+        document.metadata = jsonpickle.encode(metadata)
+        document.save()
+        response['status'] = 'ok'
+    else:
+        response['status'] = 'not a post request'
+    return HttpResponse(json.dumps(response), content_type='application/json')

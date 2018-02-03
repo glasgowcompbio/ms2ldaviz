@@ -55,6 +55,8 @@ lda_single_patterns = [
     url(r'^add_link/(?P<from_motif_id>\w+)/(?P<to_motif_id>\w+)/$',views.add_link,name = 'add_link'),
     url(r'^remove_link/(?P<from_motif_id>\w+)/$',views.remove_link,name = 'remove_link'),
     url(r'^feature_info/(?P<feature_id>\w+)/(?P<experiment_id>\w+)/$',views.feature_info,name = 'feature_info'),
+    url(r'^set_doc_annotation/$',views.set_doc_annotation,name = 'set_doc_annotation'),
+    url(r'^get_doc_annotation/$',views.get_doc_annotation,name = 'get_doc_annotation'),
 ]
 
 # for multi-file LDA experiments
