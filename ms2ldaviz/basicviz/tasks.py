@@ -56,7 +56,7 @@ def match_motifs_set(experiment_id,base_experiment_id,min_score_to_save = 0.5):
                     temp.append(base_feature_name_dict[fname2])
                 if len(temp) > 0:
                     feature_map[feature] = temp
-            else if ftype == 'mzdiff':
+            elif ftype == 'mzdiff':
                 temp = []
                 fname1 = ftype + "_{:.4f}".format(feature.min_mz)
                 fname2 = ftype + "_{:.4f}".format(feature.max_mz)
@@ -86,7 +86,7 @@ def match_motifs_set(experiment_id,base_experiment_id,min_score_to_save = 0.5):
                     lowername = ftype+ "_{:.4f}".format(lowval)
                     if lowername in base_feature_name_dict:
                         feature_map[lowername] = base_feature_name_dict[lowername]
-            else if ftype == 'mzdiff':
+            elif ftype == 'mzdiff':
                 if feature.name in base_feature_name_dict:
                     feature_map[feature] = [base_feature_name_dict[feature.name]]
                 else:
