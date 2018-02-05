@@ -17,7 +17,7 @@ from basicviz.forms import DocFilterForm, ValidationForm, VizForm, \
 from massbank.forms import Mass2MotifMetadataForm
 from basicviz.models import Feature, Experiment, Document, FeatureInstance, DocumentMass2Motif, \
     FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment, MotifMatch
-from basicviz.tasks import match_motifs
+from basicviz.tasks import match_motifs,match_motifs_set
 from massbank.views import get_massbank_form
 from options.views import get_option
 from decomposition.models import DocumentGlobalMass2Motif, GlobalMotif, DocumentGlobalFeature, FeatureMap
@@ -1733,7 +1733,8 @@ def start_match_motifs(request, experiment_id):
             base_experiment = match_motif_form.cleaned_data['other_experiment']
             base_experiment_id = base_experiment.id
             minimum_score_to_save = float(match_motif_form.cleaned_data['min_score_to_save'])
-            match_motifs.delay(experiment.id, base_experiment_id, min_score_to_save=minimum_score_to_save)
+            # match_motifs.delay(experiment.id, base_experiment_id, min_score_to_save=minimum_score_to_save)
+            match_motifs_set.delay(experiment.id,base_experiment.id, min_score_to_save = minimum_score_to_save)
             return manage_motif_matches(request, experiment_id)
     else:
         match_motif_form = MatchMotifForm(request.user)
