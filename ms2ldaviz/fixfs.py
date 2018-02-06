@@ -20,7 +20,7 @@ if __name__ == '__main__':
 			fl = []
 			fl = FeatureInstance.objects.filter(document = doc)
 			if len(fl)>0:
-				fs = f.featureset
+				fs = fl[0].featureset
 				if fs:
 					e.featureset = fs
 					e.save()
