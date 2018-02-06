@@ -13,16 +13,17 @@ from basicviz.models import Experiment,Feature,FeatureInstance,Mass2Motif,Mass2M
 if __name__ == '__main__':
 	es = Experiment.objects.all()
 	for e in es:
-		print e
-		docs = Document.objects.filter(experiment = e)
-		doc = docs[0]
-		fl = []
-		i = 0
-		while len(fl) == 0:
-			fl = FeatureInstance.objects.filter(document = doc)
-		f = fl[0].feature
-		fs = f.featureset
-		if fs:
-			e.featureset = fs
-			e.save()
+		if e.featureset == None:
+			print e
+			docs = Document.objects.filter(experiment = e)
+			doc = docs[0]
+			fl = []
+			i = 0
+			while len(fl) == 0:
+				fl = FeatureInstance.objects.filter(document = doc)
+			f = fl[0].feature
+			fs = f.featureset
+			if fs:
+				e.featureset = fs
+				e.save()
 
