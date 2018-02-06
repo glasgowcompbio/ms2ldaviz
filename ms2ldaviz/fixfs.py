@@ -13,6 +13,7 @@ from basicviz.models import Experiment,Feature,FeatureInstance,Mass2Motif,Mass2M
 if __name__ == '__main__':
 	es = Experiment.objects.all()
 	for e in es:
+		print e
 		docs = Document.objects.filter(experiment = e)
 		doc = docs[0]
 		f = FeatureInstance.objects.filter(document = doc)[0].feature
@@ -20,4 +21,4 @@ if __name__ == '__main__':
 		if fs:
 			e.featureset = fs
 			e.save()
-		
+
