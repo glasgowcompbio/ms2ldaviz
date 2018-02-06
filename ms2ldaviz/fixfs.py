@@ -18,12 +18,10 @@ if __name__ == '__main__':
 			docs = Document.objects.filter(experiment = e)
 			doc = docs[0]
 			fl = []
-			i = 0
-			while len(fl) == 0:
-				fl = FeatureInstance.objects.filter(document = doc)
-			f = fl[0].feature
-			fs = f.featureset
-			if fs:
-				e.featureset = fs
-				e.save()
+			fl = FeatureInstance.objects.filter(document = doc)
+			if len(fl)>0:
+				fs = f.featureset
+				if fs:
+					e.featureset = fs
+					e.save()
 
