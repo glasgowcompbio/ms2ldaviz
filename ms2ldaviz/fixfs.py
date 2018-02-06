@@ -16,7 +16,11 @@ if __name__ == '__main__':
 		print e
 		docs = Document.objects.filter(experiment = e)
 		doc = docs[0]
-		f = FeatureInstance.objects.filter(document = doc)[0].feature
+		fl = []
+		i = 0
+		while len(fl) == 0:
+			fl = FeatureInstance.objects.filter(document = doc)
+		f = fl[0].feature
 		fs = f.featureset
 		if fs:
 			e.featureset = fs
