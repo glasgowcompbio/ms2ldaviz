@@ -87,6 +87,6 @@ if __name__ == '__main__':
 	for f in gnps_f:
 		if len(f.featureinstance_set.all()) > 0:
 			print f,"has fi"
-		if len(f.mass2motifinstance_sel.all()) > 0:
+		if len(f.mass2motifinstance_set.all()) > 0:
 			print f,"has m2m"
 
