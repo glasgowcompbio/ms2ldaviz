@@ -44,6 +44,7 @@ if __name__ == '__main__':
 			else:
 				gnps_f.name = newname # ensure correct format
 				gnps_f.featureset = fs
+				gnps_f.experiment = None
 				gnps_f.save()
 			n_done += 1
 			if n_done % 1000 == 0:
