@@ -47,7 +47,7 @@ if __name__ == '__main__':
 					gnps_f.featureset = fs
 					gnps_f.experiment = None
 					gnps_f.save()
-				n_done += 1
+			n_done += 1
 			if n_done % 1000 == 0:
 				print n_done,total
 
