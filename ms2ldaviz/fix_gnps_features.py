@@ -17,12 +17,12 @@ if __name__ == '__main__':
 	e = Experiment.objects.get(id = 191)
 	print e
 
-	fs = BVFeatureSet.objects.get(name = 'binned_005')
-	fs_features = Feature.objects.filter(featureset = fs)
+	# fs = BVFeatureSet.objects.get(name = 'binned_005')
+	# fs_features = Feature.objects.filter(featureset = fs)
 
-	feat_dict = {}
-	for f in fs_features:
-		feat_dict[f.name] = f
+	# feat_dict = {}
+	# for f in fs_features:
+	# 	feat_dict[f.name] = f
 
 	# gnps_docs = Document.objects.filter(experiment = e)
 
@@ -54,29 +54,39 @@ if __name__ == '__main__':
 	# 			print n_done,total
 
 	# fix the features in the mass2motifs
-	motifs = Mass2Motif.objects.filter(experiment = e)
-	gnps_fmi = Mass2MotifInstance.objects.filter(mass2motif__in = motifs)
-	total = len(gnps_fmi)
-	n_done = 0
-	print "MOTIFS"
-	with transaction.atomic():
-		for fmi in gnps_fmi:
-			gnps_f = fmi.feature
-			if not gnps_f.featureset:
-				# reformat name just in case
-				tokens = gnps_f.name.split('_')
-				newname = tokens[0] + "_{:.4f}".format(float(tokens[1]))
-				if newname in feat_dict:
-					global_feature = feat_dict[newname]
-					fmi.feature = global_feature
-					fmi.save()
-				else:
-					print "feature in motif that wasnt in a document??"
-			n_done += 1
-			if n_done % 100 == 0:
-				print n_done,total
+	# motifs = Mass2Motif.objects.filter(experiment = e)
+	# gnps_fmi = Mass2MotifInstance.objects.filter(mass2motif__in = motifs)
+	# total = len(gnps_fmi)
+	# n_done = 0
+	# print "MOTIFS"
+	# with transaction.atomic():
+	# 	for fmi in gnps_fmi:
+	# 		gnps_f = fmi.feature
+	# 		if not gnps_f.featureset:
+	# 			# reformat name just in case
+	# 			tokens = gnps_f.name.split('_')
+	# 			newname = tokens[0] + "_{:.4f}".format(float(tokens[1]))
+	# 			if newname in feat_dict:
+	# 				global_feature = feat_dict[newname]
+	# 				fmi.feature = global_feature
+	# 				fmi.save()
+	# 			else:
+	# 				print "feature in motif that wasnt in a document??"
+	# 		n_done += 1
+	# 		if n_done % 100 == 0:
+	# 			print n_done,total
 
 
 
-	e.featureset = fs
-	e.save()
+	# e.featureset = fs
+	# e.save()
+
+
+	# test
+	gnps_f = Feature.objects.filter(experiment = e)
+	for f in gnps_f:
+		if len(f.featureinstance_set.all()) > 0:
+			print f,"has fi"
+		if len(f.mass2motifinstance_sel.all()) > 0:
+			print f,"has m2m"
+
