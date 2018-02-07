@@ -73,7 +73,7 @@ if __name__ == '__main__':
 				else:
 					print "feature in motif that wasnt in a document??"
 			n_done += 1
-			if n_done % 1000 == 0:
+			if n_done % 100 == 0:
 				print n_done,total
 
 
