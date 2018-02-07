@@ -34,21 +34,47 @@ if __name__ == '__main__':
 	with transaction.atomic():
 		for fi in gnps_fi:
 			gnps_f = fi.feature
-			# reformat name just in case
-			tokens = gnps_f.name.split('_')
-			newname = tokens[0] + "_{:.4f}".format(float(tokens[1]))
-			if newname in feat_dict:
-				global_feature = feat_dict[newname]
-				fi.feature = global_feature
-				fi.save()
-			else:
-				gnps_f.name = newname # ensure correct format
-				gnps_f.featureset = fs
-				gnps_f.experiment = None
-				gnps_f.save()
+			if not gnps_f.featureset:
+				# reformat name just in case
+				tokens = gnps_f.name.split('_')
+				newname = tokens[0] + "_{:.4f}".format(float(tokens[1]))
+				if newname in feat_dict:
+					global_feature = feat_dict[newname]
+					fi.feature = global_feature
+					fi.save()
+				else:
+					gnps_f.name = newname # ensure correct format
+					gnps_f.featureset = fs
+					gnps_f.experiment = None
+					gnps_f.save()
+				n_done += 1
+			if n_done % 1000 == 0:
+				print n_done,total
+
+	# fix the features in the mass2motifs
+	motifs = Mass2Motif.objects.filter(experiment = e)
+	gnps_fmi = Mass2MotifInstance.objects.filter(mass2motif__in = motifs)
+	total = len(gnps_fmi)
+	n_done = 0
+	print "MOTIFS"
+	with transaction.atomic():
+		for fmi in gnps_fmi:
+			gnps_f = fmi.feature
+			if not gnps_f.featureset:
+				# reformat name just in case
+				tokens = gnps_f.name.split('_')
+				newname = tokens[0] + "_{:.4f}".format(float(tokens[1]))
+				if newname in feat_dict:
+					global_feature = feat_dict[newname]
+					fmi.feature = global_feature
+					fmi.save()
+				else:
+					print "feature in motif that wasnt in a document??"
 			n_done += 1
 			if n_done % 1000 == 0:
 				print n_done,total
+
+
 
 	e.featureset = fs
 	e.save()
