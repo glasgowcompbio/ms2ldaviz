@@ -84,9 +84,13 @@ if __name__ == '__main__':
 
 	# test
 	gnps_f = Feature.objects.filter(experiment = e)
+	total = len(gnps_f)
+	n_done = 0
 	for f in gnps_f:
 		if len(f.featureinstance_set.all()) > 0:
 			print f,"has fi"
 		if len(f.mass2motifinstance_set.all()) > 0:
 			print f,"has m2m"
-
+		n_done += 1
+		if n_done % 100 == 0:
+			print n_done,total
