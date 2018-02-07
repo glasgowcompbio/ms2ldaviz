@@ -26,7 +26,9 @@ if __name__ == '__main__':
 
 	gnps_docs = Document.objects.filter(experiment = e)
 
-	gnps_fi = FeatureInstance.objects.filter(document__in = gnps_docs, featureset = None)
+	gnps_fi = FeatureInstance.objects.filter(document__in = gnps_docs)
+
+	gnps_fi = filter(lambda x: x.feature.featureset == None,gnps_fi)
 
 	total = len(gnps_fi)
 	n_done = 0
