@@ -24,34 +24,34 @@ if __name__ == '__main__':
 	for f in fs_features:
 		feat_dict[f.name] = f
 
-	gnps_docs = Document.objects.filter(experiment = e)
+	# gnps_docs = Document.objects.filter(experiment = e)
 
-	gnps_fi = FeatureInstance.objects.filter(document__in = gnps_docs)
+	# gnps_fi = FeatureInstance.objects.filter(document__in = gnps_docs)
 
-	gnps_fi = filter(lambda x: x.feature.featureset == None,gnps_fi)
+	# gnps_fi = filter(lambda x: x.feature.featureset == None,gnps_fi)
 
-	total = len(gnps_fi)
-	n_done = 0
+	# total = len(gnps_fi)
+	# n_done = 0
 
-	with transaction.atomic():
-		for fi in gnps_fi:
-			gnps_f = fi.feature
-			if not gnps_f.featureset:
-				# reformat name just in case
-				tokens = gnps_f.name.split('_')
-				newname = tokens[0] + "_{:.4f}".format(float(tokens[1]))
-				if newname in feat_dict:
-					global_feature = feat_dict[newname]
-					fi.feature = global_feature
-					fi.save()
-				else:
-					gnps_f.name = newname # ensure correct format
-					gnps_f.featureset = fs
-					gnps_f.experiment = None
-					gnps_f.save()
-			n_done += 1
-			if n_done % 1000 == 0:
-				print n_done,total
+	# with transaction.atomic():
+	# 	for fi in gnps_fi:
+	# 		gnps_f = fi.feature
+	# 		if not gnps_f.featureset:
+	# 			# reformat name just in case
+	# 			tokens = gnps_f.name.split('_')
+	# 			newname = tokens[0] + "_{:.4f}".format(float(tokens[1]))
+	# 			if newname in feat_dict:
+	# 				global_feature = feat_dict[newname]
+	# 				fi.feature = global_feature
+	# 				fi.save()
+	# 			else:
+	# 				gnps_f.name = newname # ensure correct format
+	# 				gnps_f.featureset = fs
+	# 				gnps_f.experiment = None
+	# 				gnps_f.save()
+	# 		n_done += 1
+	# 		if n_done % 1000 == 0:
+	# 			print n_done,total
 
 	# fix the features in the mass2motifs
 	motifs = Mass2Motif.objects.filter(experiment = e)
