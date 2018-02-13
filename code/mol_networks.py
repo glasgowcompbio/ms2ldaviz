@@ -49,10 +49,10 @@ class Network(object):
 		for mol in self.edge_dict:
 			self.n_edges[mol] = len(self.edge_dict[mol])
 	
-	def top_k_filter(k=10):
+	def top_k_filter(self,k=10):
 		# create a sorted version of the dictionary
 		min_scores = {}
-		for mol,edges in edge_dict.items():
+		for mol,edges in self.edge_dict.items():
 			edge_score = zip(edges.keys(),edges.values())
 			edge_score = sorted(edge_score,key = lambda x: x[1],reverse = True)
 			if len(edge_score) < k:
@@ -63,10 +63,10 @@ class Network(object):
 
 		filtered_edge_dict = {}
 		n_edges = {}
-		for mol,edges in edge_dict.items():
+		for mol,edges in self.edge_dict.items():
 			filtered_edge_dict[mol] = {}
 			for target_mol,score in edges.items():
-				if score >= min_scores[mol] and edge_dict[target_mol][mol] >= min_scores[target_mol]:
+				if score >= min_scores[mol] and self.edge_dict[target_mol][mol] >= min_scores[target_mol]:
 					# keep the edge
 					filtered_edge_dict[mol][target_mol] = score
 			n_edges[mol] = len(filtered_edge_dict[mol])
@@ -143,6 +143,7 @@ class Network(object):
 		components = []
 		while self.n_nodes() > 0:
 			components.append(self._extract_component(min_score = min_score))
+			print "Found {} components".format(len(components))
 		small_enough = []
 		needs_cropping = []
 		for component in components:
@@ -150,8 +151,9 @@ class Network(object):
 				needs_cropping.append(component)
 			else:
 				small_enough.append(component)
-
 		while len(needs_cropping) > 0:
+			print "Cropping components to have max size = {}".format(max_component_size)
+			print "\t{} components ok, {} need cropping".format(len(small_enough),len(needs_cropping))
 			new_crop = []
 			for component in needs_cropping:
 				new_comp = component._cut(min_score = 0.5)
@@ -167,4 +169,16 @@ class Network(object):
 
 
 		return small_enough
+
+	def write_network(self,csv_writer,heads = False):
+		if heads:
+			csv_writer.writerow(['sourceNode','targetNode','Weight'])
+		done = {}
+		for node in self.edge_dict:
+			done[node] = {}
+		for node,edges in self.edge_dict.items():
+			for target,score in edges.items():
+				if not node in done[target]:
+					csv_writer.writerow([node,target,score])
+					done[node][target] = True
 
