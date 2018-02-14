@@ -6,18 +6,18 @@ import numpy as np
 
 
 # utility function to create an edge dictionary
-def create_edge_dict(scores,ms1,min_frag_overlap = 6,min_score = 0.7):
+def create_edge_dict(scores,min_frag_overlap = 6,min_score = 0.5):
 	edge_dict = {}
 	for score_row in scores:
-		mol1 = ms1[score_row[0]]
-		mol2 = ms1[score_row[1]]
+		mol1 = score_row[0]
+		mol2 = score_row[1]
 		score = score_row[2]
 		overlap = score_row[3]
 		if overlap >= min_frag_overlap and score >= min_score:
 			if not mol1 in edge_dict:
-				edge_dict[mol1] = []
+				edge_dict[mol1] = {}
 			if not mol2 in edge_dict:
-				edge_dict[mol2] = []
+				edge_dict[mol2] = {}
 			edge_dict[mol1][mol2] = score
 			edge_dict[mol2][mol1] = score
 
@@ -74,6 +74,14 @@ class Network(object):
 		self.n_edges = n_edges
 
 
+	def copy(self):
+		# make a deep copy of itself and return
+		new_edge_dict = {}
+		for mol,edges in self.edge_dict.items():
+			new_edge_dict[mol] = {}
+			for target,score in edges.items():
+				new_edge_dict[mol][target] = score
+		return Network(new_edge_dict)
 	def _extract_component(self,min_score = 0.5,start_node = None):
 		if not start_node:
 			start_node = self.edge_dict.keys()[0]
@@ -181,4 +189,10 @@ class Network(object):
 				if not node in done[target]:
 					csv_writer.writerow([node,target,score])
 					done[node][target] = True
+	def __str__(self):
+		out_str = ""
+		out_str += "Network has {} nodes\n".format(self.n_nodes())
+		for mol,edges in self.edge_dict.items():
+			out_str += str(mol) + " (degree = {})\t".format(len(edges)) + " ".join(["({},{})".format(t,s) for t,s in edges.items()]) + "\n"
+		return out_str
 
