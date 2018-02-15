@@ -15,6 +15,8 @@ import re
 #  2. Turning them into fragment and loss features
 #  3. Making the corpus object
 
+
+PROTON_MASS = 1.00727645199076
 class MS1(object):
     def __init__(self,id,mz,rt,intensity,file_name,scan_number = None):
         self.id = id
@@ -1253,12 +1255,29 @@ class LoadMGF(Loader):
 
                             if not in_doc:
                                 in_doc = True
+                                # Following corrects parentmass according to charge
+                                # if charge is known. This should lead to better computation of neutral losses
+                                if 'charge' in temp_metadata:
+                                    # print metadata[doc_name]['charge'],metadata[doc_name]['parentmass']
+                                    temp_metadata['precursormass'] = temp_metadata['parentmass']
+                                    pm = temp_metadata['parentmass']
+                                    ch = temp_metadata['charge']
+                                    mul = int(ch[0])
+                                    if mul > 1:
+                                        pm *= mul
+                                        pm -= (mul-1)*PROTON_MASS
+                                        temp_metadata['parentmass'] = pm
+                                        parentmass = pm
+
+
+
                                 new_ms1 = MS1(ms1_id,parentmass,parentrt,parentintensity,file_name)
                                 ms1_id += 1
                                 doc_name = 'document_{}'.format(ms1_id)
                                 metadata[doc_name] = temp_metadata.copy()
                                 new_ms1.name = doc_name
                                 ms1.append(new_ms1)
+                                
 
                             tokens = rline.split()
                             if len(tokens) == 2:
