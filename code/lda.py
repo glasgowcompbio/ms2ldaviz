@@ -177,7 +177,8 @@ class LDA(object):
  # In single file it is created internally
 class VariationalLDA(object):
 	def __init__(self,corpus=None,K = 20,eta=0.1,
-		alpha=1,update_alpha=True,word_index=None,normalise = -1,fixed_topics = None,fixed_topics_metadata = None):
+		alpha=1,update_alpha=True,word_index=None,normalise = -1,fixed_topics = None,fixed_topics_metadata = None
+		topic_index = None):
 		self.corpus = corpus
 		self.word_index = word_index
 		self.normalise = normalise
@@ -213,20 +214,22 @@ class VariationalLDA(object):
 
 		# self.topic_index = topic_index
 		# self.topic_metadata = topic_metadata
-		self.topic_index = {}
-		self.topic_metadata = {}
-		topic_pos = 0
-		if fixed_topics:
-			for topic_name in fixed_topics:
-				self.topic_index[topic_name] = topic_pos
-				self.topic_metadata[topic_name] = fixed_topics_metadata[topic_name]
-				self.topic_metadata[topic_name]['type'] = 'fixed'
-				topic_pos += 1
+		self.topic_index = topic_index
+		if not self.topic_index:
+			self.topic_index = {}
+			self.topic_metadata = {}
+			topic_pos = 0
+			if fixed_topics:
+				for topic_name in fixed_topics:
+					self.topic_index[topic_name] = topic_pos
+					self.topic_metadata[topic_name] = fixed_topics_metadata[topic_name]
+					self.topic_metadata[topic_name]['type'] = 'fixed'
+					topic_pos += 1
 		
-		for topic_pos in range(self.n_fixed_topics,self.K):
-			topic_name = 'motif_{}'.format(topic_pos)
-			self.topic_index[topic_name] = topic_pos
-			self.topic_metadata[topic_name] = {'name':topic_name,'type':'learnt'}
+			for topic_pos in range(self.n_fixed_topics,self.K):
+				topic_name = 'motif_{}'.format(topic_pos)
+				self.topic_index[topic_name] = topic_pos
+				self.topic_metadata[topic_name] = {'name':topic_name,'type':'learnt'}
 
 		if fixed_topics:
 			self._add_exact_fixed_topics(fixed_topics)
