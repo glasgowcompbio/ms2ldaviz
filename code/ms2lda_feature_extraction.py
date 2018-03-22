@@ -1262,7 +1262,7 @@ class LoadMGF(Loader):
                                     temp_metadata['precursormass'] = temp_metadata['parentmass']
                                     pm = temp_metadata['parentmass']
                                     ch = temp_metadata['charge']
-                                    mul = int(ch[0])
+                                    mul = int(ch)
                                     if mul > 1:
                                         pm *= mul
                                         pm -= (mul-1)*PROTON_MASS
@@ -1277,7 +1277,7 @@ class LoadMGF(Loader):
                                 metadata[doc_name] = temp_metadata.copy()
                                 new_ms1.name = doc_name
                                 ms1.append(new_ms1)
-                                
+
 
                             tokens = rline.split()
                             if len(tokens) == 2:
