@@ -4,6 +4,7 @@ from Queue import PriorityQueue
 import numpy as np
 import sys, os
 import re
+import json
 # sys.path.append('/Users/simon/git/efcompute')
 # from ef_assigner import ef_assigner
 # from formula import Formula
