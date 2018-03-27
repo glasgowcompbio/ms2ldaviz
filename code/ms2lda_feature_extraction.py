@@ -4,6 +4,7 @@ from Queue import PriorityQueue
 import numpy as np
 import sys, os
 import re
+import json
 # sys.path.append('/Users/simon/git/efcompute')
 # from ef_assigner import ef_assigner
 # from formula import Formula
@@ -15,6 +16,8 @@ import re
 #  2. Turning them into fragment and loss features
 #  3. Making the corpus object
 
+
+PROTON_MASS = 1.00727645199076
 class MS1(object):
     def __init__(self,id,mz,rt,intensity,file_name,scan_number = None):
         self.id = id
@@ -923,6 +926,94 @@ class LoadGNPS(Loader):
                 print "Processed {} spectra".format(n_processed)
         return self.ms1,self.ms2,self.metadata
 
+
+# similar to LoadGNPS, but to load MIBiG spectra that have been processed through CFM-ID
+class LoadMIBiG(Loader):
+
+    def __init__(self, merge_energies = True, merge_ppm = 2, replace = 'sum', min_intensity = 0.0):
+        self.merge_energies = merge_energies
+        self.merge_ppm = merge_ppm
+        self.replace = replace
+        self.min_intensity = min_intensity
+
+    def load_spectra(self, input_set):
+
+        # Input set is a list of (specta_filename, mibig_json), one for each spectra
+        self.input_set = input_set
+        self.files = []
+        self.ms1 = []
+        self.ms1_index = {}
+        self.ms2 = []
+        self.metadata = {}
+        n_processed = 0
+        ms2_id = 0
+        self.metadata = {}
+
+        for spectra_file, mibig_json in self.input_set:
+
+            # get data from the mibig json file
+            d = None
+            with open(mibig_json, 'r') as f2:
+                d = json.load(f2)
+
+            with open(spectra_file,'r') as f1:
+
+                temp_mass = []
+                temp_intensity = []
+                doc_name = spectra_file.split('/')[-1]
+                self.metadata[doc_name] = {}
+                self.metadata[doc_name]['mibig_data'] = d
+
+                # TODO: the 'mol_mass' field is not always present in the json data (d), but
+                # it should be possible to retrieve this from the pubchem id
+                mz = 0.0
+                rt = None
+                intensity = 0.0
+                new_ms1 = MS1(str(n_processed), mz, rt, intensity, mibig_json)
+                new_ms1.name = doc_name
+                self.ms1.append(new_ms1)
+                self.ms1_index[str(n_processed)] = new_ms1
+
+                for line in f1:
+                    rline = line.rstrip()
+                    if len(rline) > 0:
+                        if rline.startswith('energy'):
+                            continue
+                        else:
+                            # TODO: below block pretty much copied and pasted from the GNPS loader
+                            # If it gets here, its a fragment peak
+                            sr = rline.split(' ')
+                            mass = float(sr[0])
+                            intensity = float(sr[1])
+                            if intensity >= self.min_intensity:
+                                if self.merge_energies and len(temp_mass)>0:
+                                    errs = 1e6*np.abs(mass-np.array(temp_mass))/mass
+                                    if errs.min() < self.merge_ppm:
+                                        # Don't add, but merge the intensity
+                                        min_pos = errs.argmin()
+                                        if self.replace == 'max':
+                                            temp_intensity[min_pos] = max(intensity,temp_intensity[min_pos])
+                                        else:
+                                            temp_intensity[min_pos] += intensity
+                                    else:
+                                        temp_mass.append(mass)
+                                        temp_intensity.append(intensity)
+                                else:
+                                    temp_mass.append(mass)
+                                    temp_intensity.append(intensity)
+
+                parent = self.ms1[-1]
+                for mass,intensity in zip(temp_mass,temp_intensity):
+                    new_ms2 = (mass,0.0,intensity,parent,spectra_file,float(ms2_id))
+                    self.ms2.append(new_ms2)
+                    ms2_id += 1
+
+                n_processed += 1
+            if n_processed % 100 == 0:
+                print "Processed {} spectra".format(n_processed)
+        return self.ms1,self.ms2,self.metadata
+
+
 # A class to load spectra that sit in MSP files
 class LoadMSP(Loader):
 
@@ -1253,12 +1344,29 @@ class LoadMGF(Loader):
 
                             if not in_doc:
                                 in_doc = True
+                                # Following corrects parentmass according to charge
+                                # if charge is known. This should lead to better computation of neutral losses
+                                if 'charge' in temp_metadata:
+                                    # print metadata[doc_name]['charge'],metadata[doc_name]['parentmass']
+                                    temp_metadata['precursormass'] = temp_metadata['parentmass']
+                                    pm = temp_metadata['parentmass']
+                                    ch = temp_metadata['charge']
+                                    mul = int(ch)
+                                    if mul > 1:
+                                        pm *= mul
+                                        pm -= (mul-1)*PROTON_MASS
+                                        temp_metadata['parentmass'] = pm
+                                        parentmass = pm
+
+
+
                                 new_ms1 = MS1(ms1_id,parentmass,parentrt,parentintensity,file_name)
                                 ms1_id += 1
                                 doc_name = 'document_{}'.format(ms1_id)
                                 metadata[doc_name] = temp_metadata.copy()
                                 new_ms1.name = doc_name
                                 ms1.append(new_ms1)
+
 
                             tokens = rline.split()
                             if len(tokens) == 2:
