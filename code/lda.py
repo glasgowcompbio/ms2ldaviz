@@ -177,7 +177,7 @@ class LDA(object):
  # In single file it is created internally
 class VariationalLDA(object):
 	def __init__(self,corpus=None,K = 20,eta=0.1,
-		alpha=1,update_alpha=True,word_index=None,normalise = -1,fixed_topics = None,fixed_topics_metadata = None
+		alpha=1,update_alpha=True,word_index=None,normalise = -1,fixed_topics = None,fixed_topics_metadata = None,
 		topic_index = None):
 		self.corpus = corpus
 		self.word_index = word_index
