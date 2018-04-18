@@ -123,7 +123,11 @@ class Loader(object):
                 # store (featid, mz,rt,intensity)
 
                 ## record user defined index columns before "mass" column in peaklist file
-                self.ms1_peaks.append((featid, float(mz), float(rt), samples, tokens_tuple[:index]))
+                try:
+                    self.ms1_peaks.append((featid, float(mz), float(rt), samples, tokens_tuple[:index]))
+                except:
+                    print "Failed on line: "
+                    print line    
 
         # sort them by mass
         self.ms1_peaks = sorted(self.ms1_peaks,key = lambda x: x[1])
