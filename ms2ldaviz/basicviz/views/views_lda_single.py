@@ -1726,6 +1726,34 @@ def summary(request, experiment_id):
 
     return render(request, 'basicviz/summary.html', context_dict)
 
+def short_summary(request,experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    user_experiments = UserExperiment.objects.filter(experiment=experiment)
+
+    motifs = Mass2Motif.objects.filter(experiment=experiment)
+    motif_tuples = []
+    for motif in motifs:
+        dm2ms = get_docm2m(motif)
+        motif_tuples.append((motif, len(dm2ms)))
+
+    # motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment=experiment, probability__gte=0.05)
+
+    documents = Document.objects.filter(experiment=experiment)
+
+    # all_docs_motifs = get_docm2m_all(experiment=experiment)
+
+    context_dict = {}
+    context_dict['experiment'] = experiment
+    context_dict['user_experiments'] = user_experiments
+    context_dict['motif_tuples'] = motif_tuples
+    # context_dict['motif_features'] = motif_features
+    context_dict['documents'] = documents
+    context_dict['n_docs'] = len(documents)
+    # context_dict['all_docs_motifs'] = all_docs_motifs
+    
+    return render(request, 'basicviz/short_summary.html', context_dict)
+
+
 
 # Matches motifs in one experiment with those in another
 # TODO: move to celery, create form

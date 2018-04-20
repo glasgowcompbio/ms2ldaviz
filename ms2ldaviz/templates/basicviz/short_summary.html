@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_block %}
+{% endblock %}
+
+{% block body_block %}
+
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h3>Experiment (short) Summary</h3>
+                <ul>
+                    <li><b>Name:</b> {{experiment.name}}</li>
+                    <li><b>Details:</b> {{experiment.description}}</li>
+                    <li><b>Users:</b> {% for user_experiment in user_experiments %} {{user_experiment.user.username}} ({{user_experiment.permission}}), {% endfor %}</li>
+                    <li><b>Full summary:</b> Click <a href="/basicviz/summary/{{experiment.id}}">here</a> for full summary (can be slow)</li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Experiment options (if run on Ms2lda.org)</h4>
+                <ul>
+                    <li><b>MS2 file</b>: {{experiment.ms2_file}}</li>
+                    <li><b>Peaklist file</b>: {{experiment.csv_file}}</li>
+                    <li><b>isolation_window</b>: {{experiment.isolation_window}}</li>
+                    <li><b>mz_tol</b>: {{experiment.mz_tol}}</li>
+                    <li><b>rt_tol</b>: {{experiment.rt_tol}}</li>
+                    <li><b>min_ms1_rt (s)</b>: {{experiment.min_ms1_rt}}</li>
+                    <li><b>max_ms1_rt (s)</b>: {{experiment.max_ms1_rt}}</li>
+                    <li><b>min_ms2_intensity</b>: {{experiment.min_ms2_intensity}}</li>
+                    <li><b>filter duplicates</b>: {{experiment.filter_duplicates}}</li>
+                    <li><b>min_ms1_intensity</b>: {{experiment.min_ms1_intensity}}</li>
+                    <li><b>duplicate_filter_mz_tol</b>: {{experiment.duplicate_filter_mz_tol}}</li>
+                    <li><b>duplicate_filter_rt_tol</b>: {{experiment.duplicate_filter_rt_tol}}</li>
+                    <li><b>n_its (if LDA)</b>: {{experiment.n_its}}</li>
+                    <li><b>K (if LDA)</b>: {{experiment.K}}</li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Fragmentation Spectra Details</h4>
+                <p>
+                    The following table lists the fragmentation spectra of molecules
+                    in this dataset. Click the links in the <strong>Name</strong> column
+                    for more information on that molecule, including associated Mass2Motifs
+                    that explain the features of the spectra.
+                </p>
+                <table class="table" id="parenttable">
+                <thead>
+                <tr>
+                    {% if documents.0.user_cols %}
+                        {% for user_col_name, user_col_value in documents.0.user_cols %}
+                            <th>{{ user_col_name }}</th>
+                        {% endfor %}
+                    {% endif %}
+                    <th>Name</th><th>Precursor Mass</th><th>link</th><th>Display Name</th></tr>
+                </thead>
+                <tbody>
+                {% for doc in documents %}
+                    <tr>
+                        {% if documents.0.user_cols %}
+                            {% for user_col_name, user_col_value in doc.user_cols %}
+                                <td>{{ user_col_value }}</td>
+                            {% endfor %}
+                        {% endif %}
+                        <td><a href="/basicviz/show_doc/{{doc.id}}">{{doc.name}}</a></td>
+                        <td>{{doc.mass}}</td>
+                        <td>{% if doc.csid %}
+                            <a href="http://www.chemspider.com/Chemical-Structure.{{doc.csid}}.html" target=new>View on ChemSpider</a>
+                            {% endif %}
+                        </td>
+                        <td>{{doc.display_name}}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Mass2Motif Details</h4>
+                <p>
+                    The following table lists the Mass2Motifs that have been inferred for this
+                    dataset, including their degree (number of associated molecules) and annotations.
+                    During the use of Mass2Motifs for structural grouping, annotation, and/or classification,
+                    <a href="/disclaimer" target="_blank">please keep the following in mind</a>.
+                </p>
+                <table class='table' id='summarytable'>
+                    <thead>
+                        <tr><th>Name</th><th>Degree</th><th>Annotation</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for motif_tuple in motif_tuples %}
+                            <tr>
+                                <td>
+                                    <a href="/basicviz/view_parents/{{motif_tuple.0.id}}">{{ motif_tuple.0.name }}</a>
+                                </td>
+                                <td>{{motif_tuple.1}}</td>
+                                <td>{{motif_tuple.0.annotation}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        
+
+    </div>
+
+{% endblock %}
+
+{% block js_block %}
+
+	<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+
+	<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+	<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+	<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+	<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+
+
+
+	<script type="text/javascript">
+
+		$('#summarytable').DataTable({
+			dom: 'Bfrtip',
+			buttons: [
+		        'csv',
+	        ],
+	        "order": [[ 1, "desc" ]],
+	    });
+		$('#featuretable').DataTable({
+			dom: 'Bfrtip',
+			buttons: [
+		        'csv',
+	        ],
+	        "order": [[ 1, "asc" ]],
+	    });
+		$('#parenttable').DataTable({
+			dom: 'Bfrtip',
+			buttons: [
+		        'csv',
+	        ],
+	        "order": [[ 1, "asc" ]],
+	    });
+        $('#docmotiftable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                'csv',
+            ],
+            "order": [[ 0, "asc" ]],
+        });
+	</script>
+
+{% endblock %}
+
