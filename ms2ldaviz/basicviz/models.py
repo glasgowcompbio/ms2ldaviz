@@ -109,6 +109,10 @@ class Experiment(models.Model):
         super(Experiment, self).save(*args, **kwargs)
 
 
+class PublicExperiments(models.Model):
+    experiment = models.ForeignKey(Experiment)
+
+
 class MultiLink(models.Model):
     multifileexperiment = models.ForeignKey(MultiFileExperiment)
     experiment = models.ForeignKey(Experiment)

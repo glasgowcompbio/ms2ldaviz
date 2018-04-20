@@ -16,7 +16,7 @@ from basicviz.forms import DocFilterForm, ValidationForm, VizForm, \
     TopicScoringForm, MatchMotifForm
 from massbank.forms import Mass2MotifMetadataForm
 from basicviz.models import Feature, Experiment, Document, FeatureInstance, DocumentMass2Motif, \
-    FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment, MotifMatch
+    FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment, MotifMatch, PublicExperiments
 from basicviz.tasks import match_motifs,match_motifs_set
 from massbank.views import get_massbank_form
 from options.views import get_option
@@ -34,8 +34,13 @@ def check_user(request, experiment):
         ue = UserExperiment.objects.get(experiment=experiment, user=user)
         return ue.permission
     except:
-        # User can't see this one
-        return None
+        # try the public experiments
+        e = PublicExperiments.objects.filter(experiment = experiment)
+        if len(e) > 0:
+            return "view"
+        else:
+            # User can't see this one
+            return None
 
 
 def topic_table(request, experiment_id):
@@ -215,7 +220,8 @@ def compute_topic_scores(request, experiment_id):
     return render(request, 'basicviz/compute_topic_scores.html', context_dict)
 
 
-@login_required(login_url='/registration/login/')
+
+# @login_required(login_url='/registration/login/')
 def show_docs(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     if not check_user(request, experiment):
@@ -229,7 +235,7 @@ def show_docs(request, experiment_id):
     return render(request, 'basicviz/show_docs.html', context_dict)
 
 
-@login_required(login_url='/registration/login/')
+# @login_required(login_url='/registration/login/')
 def show_doc(request, doc_id):
     document = Document.objects.get(id=doc_id)
     experiment = document.experiment
@@ -276,7 +282,7 @@ def get_doc_context_dict(document):
     return context_dict
 
 
-@login_required(login_url='/registration/login/')
+# @login_required(login_url='/registration/login/')
 def view_parents(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
     experiment = motif.experiment
@@ -784,7 +790,7 @@ def get_doc_topics(request, doc_id):
     return HttpResponse(json.dumps(plot_fragments), content_type='application/json')
 
 
-@login_required(login_url='/registration/login/')
+# @login_required(login_url='/registration/login/')
 def start_viz(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     if not check_user(request, experiment):
@@ -842,7 +848,7 @@ def start_viz(request, experiment_id):
         return render(request, 'basicviz/graph.html', context_dict)
 
 
-@login_required(login_url='/registration/login/')
+# @login_required(login_url='/registration/login/')
 def start_annotated_viz(request, experiment_id):
     # Is this function ever called??
     experiment = Experiment.objects.get(id=experiment_id)
