@@ -1,4 +1,4 @@
-# A collection of useful functions
+# A collection of useful functions and objects
 
 
 # Creates a corpus in reverse: i.e. keys are features, values are a set of docs
@@ -52,3 +52,38 @@ def bin_diff(diff,bin_width = 0.005):
 	bin_middle = (bin_lower + bin_upper)/2.0
 	bin_middle -= offset
 	return "{:.4f}".format(bin_middle)
+
+def convert_corpus_to_counts(corpus):
+	n_files = len(corpus)
+	counts = {}
+	for file,spectra in corpus.items():
+		counts[file] = {}
+		for mol,spectrum in spectra.items():
+			for mz,intensity in spectrum.items():
+				if not mz in counts[file]:
+					counts[file][mz] = 1
+				else:
+					counts[file][mz] += 1
+	return counts
+
+def make_count_matrix(counts):
+	feature_index = {}
+	sample_index = {}
+	import numpy as np
+	from scipy.sparse import coo_matrix
+	filepos = 0
+	featurepos = 0
+	spdata = []
+	file_list = sorted(counts.keys())
+	for file in file_list:
+		file_counts = counts[file]
+		sample_index[file] = filepos
+		filepos += 1
+		for feature,count in file_counts.items():
+			if not feature in feature_index:
+				feature_index[feature] = featurepos
+				featurepos += 1
+			spdata.append((sample_index[file],feature_index[feature],count))
+	i,j,k = zip(*spdata)
+	co = coo_matrix((k,(j,i))) # note j,i: rows are features
+	return np.array(co.todense()),sample_index,feature_index
