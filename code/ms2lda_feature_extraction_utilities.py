@@ -86,4 +86,10 @@ def make_count_matrix(counts):
 			spdata.append((sample_index[file],feature_index[feature],count))
 	i,j,k = zip(*spdata)
 	co = coo_matrix((k,(j,i))) # note j,i: rows are features
-	return np.array(co.todense()),sample_index,feature_index
+	sample_list = ['' for s in sample_index]
+	for s,pos in sample_index.items():
+		sample_list[pos] = s
+	feature_list = ['' for s in feature_index]
+	for s,pos in feature_index.items():
+		feature_list[pos] = s	
+	return np.array(co.todense()),sample_index,feature_index,sample_list,feature_list
