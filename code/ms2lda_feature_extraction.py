@@ -1355,10 +1355,6 @@ class LoadMGF(Loader):
                                     temp_metadata['precursormass'] = temp_metadata['parentmass']
                                     pm = temp_metadata['parentmass']
                                     ch = temp_metadata['charge']
-<<<<<<< HEAD
-                                    mul = int(ch)
-=======
-
                                     mul = int(ch.replace("+", ""))
                                     try:
                                         if ch.startswith('-') or ch.startswith('+'): # e.g. '-1'
@@ -1370,7 +1366,7 @@ class LoadMGF(Loader):
                                             mul = int(ch[0]) # e.g. '1+'
                                     except ValueError:
                                         mul = 0
->>>>>>> 75923eef234f5559ce07c880e9d3791d9117cf14
+
                                     if mul > 1:
                                         pm *= mul
                                         pm -= (mul-1)*PROTON_MASS
