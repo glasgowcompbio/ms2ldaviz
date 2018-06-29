@@ -590,11 +590,12 @@ class LoadMZML(Loader):
                                     ms1_id += 1
                                     metadata[new_ms1.name] = {'parentmass':current_ms1_scan_mz[max_intensity_pos],
                                                               'parentrt':current_ms1_scan_rt,'scan_number':nc,
-                                                              'precursor_mass':precursor_mz}
+                                                              'precursor_mass':precursor_mz,'file':input_file}
 
 
                                     previous_ms1 = new_ms1 # used for merging energies
                                     previous_precursor_mz = new_ms1.mz
+                nc += 1
 
 
         print "Found {} ms2 spectra, and {} individual ms2 objects".format(len(ms1),len(ms2))
