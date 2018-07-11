@@ -17,14 +17,15 @@ python manage.py createsuperuser
 python setup_feat.py
 ```
 
+In their own shell (within pipenv shell) run:
 ```
 docker run --name some-redis -d -p 6379:6379 redis
 ```
-
+and
 ```
 ./start_celery_prod.sh
 ```
-
+and
 ```
 python manage.py runserver
 ```
