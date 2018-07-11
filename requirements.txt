@@ -4,11 +4,12 @@ jsonpickle==0.9.4
 networkx==1.11
 ChemSpiPy==1.0.4
 celery==4.0.2
+kombu==4.1.0
 pymzml==0.7.7
 django-grappelli==2.9.1
 django-ipware==1.1.6
 django-markdown2==0.3.0
 markdown2==2.3.4
-psycopg2==2.6.2
+psycopg2
 scipy==0.18.1
 scikit-learn==0.18.1

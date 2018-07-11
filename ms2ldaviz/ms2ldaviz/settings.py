@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '^(2&40trp_*ei%$_*p-k598#hu3-w(@9%&&dr&#0##dpag=c%+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -88,12 +88,8 @@ WSGI_APPLICATION = 'ms2ldaviz.wsgi.application'
 # for the digital ocean server
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'django',
-        'USER': 'django',
-        'PASSWORD': 'j7z3rL40w9',
-        'HOST': 'localhost',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -147,3 +143,6 @@ STATICFILES_DIRS = (
 
 # Approx 10MB for big API requests
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10000000
+
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+

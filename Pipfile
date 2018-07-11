@@ -1,0 +1,26 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[packages]
+numpy = "==1.12.0"
+jsonpickle = "==0.9.4"
+networkx = "==1.11"
+celery = "==4.0.2"
+django-grappelli = "==2.9.1"
+django-ipware = "==1.1.6"
+"django-markdown2" = "==0.3.0"
+"markdown2" = "==2.3.4"
+"psycopg2" = "*"
+scipy = "==0.18.1"
+scikit-learn = "==0.18.1"
+Django = "==1.10.5"
+ChemSpiPy = "==1.0.4"
+pymzML = "==0.7.7"
+redis = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "2.7"
