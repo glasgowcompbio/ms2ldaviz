@@ -12,14 +12,12 @@ pipenv --python 2.7
 pipenv install
 pipenv shell
 cd ms2ldaviz
-python manage.py migrate
-python manage.py createsuperuser
-python setup_feat.py
 ```
 
 In their own shell (within pipenv shell) run:
 ```
 docker run --name some-redis -d -p 6379:6379 redis
+docker run --name some-pg -d -p 5432:5432 -e POSTGRES_PASSWORD=j7z3rL40w9 -e POSTGRES_USER=django postgres
 ```
 and
 ```
@@ -27,6 +25,9 @@ and
 ```
 and
 ```
+python manage.py migrate
+python manage.py createsuperuser
+python setup_feat.py
 python manage.py runserver
 ```
 
