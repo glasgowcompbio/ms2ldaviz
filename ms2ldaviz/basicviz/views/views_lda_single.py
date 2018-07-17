@@ -1649,6 +1649,24 @@ def get_annotated_topics(request, experiment_id):
 
     return HttpResponse(json.dumps(output), content_type='application/json')
 
+def get_all_topics(request,experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    motifs = Mass2Motif.objects.filter(experiment=experiment)
+    output_motifs = motifs
+
+    output_metadata = []
+    output_beta = []
+    for motif in output_motifs:
+        output_metadata.append((motif.name, motif.annotation, motif.short_annotation))
+        betas = []
+        beta_vals = motif.mass2motifinstance_set.all()
+        for b in beta_vals:
+            betas.append((b.feature.name, b.probability))
+        output_beta.append((motif.name, betas))
+
+    output = (output_metadata, output_beta)
+
+    return HttpResponse(json.dumps(output), content_type='application/json')
 
 # Gets the document <-> m2m links for a particular experiment as a json object
 def get_doc_m2m(request, experiment_id):
