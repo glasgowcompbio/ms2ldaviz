@@ -1,6 +1,6 @@
 from django import forms
 
-from basicviz.models import Experiment
+from basicviz.models import Experiment,BVFeatureSet
 from decomposition.models import MotifSet
 from basicviz.constants import EXPERIMENT_DECOMPOSITION_SOURCE
 from django.core.exceptions import ValidationError
@@ -14,6 +14,11 @@ class CreateExperimentForm(forms.ModelForm):
         self.fields['decompose_from'] = forms.ModelChoiceField(
             queryset=MotifSet.objects.all(),
             label='Decompose using Mass2Motifs in'
+        )
+        self.fields['featureset'] = forms.ModelChoiceField(
+            queryset=BVFeatureSet.objects.filter(name__startswith='binned'),
+            label='Choose width of ms2 bins',
+            initial=BVFeatureSet.objects.get(name = 'binned_005')
         )
         self.fields['ms2_file'].required = True
         self.fields['decompose_from'].required = False
@@ -46,7 +51,7 @@ class CreateExperimentForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'style': 'width:300px'}),
             'description': forms.Textarea(attrs={'rows': 3, 'cols': 56}),
             'csv_file': forms.ClearableFileInput(),
-            'ms2_file': forms.ClearableFileInput()
+            'ms2_file': forms.ClearableFileInput(),
         }
         labels = {
             'name': '(Required) Experiment name. Note that this must be unique in the system',
@@ -60,6 +65,7 @@ class CreateExperimentForm(forms.ModelForm):
             'max_ms1_rt': 'Maximum retention time of MS1 peaks to store (seconds)',
             'min_ms1_intensity': 'Minimum intensity of MS1 peaks to store',
             'min_ms2_intensity': 'Minimum intensity of MS2 peaks to store',
+            'featureset': 'Width of the MS2 bins',
             'filter_duplicates': 'Attempt to filter out duplicate MS1 peaks. If Set to True, the code merges peaks within duplicate_filter_mz_tol and duplicate_filter_rt_tol.',
             'duplicate_filter_mz_tol': 'mz tol (ppm) for duplicate filtering',
             'duplicate_filter_rt_tol': 'rt tol (seconds) for duplicate filtering',
@@ -72,6 +78,7 @@ class CreateExperimentForm(forms.ModelForm):
             'name', 'description',
             'experiment_type', 'experiment_ms2_format', 'ms2_file', 'csv_file',
             'isolation_window', 'mz_tol', 'rt_tol', 'min_ms1_rt', 'max_ms1_rt', 'min_ms1_intensity','min_ms2_intensity',
+            'featureset',
             'filter_duplicates','duplicate_filter_mz_tol','duplicate_filter_rt_tol',
             'K', 'n_its',
         ]

@@ -11,6 +11,42 @@ def get_experiment_features(experiment):
     features = set([fi.feature for fi in feature_instances])
     return features
 
+
+def map_the_features(fs,base_fs,features,base_features):
+    feature_map = {}
+    if fs == base_fs:
+        for feature in features:
+            if feature in base_features:
+                feature_map[feature] = [feature]
+    else:
+        base_feature_name_dict = {}
+        for feature in base_features:
+            base_feature_name_dict[feature.name] = feature
+        w1 = float('0.'+fs.name.split('_')[1])
+        w2 = float('0.' + base_fs.name.split('_')[1])
+        assert w1 > w2
+        # only allow lower res mapping
+        # find all the higher res features that could map to the lower res one
+        fac = int(w1/w2)
+        for feature in features:
+            tokens = feature.name.split('_')
+            feat_type = tokens[0]
+            feat_mz = float(tokens[1])  
+            lower = feature.min_mz
+            upper = feature.max_mz
+            temp = []
+            hr_mz = lower + w2/2.0
+            for i in range(fac):
+                possible_feature = "{}_{:.4f}".format(feat_type,hr_mz)
+                if possible_feature in base_feature_name_dict:
+                    temp.append(base_feature_name_dict[possible_feature])
+                hr_mz += w2
+            if len(temp) > 0:
+                feature_map[feature] = temp
+
+    return feature_map
+
+
 @app.task
 def match_motifs_set(experiment_id,base_experiment_id,min_score_to_save = 0.5):
 
@@ -28,88 +64,88 @@ def match_motifs_set(experiment_id,base_experiment_id,min_score_to_save = 0.5):
     features = get_experiment_features(experiment)
     base_features = get_experiment_features(base_experiment)
 
-    base_feature_name_dict = {}
-    for feature in base_features:
-        base_feature_name_dict[feature.name] = feature
-
-
-    feature_map = {}
-    if fs == base_fs:
-        # the task is easy because both sets of motifs are in the same set
-        for feature in features:
-            if feature in base_features:
-                feature_map[feature] = [feature]
-    elif fs.name == 'binned_01' and base_fs.name == 'binned_005':
-        # allow the comparison of things with wider fs with the original motifs
-        for feature in features:
-            ftype = feature.name.split('_')[0]
-            if ftype == 'fragment' or ftype == 'loss':
-                # work out the names of the two 005 features
-                lowval = feature.min_mz
-                highval = feature.max_mz
-                fname1 = ftype + "_{:.4f}".format(lowval + 0.005/2.0)
-                fname2 = ftype + "_{:.4f}".format(highval - 0.005/2.0)
-                temp = []
-                if fname1 in base_feature_name_dict:
-                    temp.append(base_feature_name_dict[fname1])
-                if fname2 in base_feature_name_dict:
-                    temp.append(base_feature_name_dict[fname2])
-                if len(temp) > 0:
-                    feature_map[feature] = temp
-            elif ftype == 'mzdiff':
-                temp = []
-                fname1 = ftype + "_{:.4f}".format(feature.min_mz)
-                fname2 = ftype + "_{:.4f}".format(feature.max_mz)
-                if feature.name in base_feature_name_dict:
-                    temp.append(base_feature_name_dict[feature.name])
-                if fname1 in base_feature_name_dict:
-                    temp.append(base_feature_name_dict[fname1])
-                if fname2 in base_feature_name_dict:
-                    temp.append(base_feature_name_dict[fname2])
-                if len(temp) > 0:
-                    feature_map[feature] = temp
-    elif fs.name == 'binned_005' and basefs.name == 'binned_01':
-        # Each will only match to one, but the matches will appear more than once
-        for feature in features:
-            ftype = feature.name.split('_')[0]
-            if ftype == 'fragent' or ftype == 'loss':
-                lowval = feature.min_mz
-                highval = feature.max_mz
-                # Each feature will map perfectly into the first or second half of 
-                # one of the base features
-                # we just need to work out if it is a first half or a second half one
-                # Easiest way is to check if upper lor lower val is a name in the other set
-                uppername = ftype+ "_{:.4f}".format(highval)
-                if uppername in base_feature_name_dict:
-                    feature_map[feature] = base_feature_name_dict[uppername]
-                else:
-                    lowername = ftype+ "_{:.4f}".format(lowval)
-                    if lowername in base_feature_name_dict:
-                        feature_map[lowername] = base_feature_name_dict[lowername]
-            elif ftype == 'mzdiff':
-                if feature.name in base_feature_name_dict:
-                    feature_map[feature] = [base_feature_name_dict[feature.name]]
-                else:
-                    # Complicated case: 0.005 diffs either align with the centre
-                    # of the 0.01 diff or at either end
-                    # if the latter, we try linking to the 0.01 feature above and below
-                    temp = []
-                    fmz = float(feature.name.split('_')[1])
-                    drop_name = 'mzdiff_{:.4f}'.format(fmz - 0.005)
-                    up_name = 'mzdiff_{:.4f}'.format(fmz + 0.005)
-                    if drop_name in base_feature_name_dict:
-                        temp.append(base_feature_name_dict[drop_name])
-                    if up_name in base_feature_name_dict:
-                        temp.append(base_feature_name_dict[up_name])
-                    if len(temp) > 0:
-                        feature_map[feature] = temp
+    
+    if not fs == None and not base_fs == None:
+        feature_map = map_the_features(fs,base_fs,features,base_features)
     else:
-        # Ensure backward compatibility
         return match_motifs(experiment_id,base_experiment_id,min_score_to_save = min_score_to_save)
 
-    mzd_features = filter(lambda x: x.name.startswith('mzdiff'),feature_map.keys())
-    for f in mzd_features:
-        print f,feature_map[f]
+    # if fs == base_fs:
+    #     # the task is easy because both sets of motifs are in the same set
+    #     for feature in features:
+    #         if feature in base_features:
+    #             feature_map[feature] = [feature]
+    # elif fs.name == 'binned_01' and base_fs.name == 'binned_005':
+    #     # allow the comparison of things with wider fs with the original motifs
+    #     for feature in features:
+    #         ftype = feature.name.split('_')[0]
+    #         if ftype == 'fragment' or ftype == 'loss':
+    #             # work out the names of the two 005 features
+    #             lowval = feature.min_mz
+    #             highval = feature.max_mz
+    #             fname1 = ftype + "_{:.4f}".format(lowval + 0.005/2.0)
+    #             fname2 = ftype + "_{:.4f}".format(highval - 0.005/2.0)
+    #             temp = []
+    #             if fname1 in base_feature_name_dict:
+    #                 temp.append(base_feature_name_dict[fname1])
+    #             if fname2 in base_feature_name_dict:
+    #                 temp.append(base_feature_name_dict[fname2])
+    #             if len(temp) > 0:
+    #                 feature_map[feature] = temp
+    #         elif ftype == 'mzdiff':
+    #             temp = []
+    #             fname1 = ftype + "_{:.4f}".format(feature.min_mz)
+    #             fname2 = ftype + "_{:.4f}".format(feature.max_mz)
+    #             if feature.name in base_feature_name_dict:
+    #                 temp.append(base_feature_name_dict[feature.name])
+    #             if fname1 in base_feature_name_dict:
+    #                 temp.append(base_feature_name_dict[fname1])
+    #             if fname2 in base_feature_name_dict:
+    #                 temp.append(base_feature_name_dict[fname2])
+    #             if len(temp) > 0:
+    #                 feature_map[feature] = temp
+    # elif fs.name == 'binned_005' and basefs.name == 'binned_01':
+    #     # Each will only match to one, but the matches will appear more than once
+    #     for feature in features:
+    #         ftype = feature.name.split('_')[0]
+    #         if ftype == 'fragent' or ftype == 'loss':
+    #             lowval = feature.min_mz
+    #             highval = feature.max_mz
+    #             # Each feature will map perfectly into the first or second half of 
+    #             # one of the base features
+    #             # we just need to work out if it is a first half or a second half one
+    #             # Easiest way is to check if upper lor lower val is a name in the other set
+    #             uppername = ftype+ "_{:.4f}".format(highval)
+    #             if uppername in base_feature_name_dict:
+    #                 feature_map[feature] = base_feature_name_dict[uppername]
+    #             else:
+    #                 lowername = ftype+ "_{:.4f}".format(lowval)
+    #                 if lowername in base_feature_name_dict:
+    #                     feature_map[lowername] = base_feature_name_dict[lowername]
+    #         elif ftype == 'mzdiff':
+    #             if feature.name in base_feature_name_dict:
+    #                 feature_map[feature] = [base_feature_name_dict[feature.name]]
+    #             else:
+    #                 # Complicated case: 0.005 diffs either align with the centre
+    #                 # of the 0.01 diff or at either end
+    #                 # if the latter, we try linking to the 0.01 feature above and below
+    #                 temp = []
+    #                 fmz = float(feature.name.split('_')[1])
+    #                 drop_name = 'mzdiff_{:.4f}'.format(fmz - 0.005)
+    #                 up_name = 'mzdiff_{:.4f}'.format(fmz + 0.005)
+    #                 if drop_name in base_feature_name_dict:
+    #                     temp.append(base_feature_name_dict[drop_name])
+    #                 if up_name in base_feature_name_dict:
+    #                     temp.append(base_feature_name_dict[up_name])
+    #                 if len(temp) > 0:
+    #                     feature_map[feature] = temp
+    # else:
+    #     # Ensure backward compatibility
+    #     return match_motifs(experiment_id,base_experiment_id,min_score_to_save = min_score_to_save)
+
+    # mzd_features = filter(lambda x: x.name.startswith('mzdiff'),feature_map.keys())
+    # for f in mzd_features:
+    #     print f,feature_map[f]
 
 
     print "Found matches of {} out of {} features".format(len(feature_map),len(features))
