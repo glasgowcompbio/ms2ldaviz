@@ -29,9 +29,17 @@ def get_upload_folder(instance, filename):
 class BVFeatureSet(models.Model):
     name = models.CharField(max_length=64,unique = True)
     def __str__(self):
-        return self.name
+        bin_widths = {'binned_005':0.005,
+                  'binned_01': 0.01,
+                  'binned_05': 0.05,
+                  'binned_1': 0.1,
+                  'binned_5': 0.5}
+        try:   
+            return "{} Da".format(bin_widths[self.name])
+        except:
+            return self.name
     def __unicode__(self):
-        return self.name
+        return str(self)
 
 
 class Experiment(models.Model):
