@@ -17,7 +17,7 @@ class CreateExperimentForm(forms.ModelForm):
         )
         self.fields['featureset'] = forms.ModelChoiceField(
             queryset=BVFeatureSet.objects.filter(name__startswith='binned'),
-            label='Choose width of ms2 bins',
+            label='Choose width of ms2 bins (to enable comparison with characterised motifs, we strongly recommend default value of 0.005 Da)',
             initial=BVFeatureSet.objects.get(name = 'binned_005')
         )
         self.fields['ms2_file'].required = True
