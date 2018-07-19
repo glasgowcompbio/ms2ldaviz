@@ -43,7 +43,16 @@ def load_mzml_and_make_documents(experiment):
     print "Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1), len(ms2))
 
 
-    fm = MakeBinnedFeatures()
+    
+    # need to add bin width here..
+    bin_widths = {'binned_005':0.005,
+                  'binned_01': 0.01,
+                  'binned_05': 0.05,
+                  'binned_1': 0.1,
+                  'binned_5': 0.5}
+
+    bin_width = bin_widths[experiment.featureset.name]
+    fm = MakeBinnedFeatures(bin_width = bin_width)
     corpus, word_mz_range = fm.make_features(ms2)
     corpus = corpus[corpus.keys()[0]]
 

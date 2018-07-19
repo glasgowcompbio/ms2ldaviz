@@ -65,5 +65,4 @@ def process_experiment(exp, cleaned_data):
         }
         pipeline = pipelines[exp.experiment_type]
 
-
         pipeline.delay(exp.id, params)

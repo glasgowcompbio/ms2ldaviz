@@ -64,12 +64,13 @@ def lda_task(exp_id, params):
     # see http://docs.celeryproject.org/en/latest/userguide/tasks.html#logging
     old_outs = sys.stdout, sys.stderr
     rlevel = app.conf.worker_redirect_stdouts_level
+
     try:
         app.log.redirect_stdouts_to_logger(logger, rlevel)
-
         corpus, metadata, word_mz_range = lda_load_mzml_and_make_documents(exp)
         lda_dict = run_lda(corpus, metadata, word_mz_range, K, n_its=n_its)
-        load_dict(lda_dict, exp)
+        feature_set_name = exp.featureset.name
+        load_dict(lda_dict, exp, feature_set_name = feature_set_name)
 
         yes, _ = EXPERIMENT_DECOMPOSITION_SOURCE[1]
         if exp.decomposition_source == yes:
