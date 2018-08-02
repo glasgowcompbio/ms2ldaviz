@@ -32,3 +32,21 @@ python manage.py runserver
 ```
 
 Goto http://localhost:8000
+
+
+# Run gensim lda
+
+Requires server to be up and running.
+
+Performs 3 steps:
+1. Generate corpus/features from MS2 file
+2. Run lda using gensim
+3. Insert lda result into db
+
+
+```bash
+cd ms2ldaviz
+./run_gensim.py corpus -f mgf myexp.mgf myexp.corpus.json
+./run_gensim.py gensim myexp.corpus.json myexp.ldaresult.json
+./run_gensim.py insert myexp.ldaresult.json stefanv myexp
+```
