@@ -51,6 +51,9 @@ def build_parser():
     lda.add_argument('ldajson', type=FileType('w'), help="lda file")
     lda.add_argument('-k', type=int, default=300, help='Number of topics')
     lda.add_argument('-n', type=int, default=1000, help='Number of iterations')
+    lda.add_argument('--gamma_threshold', default=0.001, type=float, help='Minimum change in the value of the gamma parameters to continue iterating')
+    lda.add_argument('--chunksize', default=2000, type=int, help='Number of documents to be used in each training chunk')
+    lda.add_argument('--batch', action='store_true', help='When set will use batch learning otherwise online learning')
     lda.add_argument('--normalize', type=int, default=1000, help='Normalize intensities')
     lda.add_argument('--min_prob_to_keep_beta', type=float, default=1e-3, help='Minimum probability to keep beta')
     lda.add_argument('--min_prob_to_keep_phi', type=float, default=1e-2, help='Minimum probability to keep phi')
@@ -106,7 +109,7 @@ def msfile2corpus(ms2_file, ms2_format, min_ms1_intensity, min_ms2_intensity, mz
     json.dump(lda_dict, corpusjson)
 
 
-def gensim(corpusjson, ldajson, n, k, normalize, min_prob_to_keep_beta, min_prob_to_keep_phi, min_prob_to_keep_theta):
+def gensim(corpusjson, ldajson, n, k, gamma_threshold, chunksize, batch, normalize, min_prob_to_keep_beta, min_prob_to_keep_phi, min_prob_to_keep_theta):
     lda_dict = json.load(corpusjson)
     corpus = []
     index2doc = []
@@ -118,7 +121,11 @@ def gensim(corpusjson, ldajson, n, k, normalize, min_prob_to_keep_beta, min_prob
         corpus.append(bow)
         index2doc.append(doc)
 
-    lda = LdaMulticore(corpus, num_topics=k, iterations=n, per_word_topics=True)
+    lda = LdaMulticore(corpus,
+                       num_topics=k, iterations=n,
+                       per_word_topics=True, gamma_threshold=gamma_threshold,
+                       chunksize=chunksize, batch=batch
+                       )
 
     beta = {}
     index2word = {v: k for k, v in lda_dict['word_index'].items()}
