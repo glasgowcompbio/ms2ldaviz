@@ -59,6 +59,8 @@ def build_parser():
     lda.add_argument('--min_prob_to_keep_beta', type=float, default=1e-3, help='Minimum probability to keep beta')
     lda.add_argument('--min_prob_to_keep_phi', type=float, default=1e-2, help='Minimum probability to keep phi')
     lda.add_argument('--min_prob_to_keep_theta', type=float, default=1e-2, help='Minimum probability to keep theta')
+    lda.add_argument('--alpha', default='symmetric', choices=('asymmetric', 'symmetric'))
+    lda.add_argument('--eta', help='Can be a float or "auto". Default is None')
     lda.set_defaults(func=gensim)
 
     # insert
@@ -110,7 +112,15 @@ def msfile2corpus(ms2_file, ms2_format, min_ms1_intensity, min_ms2_intensity, mz
     json.dump(lda_dict, corpusjson)
 
 
-def gensim(corpusjson, ldajson, n, k, gamma_threshold, chunksize, batch, normalize, passes, min_prob_to_keep_beta, min_prob_to_keep_phi, min_prob_to_keep_theta):
+def gensim(corpusjson, ldajson,
+           n, k, gamma_threshold,
+           chunksize, batch, normalize, passes,
+           min_prob_to_keep_beta, min_prob_to_keep_phi, min_prob_to_keep_theta,
+           alpha, eta,
+           ):
+
+    if eta is not None and eta != 'auto':
+        eta = float(eta)
     lda_dict = json.load(corpusjson)
     corpus = []
     index2doc = []
@@ -126,7 +136,7 @@ def gensim(corpusjson, ldajson, n, k, gamma_threshold, chunksize, batch, normali
                        num_topics=k, iterations=n,
                        per_word_topics=True, gamma_threshold=gamma_threshold,
                        chunksize=chunksize, batch=batch,
-                       passes=passes
+                       passes=passes, alpha=alpha, eta=eta,
                        )
 
     beta = {}
