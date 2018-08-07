@@ -55,6 +55,7 @@ def build_parser():
     lda.add_argument('--chunksize', default=2000, type=int, help='Number of documents to be used in each training chunk')
     lda.add_argument('--batch', action='store_true', help='When set will use batch learning otherwise online learning')
     lda.add_argument('--normalize', type=int, default=1000, help='Normalize intensities')
+    lda.add_argument('--passes', type=int, default=1, help='Number of passes through the corpus during training.')
     lda.add_argument('--min_prob_to_keep_beta', type=float, default=1e-3, help='Minimum probability to keep beta')
     lda.add_argument('--min_prob_to_keep_phi', type=float, default=1e-2, help='Minimum probability to keep phi')
     lda.add_argument('--min_prob_to_keep_theta', type=float, default=1e-2, help='Minimum probability to keep theta')
@@ -109,7 +110,7 @@ def msfile2corpus(ms2_file, ms2_format, min_ms1_intensity, min_ms2_intensity, mz
     json.dump(lda_dict, corpusjson)
 
 
-def gensim(corpusjson, ldajson, n, k, gamma_threshold, chunksize, batch, normalize, min_prob_to_keep_beta, min_prob_to_keep_phi, min_prob_to_keep_theta):
+def gensim(corpusjson, ldajson, n, k, gamma_threshold, chunksize, batch, normalize, passes, min_prob_to_keep_beta, min_prob_to_keep_phi, min_prob_to_keep_theta):
     lda_dict = json.load(corpusjson)
     corpus = []
     index2doc = []
@@ -124,7 +125,8 @@ def gensim(corpusjson, ldajson, n, k, gamma_threshold, chunksize, batch, normali
     lda = LdaMulticore(corpus,
                        num_topics=k, iterations=n,
                        per_word_topics=True, gamma_threshold=gamma_threshold,
-                       chunksize=chunksize, batch=batch
+                       chunksize=chunksize, batch=batch,
+                       passes=passes
                        )
 
     beta = {}
