@@ -1330,7 +1330,7 @@ class LoadMGF(Loader):
                             elif key == "pepmass":
                                 ## only mass exists
                                 if " " not in val:
-                                    temp_metadata['parentmass'] = float(val)
+                                    temp_metadata['precursormass'] = float(val)
                                     temp_metadata['parentintensity'] = None
                                     parentmass = float(val)
                                     parentintensity = None
@@ -1340,7 +1340,7 @@ class LoadMGF(Loader):
                                     parentmass, parentintensity = val.split(' ', 1)
                                     parentmass = float(parentmass)
                                     parentintensity = float(parentintensity)
-                                    temp_metadata['parentmass'] = parentmass
+                                    temp_metadata['precursormass'] = parentmass
                                     temp_metadata['parentintensity'] = parentintensity
 
                             else:
@@ -1353,10 +1353,15 @@ class LoadMGF(Loader):
                                 in_doc = True
                                 # Following corrects parentmass according to charge
                                 # if charge is known. This should lead to better computation of neutral losses
+                                single_charge_precursor_mass = temp_metadata['precursormass']
+                                parent_mass = temp_metadata['precursormass']
+
                                 if 'charge' in temp_metadata:
                                     # print metadata[doc_name]['charge'],metadata[doc_name]['parentmass']
-                                    temp_metadata['precursormass'] = temp_metadata['parentmass']
-                                    pm = temp_metadata['parentmass']
+
+
+                                    # temp_metadata['parentmass'] = temp_metadata['parentmass']
+                                    pm = temp_metadata['precursormass']
                                     ch = temp_metadata['charge']
                                     mul = int(ch.replace("+", ""))
                                     try:
@@ -1371,14 +1376,17 @@ class LoadMGF(Loader):
                                         mul = 0
 
                                     if mul > 1:
-                                        pm *= mul
-                                        pm -= (mul-1)*PROTON_MASS
-                                        temp_metadata['parentmass'] = pm
-                                        parentmass = pm
+                                        single_charge_precursor_mass *= mul
+                                        single_charge_precursor_mass -= (mul-1)*PROTON_MASS
+                                        
+                                        parent_mass = temp_metadata['precursormass']*mul
+                                        parent_mass -= mul*PROTON_MASS
+                                        
 
+                                temp_metadata['parentmass'] = parent_mass
+                                temp_metadata['singlechargeprecursormass'] = single_charge_precursor_mass
 
-
-                                new_ms1 = MS1(ms1_id,parentmass,parentrt,parentintensity,file_name)
+                                new_ms1 = MS1(ms1_id,single_charge_precursor_mass,parentrt,parentintensity,file_name)
                                 ms1_id += 1
                                 doc_name = 'document_{}'.format(ms1_id)
                                 metadata[doc_name] = temp_metadata.copy()
