@@ -1375,7 +1375,7 @@ class LoadMGF(Loader):
                                     except ValueError:
                                         mul = 0
 
-                                    if mul > 1:
+                                    if mul > 0:
                                         single_charge_precursor_mass *= mul
                                         single_charge_precursor_mass -= (mul-1)*PROTON_MASS
                                         
