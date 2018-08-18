@@ -980,15 +980,19 @@ def write_summary_file(lda_dictionary,filename):
                 row = [doc,motif,probability,lda_dictionary['overlap_scores'][doc].get(motif,0.0)]
                 writer.writerow(row)
             
-def write_topic_report(lda_dictionary,filename):
-    import pylab as plt
+def write_topic_report(lda_dictionary,filename,backend = 'agg'):
+    # import pylab as plt
+    import matplotlib
+    matplotlib.use(backend)
+    import matplotlib.pyplot as plt
     from matplotlib.backends.backend_pdf import PdfPages
     with PdfPages(filename) as pdf:
 
         topic_list = lda_dictionary['beta'].keys()
-        topic_list = zip(topic_list,[int(t.split('_')[1]) for t in topic_list])
-        topic_list.sort(key = lambda x: x[1])
-        topic_list,_ = zip(*topic_list)
+        # TODO fix motif order in report
+        # topic_list = zip(topic_list,[int(t.split('_')[1]) for t in topic_list])
+        # topic_list.sort(key = lambda x: x[1])
+        # topic_list,_ = zip(*topic_list)
         for topic in topic_list:
             sys.stdout.write(topic + ' ')
             sys.stdout.flush()
