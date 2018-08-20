@@ -156,8 +156,9 @@ def gensim(corpusjson, ldajson,
         _, _, topics_per_word_phi = lda.get_document_topics(bow, per_word_topics=True,
                                                             minimum_probability=min_prob_to_keep_theta,
                                                             minimum_phi_value=min_prob_to_keep_phi)
+        word_intens = {k: v for k, v in bow}
         phi[index2doc[doc_id]] = {
-            index2word[word_id]: {'motif_{0}'.format(topic_id): phi / 1000 for topic_id, phi in topics} for
+            index2word[word_id]: {'motif_{0}'.format(topic_id): phi / word_intens[word_id] for topic_id, phi in topics} for
             word_id, topics in topics_per_word_phi}
 
     lda_dict['alpha'] = [float(d) for d in lda.alpha]
