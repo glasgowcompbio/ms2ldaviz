@@ -50,3 +50,12 @@ cd ms2ldaviz
 ./run_gensim.py gensim myexp.corpus.json myexp.ldaresult.json
 ./run_gensim.py insert myexp.ldaresult.json stefanv myexp
 ```
+
+# Update lda subtree
+
+The lda directory is a checkout of the https://github.com/sdrogers/lda repo, it can be synced using
+
+```bash
+git remote add lda https://github.com/sdrogers/lda.git
+git subtree pull --prefix=lda lda master
+```
