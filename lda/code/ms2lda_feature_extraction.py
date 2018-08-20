@@ -4,6 +4,7 @@ from Queue import PriorityQueue
 import numpy as np
 import sys, os
 import re
+import json
 # sys.path.append('/Users/simon/git/efcompute')
 # from ef_assigner import ef_assigner
 # from formula import Formula
@@ -15,6 +16,8 @@ import re
 #  2. Turning them into fragment and loss features
 #  3. Making the corpus object
 
+
+PROTON_MASS = 1.00727645199076
 class MS1(object):
     def __init__(self,id,mz,rt,intensity,file_name,scan_number = None):
         self.id = id
@@ -83,7 +86,13 @@ class Loader(object):
         self.user_cols_names = []
         with open(self.peaklist,'r') as f:
             heads = f.readline()
-            tokens = heads.strip().split(',')
+
+            ## add this in case peaklist file is separated by ';'
+            self.separator = ','
+            if ';' in heads:
+                self.separator = ';'
+
+            tokens = heads.strip().split(self.separator)
             index = -1
             featid_index = None
             for i in range(len(tokens)):
@@ -104,7 +113,7 @@ class Loader(object):
             self.sample_names = tokens[index+2:]
 
             for line in f:
-                tokens_tuple= line.strip().split(',', index+2)
+                tokens_tuple= line.strip().split(self.separator, index+2)
                 featid = None
                 if featid_index != None:
                     featid = tokens_tuple[featid_index]
@@ -114,7 +123,11 @@ class Loader(object):
                 # store (featid, mz,rt,intensity)
 
                 ## record user defined index columns before "mass" column in peaklist file
-                self.ms1_peaks.append((featid, float(mz), float(rt), samples, tokens_tuple[:index]))
+                try:
+                    self.ms1_peaks.append((featid, float(mz), float(rt), samples, tokens_tuple[:index]))
+                except:
+                    print "Failed on line: "
+                    print line    
 
         # sort them by mass
         self.ms1_peaks = sorted(self.ms1_peaks,key = lambda x: x[1])
@@ -162,7 +175,7 @@ class Loader(object):
             featid = peak[0]
             peak_mz = peak[1]
             peak_rt = peak[2]
-            peak_intensity = None if ',' in peak[3] else float(peak[3])
+            peak_intensity = None if self.separator in peak[3] else float(peak[3])
             user_cols = peak[4]
 
             ## first check FeatureId matching
@@ -197,6 +210,13 @@ class Loader(object):
                     # Didn't find any
                     continue
 
+            ## Bug fix:
+            ## add these two lines to avoid the case that min_ms2_intensity has been set too high,
+            ## then most fragments will be removed, and we cannot find a hit for ms1, which will lead to bug:
+            ## AttributeError: 'NoneType' object has no attribute 'id'
+            if not old_ms1:
+                continue
+
             from time import time
             # make a new ms1 object
             new_ms1 = MS1(old_ms1.id,peak_mz,peak_rt,peak_intensity,old_ms1.file_name,old_ms1.scan_number)
@@ -206,10 +226,10 @@ class Loader(object):
             ## record user index columns before "mass" column in peaklist file into metadata
             new_metadata[new_ms1.name]['user_cols'] = zip(self.user_cols_names, user_cols)
 
-            if ',' in peak[3]:
+            if self.separator in peak[3]:
                 # print "process sample", str(peak[0]), str(peak[1])
                 tokens = []
-                for token in peak[3].split(','):
+                for token in peak[3].split(self.separator):
                     try:
                         token = float(token)
                     except:
@@ -217,7 +237,7 @@ class Loader(object):
                     if token <= 0:
                         token = None
                     tokens.append(token)
-                # tokens = [float(token) for token in peak[2].split(',')]
+                # tokens = [float(token) for token in peak[2].split(self.separator)]
                 new_metadata[new_ms1.name]['intensities'] = dict(zip(self.sample_names, tokens))
 
             # Delete the old one so it can't be picked again - removed this, maybe it's not a good idea?
@@ -468,7 +488,7 @@ class LoadMZML(Loader):
         ms1 = []
         ms2 = []
         metadata = {}
-        nc = 0
+        
         ms2_id = 0
         ms1_id = 0
 
@@ -485,8 +505,9 @@ class LoadMZML(Loader):
             previous_precursor_mz = -10
             previous_ms1 = None
 
-            for spectrum in run:
+            for nc,spectrum in enumerate(run):
                 if spectrum['ms level'] == 1:
+                    current_ms1_scan_number = nc
                     current_ms1_scan_rt,units = spectrum['scan start time']
                     if units == 'minute':
                         current_ms1_scan_rt *= 60.0
@@ -516,7 +537,7 @@ class LoadMZML(Loader):
                             # Make the ms2 objects:
                             if previous_ms1:
                                 for mz,intensity in spectrum.centroidedPeaks:
-                                    ms2.append((mz,current_ms1_scan_rt,intensity,previous_ms1,file_name,float(ms2_id)))
+                                    ms2.append((mz,current_ms1_scan_rt,intensity,previous_ms1,file_name,float(ms2_id),nc))
                                     ms2_id += 1
                             else:
                                 pass
@@ -552,7 +573,8 @@ class LoadMZML(Loader):
                             if (max_intensity > self.min_ms1_intensity) and (not max_intensity_pos == None):
                             # mz,rt,intensity,file_name,scan_number = None):
                                 new_ms1 = MS1(ms1_id,current_ms1_scan_mz[max_intensity_pos],
-                                              current_ms1_scan_rt,max_intensity,file_name,scan_number = nc)
+                                              current_ms1_scan_rt,max_intensity,file_name,scan_number = current_ms1_scan_number)
+
 
 
                                 # ms1.append(new_ms1)
@@ -562,19 +584,20 @@ class LoadMZML(Loader):
                                 n_found = 0
                                 for mz,intensity in spectrum.centroidedPeaks:
                                     if intensity > self.min_ms2_intensity:
-                                        ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id)))
+                                        ms2.append((mz,current_ms1_scan_rt,intensity,new_ms1,file_name,float(ms2_id),nc))
                                         ms2_id += 1
                                         n_found += 1
                                 if n_found > 0:
                                     ms1.append(new_ms1)
                                     ms1_id += 1
                                     metadata[new_ms1.name] = {'parentmass':current_ms1_scan_mz[max_intensity_pos],
-                                                              'parentrt':current_ms1_scan_rt,'scan_number':nc,
-                                                              'precursor_mass':precursor_mz}
+                                                              'parentrt':current_ms1_scan_rt,'scan_number':current_ms1_scan_number,
+                                                              'precursor_mass':precursor_mz,'file':file_name}
 
 
                                     previous_ms1 = new_ms1 # used for merging energies
                                     previous_precursor_mz = new_ms1.mz
+               
 
 
         print "Found {} ms2 spectra, and {} individual ms2 objects".format(len(ms1),len(ms2))
@@ -910,6 +933,94 @@ class LoadGNPS(Loader):
                 print "Processed {} spectra".format(n_processed)
         return self.ms1,self.ms2,self.metadata
 
+
+# similar to LoadGNPS, but to load MIBiG spectra that have been processed through CFM-ID
+class LoadMIBiG(Loader):
+
+    def __init__(self, merge_energies = True, merge_ppm = 2, replace = 'sum', min_intensity = 0.0):
+        self.merge_energies = merge_energies
+        self.merge_ppm = merge_ppm
+        self.replace = replace
+        self.min_intensity = min_intensity
+
+    def load_spectra(self, input_set):
+
+        # Input set is a list of (specta_filename, mibig_json), one for each spectra
+        self.input_set = input_set
+        self.files = []
+        self.ms1 = []
+        self.ms1_index = {}
+        self.ms2 = []
+        self.metadata = {}
+        n_processed = 0
+        ms2_id = 0
+        self.metadata = {}
+
+        for spectra_file, mibig_json in self.input_set:
+
+            # get data from the mibig json file
+            d = None
+            with open(mibig_json, 'r') as f2:
+                d = json.load(f2)
+
+            with open(spectra_file,'r') as f1:
+
+                temp_mass = []
+                temp_intensity = []
+                doc_name = spectra_file.split('/')[-1]
+                self.metadata[doc_name] = {}
+                self.metadata[doc_name]['mibig_data'] = d
+
+                # TODO: the 'mol_mass' field is not always present in the json data (d), but
+                # it should be possible to retrieve this from the pubchem id
+                mz = 0.0
+                rt = None
+                intensity = 0.0
+                new_ms1 = MS1(str(n_processed), mz, rt, intensity, mibig_json)
+                new_ms1.name = doc_name
+                self.ms1.append(new_ms1)
+                self.ms1_index[str(n_processed)] = new_ms1
+
+                for line in f1:
+                    rline = line.rstrip()
+                    if len(rline) > 0:
+                        if rline.startswith('energy'):
+                            continue
+                        else:
+                            # TODO: below block pretty much copied and pasted from the GNPS loader
+                            # If it gets here, its a fragment peak
+                            sr = rline.split(' ')
+                            mass = float(sr[0])
+                            intensity = float(sr[1])
+                            if intensity >= self.min_intensity:
+                                if self.merge_energies and len(temp_mass)>0:
+                                    errs = 1e6*np.abs(mass-np.array(temp_mass))/mass
+                                    if errs.min() < self.merge_ppm:
+                                        # Don't add, but merge the intensity
+                                        min_pos = errs.argmin()
+                                        if self.replace == 'max':
+                                            temp_intensity[min_pos] = max(intensity,temp_intensity[min_pos])
+                                        else:
+                                            temp_intensity[min_pos] += intensity
+                                    else:
+                                        temp_mass.append(mass)
+                                        temp_intensity.append(intensity)
+                                else:
+                                    temp_mass.append(mass)
+                                    temp_intensity.append(intensity)
+
+                parent = self.ms1[-1]
+                for mass,intensity in zip(temp_mass,temp_intensity):
+                    new_ms2 = (mass,0.0,intensity,parent,spectra_file,float(ms2_id))
+                    self.ms2.append(new_ms2)
+                    ms2_id += 1
+
+                n_processed += 1
+            if n_processed % 100 == 0:
+                print "Processed {} spectra".format(n_processed)
+        return self.ms1,self.ms2,self.metadata
+
+
 # A class to load spectra that sit in MSP files
 class LoadMSP(Loader):
 
@@ -1219,7 +1330,7 @@ class LoadMGF(Loader):
                             elif key == "pepmass":
                                 ## only mass exists
                                 if " " not in val:
-                                    temp_metadata['parentmass'] = float(val)
+                                    temp_metadata['precursormass'] = float(val)
                                     temp_metadata['parentintensity'] = None
                                     parentmass = float(val)
                                     parentintensity = None
@@ -1229,7 +1340,7 @@ class LoadMGF(Loader):
                                     parentmass, parentintensity = val.split(' ', 1)
                                     parentmass = float(parentmass)
                                     parentintensity = float(parentintensity)
-                                    temp_metadata['parentmass'] = parentmass
+                                    temp_metadata['precursormass'] = parentmass
                                     temp_metadata['parentintensity'] = parentintensity
 
                             else:
@@ -1240,12 +1351,51 @@ class LoadMGF(Loader):
 
                             if not in_doc:
                                 in_doc = True
-                                new_ms1 = MS1(ms1_id,parentmass,parentrt,parentintensity,file_name)
+                                # Following corrects parentmass according to charge
+                                # if charge is known. This should lead to better computation of neutral losses
+                                single_charge_precursor_mass = temp_metadata['precursormass']
+                                parent_mass = temp_metadata['precursormass']
+
+                                if 'charge' in temp_metadata:
+                                    # print metadata[doc_name]['charge'],metadata[doc_name]['parentmass']
+
+
+                                    # temp_metadata['parentmass'] = temp_metadata['parentmass']
+                                    pm = temp_metadata['precursormass']
+                                    ch = temp_metadata['charge']
+                                    mul = int(ch.replace("+", ""))
+                                    try:
+                                        if ch.startswith('-') or ch.startswith('+'): # e.g. '-1'
+                                            if ch.endswith('-') or ch.endswith('+'): # e.g. '-1+'
+                                                mul = int(ch[:-1]) # remove funny last character
+                                            else:
+                                                mul = int(ch)
+                                        else:
+                                            mul = int(ch[0]) # e.g. '1+'
+                                    except ValueError:
+                                        mul = 0
+
+                                    if mul > 0:
+                                        single_charge_precursor_mass *= mul
+                                        single_charge_precursor_mass -= (mul-1)*PROTON_MASS
+                                        
+                                        parent_mass = temp_metadata['precursormass']*mul
+                                        parent_mass -= mul*PROTON_MASS
+                                        
+
+                                temp_metadata['parentmass'] = parent_mass
+                                temp_metadata['singlechargeprecursormass'] = single_charge_precursor_mass
+
+                                new_ms1 = MS1(ms1_id,single_charge_precursor_mass,parentrt,parentintensity,file_name)
                                 ms1_id += 1
-                                doc_name = 'document_{}'.format(ms1_id)
+                                if 'name' in temp_metadata:
+                                    doc_name = temp_metadata['name']
+                                else:
+                                    doc_name = 'document_{}'.format(ms1_id)
                                 metadata[doc_name] = temp_metadata.copy()
                                 new_ms1.name = doc_name
                                 ms1.append(new_ms1)
+
 
                             tokens = rline.split()
                             if len(tokens) == 2:
