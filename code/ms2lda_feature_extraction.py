@@ -19,13 +19,17 @@ import json
 
 PROTON_MASS = 1.00727645199076
 class MS1(object):
-    def __init__(self,id,mz,rt,intensity,file_name,scan_number = None):
+    def __init__(self,id,mz,rt,intensity,file_name,scan_number = None,single_charge_precursor_mass = None):
         self.id = id
         self.mz = mz
         self.rt = rt
         self.intensity = intensity
         self.file_name = file_name
         self.scan_number = scan_number
+        if single_charge_precursor_mass:
+            self.single_charge_precursor_mass = single_charge_precursor_mass
+        else:
+            self.single_charge_precursor_mass = self.mz
         self.name = "{}_{}".format(self.mz,self.rt)
 
     def __str__(self):
@@ -1354,6 +1358,7 @@ class LoadMGF(Loader):
                                 # Following corrects parentmass according to charge
                                 # if charge is known. This should lead to better computation of neutral losses
                                 single_charge_precursor_mass = temp_metadata['precursormass']
+                                precursor_mass = temp_metadata['precursormass']
                                 parent_mass = temp_metadata['precursormass']
 
                                 if 'charge' in temp_metadata:
@@ -1386,7 +1391,7 @@ class LoadMGF(Loader):
                                 temp_metadata['parentmass'] = parent_mass
                                 temp_metadata['singlechargeprecursormass'] = single_charge_precursor_mass
 
-                                new_ms1 = MS1(ms1_id,single_charge_precursor_mass,parentrt,parentintensity,file_name)
+                                new_ms1 = MS1(ms1_id,precursor_mass,parentrt,parentintensity,file_name,single_charge_precursor_mass = single_charge_precursor_mass)
                                 ms1_id += 1
                                 if 'name' in temp_metadata:
                                     doc_name = temp_metadata['name']
@@ -1522,7 +1527,7 @@ class MakeBinnedFeatures(MakeFeatures):
                 loss_mz = 0.0
             else:
                 do_losses = True
-                loss_mz = peak[3].mz - mz
+                loss_mz = peak[3].single_charge_precursor_mass - mz
             intensity = peak[2]
             if intensity >= self.min_intensity:
                 doc_name = peak[3].name
