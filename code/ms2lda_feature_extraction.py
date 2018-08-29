@@ -59,7 +59,7 @@ class MS1(object):
 ## *load_spectra* functions are too long, refactor and split when having time
 class Loader(object):
     def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 0.5,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False,repeated_precursor_match = None,
-                    min_ms1_rt = 0.0, max_ms1_rt = 1e6, min_ms2_intensity = 0.0):
+                    min_ms1_rt = 0.0, max_ms1_rt = 1e6, min_ms2_intensity = 0.0,has_scan_id = False):
         self.min_ms1_intensity = min_ms1_intensity
         self.peaklist = peaklist
         self.isolation_window = isolation_window
@@ -101,7 +101,7 @@ class Loader(object):
             featid_index = None
             for i in range(len(tokens)):
                 index = i
-                if tokens[i].lower() == "featureid":
+                if tokens[i].lower() == "scans":
                     featid_index = i
                 if tokens[i].lower() in ['mass', 'mz']:
                     break
@@ -161,8 +161,8 @@ class Loader(object):
             doc_name = el.name
             doc_ms1[doc_name] = el
         for k,v in metadata.items():
-            if 'featid' in v:
-                featid = v['featid']
+            if 'scans' in v:
+                featid = v['scans']
                 featid_ms1_dict[featid] = doc_ms1[k]
 
         ## build ms1_ms2 dict, to make searching O(1) in the following loop
@@ -173,7 +173,9 @@ class Loader(object):
             ms1_ms2_dict.setdefault(el[3], [])
             ms1_ms2_dict[el[3]].append(el)
 
+
         for n_peaks_checked,peak in enumerate(self.ms1_peaks):
+            
             if n_peaks_checked % 500 == 0:
                 print n_peaks_checked
             featid = peak[0]
@@ -188,6 +190,7 @@ class Loader(object):
                 old_ms1 = featid_ms1_dict[featid]
 
             else:
+                print featid
                 min_mz = peak_mz - self.mz_tol*peak_mz/1e6
                 max_mz = peak_mz + self.mz_tol*peak_mz/1e6
                 min_rt = peak_rt - self.rt_tol
@@ -195,6 +198,7 @@ class Loader(object):
 
 
                 ms1_hits = filter(lambda x: x.mz >= min_mz and x.mz <= max_mz and x.rt >= min_rt and x.rt <= max_rt,ms1)
+
 
                 if len(ms1_hits) == 1:
                     # Found one hit, easy
@@ -209,6 +213,8 @@ class Loader(object):
                                 best_intensity = frag_peak[2]
                                 best_ms1 = frag_peak[3]
                     old_ms1 = best_ms1
+
+
 
                 else:
                     # Didn't find any
@@ -576,8 +582,30 @@ class LoadMZML(Loader):
                             # Make the new MS1 object
                             if (max_intensity > self.min_ms1_intensity) and (not max_intensity_pos == None):
                             # mz,rt,intensity,file_name,scan_number = None):
+                                # fix the charge for better loss computation
+                                ch = spectrum['precursors'][0].get('charge',"+1")
+                                mul = int(ch.replace("+", ""))
+                                try:
+                                    if ch.startswith('-') or ch.startswith('+'): # e.g. '-1'
+                                        if ch.endswith('-') or ch.endswith('+'): # e.g. '-1+'
+                                            mul = int(ch[:-1]) # remove funny last character
+                                        else:
+                                            mul = int(ch)
+                                    else:
+                                        mul = int(ch[0]) # e.g. '1+'
+                                except ValueError:
+                                    mul = 0
+
+                                # Note: can't we just use the precursor now?
+                                single_charge_precursor_mass = current_ms1_scan_mz[max_intensity_pos]
+                                if (mul > 1):
+                                    single_charge_precursor_mass *= mul
+                                    single_charge_precursor_mass -= (mul-1)*PROTON_MASS
+                                        
                                 new_ms1 = MS1(ms1_id,current_ms1_scan_mz[max_intensity_pos],
-                                              current_ms1_scan_rt,max_intensity,file_name,scan_number = current_ms1_scan_number)
+                                              current_ms1_scan_rt,max_intensity,file_name,
+                                              scan_number = current_ms1_scan_number,
+                                              single_charge_precursor_mass = single_charge_precursor_mass)
 
 
 
@@ -1380,7 +1408,7 @@ class LoadMGF(Loader):
                                     except ValueError:
                                         mul = 0
 
-                                    if mul > 0:
+                                    if mul > 1:
                                         single_charge_precursor_mass *= mul
                                         single_charge_precursor_mass -= (mul-1)*PROTON_MASS
                                         
