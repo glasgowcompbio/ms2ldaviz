@@ -1509,7 +1509,7 @@ def get_docm2m_bydoc(document, doc_m2m_prob_threshold=None, doc_m2m_overlap_thre
     return dm2m
 
 
-@login_required(login_url='/registration/login/')
+# @login_required(login_url='/registration/login/')
 def extract_docs(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     if not check_user(request, experiment):

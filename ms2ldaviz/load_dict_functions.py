@@ -110,7 +110,13 @@ def add_theta(doc_name,experiment,lda_dict):
     document = Document.objects.get(name = doc_name,experiment=experiment)
     for topic in lda_dict['theta'][doc_name]:
         mass2motif = Mass2Motif.objects.get(name = topic,experiment = experiment)
-        DocumentMass2Motif.objects.get_or_create(document = document,mass2motif = mass2motif,probability = lda_dict['theta'][doc_name][topic])[0]
+        os = None
+        if 'overlap_scores' in lda_dict:
+            os = lda_dict['overlap_scores'][doc_name].get(topic,None)
+        if os:
+            DocumentMass2Motif.objects.get_or_create(document = document,mass2motif = mass2motif,probability = lda_dict['theta'][doc_name][topic],overlap_score = os)[0]
+        else:
+            DocumentMass2Motif.objects.get_or_create(document = document,mass2motif = mass2motif,probability = lda_dict['theta'][doc_name][topic])[0]
 
 def load_phi(doc_name,experiment,lda_dict):
     document = Document.objects.get(name = doc_name,experiment=experiment)
@@ -264,15 +270,15 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
             #       mass2motif = Mass2Motif.objects.get(name=topic,experiment=experiment)
             #       probability = lda_dict['phi'][doc][word][topic]
             #       FeatureMass2MotifInstance.objects.get_or_create(featureinstance = feature_instance,mass2motif = mass2motif,probability = probability)
-
-    print "Computing overlap scores"
-    n_done = 0
-    dm2ms = DocumentMass2Motif.objects.filter(document__experiment = experiment)
-    to_do = len(dm2ms)
-    with transaction.atomic():
-        for dm2m in dm2ms:
-            n_done += 1
-            if n_done % 100 == 0:
-                print "Done {}/{}".format(n_done,to_do)
-            dm2m.overlap_score = compute_overlap_score(dm2m.mass2motif,dm2m.document)
-            dm2m.save()
+    if not 'overlap_scores' in lda_dict:
+        print "Computing overlap scores"
+        n_done = 0
+        dm2ms = DocumentMass2Motif.objects.filter(document__experiment = experiment)
+        to_do = len(dm2ms)
+        with transaction.atomic():
+            for dm2m in dm2ms:
+                n_done += 1
+                if n_done % 100 == 0:
+                    print "Done {}/{}".format(n_done,to_do)
+                dm2m.overlap_score = compute_overlap_score(dm2m.mass2motif,dm2m.document)
+                dm2m.save()

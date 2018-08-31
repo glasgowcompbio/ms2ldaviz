@@ -66,7 +66,7 @@ def lda_task(exp_id, params):
     rlevel = app.conf.worker_redirect_stdouts_level
 
     try:
-        # app.log.redirect_stdouts_to_logger(logger, rlevel)
+        app.log.redirect_stdouts_to_logger(logger, rlevel)
         corpus, metadata, word_mz_range = lda_load_mzml_and_make_documents(exp)
         lda_dict = run_lda(corpus, metadata, word_mz_range, K, n_its=n_its)
         feature_set_name = exp.featureset.name
