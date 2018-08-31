@@ -111,19 +111,15 @@ class Loader(object):
             rt_col = None
             featid_index = None
             for i in range(len(tokens)):
-                index = i
                 if tokens[i].lower() == self.mz_col_name.lower():
-                    mz_col = i
-                elif tokens[i].lower() == self.rt_col_name.lower():
-                    rt_col = i
+                    index = i
                 elif self.csv_id_col and tokens[i].lower() == self.csv_id_col.lower():
                     featid_index = i
                 # if tokens[i].lower() == "scans":
                 #     featid_index = i
                 # if tokens[i].lower() in ['mass', 'mz']:
                 #     break
-                else:
-                    self.user_cols_names.append(tokens[i])
+                self.user_cols_names.append(tokens[i])
 
             ## if any sample names missing, use "Sample_*" to replace
             empty_sample_name_id = 0
@@ -135,7 +131,7 @@ class Loader(object):
             self.sample_names = tokens[index+2:]
 
             for line in f:
-                tokens_tuple= line.strip().split(self.separator, rt_col+1)
+                tokens_tuple= line.strip().split(self.separator, index+2)
                 featid = None
                 if featid_index != None:
                     featid = tokens_tuple[featid_index]
@@ -144,7 +140,7 @@ class Loader(object):
                 print rt,float(mz)
                 if self.rt_units == 'minutes':
                     rt *= 60.0
-                samples = tokens_tuple[rt_col+1]
+                samples = tokens_tuple[index+2]
                 # store (featid, mz,rt,intensity)
 
                 ## record user defined index columns before "mass" column in peaklist file
