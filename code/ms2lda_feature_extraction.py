@@ -135,8 +135,8 @@ class Loader(object):
                 featid = None
                 if featid_index != None:
                     featid = tokens_tuple[featid_index]
-                mz = tokens_tuple[mz_col]
-                rt = float(tokens_tuple[rt_col])
+                mz = tokens_tuple[index]
+                rt = float(tokens_tuple[index+1])
                 print rt,float(mz)
                 if self.rt_units == 'minutes':
                     rt *= 60.0
