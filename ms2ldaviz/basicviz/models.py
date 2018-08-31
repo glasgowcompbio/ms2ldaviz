@@ -61,12 +61,12 @@ class Experiment(models.Model):
     ms2_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
     csv_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
 
-    csv_mz_column = models.CharField(blank = True, null = True, max_length=128)
-    csv_rt_column = models.CharField(blank = True, null = True, max_length=128)
-    csv_rt_units = models.CharField(blank = True, null = True, choices = [('minutes','minutes'),('seconds','seconds')],max_length=128)
+    csv_mz_column = models.CharField(blank = True, null = True, max_length=128, default='mz')
+    # csv_rt_column = models.CharField(blank = True, null = True, max_length=128)
+    csv_rt_units = models.CharField(blank = True, null = True, choices = [('minutes','minutes'),('seconds','seconds')],max_length=128,default = 'seconds')
 
-    csv_id_column = models.CharField(blank = True, null = True, max_length=128)
-    ms2_id_field = models.CharField(blank = True, null = True, max_length=128)
+    csv_id_column = models.CharField(blank = True, null = True, max_length=128, default='scans')
+    ms2_id_field = models.CharField(blank = True, null = True, max_length=128, default ='scans')
     
 
     # I don't think this should be stored here

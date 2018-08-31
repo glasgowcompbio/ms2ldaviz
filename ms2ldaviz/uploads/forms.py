@@ -58,7 +58,7 @@ class CreateExperimentForm(forms.ModelForm):
             'description':'(Required) Experiment description.',
             'csv_file': 'MS1 file (CSV) [see above for formatting instructions]',
             'csv_mz_column': 'Column name for mz in csv file. If blank, reverts to mz',
-            'csv_rt_column': 'Column name for rt in csv file. If blank, reverts to rt',
+            # 'csv_rt_column': 'Column name for rt in csv file. If blank, reverts to rt',
             'csv_rt_units': 'Units for time column (minutes or seconds)',
             'csv_id_column': 'ID column in csv file to match to the ms2 file',
             'ms2_id_field': 'ID field in ms2 file to link to ID column in csv',
@@ -81,7 +81,9 @@ class CreateExperimentForm(forms.ModelForm):
         }
         fields = [
             'name', 'description',
-            'experiment_type', 'experiment_ms2_format', 'ms2_file', 'csv_file','csv_mz_column','csv_rt_column','csv_rt_units',
+            'experiment_type', 'experiment_ms2_format', 'ms2_file', 'csv_file','csv_mz_column',
+            # 'csv_rt_column',
+            'csv_rt_units',
             'csv_id_column','ms2_id_field',
             'isolation_window', 'mz_tol', 'rt_tol', 'min_ms1_rt', 'max_ms1_rt', 'min_ms1_intensity','min_ms2_intensity',
             'featureset',
