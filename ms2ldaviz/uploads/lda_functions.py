@@ -27,7 +27,6 @@ def load_mzml_and_make_documents(experiment):
                           min_ms2_intensity = experiment.min_ms2_intensity,
                           rt_units = experiment.csv_rt_units,
                           mz_col_name = experiment.csv_mz_column,
-                          rt_col_name = experiment.csv_rt_column, 
                           csv_id_col = experiment.csv_id_column,
                           id_field = experiment.ms2_id_field)
     elif experiment.experiment_ms2_format == '1':
@@ -38,7 +37,6 @@ def load_mzml_and_make_documents(experiment):
                         peaklist=peaklist,
                         rt_units = experiment.csv_rt_units,
                         mz_col_name = experiment.csv_mz_column,
-                        rt_col_name = experiment.csv_rt_column, 
                         csv_id_col = experiment.csv_id_column,
                         id_field = experiment.ms2_id_field)
     elif experiment.experiment_ms2_format == '2':
@@ -49,7 +47,6 @@ def load_mzml_and_make_documents(experiment):
                         peaklist=peaklist,
                         rt_units = experiment.csv_rt_units,
                         mz_col_name = experiment.csv_mz_column,
-                        rt_col_name = experiment.csv_rt_column, 
                         csv_id_col = experiment.csv_id_column,
                         id_field = experiment.ms2_id_field)
 
