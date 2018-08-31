@@ -59,7 +59,7 @@ class MS1(object):
 ## *load_spectra* functions are too long, refactor and split when having time
 class Loader(object):
     def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 0.5,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False,repeated_precursor_match = None,
-                    min_ms1_rt = 0.0, max_ms1_rt = 1e6, min_ms2_intensity = 0.0,has_scan_id = False):
+                    min_ms1_rt = 0.0, max_ms1_rt = 1e6, min_ms2_intensity = 0.0,has_scan_id = False, rt_units = 'seconds',mz_col_name = 'mz', rt_col_name = 'rt', csv_id_col = None, id_field = None):
         self.min_ms1_intensity = min_ms1_intensity
         self.peaklist = peaklist
         self.isolation_window = isolation_window
@@ -75,6 +75,14 @@ class Loader(object):
             self.repeated_precursor_match = repeated_precursor_match
         else:
             self.repeated_precursor_match = 2*self.isolation_window
+
+
+        self.mz_col_name = mz_col_name
+        self.rt_col_name = rt_col_name
+        self.csv_id_col = csv_id_col
+        self.rt_units = rt_units
+        self.csv_id_col = csv_id_col
+        self.id_field = id_field
 
     def __str__(self):
         return "loader class"
@@ -99,13 +107,23 @@ class Loader(object):
             tokens = heads.strip().split(self.separator)
             index = -1
             featid_index = None
+            mz_col = None
+            rt_col = None
+            featid_index = None
             for i in range(len(tokens)):
                 index = i
-                if tokens[i].lower() == "scans":
+                if tokens[i].lower() == self.mz_col_name.lower():
+                    mz_col = i
+                elif tokens[i].lower() == self.rt_col_name.lower():
+                    rt_col = i
+                elif self.csv_id_col and tokens[i].lower() == self.csv_id_col.lower():
                     featid_index = i
-                if tokens[i].lower() in ['mass', 'mz']:
-                    break
-                self.user_cols_names.append(tokens[i])
+                # if tokens[i].lower() == "scans":
+                #     featid_index = i
+                # if tokens[i].lower() in ['mass', 'mz']:
+                #     break
+                else:
+                    self.user_cols_names.append(tokens[i])
 
             ## if any sample names missing, use "Sample_*" to replace
             empty_sample_name_id = 0
@@ -117,13 +135,16 @@ class Loader(object):
             self.sample_names = tokens[index+2:]
 
             for line in f:
-                tokens_tuple= line.strip().split(self.separator, index+2)
+                tokens_tuple= line.strip().split(self.separator, rt_col+1)
                 featid = None
                 if featid_index != None:
                     featid = tokens_tuple[featid_index]
-                mz = tokens_tuple[index]
-                rt = tokens_tuple[index+1]
-                samples = tokens_tuple[index+2]
+                mz = tokens_tuple[mz_col]
+                rt = float(tokens_tuple[rt_col])
+                print rt,float(mz)
+                if self.rt_units == 'minutes':
+                    rt *= 60.0
+                samples = tokens_tuple[rt_col+1]
                 # store (featid, mz,rt,intensity)
 
                 ## record user defined index columns before "mass" column in peaklist file
@@ -161,8 +182,8 @@ class Loader(object):
             doc_name = el.name
             doc_ms1[doc_name] = el
         for k,v in metadata.items():
-            if 'scans' in v:
-                featid = v['scans']
+            if self.id_field and self.id_field.lower() in v:
+                featid = v[self.id_field.lower()]
                 featid_ms1_dict[featid] = doc_ms1[k]
 
         ## build ms1_ms2 dict, to make searching O(1) in the following loop
@@ -188,9 +209,8 @@ class Loader(object):
             ## if featureId not exist, then do "mz/rt matching"
             if featid != None and featid in featid_ms1_dict:
                 old_ms1 = featid_ms1_dict[featid]
-
+                print "yay"
             else:
-                print featid
                 min_mz = peak_mz - self.mz_tol*peak_mz/1e6
                 max_mz = peak_mz + self.mz_tol*peak_mz/1e6
                 min_rt = peak_rt - self.rt_tol
