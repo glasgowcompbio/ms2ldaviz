@@ -5,10 +5,11 @@ import os
 import shutil
 import sys
 import traceback
+import pickle
 
 from celery.utils.log import get_task_logger
 
-from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_DECOMPOSITION_SOURCE
+from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_DECOMPOSITION_SOURCE, EXPERIMENT_TYPE
 from basicviz.models import Experiment
 from decomposition.decomposition_functions import decompose, load_mzml_and_make_documents
 from decomposition.models import MotifSet, Decomposition
@@ -143,3 +144,37 @@ def just_decompose_task(decomposition_id):
     ready, _ = EXPERIMENT_STATUS_CODE[1]
     decomposition.status = ready
     decomposition.save()
+
+
+@app.task
+def upload_task(exp_id, params):
+    experiment = Experiment.objects.get(pk=exp_id)
+
+    logger = custom_logger(experiment)
+    logger.info('Running upload on experiment_%d (%s)' % (exp_id, experiment.description))
+    logger.info('dict/json file = %s' % experiment.ms2_file)
+
+    old_outs = sys.stdout, sys.stderr
+    rlevel = app.conf.worker_redirect_stdouts_level
+    try:
+        app.log.redirect_stdouts_to_logger(logger, rlevel)
+
+        filename = params['filename']
+        with open(filename, 'r') as f:
+            lda_dict = pickle.load(f)
+        logger.info('Loaded %s' % filename)
+
+        verbose = False
+        featureset = params['featureset']
+        load_dict(lda_dict, experiment, verbose, featureset)
+
+        ready, _ = EXPERIMENT_STATUS_CODE[1]
+        experiment.status = ready
+        experiment.save()
+
+        delete_analysis_dir(experiment)
+
+    except:
+        traceback.print_exc()
+    finally:
+        sys.stdout, sys.stderr = old_outs
