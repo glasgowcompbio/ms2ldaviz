@@ -76,16 +76,15 @@ def process_experiment(exp, cleaned_data):
         # runs the correct task based on the experiment type and ms2 format
         params = {}
         task = None
-        if exp.experiment_type == EXPERIMENT_TYPE[1][0]:
+        if exp.experiment_type == EXPERIMENT_TYPE[1][0]: # run decomposition
             params['decompose_from'] = cleaned_data['decompose_from'].name if 'decompose_from' in cleaned_data else None
             task = decomposition_task
-        elif exp.experiment_type == EXPERIMENT_TYPE[0][0]:
+        elif exp.experiment_type == EXPERIMENT_TYPE[0][0]: # run upload of lda results
             if exp.experiment_ms2_format == EXPERIMENT_MS2_FORMAT[3][0]:
                 params['filename'] = exp.ms2_file.path
                 params['featureset'] = exp.featureset.name
                 task = upload_task
-                pass
-            else:
+            else: # run lda inference
                 params['K'] = cleaned_data['K'] if 'K' in cleaned_data else None
                 params['n_its'] = cleaned_data['n_its'] if 'n_its' in cleaned_data else None
                 task = lda_task
