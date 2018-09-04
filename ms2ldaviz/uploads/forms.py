@@ -108,18 +108,6 @@ class UploadExperimentForm(forms.ModelForm):
         )
         self.fields['ms2_file'].required = True
 
-    def is_valid(self):
-        valid = super(UploadExperimentForm, self).is_valid()
-        if not valid:
-            return valid
-
-        ms2_file_name = self.cleaned_data['ms2_file'].name.lower()
-        if not ms2_file_name.endswith('.dict') and not ms2_file_name.endswith('.json'):
-            self.add_error('ms2_file', ValidationError(_('Error: Extension should be in python pickled (.dict) or .json format'), code='invalid'))
-            return False
-
-        return True
-
     class Meta:
         model = Experiment
         widgets = {

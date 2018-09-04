@@ -161,13 +161,16 @@ def upload_task(exp_id, params):
         app.log.redirect_stdouts_to_logger(logger, rlevel)
 
         filename = params['filename']
-        with open(filename, 'r') as f:
-            if filename.lower().endswith('.dict'):
+        lda_dict = None
+        try:
+            with open(filename, 'r') as f:
                 lda_dict = pickle.load(f)
-            elif filename.lower().endswith('.json'):
+        except KeyError:
+            with open(filename, 'r') as f:
                 lda_dict = json.load(f)
-            logger.info('Loaded %s' % filename)
 
+        if lda_dict is not None:
+            logger.info('Loaded %s' % filename)
             verbose = False
             featureset = params['featureset']
             load_dict(lda_dict, experiment, verbose, featureset)
@@ -175,7 +178,6 @@ def upload_task(exp_id, params):
             ready, _ = EXPERIMENT_STATUS_CODE[1]
             experiment.status = ready
             experiment.save()
-
             delete_analysis_dir(experiment)
 
     except:
