@@ -6,6 +6,7 @@ import shutil
 import sys
 import traceback
 import pickle
+import json
 
 from celery.utils.log import get_task_logger
 
@@ -161,18 +162,21 @@ def upload_task(exp_id, params):
 
         filename = params['filename']
         with open(filename, 'r') as f:
-            lda_dict = pickle.load(f)
-        logger.info('Loaded %s' % filename)
+            if filename.lower().endswith('.dict'):
+                lda_dict = pickle.load(f)
+            elif filename.lower().endswith('.json'):
+                lda_dict = json.load(f)
+            logger.info('Loaded %s' % filename)
 
-        verbose = False
-        featureset = params['featureset']
-        load_dict(lda_dict, experiment, verbose, featureset)
+            verbose = False
+            featureset = params['featureset']
+            load_dict(lda_dict, experiment, verbose, featureset)
 
-        ready, _ = EXPERIMENT_STATUS_CODE[1]
-        experiment.status = ready
-        experiment.save()
+            ready, _ = EXPERIMENT_STATUS_CODE[1]
+            experiment.status = ready
+            experiment.save()
 
-        delete_analysis_dir(experiment)
+            delete_analysis_dir(experiment)
 
     except:
         traceback.print_exc()
