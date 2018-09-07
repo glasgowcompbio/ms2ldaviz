@@ -29,8 +29,8 @@ EXPERIMENT_MS2_FORMAT = [
     ('0', 'mzML'),
     ('1', 'msp'),
     ('2', 'mgf'),
+    ('3', 'upload')
 ]
-
 
 MASSBANK_AUTHORS = "van der Hooft, J. J. J., Wandy J., Rogers, S., University of Glasgow"
 MASSBANK_LICENSE = 'CC BY'

@@ -61,6 +61,13 @@ class Experiment(models.Model):
     ms2_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
     csv_file = models.FileField(blank=True, null=True, upload_to=get_upload_folder)
 
+    csv_mz_column = models.CharField(blank = True, null = True, max_length=128, default='mz')
+    # csv_rt_column = models.CharField(blank = True, null = True, max_length=128)
+    csv_rt_units = models.CharField(blank = True, null = True, choices = [('minutes','minutes'),('seconds','seconds')],max_length=128,default = 'seconds')
+
+    csv_id_column = models.CharField(blank = True, null = True, max_length=128, default='scans')
+    ms2_id_field = models.CharField(blank = True, null = True, max_length=128, default ='scans')
+    
 
     # I don't think this should be stored here
     # as it precludes the same experiment being decomposed multiple times
@@ -76,23 +83,20 @@ class Experiment(models.Model):
     max_ms1_rt = models.FloatField(null=True, default=21*60) # seconds
     min_ms2_intensity = models.FloatField(null=True, default=5000.0)
 
-
     # Same with these -- this model is getting a bit bloated
     filter_duplicates = models.BooleanField(null = False,default = False)
     min_ms1_intensity = models.FloatField(null = True,default=0.0)
     duplicate_filter_mz_tol = models.FloatField(null = True,default = 0.5)
     duplicate_filter_rt_tol = models.FloatField(null = True,default = 16)
 
-
     n_its = models.IntegerField(null = True,default = 1000)
-
-
     K = models.IntegerField(null=True, default=300)
-
     featureset = models.ForeignKey(BVFeatureSet,null = True)
+
 
     def __unicode__(self):
         return self.name
+
 
     def save(self, *args, **kwargs):
 

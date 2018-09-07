@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block head_block %}
+{% endblock %}
+
+{% block body_block %}
+
+	<h3>Add a new experiment</h3>
+    <ul class="nav nav-tabs">
+      <li role="presentation"><a href="/uploads/create_experiment">Create</a></li>
+      <li role="presentation" class="active"><a href="/uploads/upload_experiment">Upload</a></li>
+    </ul>
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p>
+                    You can upload LDA experiments that have been performed locally in your computer
+                    <a href="https://github.com/sdrogers/lda">(download script)</a>.
+                </p>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <form id="experiment_form" method="post" action="/uploads/upload_experiment/" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% for hidden in experiment_form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+
+                    {% for field in experiment_form.visible_fields %}
+                        <p>{{ field.errors }}</p>
+                        <p>  {{field.label}} {% if field.field.required %} * {% endif %} {{ field }}</p>
+                    {% endfor %}
+                    <input type="submit" name="submit" value="Upload Your Experiment" class="btn btn-primary" />
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
