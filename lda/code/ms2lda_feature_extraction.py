@@ -84,6 +84,9 @@ class Loader(object):
         self.csv_id_col = csv_id_col
         self.id_field = id_field
 
+        if not self.mz_col_name:
+            self.mz_col_name = 'mz'
+
     def __str__(self):
         return "loader class"
 
@@ -117,7 +120,8 @@ class Loader(object):
                     featid_index = i
                 # if tokens[i].lower() == "scans":
                 #     featid_index = i
-                # if tokens[i].lower() in ['mass', 'mz']:
+                if tokens[i].lower() in ['mass', 'mz']: # backwards compatibility
+                    index = i
                 #     break
                 self.user_cols_names.append(tokens[i])
 
