@@ -43,6 +43,7 @@ def check_user(request, experiment):
             return None
 
 
+
 def topic_table(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     motifs = Mass2Motif.objects.filter(experiment=experiment)
@@ -1891,3 +1892,27 @@ def set_doc_annotation(request):
     else:
         response['status'] = 'not a post request'
     return HttpResponse(json.dumps(response), content_type='application/json')
+
+
+
+def get_gnps_summary(request,experiment_id,metadata_columns = ['scans']):
+    experiment = Experiment.objects.get(id = experiment_id)
+    documents = Document.objects.filter(experiment = experiment)
+    dm2m = DocumentMass2Motif.objects.filter(document__in = documents).order_by('document')
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="gnps_output_{}.csv"'.format(experiment_id)
+    writer = csv.writer(response)
+
+
+
+    writer.writerow(metadata_columns+['document','motif','probability','overlap'])
+    for d in dm2m:
+        md = []
+        for m in metadata_columns:
+            temp = jsonpickle.decode(d.document.metadata)
+            md.append(temp.get(m,'NA'))
+        writer.writerow(md+[d.document,d.mass2motif,d.probability,d.overlap_score])
+    return response
+
+
