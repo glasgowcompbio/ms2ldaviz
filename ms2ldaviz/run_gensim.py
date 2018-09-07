@@ -16,8 +16,12 @@ from basicviz.models import Experiment, User, BVFeatureSet, UserExperiment, JobL
 from load_dict_functions import load_dict
 from lda import VariationalLDA
 from gensim.models.ldamulticore import LdaMulticore
+from gensim.models.ldamodel import LdaModel
 import numpy as np
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
+level=logging.DEBUG)
 
 def build_parser():
     parser = ArgumentParser(description="Run gensim lda on MS2 file and insert into db", epilog=textwrap.dedent("""
@@ -149,12 +153,14 @@ def gensim(corpusjson, ldajson,
         index2doc.append(doc)
 
     lda = LdaMulticore(corpus,
-                       num_topics=k, iterations=n,
+                       num_topics=k, iterations=100,
                        per_word_topics=True, gamma_threshold=gamma_threshold,
-                       chunksize=chunksize, batch=batch,
-                       passes=passes, alpha=alpha, eta=eta,
+                       chunksize=len(corpus), batch=batch,
+                       passes=100, alpha='symmetric', eta=0.1,
                        )
-
+#     lda = LdaModel(corpus, num_topics=k, iterations=100,
+#                     chunksize=len(corpus), update_every=1, eta=0.1, alpha='auto',
+#                     passes=100)
     beta = {}
     index2word = {v: k for k, v in lda_dict['word_index'].items()}
     for tid, topic in enumerate(lda.get_topics()):
