@@ -1895,7 +1895,7 @@ def set_doc_annotation(request):
 
 
 
-def get_gnps_summary(request,experiment_id,metadata_columns = ['scans']):
+def get_gnps_summary(request,experiment_id,metadata_columns = ['scans','precursormass','parentrt']):
     experiment = Experiment.objects.get(id = experiment_id)
     documents = Document.objects.filter(experiment = experiment)
     dm2m = DocumentMass2Motif.objects.filter(document__in = documents).order_by('document')
@@ -1906,7 +1906,7 @@ def get_gnps_summary(request,experiment_id,metadata_columns = ['scans']):
 
 
 
-    writer.writerow(metadata_columns+['document','motif','probability','overlap'])
+    writer.writerow(metadata_columns+['document','precursor mz','precursor rt','motif','probability','overlap'])
     for d in dm2m:
         md = []
         for m in metadata_columns:
