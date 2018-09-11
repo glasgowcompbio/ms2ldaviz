@@ -5,6 +5,11 @@ import json
 import os
 import sys
 
+# Never let numpy use more than one core, otherwise each worker of LdaMulticore will use all cores for numpy
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
+
 sys.path.append('../lda/code')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 
@@ -20,8 +25,8 @@ from gensim.models.ldamodel import LdaModel
 import numpy as np
 
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+
 
 def build_parser():
     parser = ArgumentParser(description="Run gensim lda on MS2 file and insert into db", epilog=textwrap.dedent("""
@@ -42,29 +47,32 @@ def build_parser():
     corpus.add_argument('ms2_file', help="MS2 file")
     corpus.add_argument('corpusjson', type=FileType('w'), help="corpus file")
     corpus.add_argument('-f', '--ms2_format', default='msp', help='Format of MS2 file', choices=('msp', 'mgf', 'mzxml'))
-    corpus.add_argument('--min_ms1_intensity', type=float, default=0.0)
-    corpus.add_argument('--min_ms2_intensity', type=float, default=5000.0)
-    corpus.add_argument('--mz_tol', type=float, default=5.0)
-    corpus.add_argument('--rt_tol', type=float, default=10.0)
-    corpus.add_argument('-k', type=int, default=300, help='Number of topics')
+    corpus.add_argument('--min_ms1_intensity', type=float, default=0.0, help='Minimum intensity of MS1 peaks to store  (default: %(default)s)')
+    corpus.add_argument('--min_ms2_intensity', type=float, default=5000.0, help='Minimum intensity of MS2 peaks to store  (default: %(default)s)')
+    corpus.add_argument('--mz_tol', type=float, default=5.0, help='Mass tolerance when linking peaks from the peaklist to those found in MS2 file (ppm) (default: %(default)s)')
+    corpus.add_argument('--rt_tol', type=float, default=10.0, help='Retention time tolerance when linking peaks from the peaklist to those found in MS2 file (seconds)  (default: %(default)s)')
+    corpus.add_argument('-k', type=int, default=300, help='Number of topics (default: %(default)s)')
     corpus.set_defaults(func=msfile2corpus)
 
     # lda
     lda = sc.add_parser('gensim', help='Run lda using gensim')
     lda.add_argument('corpusjson', type=FileType('r'), help="corpus file")
     lda.add_argument('ldajson', type=FileType('w'), help="lda file")
-    lda.add_argument('-k', type=int, default=300, help='Number of topics')
-    lda.add_argument('-n', type=int, default=1000, help='Number of iterations')
-    lda.add_argument('--gamma_threshold', default=0.001, type=float, help='Minimum change in the value of the gamma parameters to continue iterating')
-    lda.add_argument('--chunksize', default=2000, type=int, help='Number of documents to be used in each training chunk')
-    lda.add_argument('--batch', action='store_true', help='When set will use batch learning otherwise online learning')
-    lda.add_argument('--normalize', type=int, default=1000, help='Normalize intensities')
-    lda.add_argument('--passes', type=int, default=1, help='Number of passes through the corpus during training.')
-    lda.add_argument('--min_prob_to_keep_beta', type=float, default=1e-3, help='Minimum probability to keep beta')
-    lda.add_argument('--min_prob_to_keep_phi', type=float, default=1e-2, help='Minimum probability to keep phi')
-    lda.add_argument('--min_prob_to_keep_theta', type=float, default=1e-2, help='Minimum probability to keep theta')
-    lda.add_argument('--alpha', default='symmetric', choices=('asymmetric', 'symmetric'))
-    lda.add_argument('--eta', help='Can be a float or "auto". Default is None')
+    lda.add_argument('-k', type=int, default=300, help='Number of topics (default: %(default)s)')
+    lda.add_argument('-n', type=int, default=1000, help='Number of iterations (default: %(default)s)')
+    lda.add_argument('--gamma_threshold', default=0.001, type=float, help='Minimum change in the value of the gamma parameters to continue iterating (default: %(default)s)')
+    lda.add_argument('--chunksize', default=2000, type=int, help='Number of documents to be used in each training chunk, use 0 for same size as corpus (default: %(default)s)')
+    lda.add_argument('--batch', action='store_true', help='When set will use batch learning otherwise online learning (default: %(default)s)')
+    lda.add_argument('--normalize', type=int, default=1000, help='Normalize intensities (default: %(default)s)')
+    lda.add_argument('--passes', type=int, default=1, help='Number of passes through the corpus during training (default: %(default)s)')
+    lda.add_argument('--min_prob_to_keep_beta', type=float, default=1e-3, help='Minimum probability to keep beta (default: %(default)s)')
+    lda.add_argument('--min_prob_to_keep_phi', type=float, default=1e-2, help='Minimum probability to keep phi (default: %(default)s)')
+    lda.add_argument('--min_prob_to_keep_theta', type=float, default=1e-2, help='Minimum probability to keep theta (default: %(default)s)')
+    lda.add_argument('--alpha', default='symmetric', choices=('asymmetric', 'symmetric'), help="Prior selecting strategies (default: %(default)s)")
+    lda.add_argument('--eta', help='Can be a float or "auto". Default is (default: %(default)s)')
+    lda.add_argument('--workers', type=int, default=4, help='Number of workers. 0 will use single core LdaCore otherwise will use LdaMulticore (default: %(default)s)')
+    lda.add_argument('--random_seed', type=int, help='Random seed to use, Useful for reproducibility. (default: %(default)s)')
+
     lda.set_defaults(func=gensim)
 
     # insert
@@ -136,7 +144,7 @@ def gensim(corpusjson, ldajson,
            n, k, gamma_threshold,
            chunksize, batch, normalize, passes,
            min_prob_to_keep_beta, min_prob_to_keep_phi, min_prob_to_keep_theta,
-           alpha, eta,
+           alpha, eta, workers, random_seed
            ):
 
     if eta is not None and eta != 'auto':
@@ -151,16 +159,26 @@ def gensim(corpusjson, ldajson,
             bow.append((lda_dict['word_index'][word], int(score * normalize / max_score)))
         corpus.append(bow)
         index2doc.append(doc)
+    if chunksize == 0:
+        chunksize = len(corpus)
 
-    lda = LdaMulticore(corpus,
-                       num_topics=k, iterations=100,
+    if workers > 0:
+        lda = LdaMulticore(corpus,
+                           num_topics=k, iterations=n,
+                           per_word_topics=True, gamma_threshold=gamma_threshold,
+                           chunksize=chunksize, batch=batch,
+                           passes=passes, alpha=alpha, eta=eta,
+                           workers=workers,
+                           random_state=random_seed,
+                           )
+    else:
+        lda = LdaModel(corpus,
+                       num_topics=k, iterations=n,
                        per_word_topics=True, gamma_threshold=gamma_threshold,
-                       chunksize=len(corpus), batch=batch,
-                       passes=100, alpha='symmetric', eta=0.1,
+                       chunksize=chunksize, update_every=0 if batch else 1,
+                       passes=passes, alpha=alpha, eta=eta,
+                       random_state=random_seed,
                        )
-#     lda = LdaModel(corpus, num_topics=k, iterations=100,
-#                     chunksize=len(corpus), update_every=1, eta=0.1, alpha='auto',
-#                     passes=100)
     beta = {}
     index2word = {v: k for k, v in lda_dict['word_index'].items()}
     for tid, topic in enumerate(lda.get_topics()):
