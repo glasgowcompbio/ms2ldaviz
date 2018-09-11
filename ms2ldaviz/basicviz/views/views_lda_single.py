@@ -1906,7 +1906,7 @@ def get_gnps_summary(request,experiment_id,metadata_columns = ['scans','precurso
 
 
 
-    writer.writerow(metadata_columns+['document','precursor mz','precursor rt','motif','probability','overlap'])
+    writer.writerow(metadata_columns+['document','motif','probability','overlap'])
     for d in dm2m:
         md = []
         for m in metadata_columns:
