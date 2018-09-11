@@ -1911,7 +1911,10 @@ def get_gnps_summary(request,experiment_id,metadata_columns = ['scans','precurso
         md = []
         for m in metadata_columns:
             temp = jsonpickle.decode(d.document.metadata)
-            md.append(temp.get(m,'NA'))
+            val = temp.get(m,'NA')
+            if val == 'NA' and m == 'precursormass':
+                val = temp.get('parentmass','NA')
+            md.append(val)
         writer.writerow(md+[d.document,d.mass2motif,d.probability,d.overlap_score])
     return response
 
