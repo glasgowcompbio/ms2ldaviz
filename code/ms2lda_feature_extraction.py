@@ -59,7 +59,7 @@ class MS1(object):
 ## *load_spectra* functions are too long, refactor and split when having time
 class Loader(object):
     def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 0.5,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False,repeated_precursor_match = None,
-                    min_ms1_rt = 0.0, max_ms1_rt = 1e6, min_ms2_intensity = 0.0,has_scan_id = False, rt_units = 'seconds',mz_col_name = 'mz', rt_col_name = 'rt', csv_id_col = None, id_field = None):
+                    min_ms1_rt = 0.0, max_ms1_rt = 1e6, min_ms2_intensity = 0.0,has_scan_id = False, rt_units = 'seconds',mz_col_name = 'mz', rt_col_name = 'rt', csv_id_col = None, id_field = None,name_field = None):
         self.min_ms1_intensity = min_ms1_intensity
         self.peaklist = peaklist
         self.isolation_window = isolation_window
@@ -83,6 +83,8 @@ class Loader(object):
         self.rt_units = rt_units
         self.csv_id_col = csv_id_col
         self.id_field = id_field
+
+        self.name_field = name_field # only works for msp - fix for metlin people
 
         if not self.mz_col_name:
             self.mz_col_name = 'mz'
@@ -1184,9 +1186,13 @@ class LoadMSP(Loader):
                                     ## We have the case that 'doc' with same 'Name' metadata but different inchikey
                                     ## If we use 'Name' as the key of metadata dictionary, the old data will be overwitten
                                     ## So keep the following format of doc_name instead of using 'Name'
-                                    doc_name = 'document_{}'.format(ms1_id)
-                                    metadata[doc_name] = temp_metadata.copy()
-                                    new_ms1.name = doc_name
+                                    if not self.name or not temp_metadata.get(self.name,None):
+                                        doc_name = 'document_{}'.format(ms1_id)
+                                        metadata[doc_name] = temp_metadata.copy()
+                                        new_ms1.name = doc_name
+                                    else:
+                                        doc_name = temp_metadata.get(self.name)
+                                        new_ms1.name = doc_name
                                     ms1.append(new_ms1)
 
                                     if inchikey:
