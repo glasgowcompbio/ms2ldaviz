@@ -1118,6 +1118,7 @@ class LoadMSP(Loader):
 
                 for line in f:
                     rline  = line.rstrip()
+                    print rline
                     if not in_doc and len(rline) == 0:
                         continue
 
@@ -1170,7 +1171,7 @@ class LoadMSP(Loader):
                                             ms2_dict.setdefault(new_ms1, [])
                                             ms2_dict[new_ms1].append((mz,intensity))
 
-                        elif rline.startswith('Num Peaks'):
+                        elif rline.lower().startswith('num peaks'):
                             in_doc = True
                             if keep_block:
                                 ## record block_id for normalization later
@@ -1229,6 +1230,7 @@ class LoadMSP(Loader):
                                 inchikey = val
                             elif key == 'precursormz':
                                 temp_metadata['parentmass'] = float(val)
+                                temp_metadata['precursormz'] = float(val)
                                 parentmass = float(val)
                             elif key == 'retentiontime':
                                 ## rt must in float format, and can not be -1 as well
@@ -1262,6 +1264,8 @@ class LoadMSP(Loader):
                                 temp_metadata['csid'] = val
 
                             elif key in ['smiles', 'formula']:
+                                temp_metadata[key] = val
+                            else:
                                 temp_metadata[key] = val
 
 
