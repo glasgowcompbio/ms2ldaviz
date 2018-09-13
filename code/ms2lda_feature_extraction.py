@@ -1120,7 +1120,6 @@ class LoadMSP(Loader):
 
                 for line in f:
                     rline  = line.rstrip()
-                    print rline
                     if not in_doc and len(rline) == 0:
                         continue
 
@@ -1186,13 +1185,12 @@ class LoadMSP(Loader):
                                     ## We have the case that 'doc' with same 'Name' metadata but different inchikey
                                     ## If we use 'Name' as the key of metadata dictionary, the old data will be overwitten
                                     ## So keep the following format of doc_name instead of using 'Name'
-                                    if not self.name or not temp_metadata.get(self.name,None):
+                                    try:
+                                        doc_name = temp_metadata.get(self.name_field.lower())
+                                    except:
                                         doc_name = 'document_{}'.format(ms1_id)
-                                        metadata[doc_name] = temp_metadata.copy()
-                                        new_ms1.name = doc_name
-                                    else:
-                                        doc_name = temp_metadata.get(self.name)
-                                        new_ms1.name = doc_name
+                                    metadata[doc_name] = temp_metadata.copy()
+                                    new_ms1.name = doc_name
                                     ms1.append(new_ms1)
 
                                     if inchikey:
