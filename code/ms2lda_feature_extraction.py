@@ -209,7 +209,6 @@ class Loader(object):
             ## if featureId not exist, then do "mz/rt matching"
             if featid != None and featid in featid_ms1_dict:
                 old_ms1 = featid_ms1_dict[featid]
-                print "yay"
             else:
                 min_mz = peak_mz - self.mz_tol*peak_mz/1e6
                 max_mz = peak_mz + self.mz_tol*peak_mz/1e6
