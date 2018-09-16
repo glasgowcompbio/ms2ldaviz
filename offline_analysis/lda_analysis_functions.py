@@ -18,16 +18,31 @@ def compute_motif_degrees(lda_dict,p_thresh,o_thresh):
 	return motif_degrees,md
 
 
-def plot_motif(lda_dict,motif_name,**kwargs):
-	plt.figure(**kwargs)
+def plot_motif(lda_dict,motif_name,xlim=None,**kwargs):
 	be = lda_dict['beta'][motif_name]
-	for feature,intensity in be.items():
+	plot_motif_from_dict(be,xlim=xlim,**kwargs)
+
+def plot_motif_from_dict(motif_dict,xlim=None,**kwargs):
+	plt.figure(**kwargs)
+	anylosses = False
+	for feature,intensity in motif_dict.items():
 		if feature.startswith('fragment'):
 			# deal with losses later
 			feature_mz = float(feature.split('_')[1])
 			plt.plot([feature_mz,feature_mz],[0,intensity],'r')
+		elif feature.startswith('loss'):
+			feature_mz = float(feature.split('_')[1])
+			plt.plot([feature_mz,feature_mz],[0,-intensity],'b')			
+			anylosses = True
+
+	if xlim:
+		plt.xlim(xlim)
+	if anylosses:
+		plt.plot(plt.xlim(),[0,0],'k--')
 	plt.xlabel('m/z')
 	plt.ylabel('probability')
+
+
 
 def list_metadata_fields(lda_dict):
 	fields = []
@@ -76,24 +91,38 @@ def plot_mol(lda_dict,mol,color_motifs = False,xlim = None,**kwargs):
 			if feature.startswith('fragment'):
 				mz = float(feature.split('_')[1])
 				plt.plot([mz,mz],[0,intensity],'r')
+			elif feature.startswith('loss'):
+				mz = float(feature.split('_')[1])
+				plt.plot([mz,mz],[0,-intensity],'b')
+
 	else:
+		anylosses = False
 		phi = lda_dict['phi'][mol]
 		for feature,pphi in phi.items():
 			if feature.startswith('fragment'):
-				mz = float(feature.split('_')[1])
-				total_intensity = spec[feature]
-				cum_intensity = 0
-				col_index = 0
-				for motif,prob in pphi.items():
-					plt.plot([mz,mz],[cum_intensity,cum_intensity + prob*total_intensity],color=motif_cols.get(motif,[0.6,0.6,0.6]))
-					cum_intensity += prob*total_intensity
-					col_index += 1
-					if col_index == len(cols):
-						break
-				if cum_intensity < total_intensity:
-					plt.plot([mz,mz],[cum_intensity,total_intensity],'k',color = [0.6,0.6,0.6])
+				mul = 1
+			elif feature.startswith('loss'):
+				mul = -1
+				anylosses = True
+			else:
+				continue
+
+			mz = float(feature.split('_')[1])
+			total_intensity = spec[feature]
+			cum_intensity = 0
+			col_index = 0
+			for motif,prob in pphi.items():
+				plt.plot([mz,mz],[mul*cum_intensity,mul*(cum_intensity + prob*total_intensity)],color=motif_cols.get(motif,[0.6,0.6,0.6]))
+				cum_intensity += prob*total_intensity
+				col_index += 1
+				if col_index == len(cols):
+					break
+			if cum_intensity < total_intensity:
+				plt.plot([mz,mz],[mul*cum_intensity,mul*total_intensity],'k',color = [0.6,0.6,0.6])
 		tit_string = "    ".join(["{}: {}".format(m,c) for m,c in motif_cols.items()])
 		plt.title(tit_string)
+		if anylosses:
+			plt.plot(plt.xlim(),[0,0],'k--')
 	if xlim:
 		plt.xlim(xlim)
 
