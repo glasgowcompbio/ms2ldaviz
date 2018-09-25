@@ -605,8 +605,8 @@ class LoadMZML(Loader):
                             # mz,rt,intensity,file_name,scan_number = None):
                                 # fix the charge for better loss computation
                                 ch = spectrum['precursors'][0].get('charge',"+1")
-                                mul = int(ch.replace("+", ""))
                                 try:
+                                    mul = int(ch.replace("+", "")) # if ch is an integer, this will throw AttributeError
                                     if ch.startswith('-') or ch.startswith('+'): # e.g. '-1'
                                         if ch.endswith('-') or ch.endswith('+'): # e.g. '-1+'
                                             mul = int(ch[:-1]) # remove funny last character
@@ -616,6 +616,9 @@ class LoadMZML(Loader):
                                         mul = int(ch[0]) # e.g. '1+'
                                 except ValueError:
                                     mul = 0
+                                except AttributeError:
+                                    mul = ch # assumes ch is already an integer
+
 
                                 # Note: can't we just use the precursor now?
                                 single_charge_precursor_mass = current_ms1_scan_mz[max_intensity_pos]
