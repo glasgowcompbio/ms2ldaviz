@@ -1423,7 +1423,10 @@ class LoadMGF(Loader):
                                     # temp_metadata['parentmass'] = temp_metadata['parentmass']
                                     pm = temp_metadata['precursormass']
                                     ch = temp_metadata['charge']
-                                    mul = int(ch.replace("+", ""))
+                                    try:
+                                        mul = int(ch.replace("+", ""))
+                                    except:
+                                        mul = 0
                                     try:
                                         if ch.startswith('-') or ch.startswith('+'): # e.g. '-1'
                                             if ch.endswith('-') or ch.endswith('+'): # e.g. '-1+'
