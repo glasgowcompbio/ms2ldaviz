@@ -649,11 +649,11 @@ class LoadMZML(Loader):
                                 str_charge = spectrum['precursors'][0].get('charge',"+1")
                                 int_charge = self._interpret_charge(str_charge)
 
-                                precursormass = current_ms1_scan_mz[max_intensity_pos]
-                                parent_mass,single_charge_precursor_mass = self._ion_masses(precursormass,int_charge)
+                                # precursormass = current_ms1_scan_mz[max_intensity_pos]
+                                parent_mass,single_charge_precursor_mass = self._ion_masses(precursor_mz,int_charge)
 
 
-                                new_ms1 = MS1(ms1_id,precursormass,
+                                new_ms1 = MS1(ms1_id,precursor_mz,
                                               current_ms1_scan_rt,max_intensity,file_name,
                                               scan_number = current_ms1_scan_number,
                                               single_charge_precursor_mass = single_charge_precursor_mass)
@@ -673,9 +673,9 @@ class LoadMZML(Loader):
                                 if n_found > 0:
                                     ms1.append(new_ms1)
                                     ms1_id += 1
-                                    metadata[new_ms1.name] = {'parentmass':current_ms1_scan_mz[max_intensity_pos],
+                                    metadata[new_ms1.name] = {'most_intense_precursor_mass':current_ms1_scan_mz[max_intensity_pos],
                                                               'parentrt':current_ms1_scan_rt,'scan_number':current_ms1_scan_number,
-                                                              'precursor_mass':precursor_mz,'file':file_name}
+                                                              'precursor_mass':precursor_mz,'file':file_name,'charge':int_charge}
 
 
                                     previous_ms1 = new_ms1 # used for merging energies
@@ -1454,7 +1454,7 @@ class LoadMGF(Loader):
 
                                 temp_metadata['parentmass'] = parent_mass
                                 temp_metadata['singlechargeprecursormass'] = single_charge_precursor_mass
-                                
+                                temp_metadata['charge'] = int_charge
 
                                 new_ms1 = MS1(ms1_id,precursor_mass,parentrt,parentintensity,file_name,single_charge_precursor_mass = single_charge_precursor_mass)
                                 ms1_id += 1
