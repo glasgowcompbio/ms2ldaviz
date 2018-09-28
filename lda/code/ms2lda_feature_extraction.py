@@ -95,6 +95,48 @@ class Loader(object):
     def load_spectra(self,input_set):
         raise NotImplementedError("load spectra method must be implemented")
 
+
+    # compute the parent masses
+    # single_charge version is used for loss computation
+    def _ion_masses(self,precursormass,int_charge):
+        mul = abs(int_charge)
+        parent_mass = precursormass*mul
+        parent_mass -= int_charge*PROTON_MASS
+        single_charge_precursor_mass = precursormass*mul
+        if int_charge > 0:
+            single_charge_precursor_mass -= (int_charge-1)*PROTON_MASS
+        else:
+            single_charge_precursor_mass += (mul-1)*PROTON_MASS
+        return parent_mass,single_charge_precursor_mass
+
+
+    ## method to interpret the ever variable charge
+    ## field in the different formats
+    ## should never fail now
+    def _interpret_charge(self,charge):
+        if not charge: # if it is none
+            return 1
+        try:
+            if not type(charge) == str:
+                charge = str(charge)
+
+            ## add the meat here
+            ## try removing any + signs
+            charge = charge.replace("+", "")
+
+            ## remove trailing minus signs
+            if charge.endswith('-'):
+                charge = charge[:-1]
+                # move the minus to the front if it 
+                # isn't already there
+                if not charge.startswith('-'):
+                    charge = '-' + charge
+            ## turn into an int
+            int_charge = int(charge)
+            return int_charge
+        except:
+            int_charge = 1
+        return int_charge
     ## modify peaklist function
     ## try to detect "featureid", store it in ms1_peaks used for in for mgf ms1 analysis
     ## ms1_peaks: [featid, mz,rt,intensity], featid will be None if "FeatureId" not exist
@@ -604,29 +646,14 @@ class LoadMZML(Loader):
                             if (max_intensity > self.min_ms1_intensity) and (not max_intensity_pos == None):
                             # mz,rt,intensity,file_name,scan_number = None):
                                 # fix the charge for better loss computation
-                                ch = spectrum['precursors'][0].get('charge',"+1")
-                                try:
-                                    mul = int(ch.replace("+", "")) # if ch is an integer, this will throw AttributeError
-                                    if ch.startswith('-') or ch.startswith('+'): # e.g. '-1'
-                                        if ch.endswith('-') or ch.endswith('+'): # e.g. '-1+'
-                                            mul = int(ch[:-1]) # remove funny last character
-                                        else:
-                                            mul = int(ch)
-                                    else:
-                                        mul = int(ch[0]) # e.g. '1+'
-                                except ValueError:
-                                    mul = 0
-                                except AttributeError:
-                                    mul = ch # assumes ch is already an integer
+                                str_charge = spectrum['precursors'][0].get('charge',"+1")
+                                int_charge = self._interpret_charge(str_charge)
+
+                                # precursormass = current_ms1_scan_mz[max_intensity_pos]
+                                parent_mass,single_charge_precursor_mass = self._ion_masses(precursor_mz,int_charge)
 
 
-                                # Note: can't we just use the precursor now?
-                                single_charge_precursor_mass = current_ms1_scan_mz[max_intensity_pos]
-                                if (mul > 1):
-                                    single_charge_precursor_mass *= mul
-                                    single_charge_precursor_mass -= (mul-1)*PROTON_MASS
-                                        
-                                new_ms1 = MS1(ms1_id,current_ms1_scan_mz[max_intensity_pos],
+                                new_ms1 = MS1(ms1_id,precursor_mz,
                                               current_ms1_scan_rt,max_intensity,file_name,
                                               scan_number = current_ms1_scan_number,
                                               single_charge_precursor_mass = single_charge_precursor_mass)
@@ -646,9 +673,9 @@ class LoadMZML(Loader):
                                 if n_found > 0:
                                     ms1.append(new_ms1)
                                     ms1_id += 1
-                                    metadata[new_ms1.name] = {'parentmass':current_ms1_scan_mz[max_intensity_pos],
+                                    metadata[new_ms1.name] = {'most_intense_precursor_mass':current_ms1_scan_mz[max_intensity_pos],
                                                               'parentrt':current_ms1_scan_rt,'scan_number':current_ms1_scan_number,
-                                                              'precursor_mass':precursor_mz,'file':file_name}
+                                                              'precursor_mass':precursor_mz,'file':file_name,'charge':int_charge}
 
 
                                     previous_ms1 = new_ms1 # used for merging energies
@@ -1419,35 +1446,15 @@ class LoadMGF(Loader):
                                 precursor_mass = temp_metadata['precursormass']
                                 parent_mass = temp_metadata['precursormass']
 
-                                if 'charge' in temp_metadata:
-                                    # print metadata[doc_name]['charge'],metadata[doc_name]['parentmass']
+                                str_charge = temp_metadata.get('charge','1')
+                                int_charge = self._interpret_charge(str_charge)
 
+                                parent_mass,single_charge_precursor_mass = self._ion_masses(precursor_mass,int_charge)
 
-                                    # temp_metadata['parentmass'] = temp_metadata['parentmass']
-                                    pm = temp_metadata['precursormass']
-                                    ch = temp_metadata['charge']
-                                    mul = int(ch.replace("+", ""))
-                                    try:
-                                        if ch.startswith('-') or ch.startswith('+'): # e.g. '-1'
-                                            if ch.endswith('-') or ch.endswith('+'): # e.g. '-1+'
-                                                mul = int(ch[:-1]) # remove funny last character
-                                            else:
-                                                mul = int(ch)
-                                        else:
-                                            mul = int(ch[0]) # e.g. '1+'
-                                    except ValueError:
-                                        mul = 0
-
-                                    if mul > 1:
-                                        single_charge_precursor_mass *= mul
-                                        single_charge_precursor_mass -= (mul-1)*PROTON_MASS
-                                        
-                                        parent_mass = temp_metadata['precursormass']*mul
-                                        parent_mass -= mul*PROTON_MASS
-                                        
 
                                 temp_metadata['parentmass'] = parent_mass
                                 temp_metadata['singlechargeprecursormass'] = single_charge_precursor_mass
+                                temp_metadata['charge'] = int_charge
 
                                 new_ms1 = MS1(ms1_id,precursor_mass,parentrt,parentintensity,file_name,single_charge_precursor_mass = single_charge_precursor_mass)
                                 ms1_id += 1
