@@ -143,7 +143,9 @@ class Loader(object):
     def _load_peak_list(self):
         self.ms1_peaks = []
         self.user_cols_names = []
-        with open(self.peaklist,'r') as f:
+        with open(self.peaklist,'rU') as f:
+
+
             heads = f.readline()
 
             ## add this in case peaklist file is separated by ';'
@@ -185,7 +187,6 @@ class Loader(object):
                     featid = tokens_tuple[featid_index]
                 mz = tokens_tuple[index]
                 rt = float(tokens_tuple[index+1])
-                print rt,float(mz)
                 if self.rt_units == 'minutes':
                     rt *= 60.0
                 samples = tokens_tuple[index+2]
@@ -207,8 +208,6 @@ class Loader(object):
     ## find the most suitable ms1 hit
     ## then update ms1, ms2, metadata
     def process_peaklist(self, ms1, ms2, metadata):
-
-        print ms1[0], metadata.values()[0]
 
         self._load_peak_list()
         ms1 = sorted(ms1,key = lambda x: x.mz)
@@ -238,7 +237,7 @@ class Loader(object):
             ms1_ms2_dict.setdefault(el[3], [])
             ms1_ms2_dict[el[3]].append(el)
 
-
+        print "Matching peaks..."
         for n_peaks_checked,peak in enumerate(self.ms1_peaks):
             
             if n_peaks_checked % 500 == 0:
@@ -293,6 +292,7 @@ class Loader(object):
             from time import time
             # make a new ms1 object
             new_ms1 = MS1(old_ms1.id,peak_mz,peak_rt,peak_intensity,old_ms1.file_name,old_ms1.scan_number)
+            new_ms1.name = old_ms1.name
             new_ms1_list.append(new_ms1)
             new_metadata[new_ms1.name] = metadata[old_ms1.name]
 
@@ -1458,10 +1458,13 @@ class LoadMGF(Loader):
 
                                 new_ms1 = MS1(ms1_id,precursor_mass,parentrt,parentintensity,file_name,single_charge_precursor_mass = single_charge_precursor_mass)
                                 ms1_id += 1
-                                if 'name' in temp_metadata:
-                                    doc_name = temp_metadata['name']
-                                else:
-                                    doc_name = 'document_{}'.format(ms1_id)
+
+                                doc_name = temp_metadata.get(self.name_field.lower(),None)
+                                if not doc_name:
+                                    if 'name' in temp_metadata:
+                                        doc_name = temp_metadata['name']
+                                    else:
+                                        doc_name = 'document_{}'.format(ms1_id)
                                 metadata[doc_name] = temp_metadata.copy()
                                 new_ms1.name = doc_name
                                 ms1.append(new_ms1)
