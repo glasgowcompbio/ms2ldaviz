@@ -5,7 +5,7 @@ import jsonpickle
 import networkx as nx
 import numpy as np
 from django.contrib.auth.decorators import login_required
-from django.db.models import OuterRef, Subquery, Count, IntegerField
+from django.db.models import Count
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
