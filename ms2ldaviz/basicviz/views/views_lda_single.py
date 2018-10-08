@@ -795,7 +795,7 @@ def start_viz(request, experiment_id):
         return HttpResponse("You do not have permission to access this page")
     context_dict = {'experiment': experiment}
 
-    ## Only show analysis choices done through celery
+    ## Only show analysis choices done lthrough celery
     ready, _ = EXPERIMENT_STATUS_CODE[1]
     choices = [(analysis.id, analysis.name + '(' + analysis.description + ')') for analysis in
                Analysis.objects.filter(experiment=experiment, status=ready)]
@@ -964,19 +964,31 @@ def make_graph(experiment, min_degree=5, topic_scale_factor=5, edge_scale_factor
                ms1_analysis_id=None, doc_max_size=200, motif_max_size=1000):
     mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
     documents = Document.objects.filter(experiment=experiment)
+    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
+    docm2ms_q = DocumentMass2Motif.objects.filter(mass2motif__experiment=experiment,
+                                                  probability__gte=doc_m2m_prob_threshold,
+                                                  overlap_score__gte=doc_m2m_overlap_threshold)\
+        .select_related('document').select_related('mass2motif')
+    docm2ms = {}
+    for r in docm2ms_q:
+        if r.mass2motif_id in docm2ms:
+            docm2ms[r.mass2motif_id].append(r)
+        else:
+            docm2ms[r.mass2motif_id] = [r]
     # Find the degrees
     topics = {}
     docm2m_dict = {}
     for mass2motif in mass2motifs:
-        topics[mass2motif] = 0
-        docm2ms = get_docm2m(mass2motif)
-        docm2m_dict[mass2motif] = list(docm2ms)
+        if mass2motif.id in docm2ms:
+            docm2m_dict[mass2motif] = docm2ms[mass2motif.id]
+        else:
+            docm2m_dict[mass2motif] = []
+        topics[mass2motif] = len(docm2m_dict[mass2motif])
+
         # if edge_choice == 'probability':
         #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=edge_thresh)
         # else:
         #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, overlap_score__gte=edge_thresh)
-        for d in docm2ms:
-            topics[mass2motif] += 1
     to_remove = []
     for topic in topics:
         if topics[topic] < min_degree:
