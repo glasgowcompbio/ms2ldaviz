@@ -173,6 +173,7 @@ def load_sample_intensity(document, experiment, metadata):
                 sample = add_sample(sample_name, experiment)
                 add_doc_sample_intensity(sample, document, intensity)
 
+
 def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'):
 
 
@@ -219,19 +220,32 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
     n_done = 0
     to_do = len(lda_dict['beta'])
     with transaction.atomic():
+        # topic
+        m2ms = {}
         for topic in lda_dict['beta']:
-            n_done += 1
-            if n_done % 100 == 0:
-                print "Done {}/{}".format(n_done,to_do)
-                experiment.status = "Done {}/{} topics".format(n_done,to_do)
-                experiment.save()
-            metadata = {}
-            metadata = lda_dict['topic_metadata'].get(topic,{})
-            add_topic_set(topic,experiment,jsonpickle.encode(metadata),lda_dict,featureset)
-            # m2m = Mass2Motif.objects.get_or_create(name = topic,experiment = experiment,metadata = jsonpickle.encode(metadata))[0]
-            # for word in lda_dict['beta'][topic]:
-            #   feature = Feature.objects.get(name = word,experiment=experiment)
-            #   Mass2MotifInstance.objects.get_or_create(feature = feature,mass2motif = m2m,probability = lda_dict['beta'][topic][word])
+            metadata = jsonpickle.encode(lda_dict['topic_metadata'].get(topic, {}))
+            m2ms[topic]= Mass2Motif(name=topic, experiment=experiment, metadata=metadata)
+        Mass2Motif.objects.bulk_create(m2ms.values())
+
+        # words of topic
+        m2mis = []
+        features_q = Feature.objects.filter(featureset=featureset, featureinstance__document__experiment=experiment)
+        features = {r.name: r for r in features_q}
+        for topic in lda_dict['beta']:
+            m2m = m2ms[topic]
+            for word, probability in lda_dict['beta'][topic].items():
+                feature = features[word]
+                m2mis.append(Mass2MotifInstance(feature=feature, mass2motif=m2m, probability=probability))
+        Mass2MotifInstance.objects.bulk_create(m2mis)
+
+        # alphas
+        alphas = []
+        for topic in lda_dict['beta']:
+            m2m = m2ms[topic]
+            topic_pos = lda_dict['topic_index'][topic]
+            alpha = lda_dict['alpha'][topic_pos]
+            alphas.append(Alpha(mass2motif=m2m, value=alpha))
+        Alpha.objects.bulk_create(alphas)
 
     print "Loading theta"
     n_done = 0
