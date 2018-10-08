@@ -599,11 +599,7 @@ def view_mass2motifs(request, experiment_id):
     if not check_user(request, experiment):
         return HttpResponse("You do not have permission to access this page")
     if experiment.experiment_type == '0':
-        motifs = Mass2Motif.objects.filter(experiment=experiment)
-        motif_tuples = []
-        for motif in motifs:
-            dm2ms = get_docm2m(motif)
-            motif_tuples.append((motif, len(dm2ms)))
+        motif_tuples = get_motifs_with_degree(experiment)
         context_dict = {'motif_tuples': motif_tuples}
         context_dict['experiment'] = experiment
         return render(request, 'basicviz/view_mass2motifs.html', context_dict)
@@ -1718,13 +1714,8 @@ def get_proportion_annotated_docs(request, experiment_id):
     return HttpResponse(json.dumps(output_data), content_type='application/json')
 
 
-# Renders a page summarising a particular experiment
-def summary(request, experiment_id):
-    experiment = Experiment.objects.get(id=experiment_id)
-    user_experiments = UserExperiment.objects.filter(experiment=experiment)
-
+def get_motifs_with_degree(experiment):
     doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
-
     motifs = Mass2Motif.objects.filter(experiment=experiment).prefetch_related('experiment')
     docm2m_q = DocumentMass2Motif.objects.values_list('mass2motif__id').filter(mass2motif__experiment=experiment,
                                                                                probability__gte=doc_m2m_prob_threshold,
@@ -1738,6 +1729,14 @@ def summary(request, experiment_id):
             motif_tuples.append((motif, docm2m[motif.id]))
         else:
             motif_tuples.append((motif, 0))
+    return motif_tuples
+
+# Renders a page summarising a particular experiment
+def summary(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    user_experiments = UserExperiment.objects.filter(experiment=experiment)
+
+    motif_tuples = get_motifs_with_degree(experiment)
 
     motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment=experiment, probability__gte=0.05).select_related('mass2motif').prefetch_related('feature')
 
