@@ -5,6 +5,7 @@ import jsonpickle
 import networkx as nx
 import numpy as np
 from django.contrib.auth.decorators import login_required
+from django.db.models import OuterRef, Subquery, Count, IntegerField
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
@@ -1725,11 +1726,18 @@ def summary(request, experiment_id):
     doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
 
     motifs = Mass2Motif.objects.filter(experiment=experiment).prefetch_related('experiment')
-    # TODO a add DocumentMass2Motif count aggregate
+    docm2m_q = DocumentMass2Motif.objects.values_list('mass2motif__id').filter(mass2motif__experiment=experiment,
+                                                                               probability__gte=doc_m2m_prob_threshold,
+                                                                               overlap_score__gte=doc_m2m_overlap_threshold
+                                                                               ).annotate(degree=Count('*'))
+    docm2m = {r[0]: r[1] for r in docm2m_q}
+
     motif_tuples = []
     for motif in motifs:
-        dm2ms = get_docm2m(motif, doc_m2m_prob_threshold, doc_m2m_overlap_threshold)
-        motif_tuples.append((motif, dm2ms.count()))
+        if motif.id in docm2m:
+            motif_tuples.append((motif, docm2m[motif.id]))
+        else:
+            motif_tuples.append((motif, 0))
 
     motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment=experiment, probability__gte=0.05).select_related('mass2motif').prefetch_related('feature')
 
