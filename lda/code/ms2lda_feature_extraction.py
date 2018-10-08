@@ -59,7 +59,7 @@ class MS1(object):
 ## *load_spectra* functions are too long, refactor and split when having time
 class Loader(object):
     def __init__(self,min_ms1_intensity = 0.0,peaklist = None,isolation_window = 0.5,mz_tol = 5,rt_tol=5.0,duplicate_filter_mz_tol = 0.5,duplicate_filter_rt_tol = 16,duplicate_filter = False,repeated_precursor_match = None,
-                    min_ms1_rt = 0.0, max_ms1_rt = 1e6, min_ms2_intensity = 0.0,has_scan_id = False, rt_units = 'seconds',mz_col_name = 'mz', rt_col_name = 'rt', csv_id_col = None, id_field = None):
+                    min_ms1_rt = 0.0, max_ms1_rt = 1e6, min_ms2_intensity = 0.0,has_scan_id = False, rt_units = 'seconds',mz_col_name = 'mz', rt_col_name = 'rt', csv_id_col = None, id_field = None,name_field = None):
         self.min_ms1_intensity = min_ms1_intensity
         self.peaklist = peaklist
         self.isolation_window = isolation_window
@@ -83,6 +83,8 @@ class Loader(object):
         self.rt_units = rt_units
         self.csv_id_col = csv_id_col
         self.id_field = id_field
+
+        self.name_field = name_field # only works for msp - fix for metlin people
 
         if not self.mz_col_name:
             self.mz_col_name = 'mz'
@@ -209,7 +211,6 @@ class Loader(object):
             ## if featureId not exist, then do "mz/rt matching"
             if featid != None and featid in featid_ms1_dict:
                 old_ms1 = featid_ms1_dict[featid]
-                print "yay"
             else:
                 min_mz = peak_mz - self.mz_tol*peak_mz/1e6
                 max_mz = peak_mz + self.mz_tol*peak_mz/1e6
@@ -604,8 +605,8 @@ class LoadMZML(Loader):
                             # mz,rt,intensity,file_name,scan_number = None):
                                 # fix the charge for better loss computation
                                 ch = spectrum['precursors'][0].get('charge',"+1")
-                                mul = int(ch.replace("+", ""))
                                 try:
+                                    mul = int(ch.replace("+", "")) # if ch is an integer, this will throw AttributeError
                                     if ch.startswith('-') or ch.startswith('+'): # e.g. '-1'
                                         if ch.endswith('-') or ch.endswith('+'): # e.g. '-1+'
                                             mul = int(ch[:-1]) # remove funny last character
@@ -615,6 +616,9 @@ class LoadMZML(Loader):
                                         mul = int(ch[0]) # e.g. '1+'
                                 except ValueError:
                                     mul = 0
+                                except AttributeError:
+                                    mul = ch # assumes ch is already an integer
+
 
                                 # Note: can't we just use the precursor now?
                                 single_charge_precursor_mass = current_ms1_scan_mz[max_intensity_pos]
@@ -1171,7 +1175,7 @@ class LoadMSP(Loader):
                                             ms2_dict.setdefault(new_ms1, [])
                                             ms2_dict[new_ms1].append((mz,intensity))
 
-                        elif rline.startswith('Num Peaks'):
+                        elif rline.lower().startswith('num peaks'):
                             in_doc = True
                             if keep_block:
                                 ## record block_id for normalization later
@@ -1184,7 +1188,10 @@ class LoadMSP(Loader):
                                     ## We have the case that 'doc' with same 'Name' metadata but different inchikey
                                     ## If we use 'Name' as the key of metadata dictionary, the old data will be overwitten
                                     ## So keep the following format of doc_name instead of using 'Name'
-                                    doc_name = 'document_{}'.format(ms1_id)
+                                    try:
+                                        doc_name = temp_metadata.get(self.name_field.lower())
+                                    except:
+                                        doc_name = 'document_{}'.format(ms1_id)
                                     metadata[doc_name] = temp_metadata.copy()
                                     new_ms1.name = doc_name
                                     ms1.append(new_ms1)
@@ -1230,6 +1237,7 @@ class LoadMSP(Loader):
                                 inchikey = val
                             elif key == 'precursormz':
                                 temp_metadata['parentmass'] = float(val)
+                                temp_metadata['precursormz'] = float(val)
                                 parentmass = float(val)
                             elif key == 'retentiontime':
                                 ## rt must in float format, and can not be -1 as well
@@ -1263,6 +1271,8 @@ class LoadMSP(Loader):
                                 temp_metadata['csid'] = val
 
                             elif key in ['smiles', 'formula']:
+                                temp_metadata[key] = val
+                            else:
                                 temp_metadata[key] = val
 
 

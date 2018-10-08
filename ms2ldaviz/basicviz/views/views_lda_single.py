@@ -1917,7 +1917,7 @@ def set_doc_annotation(request):
 
 
 
-def get_gnps_summary(request,experiment_id,metadata_columns = ['scans']):
+def get_gnps_summary(request,experiment_id,metadata_columns = ['scans','precursormass','parentrt']):
     experiment = Experiment.objects.get(id = experiment_id)
     documents = Document.objects.filter(experiment = experiment)
     dm2m = DocumentMass2Motif.objects.filter(document__in = documents).order_by('document')
@@ -1933,7 +1933,10 @@ def get_gnps_summary(request,experiment_id,metadata_columns = ['scans']):
         md = []
         for m in metadata_columns:
             temp = jsonpickle.decode(d.document.metadata)
-            md.append(temp.get(m,'NA'))
+            val = temp.get(m,'NA')
+            if val == 'NA' and m == 'precursormass':
+                val = temp.get('parentmass','NA')
+            md.append(val)
         writer.writerow(md+[d.document,d.mass2motif,d.probability,d.overlap_score])
     return response
 
