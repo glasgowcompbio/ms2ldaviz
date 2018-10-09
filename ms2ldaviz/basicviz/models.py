@@ -140,11 +140,11 @@ class UserExperiment(models.Model):
     experiment = models.ForeignKey(Experiment)
     permission = models.CharField(max_length=24,null=False)
 
-
 class Document(models.Model):
     name = models.CharField(max_length=64)
     experiment = models.ForeignKey(Experiment)
     metadata = models.CharField(max_length=2048, null=True)
+    mol_string = models.TextField(null=True)
 
     def get_annotation(self):
         md = jsonpickle.decode(self.metadata)

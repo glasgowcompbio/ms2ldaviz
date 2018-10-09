@@ -257,6 +257,9 @@ def show_doc(request, doc_id):
     if document.csid:
         context_dict['csid'] = document.csid
 
+    if document.mol_string:
+        context_dict['mol_string'] = document.mol_string
+
     if document.image_url:
         context_dict['image_url'] = document.image_url
 

@@ -20,6 +20,7 @@
 	</style>
 {% endblock %}
 
+
 {% block body_block %}
 	{% if document %}
 		<h3>{{document.name}} -- {{document.display_name}}</h3>
@@ -77,6 +78,17 @@
                     <img src="{{image_url}}">
                     <a href="http://www.chemspider.com/Chemical-Structure.{{csid}}.html" target=new>View on ChemSpider</a>
                 </div>
+                <div class="panel-body">
+                    <p>{{mol_string}}</p>
+                        <link rel="stylesheet" href="{% static 'css/ChemDoodleWeb.css' %}" type="text/css">
+                        <script type="text/javascript" src="{% static 'js/ChemDoodleWeb.js' %}"></script>
+                        <script type="text/javascript">
+                            var viewer = new ChemDoodle.ViewerCanvas('viewACS',200,200);
+                            var mol = "{{mol_string | escapejs}}";
+                            var this_mol = ChemDoodle.readMOL(mol);
+                            viewer.loadMolecule(this_mol);
+                        </script>
+                </div>
             </div>
         {% endif %}
         {% if features %}
@@ -117,9 +129,12 @@
 
 {% block js_block %}
 	
-	<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
-	<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
-	<script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
+   
+
+
+	<script type='text/javascript' src="{% static 'js/d3.v3.min.js' %}"></script>
+	<script type='text/javascript' src="{% static 'js/d3.tip.v0.6.3.js' %}"> </script>
+	<script type='text/javascript' src="{% static 'js/basicviz-spectra.js' %}"></script>
 
 
 
