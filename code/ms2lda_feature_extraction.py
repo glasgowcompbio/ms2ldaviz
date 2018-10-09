@@ -158,7 +158,6 @@ class Loader(object):
             featid_index = None
             mz_col = None
             rt_col = None
-            featid_index = None
             for i in range(len(tokens)):
                 if tokens[i].lower() == self.mz_col_name.lower():
                     index = i
@@ -225,7 +224,7 @@ class Loader(object):
             doc_name = el.name
             doc_ms1[doc_name] = el
         for k,v in metadata.items():
-            if self.id_field and self.id_field.lower() in v:
+            if self.id_field and (self.id_field.lower() in v):
                 featid = v[self.id_field.lower()]
                 featid_ms1_dict[featid] = doc_ms1[k]
 
@@ -236,6 +235,13 @@ class Loader(object):
         for el in ms2:
             ms1_ms2_dict.setdefault(el[3], [])
             ms1_ms2_dict[el[3]].append(el)
+
+        if self.id_field and self.csv_id_col: # if the IDs are provided, we match by that
+            print "IDs provided ({},{}), using them to match"  
+            match_by_id = True
+        else:
+            print "IDs not provided, matching on m/z, rt"
+            match_by_id = False
 
         print "Matching peaks..."
         for n_peaks_checked,peak in enumerate(self.ms1_peaks):
@@ -250,8 +256,11 @@ class Loader(object):
 
             ## first check FeatureId matching
             ## if featureId not exist, then do "mz/rt matching"
-            if featid != None and featid in featid_ms1_dict:
-                old_ms1 = featid_ms1_dict[featid]
+            old_ms1 = None
+
+            if match_by_id:
+                if featid != None and featid in featid_ms1_dict:
+                    old_ms1 = featid_ms1_dict[featid]
             else:
                 min_mz = peak_mz - self.mz_tol*peak_mz/1e6
                 max_mz = peak_mz + self.mz_tol*peak_mz/1e6
@@ -275,12 +284,6 @@ class Loader(object):
                                 best_intensity = frag_peak[2]
                                 best_ms1 = frag_peak[3]
                     old_ms1 = best_ms1
-
-
-
-                else:
-                    # Didn't find any
-                    continue
 
             ## Bug fix:
             ## add these two lines to avoid the case that min_ms2_intensity has been set too high,
