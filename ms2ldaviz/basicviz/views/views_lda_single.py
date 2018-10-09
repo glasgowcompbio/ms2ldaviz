@@ -5,6 +5,7 @@ import jsonpickle
 import networkx as nx
 import numpy as np
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
@@ -598,11 +599,7 @@ def view_mass2motifs(request, experiment_id):
     if not check_user(request, experiment):
         return HttpResponse("You do not have permission to access this page")
     if experiment.experiment_type == '0':
-        motifs = Mass2Motif.objects.filter(experiment=experiment)
-        motif_tuples = []
-        for motif in motifs:
-            dm2ms = get_docm2m(motif)
-            motif_tuples.append((motif, len(dm2ms)))
+        motif_tuples = get_motifs_with_degree(experiment)
         context_dict = {'motif_tuples': motif_tuples}
         context_dict['experiment'] = experiment
         return render(request, 'basicviz/view_mass2motifs.html', context_dict)
@@ -798,7 +795,7 @@ def start_viz(request, experiment_id):
         return HttpResponse("You do not have permission to access this page")
     context_dict = {'experiment': experiment}
 
-    ## Only show analysis choices done through celery
+    ## Only show analysis choices done lthrough celery
     ready, _ = EXPERIMENT_STATUS_CODE[1]
     choices = [(analysis.id, analysis.name + '(' + analysis.description + ')') for analysis in
                Analysis.objects.filter(experiment=experiment, status=ready)]
@@ -967,19 +964,31 @@ def make_graph(experiment, min_degree=5, topic_scale_factor=5, edge_scale_factor
                ms1_analysis_id=None, doc_max_size=200, motif_max_size=1000):
     mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
     documents = Document.objects.filter(experiment=experiment)
+    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
+    docm2ms_q = DocumentMass2Motif.objects.filter(mass2motif__experiment=experiment,
+                                                  probability__gte=doc_m2m_prob_threshold,
+                                                  overlap_score__gte=doc_m2m_overlap_threshold)\
+        .select_related('document').select_related('mass2motif')
+    docm2ms = {}
+    for r in docm2ms_q:
+        if r.mass2motif_id in docm2ms:
+            docm2ms[r.mass2motif_id].append(r)
+        else:
+            docm2ms[r.mass2motif_id] = [r]
     # Find the degrees
     topics = {}
     docm2m_dict = {}
     for mass2motif in mass2motifs:
-        topics[mass2motif] = 0
-        docm2ms = get_docm2m(mass2motif)
-        docm2m_dict[mass2motif] = list(docm2ms)
+        if mass2motif.id in docm2ms:
+            docm2m_dict[mass2motif] = docm2ms[mass2motif.id]
+        else:
+            docm2m_dict[mass2motif] = []
+        topics[mass2motif] = len(docm2m_dict[mass2motif])
+
         # if edge_choice == 'probability':
         #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=edge_thresh)
         # else:
         #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, overlap_score__gte=edge_thresh)
-        for d in docm2ms:
-            topics[mass2motif] += 1
     to_remove = []
     for topic in topics:
         if topics[topic] < min_degree:
@@ -1476,9 +1485,9 @@ def get_prob_overlap_thresholds(experiment, doc_m2m_prob_threshold=None, doc_m2m
 ## updated get_docm2m function, use threshold for probability and overlap respectively
 ## function is used to get MocumentMassMass2Motif by motif only
 def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
-    experiment = mass2motif.experiment
-
-    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
+    if doc_m2m_prob_threshold is None or doc_m2m_overlap_threshold is None:
+        experiment = mass2motif.experiment
+        doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
 
     dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=doc_m2m_prob_threshold,
                                              overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
@@ -1493,7 +1502,7 @@ def get_docm2m_all(experiment, doc_m2m_prob_threshold=None, doc_m2m_overlap_thre
     mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
 
     dm2m = DocumentMass2Motif.objects.filter(mass2motif__in=mass2motifs, probability__gte=doc_m2m_prob_threshold,
-                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
+                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability').select_related('mass2motif').prefetch_related('document')
 
     return dm2m
 
@@ -1717,18 +1726,31 @@ def get_proportion_annotated_docs(request, experiment_id):
     return HttpResponse(json.dumps(output_data), content_type='application/json')
 
 
+def get_motifs_with_degree(experiment):
+    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
+    motifs = Mass2Motif.objects.filter(experiment=experiment).prefetch_related('experiment')
+    docm2m_q = DocumentMass2Motif.objects.values_list('mass2motif__id').filter(mass2motif__experiment=experiment,
+                                                                               probability__gte=doc_m2m_prob_threshold,
+                                                                               overlap_score__gte=doc_m2m_overlap_threshold
+                                                                               ).annotate(degree=Count('*'))
+    docm2m = {r[0]: r[1] for r in docm2m_q}
+
+    motif_tuples = []
+    for motif in motifs:
+        if motif.id in docm2m:
+            motif_tuples.append((motif, docm2m[motif.id]))
+        else:
+            motif_tuples.append((motif, 0))
+    return motif_tuples
+
 # Renders a page summarising a particular experiment
 def summary(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     user_experiments = UserExperiment.objects.filter(experiment=experiment)
 
-    motifs = Mass2Motif.objects.filter(experiment=experiment)
-    motif_tuples = []
-    for motif in motifs:
-        dm2ms = get_docm2m(motif)
-        motif_tuples.append((motif, len(dm2ms)))
+    motif_tuples = get_motifs_with_degree(experiment)
 
-    motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment=experiment, probability__gte=0.05)
+    motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment=experiment, probability__gte=0.05).select_related('mass2motif').prefetch_related('feature')
 
     documents = Document.objects.filter(experiment=experiment)
 
