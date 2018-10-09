@@ -65,9 +65,10 @@ class Experiment(models.Model):
     # csv_rt_column = models.CharField(blank = True, null = True, max_length=128)
     csv_rt_units = models.CharField(blank = True, null = True, choices = [('minutes','minutes'),('seconds','seconds')],max_length=128,default = 'seconds')
 
-    csv_id_column = models.CharField(blank = True, null = True, max_length=128, default='scans')
-    ms2_id_field = models.CharField(blank = True, null = True, max_length=128, default ='scans')
-    
+    # these are the ones used for matching
+    csv_id_column = models.CharField(blank = True, null = True, max_length=128)
+    ms2_id_field = models.CharField(blank = True, null = True, max_length=128)
+    ms2_name_field = models.CharField(blank = True,null = True,max_length=128)
 
     # I don't think this should be stored here
     # as it precludes the same experiment being decomposed multiple times
