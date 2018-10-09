@@ -65,9 +65,10 @@ class Experiment(models.Model):
     # csv_rt_column = models.CharField(blank = True, null = True, max_length=128)
     csv_rt_units = models.CharField(blank = True, null = True, choices = [('minutes','minutes'),('seconds','seconds')],max_length=128,default = 'seconds')
 
-    csv_id_column = models.CharField(blank = True, null = True, max_length=128, default='scans')
-    ms2_id_field = models.CharField(blank = True, null = True, max_length=128, default ='scans')
-    
+    # these are the ones used for matching
+    csv_id_column = models.CharField(blank = True, null = True, max_length=128)
+    ms2_id_field = models.CharField(blank = True, null = True, max_length=128)
+    ms2_name_field = models.CharField(blank = True,null = True,max_length=128)
 
     # I don't think this should be stored here
     # as it precludes the same experiment being decomposed multiple times
@@ -171,11 +172,12 @@ class Document(models.Model):
         if 'csid' in md:
             # If this doc already has a csid, make the url
             return 'http://www.chemspider.com/ImagesHandler.ashx?id=' + str(self.csid)
-        elif 'InChIKey' in md:
+        elif 'InChIKey' in md or 'inchikey' in md:
             # If it doesnt but it does have an InChIKey get the csid and make the image url
             from chemspipy import ChemSpider
             cs = ChemSpider('b07b7eb2-0ba7-40db-abc3-2a77a7544a3d')
-            results = cs.search(md['InChIKey'])
+            ikey = md.get('InChIKey',md.get('inchikey'))
+            results = cs.search(ikey)
             if results:
                 # Return the image_url and also save the csid
                 csid = results[0].csid
