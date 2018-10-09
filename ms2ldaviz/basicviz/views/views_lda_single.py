@@ -256,10 +256,6 @@ def show_doc(request, doc_id):
 
     if document.csid:
         context_dict['csid'] = document.csid
-    else:
-        md = jsonpickle.decode(document.metadata)
-        if 'csid' in md:
-            context_dict['csid'] = md['csid']
 
     if document.image_url:
         context_dict['image_url'] = document.image_url
