@@ -229,7 +229,7 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
 
         # words of topic
         m2mis = []
-        features_q = Feature.objects.filter(featureset=featureset, featureinstance__document__experiment=experiment)
+        features_q = Feature.objects.filter(featureset=featureset)
         features = {r.name: r for r in features_q}
         for topic in lda_dict['beta']:
             m2m = m2ms[topic]
