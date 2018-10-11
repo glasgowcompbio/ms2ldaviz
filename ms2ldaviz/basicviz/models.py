@@ -405,3 +405,12 @@ class MotifMatch(models.Model):
 
     def __unicode__(self):
         return "{} <-> {} ({})".format(self.frommotif.name,self.tomotif.name,self.score)
+
+class MagmaSub(models.Model):
+    smiles = models.TextField(null = False)
+    mol_string = models.TextField(null = False)
+
+class Doc2Sub(models.Model):
+    document = models.ForeignKey(Document)
+    sub = models.ForeignKey(MagmaSub)
+    fragatoms = models.CharField(max_length=128,null=False)

@@ -84,6 +84,7 @@
                         <script type="text/javascript" src="{% static 'js/ChemDoodleWeb.js' %}"></script>
                         <script type="text/javascript">
                             var viewer = new ChemDoodle.ViewerCanvas('viewACS',200,200);
+                            viewer.specs.atoms_displayTerminalCarbonLabels_2D = true;
                             var mol = "{{mol_string | escapejs}}";
                             var this_mol = ChemDoodle.readMOL(mol);
                             viewer.loadMolecule(this_mol);
