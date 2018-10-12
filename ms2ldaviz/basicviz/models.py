@@ -240,6 +240,7 @@ class Document(models.Model):
     rt = property(get_rt)
     logfc = property(get_logfc)
     mass = property(get_mass)
+    parentmass = property(get_parentmass)
     csid = property(get_csid)
     inchikey = property(get_inchi)
     annotation = property(get_annotation)
