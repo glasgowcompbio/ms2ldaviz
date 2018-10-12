@@ -116,13 +116,14 @@
                 </p>
                 <table class='table' id='doctable'>
                     <thead>
-                        <tr><th>Fragmentation spectra</th><th>Parent mass</th><th>Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
+			    <tr><th>Fragmentation spectra</th><th>Precursor Mass</th><th>Parent mass</th><th>Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
                     </thead>
                     <tbody>
                         {% for dm2m in dm2ms %}
                             <tr>
                                 <td><a href="/basicviz/show_doc/{{dm2m.document.id}}">{{dm2m.document.name}}</a></td>
                                 <td>{{dm2m.document.mass}}</td>
+				<td>{{dm2m.document.parentmass}}</td>
                                 <td>{{dm2m.document.annotation}}</td>
                                 <td>{{dm2m.probability|floatformat:"3"}}</td>
                                 <td>{{dm2m.overlap_score|floatformat:"3"}}</td>
