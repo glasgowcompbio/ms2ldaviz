@@ -122,8 +122,8 @@
                         {% for dm2m in dm2ms %}
                             <tr>
                                 <td><a href="/basicviz/show_doc/{{dm2m.document.id}}">{{dm2m.document.name}}</a></td>
-                                <td>{{dm2m.document.mass}}</td>
-				<td>{{dm2m.document.parentmass}}</td>
+                                <td>{{dm2m.document.mass|floatformat:4}}</td>
+				<td>{{dm2m.document.parentmass|floatformat:4}}</td>
                                 <td>{{dm2m.document.annotation}}</td>
                                 <td>{{dm2m.probability|floatformat:"3"}}</td>
                                 <td>{{dm2m.overlap_score|floatformat:"3"}}</td>
