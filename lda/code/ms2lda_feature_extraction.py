@@ -678,7 +678,8 @@ class LoadMZML(Loader):
                                     ms1_id += 1
                                     metadata[new_ms1.name] = {'most_intense_precursor_mass':current_ms1_scan_mz[max_intensity_pos],
                                                               'parentrt':current_ms1_scan_rt,'scan_number':current_ms1_scan_number,
-                                                              'precursor_mass':precursor_mz,'file':file_name,'charge':int_charge}
+                                                              'precursor_mass':precursor_mz,'file':file_name,'charge':int_charge,
+                                                              'parentmass': parent_mass}
 
 
                                     previous_ms1 = new_ms1 # used for merging energies
