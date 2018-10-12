@@ -282,6 +282,8 @@ class Mass2Motif(models.Model):
         md = jsonpickle.decode(self.metadata)
         if 'annotation' in md:
             return md['annotation']
+        elif 'ANNOTATION' in md:
+            return md['ANNOTATION']
         elif self.linkmotif:
             return self.linkmotif.annotation
         else:
