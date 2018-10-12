@@ -191,12 +191,17 @@ class Document(models.Model):
             # If it has neither, no image!
             return None
 
-
-
-    def get_mass(self):
+    def get_parentmass(self):
         md = jsonpickle.decode(self.metadata)
         if 'parentmass' in md:
             return md['parentmass']
+        else:
+            return None
+
+    def get_mass(self):
+        md = jsonpickle.decode(self.metadata)
+        if 'precursormass' in md:
+            return md['precursormass']
         elif 'mz' in md:
             return md['mz']
         else:
