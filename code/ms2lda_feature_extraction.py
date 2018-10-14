@@ -105,8 +105,12 @@ class Loader(object):
         single_charge_precursor_mass = precursormass*mul
         if int_charge > 0:
             single_charge_precursor_mass -= (int_charge-1)*PROTON_MASS
-        else:
+        elif int_charge < 0:
             single_charge_precursor_mass += (mul-1)*PROTON_MASS
+        else:
+            # charge = zero - leave them ll the same
+            parent_mass = precursormass
+            single_charge_precursor_mass = precursormass
         return parent_mass,single_charge_precursor_mass
 
 
