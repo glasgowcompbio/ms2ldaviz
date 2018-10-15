@@ -1765,13 +1765,15 @@ def summary(request, experiment_id):
     context_dict['documents'] = documents
     context_dict['n_docs'] = len(documents)
     context_dict['all_docs_motifs'] = all_docs_motifs
-
-    this_ue = UserExperiment.objects.filter(experiment = experiment,user=request.user)
-    if this_ue.permission == 'edit':
-        context_dict['edit_user'] = True
-    else:
+    try:
+        this_ue = UserExperiment.objects.filter(experiment = experiment,user=request.user)
+        if this_ue.permission == 'edit':
+            context_dict['edit_user'] = True
+        else:
+            context_dict['edit_user'] = False
+    except:
         context_dict['edit_user'] = False
-
+        
     pe = PublicExperiments.objects.filter(experiment = experiment)
     if len(pe) > 0:
         context_dict['is_public'] = True
