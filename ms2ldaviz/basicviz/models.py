@@ -408,9 +408,10 @@ class MotifMatch(models.Model):
 
 class MagmaSub(models.Model):
     smiles = models.TextField(null = False)
-    mol_string = models.TextField(null = False)
+    mol_string = models.TextField(null = True)
 
-class Doc2Sub(models.Model):
+class DocFeature2Sub(models.Model):
     document = models.ForeignKey(Document)
+    feature = models.ForeignKey(FeatureInstance)
     sub = models.ForeignKey(MagmaSub)
     fragatoms = models.CharField(max_length=128,null=False)
