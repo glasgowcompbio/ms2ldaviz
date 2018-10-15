@@ -1765,6 +1765,12 @@ def summary(request, experiment_id):
     context_dict['n_docs'] = len(documents)
     context_dict['all_docs_motifs'] = all_docs_motifs
 
+    pe = PublicExperiments.objects.filter(experiment = experiment)
+    if len(pe) > 0:
+        context_dict['is_public'] = True
+    else:
+        context_dict['is_public'] = False
+
     return render(request, 'basicviz/summary.html', context_dict)
 
 def short_summary(request,experiment_id):
@@ -1940,4 +1946,15 @@ def get_gnps_summary(request,experiment_id,metadata_columns = ['scans','precurso
         writer.writerow(md+[d.document,d.mass2motif,d.probability,d.overlap_score])
     return response
 
+
+def toggle_public(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    pe = PublicExperiments.objects.filter(experiment = experiment)
+    if len(pe) == 0:
+        # add one
+        PublicExperiments.objects.create(experiment = experiment)
+    else:
+        for p in pe:
+            p.delete()
+    return summary(request,experiment_id)
 

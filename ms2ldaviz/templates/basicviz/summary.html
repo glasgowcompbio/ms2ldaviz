@@ -14,8 +14,16 @@
                     <li><b>Name:</b> {{experiment.name}}</li>
                     <li><b>Details:</b> {{experiment.description}}</li>
                     <li><b>Users:</b> {% for user_experiment in user_experiments %} {{user_experiment.user.username}} ({{user_experiment.permission}}), {% endfor %}</li>
+                    {% if is_public %}
+                        <li>Experiment is <b>public</b>. <a href="/basicviz/toggle_public/{{experiment.id}}">Make private</a></li>
+                    {% else %}
+                        <li>Experiment is <b>private</b>. <a href="/basicviz/toggle_public/{{experiment.id}}">Make public</a></li>
+                    {% endif %}
                 </ul>
             </div>
+        </div>
+        <div>
+            
         </div>
         <div class="panel panel-default">
             <div class="panel-body">
