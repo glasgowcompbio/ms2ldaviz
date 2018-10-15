@@ -11,3 +11,5 @@ django-markdown2==0.3.0
 markdown2==2.3.4
 scipy==0.18.1
 scikit-learn==0.18.1
+ipython=5.8.0
+jupyter=1.0.0
