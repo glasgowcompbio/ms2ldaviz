@@ -410,8 +410,7 @@ class MagmaSub(models.Model):
     smiles = models.TextField(null = False)
     mol_string = models.TextField(null = True)
 
-class DocFeature2Sub(models.Model):
-    document = models.ForeignKey(Document)
+class FeatureInstance2Sub(models.Model):
     feature = models.ForeignKey(FeatureInstance)
     sub = models.ForeignKey(MagmaSub)
     fragatoms = models.CharField(max_length=128,null=False)
