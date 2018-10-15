@@ -1766,7 +1766,7 @@ def summary(request, experiment_id):
     context_dict['documents'] = documents
     context_dict['n_docs'] = len(documents)
     context_dict['all_docs_motifs'] = all_docs_motifs
-    if this_ue.permission == 'edit':   
+    if this_permission == 'edit':   
         context_dict['edit_user'] = True
     else:
         context_dict['edit_user'] = False
