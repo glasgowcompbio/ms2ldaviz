@@ -1747,7 +1747,8 @@ def get_motifs_with_degree(experiment):
 def summary(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     user_experiments = UserExperiment.objects.filter(experiment=experiment)
-
+    if not check_user(request, experiment):
+        return HttpResponse("You don't have permission to access this page")
     motif_tuples = get_motifs_with_degree(experiment)
 
     motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment=experiment, probability__gte=0.05).select_related('mass2motif').prefetch_related('feature')

@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 
 from basicviz.constants import AVAILABLE_OPTIONS
-from basicviz.models import SystemOptions, Experiment, UserExperiment, BVFeatureSet
+from basicviz.models import SystemOptions, Experiment, UserExperiment, BVFeatureSet, PublicExperiments
 
 
 class DocFilterForm(forms.Form):
@@ -97,7 +97,14 @@ class MatchMotifForm(forms.Form):
         # Modified by SR to include the multifile ones - 11/7/17
         # Modified by SR again to include only those with a featureset
         fs = BVFeatureSet.objects.filter(name__in = ['binned_005','binned_01','binned_1'])
-        experiments = Experiment.objects.filter(featureset__in = fs).order_by('name')
+        users_experiments = [u.experiment for u in UserExperiment.objects.filter(user = user)]
+        users_experiments += [p.experiment for p in PublicExperiments.objects.all()]
+        users_experiments = set(users_experiments)
+        experiments = []
+        for e in users_experiments:
+            if e.featureset in fs:
+                experiments.append(e)
+        # experiments = Experiment.objects.filter(featureset__in = fs).order_by('name')
         # self.fields['other_experiment'].queryset = Experiment.objects.filter(
         #     userexperiment__user=user).order_by('name')
         self.fields['other_experiment'].queryset = experiments
