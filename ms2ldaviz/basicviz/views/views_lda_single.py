@@ -1955,12 +1955,16 @@ def get_gnps_summary(request,experiment_id,metadata_columns = ['scans','precurso
 
 def toggle_public(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
-    pe = PublicExperiments.objects.filter(experiment = experiment)
-    if len(pe) == 0:
-        # add one
-        PublicExperiments.objects.create(experiment = experiment)
+    permission = check_user(request,experiment)
+    if not permission == 'edit':
+        return HttpResponse("You don't have the permission to do this!")
     else:
-        for p in pe:
-            p.delete()
-    return summary(request,experiment_id)
+        pe = PublicExperiments.objects.filter(experiment = experiment)
+        if len(pe) == 0:
+            # add one
+            PublicExperiments.objects.create(experiment = experiment)
+        else:
+            for p in pe:
+                p.delete()
+        return summary(request,experiment_id)
 
