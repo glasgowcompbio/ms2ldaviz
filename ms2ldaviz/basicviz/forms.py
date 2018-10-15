@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 from basicviz.constants import AVAILABLE_OPTIONS
 from basicviz.models import SystemOptions, Experiment, UserExperiment, BVFeatureSet, PublicExperiments
@@ -97,10 +98,14 @@ class MatchMotifForm(forms.Form):
         # Modified by SR to include the multifile ones - 11/7/17
         # Modified by SR again to include only those with a featureset
         fs = BVFeatureSet.objects.filter(name__in = ['binned_005','binned_01','binned_1'])
-        experiments = Experiment.objects.filter(featureset__in = fs)
-        print len(experiments)
-        experiments.filter(userexperiment__user = user)
-        print len(experiments)
+        ue = UserExperiment.objects.filter(user = user)
+        pe = PublicExperiments.objects.all()
+        experiments = Experiment.objects.filter(Q(featureset__in = fs), 
+            (Q(id__in = [i.experiment.id for i in ue]) | Q(id__in = [p.experiment.id for p in pe])))
+
+        # print len(experiments)
+        # experiments = experiments.filter(userexperiment__user = user) | experiments.filter(publicexperiments )
+        # print len(experiments)
         # users_experiments += [p.experiment for p in PublicExperiments.objects.all()]
         # experiments = users_experiments
         # for e in users_experiments:
