@@ -97,6 +97,9 @@ class MatchMotifForm(forms.Form):
         #     userexperiment__user=user, multilink__isnull=True).order_by('name')
         # Modified by SR to include the multifile ones - 11/7/17
         # Modified by SR again to include only those with a featureset
+
+        # modified by SR, 15/10/18 to list those from the stated featuresets that either
+        # are accessible by the user, or are public
         fs = BVFeatureSet.objects.filter(name__in = ['binned_005','binned_01','binned_1'])
         ue = UserExperiment.objects.filter(user = user)
         pe = PublicExperiments.objects.all()
