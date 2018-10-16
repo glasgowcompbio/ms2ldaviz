@@ -68,7 +68,7 @@
                         {% endif %}
                         <a href="/basicviz/start_match_motifs/{{experiment.0.id}}" class = "btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-random"></span>&nbsp;Start Motif Matching</a>
                         <a href="/basicviz/manage_motif_matches/{{experiment.0.id}}" class = "btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;Manage Motif Matches</a>
-                        <a href="/basicviz/delete/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-tasks"></span>&nbsp;Delete experiment</a>
+                        <a href="/basicviz/delete/{{experiment.0.id}}" class="btn btn-block btn-danger" style="color:white;"><span class="glyphicon glyphicon-remove"></span>&nbsp;Delete experiment</a>
                     {% endif %}
                     <a href="/basicviz/start_viz/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Start Visualisation</a>
                     {% if extra_user %}
