@@ -1968,3 +1968,11 @@ def toggle_public(request,experiment_id):
                 p.delete()
         return summary(request,experiment_id)
 
+def delete_experiment(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    permission = check_user(request,experiment)
+    if not permission == 'edit':
+        return HttpResponse("You don't have the permission to do this!")
+    else:
+        experiment.delete()
+    return basicviz_index(request)

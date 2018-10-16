@@ -61,6 +61,7 @@ lda_single_patterns = [
     url(r'^get_doc_annotation/$',views.get_doc_annotation,name = 'get_doc_annotation'),
     url(r'^get_gnps_summary/(?P<experiment_id>\w+)/$',views.get_gnps_summary,name = 'get_gnps_summary'),
     url(r'^toggle_public/(?P<experiment_id>\w+)/$',views.toggle_public,name = 'toggle_public'),
+    url(r'^delete/(?P<experiment_id>\w+)/$',views.delete_experiment,name = 'delete_experiment'),
 ]
 
 # for multi-file LDA experiments
