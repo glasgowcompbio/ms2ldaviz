@@ -411,6 +411,8 @@ class MagmaSub(models.Model):
     mol_string = models.TextField(null = True)
 
 class FeatureInstance2Sub(models.Model):
-    feature = models.ForeignKey(FeatureInstance)
-    sub = models.ForeignKey(MagmaSub)
-    fragatoms = models.CharField(max_length=128,null=False)
+    feature = models.ForeignKey(FeatureInstance, null=False)
+    sub = models.ForeignKey(MagmaSub, null=False)
+    fragatoms = models.CharField(max_length=1024, null=False)
+    mz = models.FloatField(null=True)
+    sub_type = models.CharField(max_length=128, null=True)
