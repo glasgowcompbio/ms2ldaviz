@@ -71,24 +71,25 @@
                 </div>
             </div>
         </div>
-        {% if image_url %}
+        {% if image_url or mol_string %}
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <h4>ChemSpider</h4>
-                    <img src="{{image_url}}">
+                    <h4>Molecule Plot</h4>
+                    {% if image_url %}
+                        <img src="{{image_url}}">
+                    {% endif %}
                     <a href="http://www.chemspider.com/Chemical-Structure.{{csid}}.html" target=new>View on ChemSpider</a>
                 </div>
                 <div class="panel-body">
-                    <p>{{mol_string}}</p>
-                        <link rel="stylesheet" href="{% static 'css/ChemDoodleWeb.css' %}" type="text/css">
-                        <script type="text/javascript" src="{% static 'js/ChemDoodleWeb.js' %}"></script>
-                        <script type="text/javascript">
-                            var viewer = new ChemDoodle.ViewerCanvas('viewACS',200,200);
-                            viewer.specs.atoms_displayTerminalCarbonLabels_2D = true;
-                            var mol = "{{mol_string | escapejs}}";
-                            var this_mol = ChemDoodle.readMOL(mol);
-                            viewer.loadMolecule(this_mol);
-                        </script>
+                    <link rel="stylesheet" href="{% static 'css/ChemDoodleWeb.css' %}" type="text/css">
+                    <script type="text/javascript" src="{% static 'js/ChemDoodleWeb.js' %}"></script>
+                    <script type="text/javascript">
+                        var viewer = new ChemDoodle.ViewerCanvas('viewACS',200,200);
+                        viewer.specs.atoms_displayTerminalCarbonLabels_2D = true;
+                        var mol = "{{mol_string | escapejs}}";
+                        var this_mol = ChemDoodle.readMOL(mol);
+                        viewer.loadMolecule(this_mol);
+                    </script>
                 </div>
             </div>
         {% endif %}
@@ -107,16 +108,24 @@
                         <th>Name</th>
                         <th>Intensity</th>
                         <th>Mass2Motif (Probability)</th>
+                        <th>Substructure Annotation</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% for feature,m2minstances in fm2m %}
-                        <tr><td>{{feature.feature.name}}</td><td>{{feature.intensity}}</td>
-                        <td>
-                            {% for m2minstance in m2minstances %}
-                                {{m2minstance.mass2motif}} ({{m2minstance.probability|floatformat:"3"}}),
-                            {% endfor %}
-                        </td>
+                    {% for feature,m2minstances,feature2subs in fm2m %}
+                        <tr>
+                            <td>{{feature.feature.name}}</td>
+                            <td>{{feature.intensity}}</td>
+                            <td>
+                                {% for m2minstance in m2minstances %}
+                                    {{m2minstance.mass2motif}} ({{m2minstance.probability|floatformat:"3"}}),
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for feature2sub in feature2subs %}
+                                    {{feature2sub.sub.smiles}},
+                                {% endfor %}
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>

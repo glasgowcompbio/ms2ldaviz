@@ -16,7 +16,8 @@ from basicviz.forms import DocFilterForm, ValidationForm, VizForm, \
     TopicScoringForm, MatchMotifForm
 from massbank.forms import Mass2MotifMetadataForm
 from basicviz.models import Feature, Experiment, Document, FeatureInstance, DocumentMass2Motif, \
-    FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment, MotifMatch, PublicExperiments
+    FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment, MotifMatch, \
+    PublicExperiments, FeatureInstance2Sub
 from basicviz.tasks import match_motifs,match_motifs_set
 from massbank.views import get_massbank_form
 from options.views import get_option
@@ -257,11 +258,12 @@ def show_doc(request, doc_id):
     if document.csid:
         context_dict['csid'] = document.csid
 
-    if document.mol_string:
-        context_dict['mol_string'] = document.mol_string
-
     if document.image_url:
         context_dict['image_url'] = document.image_url
+
+    if document.mol_string:
+        context_dict['mol_string'] = document.mol_string
+        context_dict['image_url'] = None
 
     return render(request, 'basicviz/show_doc.html', context_dict)
 
@@ -278,8 +280,10 @@ def get_doc_context_dict(document):
     feature_mass2motif_instances = []
     for feature in features:
         if feature.intensity > 0:
-            feature_mass2motif_instances.append(
-                (feature, FeatureMass2MotifInstance.objects.filter(featureinstance=feature)))
+            m2m = FeatureMass2MotifInstance.objects.filter(featureinstance=feature)
+            subs = FeatureInstance2Sub.objects.filter(feature=feature)
+            item = (feature, m2m, subs,)
+            feature_mass2motif_instances.append(item)
 
     feature_mass2motif_instances = sorted(feature_mass2motif_instances, key=lambda x: x[0].intensity, reverse=True)
     context_dict['fm2m'] = feature_mass2motif_instances
