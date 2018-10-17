@@ -94,6 +94,7 @@ class Experiment(models.Model):
     K = models.IntegerField(null=True, default=300)
     featureset = models.ForeignKey(BVFeatureSet,null = True)
 
+    has_magma_annotation = models.BooleanField(null = False, default = False)
 
     def __unicode__(self):
         return self.name

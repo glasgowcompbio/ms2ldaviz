@@ -19,6 +19,9 @@ if __name__ == '__main__':
         data = json.load(f)
 
     with transaction.atomic():
+        e.has_magma_annotation = True
+        e.save()
+
         i = 0
         feature_map = {}
         for d in data:
