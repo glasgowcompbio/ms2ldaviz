@@ -37,13 +37,13 @@ if __name__ == '__main__':
             # create a new substructure object and link to feature instances
             for magma_annot in d['features']:
                 name = magma_annot['name']
+                sub_type = magma_annot['type']
                 feature = feature_map[name]
                 for m in magma_annot['matches']:
                     smiles = m['smiles']
                     fragatoms = m['fragatoms']
                     mz = m['mz']
                     mol = m['mol'] if 'mol' in m else None
-                    sub_type = m['type'] if 'type' in m else None
                     sub, _ = MagmaSub.objects.get_or_create(smiles=smiles, mol_string=mol)
                     f2sub = FeatureInstance2Sub.objects.get_or_create(
                         feature=feature, sub=sub, fragatoms=fragatoms,
