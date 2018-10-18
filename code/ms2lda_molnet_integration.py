@@ -2,6 +2,10 @@ import csv
 
 def write_output_files(lda_dictionary,pairs_file,output_name_prefix,metadata,overlap_thresh=0.3,p_thresh=0.1,X=5):
 	# load the pairs file
+
+	components_to_ignore = set()
+	components_to_ignore.add('-1')
+
 	rows = []
 	with open(pairs_file,'rU') as f:
 	    reader = csv.reader(f,dialect='excel',delimiter='\t')
@@ -12,6 +16,7 @@ def write_output_files(lda_dictionary,pairs_file,output_name_prefix,metadata,ove
 	# find the components (mol families) for each doc
 	ci_pos = heads.index('ComponentIndex') # will it always be called this?
 	ci = set([x[ci_pos] for x in rows])
+
 	component_to_doc = {c:set() for c in ci}
 	doc_to_component = {}
 	for row in rows:
@@ -88,6 +93,8 @@ def write_output_files(lda_dictionary,pairs_file,output_name_prefix,metadata,ove
 	                for dp in ld[i+1:]:
 	                    # check they're in the same component
 	                    c = doc_to_component[d]
+	                    if c in components_to_ignore: # don't write for singletons
+	                    	continue
 	                    if dp in component_to_doc[c]:
 	                        new_row = [d,m,dp,'','','','',c,'','']
 	                        writer.writerow(new_row)
