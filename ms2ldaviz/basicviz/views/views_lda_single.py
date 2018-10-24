@@ -1839,10 +1839,11 @@ def manage_motif_matches(request, experiment_id):
 
 
 def add_link(request, from_motif_id, to_motif_id):
-    from_motif = Mass2Motif.objects.get(id=from_motif_id)
-    to_motif = Mass2Motif.objects.get(id=to_motif_id)
-    from_motif.linkmotif = to_motif
-    from_motif.save()
+    if not from_motif_id == to_motif_id:
+        from_motif = Mass2Motif.objects.get(id=from_motif_id)
+        to_motif = Mass2Motif.objects.get(id=to_motif_id)
+        from_motif.linkmotif = to_motif
+        from_motif.save()
     experiment_id = from_motif.experiment.id
     return manage_motif_matches(request, experiment_id)
 
