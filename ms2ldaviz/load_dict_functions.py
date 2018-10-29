@@ -15,9 +15,10 @@ def add_all_features_set(experiment,features,featureset):
     # Used when we have a dictionary of features with their min and max mz values
     nfeatures = len(features)
 
-    current_features = Feature.objects.filter(featureset = featureset)
-    current_names = [f.name for f in current_features]
+    current_features = Feature.objects.filter(featureset = featureset).values_list('name', flat=True)
+    current_names = {f for f in current_features}
     ndone = 0
+    features2add = []
     with transaction.atomic():
         for feature in features:
             # round the name
@@ -25,15 +26,17 @@ def add_all_features_set(experiment,features,featureset):
 
             if not feature in current_names:
                 mz_vals = features[feature]
-                f = add_feature_set(feature,featureset)
-                f.min_mz = mz_vals[0]
-                f.max_mz = mz_vals[1]
-                f.save()
+                f = Feature(name=feature,
+                            featureset=featureset,
+                            min_mz=mz_vals[0],
+                            max_mz=mz_vals[1])
+                features2add.append(f)
             else:
                 pass
             ndone+=1
             if ndone % 100 == 0:
                 print "Done {} of {}".format(ndone,nfeatures)
+        Feature.objects.bulk_create(features2add)
 
 
 
@@ -185,37 +188,53 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
         print "Explicit feature object: loading them all at once"
         add_all_features_set(experiment,lda_dict['features'],featureset = featureset)
 
-
     print "Loading corpus, samples and intensities"
+    features_q = Feature.objects.filter(featureset=featureset)
+    features = {r.name: r for r in features_q}
     n_done = 0
     to_do = len(lda_dict['corpus'])
+    doc_dict = {}
     with transaction.atomic():
         for doc in lda_dict['corpus']:
             n_done += 1
             if n_done % 100 == 0:
-                print "Done {}/{}".format(n_done,to_do)
-                experiment.status = "Done {}/{} docs".format(n_done,to_do)
+                print "Done {}/{}".format(n_done, to_do)
+                experiment.status = "Done {}/{} docs".format(n_done, to_do)
                 experiment.save()
             ## remove 'intensities' from metdat before store it into database
             metdat = lda_dict['doc_metadata'][doc].copy()
             metdat.pop('intensities', None)
             metdat = jsonpickle.encode(metdat)
             if verbose:
-                print doc,experiment,metdat
-            d = add_document(doc,experiment,metdat)
-            # d = Document.objects.get_or_create(name=doc,experiment=experiment,metadata=metdat)[0]
+                print doc, experiment, metdat
+            doc_dict[doc] = Document(name=doc, experiment=experiment, metadata=metdat)
+        Document.objects.bulk_create(doc_dict.values())
 
-            add_document_words_set(d,doc,experiment,lda_dict,featureset)
+        # Now that each document has an row in the database thus an id, add the document children
+        feature_instances = {}
+        feature_instances_flat = []
+        intensities = []
+        for doc_id, d in doc_dict.items():
+            feature_instances[doc_id] = {}
+            # add_document_words_set(d,doc,experiment,lda_dict,featureset)
+            for word, intensity in lda_dict['corpus'][doc_id].items():
+                fi = FeatureInstance(document=d, feature=features[word], intensity=intensity)
+                feature_instances[doc_id][word] = fi
+                feature_instances_flat.append(fi)
 
+            # load_sample_intensity(d, experiment, lda_dict['doc_metadata'][doc])
+            metdat = lda_dict['doc_metadata'][doc_id]
+            if 'intensities' in metdat:
+                for sample_name, intensity in metdat['intensities'].items():
+                    ## process missing data
+                    ## if intensity not exist, does not save in database
+                    if intensity:
+                        sample = add_sample(sample_name, experiment)
+                        # add_doc_sample_intensity(sample, d, intensity)
+                        intensities.append(DocSampleIntensity(sample=sample, document=d, intensity=intensity))
+        FeatureInstance.objects.bulk_create(feature_instances_flat)
+        DocSampleIntensity.objects.bulk_create(intensities)
 
-            load_sample_intensity(d, experiment, lda_dict['doc_metadata'][doc])
-
-
-            # for word in lda_dict['corpus'][doc]:
-            #   feature = add_feature(word,experiment)
-            #   # feature = Feature.objects.get_or_create(name=word,experiment=experiment)[0]
-            #   # fi = FeatureInstance.objects.get_or_create(document = d,feature = feature, intensity = lda_dict['corpus'][doc][word])
-            #   add_feature_instance(d,feature,lda_dict['corpus'][doc][word])
     print "Loading topics"
     n_done = 0
     to_do = len(lda_dict['beta'])
@@ -229,9 +248,6 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
 
         # words of topic
         m2mis = []
-
-        features_q = Feature.objects.filter(featureset=featureset)
-        features = {r.name: r for r in features_q}
         for topic in lda_dict['beta']:
             m2m = m2ms[topic]
             for word, probability in lda_dict['beta'][topic].items():
@@ -252,15 +268,28 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
     n_done = 0
     to_do = len(lda_dict['theta'])
     with transaction.atomic():
+        docm2ms = []
         for doc in lda_dict['theta']:
             n_done += 1
             if n_done % 100 == 0:
                 print "Done {}/{}".format(n_done,to_do) 
                 experiment.status = "Done {}/{} theta".format(n_done,to_do)     
                 experiment.save()
-            add_theta(doc,experiment,lda_dict)
-
-
+            # add_theta(doc,experiment,lda_dict)
+            document = doc_dict[doc]
+            for topic, prob in lda_dict['theta'][doc].items():
+                mass2motif = m2ms[topic]
+                os = None
+                if 'overlap_scores' in lda_dict:
+                    os = lda_dict['overlap_scores'][doc].get(topic, None)
+                if os:
+                    docm2ms.append(DocumentMass2Motif(document=document, mass2motif=mass2motif,
+                                                      probability=prob,
+                                                      overlap_score=os))
+                else:
+                    docm2ms.append(DocumentMass2Motif(document=document, mass2motif=mass2motif,
+                                                      probability=prob))
+        DocumentMass2Motif.objects.bulk_create(docm2ms)
             # document = Document.objects.get(name = doc,experiment=experiment)
             # for topic in lda_dict['theta'][doc]:
             #   mass2motif = Mass2Motif.objects.get(name = topic,experiment = experiment)
@@ -270,13 +299,22 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
     n_done = 0
     to_do = len(lda_dict['phi'])
     with transaction.atomic():
-        for doc in lda_dict['phi']:
+        phis = []
+        for doc_id in lda_dict['phi']:
             n_done += 1
             if n_done % 100 == 0:
                 print "Done {}/{}".format(n_done,to_do)
                 experiment.status = "Done {}/{} phi".format(n_done,to_do)
                 experiment.save()
-            load_phi_set(doc,experiment,lda_dict,featureset)
+            #load_phi_set(doc,experiment,lda_dict,featureset)
+
+            for word in lda_dict['phi'][doc_id]:
+                feature_instance = feature_instances[doc_id][word]
+                for topic, probability in lda_dict['phi'][doc_id][word].items():
+                    mass2motif = m2ms[topic]
+                    phis.append(FeatureMass2MotifInstance(featureinstance=feature_instance,
+                                                          mass2motif=mass2motif, probability=probability))
+        FeatureMass2MotifInstance.objects.bulk_create(phis)
             # document = Document.objects.get(name = doc,experiment=experiment)
             # for word in lda_dict['phi'][doc]:
             #   feature = Feature.objects.get(name=word,experiment=experiment)
@@ -285,10 +323,11 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
             #       mass2motif = Mass2Motif.objects.get(name=topic,experiment=experiment)
             #       probability = lda_dict['phi'][doc][word][topic]
             #       FeatureMass2MotifInstance.objects.get_or_create(featureinstance = feature_instance,mass2motif = mass2motif,probability = probability)
+
     if not 'overlap_scores' in lda_dict:
         print "Computing overlap scores"
         n_done = 0
-        dm2ms = DocumentMass2Motif.objects.filter(document__experiment = experiment)
+        dm2ms = DocumentMass2Motif.objects.filter(document__experiment = experiment).select_related('mass2motif', 'document')
         to_do = len(dm2ms)
         with transaction.atomic():
             for dm2m in dm2ms:

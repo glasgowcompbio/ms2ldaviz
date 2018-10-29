@@ -1574,7 +1574,7 @@ def compute_overlap_score(mass2motif, document):
     document_feature_instances = FeatureInstance.objects.filter(document=document)
     # Following are the phi scores
     feature_mass2motif_instances = FeatureMass2MotifInstance.objects.filter(
-        featureinstance__in=document_feature_instances)
+        featureinstance__in=document_feature_instances).select_related('featureinstance__feature')
     score = 0.0
     for feature_mass2motif_instance in feature_mass2motif_instances:
         feature = feature_mass2motif_instance.featureinstance.feature
