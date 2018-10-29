@@ -1,6 +1,7 @@
 # coding=utf8
 # Simon's attempts to make a single feature selection pipeline
-from Queue import PriorityQueue
+from __future__ import print_function
+# from Queue import PriorityQueue
 import numpy as np
 import sys, os
 import re
@@ -199,12 +200,12 @@ class Loader(object):
                 try:
                     self.ms1_peaks.append((featid, float(mz), float(rt), samples, tokens_tuple[:index]))
                 except:
-                    print "Failed on line: "
-                    print line    
+                    print("Failed on line: ")
+                    print(line)
 
         # sort them by mass
         self.ms1_peaks = sorted(self.ms1_peaks,key = lambda x: x[1])
-        print "Loaded {} ms1 peaks from {}".format(len(self.ms1_peaks),self.peaklist)
+        print("Loaded {} ms1 peaks from {}".format(len(self.ms1_peaks),self.peaklist))
 
     ## read in peaklist file (.csv)
     ## ("..., mass, RT, samplename_1, samplename_2,..."), delimiter: '.
@@ -241,17 +242,17 @@ class Loader(object):
             ms1_ms2_dict[el[3]].append(el)
 
         if self.id_field and self.csv_id_col: # if the IDs are provided, we match by that
-            print "IDs provided ({},{}), using them to match"  
+            print("IDs provided ({},{}), using them to match")
             match_by_id = True
         else:
-            print "IDs not provided, matching on m/z, rt"
+            print("IDs not provided, matching on m/z, rt")
             match_by_id = False
 
-        print "Matching peaks..."
+        print("Matching peaks...")
         for n_peaks_checked,peak in enumerate(self.ms1_peaks):
             
             if n_peaks_checked % 500 == 0:
-                print n_peaks_checked
+                print(n_peaks_checked)
             featid = peak[0]
             peak_mz = peak[1]
             peak_rt = peak[2]
@@ -340,28 +341,28 @@ class Loader(object):
         ms1 = new_ms1_list
         ms2 = new_ms2_list
         metadata = new_metadata
-        print "Peaklist filtering results in {} documents".format(len(ms1))
+        print("Peaklist filtering results in {} documents".format(len(ms1)))
         return ms1, ms2, metadata
 
 
     def filter_ms1_intensity(self,ms1,ms2,min_ms1_intensity = 1e6):
         ## Use filter function to simplify code
-        print "Filtering MS1 on intensity"
+        print("Filtering MS1 on intensity")
         ## Sometimes ms1 intensity could be None
         ms1 = filter(lambda x: False if x.intensity and x.intensity < min_ms1_intensity else True, ms1)
-        print "{} MS1 remaining".format(len(ms1))
+        print("{} MS1 remaining".format(len(ms1)))
         ms2 = filter(lambda x: x[3] in set(ms1), ms2)
-        print "{} MS2 remaining".format(len(ms2))
+        print("{} MS2 remaining".format(len(ms2)))
         return ms1, ms2
 
     def filter_ms2_intensity(self,ms2, min_ms2_intensity = 1e6):
-        print "Filtering MS2 on intensity"
+        print("Filtering MS2 on intensity")
         ms2 = filter(lambda x: x[2] >= min_ms2_intensity, ms2)
-        print "{} MS2 remaining".format(len(ms2))
+        print("{} MS2 remaining".format(len(ms2)))
         return ms2
 
     def filter_ms1(self,ms1,ms2,mz_tol = 0.5,rt_tol = 16):
-        print "Filtering MS1 to remove duplicates"
+        print("Filtering MS1 to remove duplicates")
         # Filters the loaded ms1s to reduce the number of times that the same molecule has been fragmented
 
 
@@ -394,12 +395,12 @@ class Loader(object):
                 del ms1_by_intensity[pos]
 
 
-        print "{} MS1 remaining".format(len(final_ms1_list))
+        print("{} MS1 remaining".format(len(final_ms1_list)))
         for m in ms2:
             if m[3] in final_ms1_list:
                 final_ms2_list.append(m)
 
-        print "{} MS2 remaining".format(len(final_ms2_list))
+        print("{} MS2 remaining".format(len(final_ms2_list)))
         return final_ms1_list,final_ms2_list
 
     def process_metadata(self, ms1, metadata):
@@ -522,7 +523,7 @@ class LoadCSV(Loader):
                     self.metadata[doc_name]['parentintensity'] = intensity
                     self.ms1.append(new_ms1)
                     self.ms1_index[id] = new_ms1
-            print "\t loaded {} ms1 peaks".format(len(self.ms1))
+            print("\t loaded {} ms1 peaks".format(len(self.ms1)))
 
             with open(input[1],'r') as f:
                 heads = f.readline().split(',')
@@ -541,7 +542,7 @@ class LoadCSV(Loader):
                     parent = self.ms1_index[parent_id]
                     self.ms2.append((mz,rt,intensity,parent,file_name,id))
 
-                print "\t loaded {} ms2 peaks".format(len(self.ms2))
+                print("\t loaded {} ms2 peaks".format(len(self.ms2)))
         return self.ms1,self.ms2,self.metadata
 
 
@@ -574,7 +575,7 @@ class LoadMZML(Loader):
 
 
         for input_file in input_set:
-            print "Loading spectra from {}".format(input_file)
+            print("Loading spectra from {}".format(input_file))
             current_ms1_scan_mz = None
             current_ms1_scan_intensity = None
             current_ms1_scan_rt = None
@@ -691,7 +692,7 @@ class LoadMZML(Loader):
                
 
 
-        print "Found {} ms2 spectra, and {} individual ms2 objects".format(len(ms1),len(ms2))
+        print("Found {} ms2 spectra, and {} individual ms2 objects".format(len(ms1),len(ms2)))
 
         # if self.min_ms1_intensity>0.0:
         #     ms1,ms2 = filter_ms1_intensity(ms1,ms2,min_ms1_intensity = self.min_ms1_intensity)
@@ -804,7 +805,7 @@ class LoadEmma(Loader):
 
 
         if ms1_peak_list:
-            print "Filtering based on peak list"
+            print("Filtering based on peak list")
             filtered_ms1_list = []
             # A peak list has been loaded so we need to filter the MS1 peaks
             ms1 = sorted(ms1,key = lambda x: x.mz)
@@ -826,14 +827,14 @@ class LoadEmma(Loader):
                     hits = sorted(hits,key = lambda x: x[1])
                     top_hit = hits[0][0]
                     filtered_ms1_list.append(top_hit)
-            print "Filtering results in {} hits".format(len(filtered_ms1_list))
+            print("Filtering results in {} hits".format(len(filtered_ms1_list)))
 
             filtered_ms2_list = []
             for m in ms2:
                 if m[3] in filtered_ms1_list:
                     filtered_ms2_list.append(m)
 
-            print "Filtering results in {} ms2 peaks".format(len(filtered_ms2_list))
+            print("Filtering results in {} ms2 peaks".format(len(filtered_ms2_list)))
 
             ms1 = filtered_ms1_list
             ms2 = filtered_ms2_list
@@ -870,10 +871,10 @@ class LoadEmma(Loader):
                     tokens = line.split()
                     ms1_peak_list.append((int(tokens[scan_pos]),float(tokens[mz_pos]),float(tokens[rt_pos]),int(tokens[start_scan]),int(tokens[end_scan])))
                 ms1_peak_list = sorted(ms1_peak_list,key = lambda x: x[1]) # Sort by mass
-                print "Loaded {} peaks from peak list".format(len(ms1_peak_list))
+                print("Loaded {} peaks from peak list".format(len(ms1_peak_list)))
                 return ms1_peak_list
             except:
-                print "Can't load peaklist, using none"
+                print("Can't load peaklist, using none")
                 return None
 
 # A class to load GNPS / MASSBANK style CSI spectra that treats the different
@@ -1021,7 +1022,7 @@ class LoadGNPS(Loader):
 
                 n_processed += 1
             if n_processed % 100 == 0:
-                print "Processed {} spectra".format(n_processed)
+                print("Processed {} spectra".format(n_processed))
         return self.ms1,self.ms2,self.metadata
 
 
@@ -1108,7 +1109,7 @@ class LoadMIBiG(Loader):
 
                 n_processed += 1
             if n_processed % 100 == 0:
-                print "Processed {} spectra".format(n_processed)
+                print("Processed {} spectra".format(n_processed))
         return self.ms1,self.ms2,self.metadata
 
 
@@ -1646,8 +1647,8 @@ class MakeBinnedFeatures(MakeFeatures):
         for c in self.corpus:
             n_docs += len(self.corpus[c])
 
-        print "{} documents".format(n_docs)
-        print "After removing empty words, {} words left".format(len(self.word_mz_range))
+        print("{} documents".format(n_docs))
+        print("After removing empty words, {} words left".format(len(self.word_mz_range)))
 
         if self.min_intensity_perc > 0:
             # Remove words that are smaller than a certain percentage of the highest feature
@@ -1673,7 +1674,7 @@ class MakeBinnedFeatures(MakeFeatures):
                     to_remove.append(word)
             for word in to_remove:
                 del self.word_mz_range[word]
-            print "After applying min_intensity_perc filter, {} words left".format(len(self.word_mz_range))
+            print("After applying min_intensity_perc filter, {} words left".format(len(self.word_mz_range)))
 
 
         return self.corpus,self.word_mz_range
@@ -1774,353 +1775,353 @@ class MakeNominalFeatures(MakeFeatures):
 
 # Class to use kde to make features. Could do with tidying
 
-class MakeKDEFeatures(MakeFeatures):
-    def __init__(self,loss_ppm = 15.0,frag_ppm = 7.0,
-                      min_frag = 0.0,max_frag = 10000.0,
-                      min_loss = 10.0,max_loss = 200.0,
-                      min_intensity = 0.0):
-        self.loss_ppm = loss_ppm
-        self.frag_ppm = frag_ppm
-        self.min_frag = min_frag
-        self.max_frag = max_frag
-        self.min_loss = min_loss
-        self.max_loss = max_loss
-        self.min_intensity = min_intensity
+# class MakeKDEFeatures(MakeFeatures):
+#     def __init__(self,loss_ppm = 15.0,frag_ppm = 7.0,
+#                       min_frag = 0.0,max_frag = 10000.0,
+#                       min_loss = 10.0,max_loss = 200.0,
+#                       min_intensity = 0.0):
+#         self.loss_ppm = loss_ppm
+#         self.frag_ppm = frag_ppm
+#         self.min_frag = min_frag
+#         self.max_frag = max_frag
+#         self.min_loss = min_loss
+#         self.max_loss = max_loss
+#         self.min_intensity = min_intensity
 
-        # legacy code: adds up intensities if the same feature appears multiple times
-        self.replace = 'sum'
+#         # legacy code: adds up intensities if the same feature appears multiple times
+#         self.replace = 'sum'
 
-    def make_features(self,ms2):
-        self.fragment_queue,self.loss_queue = self._make_queues(ms2)
-        self._make_kde_corpus()
-        return self.corpus,self.word_mz_range
-
-
-
-    def _make_kde_corpus(self):
-        # Process the losses
-        loss_masses = []
-        self.loss_meta = []
-        while not self.loss_queue.empty():
-            newitem = self.loss_queue.get()
-            self.loss_meta.append(newitem)
-            loss_masses.append(newitem[0])
-
-        self.loss_array = np.array(loss_masses)
-
-
-        frag_masses = []
-        self.frag_meta = []
-        while not self.fragment_queue.empty():
-            newitem = self.fragment_queue.get()
-            self.frag_meta.append(newitem)
-            frag_masses.append(newitem[0])
-
-        self.frag_array = np.array(frag_masses)
-
-        # Set the kde paramaters
-        stop_thresh = 5
-
-        self.corpus = {}
-        self.n_words = 0
-        self.word_counts = {}
-        self.word_mz_range = {}
-        self.loss_kde = self._make_kde(self.loss_array,self.loss_ppm,stop_thresh)
-        self.loss_groups,self.loss_group_list = self._process_kde(self.loss_kde,self.loss_array,self.loss_ppm)
-        self._update_corpus(self.loss_array,self.loss_kde,self.loss_meta,self.loss_groups,self.loss_group_list,'loss')
-
-
-        print "Finished losses, total words now: {}".format(len(self.word_counts))
-
-        self.frag_kde = self._make_kde(self.frag_array,self.frag_ppm,stop_thresh)
-        self.frag_groups,self.frag_group_list = self._process_kde(self.frag_kde,self.frag_array,self.frag_ppm)
-        self._update_corpus(self.frag_array,self.frag_kde,self.frag_meta,self.frag_groups,self.frag_group_list,'fragment')
+#     def make_features(self,ms2):
+#         self.fragment_queue,self.loss_queue = self._make_queues(ms2)
+#         self._make_kde_corpus()
+#         return self.corpus,self.word_mz_range
 
 
 
-        print "Finished fragments, total words now: {}".format(len(self.word_counts))
+#     def _make_kde_corpus(self):
+#         # Process the losses
+#         loss_masses = []
+#         self.loss_meta = []
+#         while not self.loss_queue.empty():
+#             newitem = self.loss_queue.get()
+#             self.loss_meta.append(newitem)
+#             loss_masses.append(newitem[0])
+
+#         self.loss_array = np.array(loss_masses)
 
 
-    def _make_kde(self,mass_array,ppm,stop_thresh):
-        kde = np.zeros_like(mass_array)
-        n_losses = len(mass_array)
-        for i in range(n_losses):
-            if i % 1000 == 0:
-                print "Done kde for {} of {}".format(i,n_losses)
-            this_mass = mass_array[i]
-            ss = ((ppm*(this_mass/1e6))/3.0)**2
-            finished = False
-            pos = i-1
-            while (not finished) and (pos >= 0):
-                de = self.gauss_pdf(mass_array[pos],this_mass,ss)
-                kde[pos] += de
-                if this_mass - mass_array[pos] > stop_thresh*np.sqrt(ss):
-                    finished = True
-                pos -= 1
-            finished = False
-            pos = i
-            while (not finished) and (pos < len(mass_array)):
-                de = self.gauss_pdf(mass_array[pos],this_mass,ss)
-                kde[pos] += de
-                if mass_array[pos] - this_mass > stop_thresh*np.sqrt(ss):
-                    finished = True
-                pos += 1
-        print "Made kde"
-        return kde
+#         frag_masses = []
+#         self.frag_meta = []
+#         while not self.fragment_queue.empty():
+#             newitem = self.fragment_queue.get()
+#             self.frag_meta.append(newitem)
+#             frag_masses.append(newitem[0])
+
+#         self.frag_array = np.array(frag_masses)
+
+#         # Set the kde paramaters
+#         stop_thresh = 5
+
+#         self.corpus = {}
+#         self.n_words = 0
+#         self.word_counts = {}
+#         self.word_mz_range = {}
+#         self.loss_kde = self._make_kde(self.loss_array,self.loss_ppm,stop_thresh)
+#         self.loss_groups,self.loss_group_list = self._process_kde(self.loss_kde,self.loss_array,self.loss_ppm)
+#         self._update_corpus(self.loss_array,self.loss_kde,self.loss_meta,self.loss_groups,self.loss_group_list,'loss')
 
 
-    def gauss_pdf(self,x,m,ss):
-        return (1.0/np.sqrt(2*np.pi*ss))*np.exp(-0.5*((x-m)**2)/ss)
+#         print("Finished losses, total words now: {}".format(len(self.word_counts)))
 
-    def _process_kde(self,kde,masses,ppm):
-
-        kde_copy = kde.copy()
-        groups = np.zeros_like(kde) - 1
-
-        max_width = 50 # ppm
-        group_list = []
-        current_group = 0
-        # group_formulas = []
-        # group_mz = []
-        verbose = False
-        while True:
-            biggest_pos = kde_copy.argmax()
-            peak_values = [biggest_pos]
-            this_mass = masses[biggest_pos]
-            ss = ((ppm*(this_mass/1e6))/3.0)**2
-            min_val = 1.0/(np.sqrt(2*np.pi*ss))
-
-            pos = biggest_pos
-            intensity = kde_copy[biggest_pos]
-            if intensity < 0.8*min_val:
-                break # finished
-            finished = False
-            lowest_intensity = intensity
-            lowest_index = biggest_pos
-
-            if intensity > min_val:
-                # Checks that it's not a singleton
-                if pos > 0:
-                    # Check that it's not the last one
-                    while not finished:
-                        pos -= 1
-                        # Decide if this one should be part of the peak or not
-                        if kde[pos] > lowest_intensity + 0.01*intensity or kde[pos] <= 1.001*min_val:
-                            # It shouldn't
-                            finished = True
-                        elif groups[pos] > -1:
-                            # We've hit another group!
-                            finished = True
-                        elif 1e6*abs(masses[pos] - this_mass)/this_mass > max_width:
-                            # Gone too far
-                            finished = True
-                        else:
-                            # it should
-                            peak_values.append(pos)
-                        # If it's the last one, we're finished
-                        if pos == 0:
-                            finished = True
-
-                        # If it's the lowest we've seen so far remember that
-                        if kde[pos] < lowest_intensity:
-                            lowest_intensity = kde[pos]
-                            lowest_index = pos
+#         self.frag_kde = self._make_kde(self.frag_array,self.frag_ppm,stop_thresh)
+#         self.frag_groups,self.frag_group_list = self._process_kde(self.frag_kde,self.frag_array,self.frag_ppm)
+#         self._update_corpus(self.frag_array,self.frag_kde,self.frag_meta,self.frag_groups,self.frag_group_list,'fragment')
 
 
-                pos = biggest_pos
-                finished = False
-                lowest_intensity = intensity
-                lowest_index = biggest_pos
-                if pos < len(kde)-1:
-                    while not finished:
-                        # Move to the right
-                        pos += 1
-                        if verbose:
-                            print pos
-                        # check if this one should be in the peak
-                        if kde[pos] > lowest_intensity + 0.01*intensity or kde[pos] <= 1.001*min_val:
-                            # it shouldn't
-                            finished = True
-                        elif groups[pos] > -1:
-                            # We've hit another group!
-                            finished = True
-                        elif 1e6*abs(masses[pos] - this_mass)/this_mass > max_width:
-                            # Gone too far
-                            finished = True
-                        else:
-                            peak_values.append(pos)
 
-                        # If it's the last value, we're finished
-                        if pos == len(kde)-1:
-                            finished = True
-
-                        # If it's the lowest we've seen, remember that
-                        if kde[pos] < lowest_intensity:
-                            lowest_intensity = kde[pos]
-                            lowest_index = pos
-
-            else:
-                # Singleton peak
-                peak_values = [biggest_pos]
-
-            if len(peak_values) > 0:
-                kde_copy[peak_values] = 0.0
-                groups[peak_values] = current_group
-                group_id = current_group
-                current_group += 1
-                group_mz = masses[biggest_pos]
-
-                # Find formulas
-                hit_string = None
-
-                new_group = (group_id,group_mz,hit_string,biggest_pos)
-
-                group_list.append(new_group)
-                if current_group % 100 == 0:
-                    print "Found {} groups".format(current_group)
-
-        return groups,group_list
-
-    def _update_corpus(self,masses,kde,meta,groups,group_list,prefix):
-        # Loop over the groups
-        for group in group_list:
-            group_id = group[0]
-            group_mz = group[1]
-            group_formula = group[2]
-            pos = np.where(groups == group_id)[0]
-            min_mz = 100000.0
-            max_mz = 0.0
-            if len(pos) > 0:
-                feature_name = str(group_mz)
-                feature_name = prefix + '_' + feature_name
-                if group_formula:
-                    feature_name += '_' + group_formula
-
-                # (mass,0.0,intensity,parent,'gnps',float(ms2_id))
-
-                for p in pos:
-                    this_meta = meta[p]
-                    this_mz = this_meta[0]
-                    if this_mz <= min_mz:
-                        min_mz = this_mz
-                    if this_mz >= max_mz:
-                        max_mz = this_mz
-                    intensity = this_meta[2]
-                    doc_name = this_meta[3].name
-                    this_file = this_meta[4]
-                    if not this_file in self.corpus:
-                        self.corpus[this_file] = {}
-                    if not doc_name in self.corpus[this_file]:
-                        self.corpus[this_file][doc_name] = {}
-                    if not feature_name in self.corpus[this_file][doc_name]:
-                        self.corpus[this_file][doc_name][feature_name] = 0.0
-                    if self.replace == 'sum':
-                        self.corpus[this_file][doc_name][feature_name] += intensity
-                    else:
-                        current = self.corpus[this_file][doc_name][feature_name]
-                        newval = max(current,intensity)
-                        self.corpus[this_file][doc_name][feature_name] = newval
-
-                self.word_counts[feature_name] = len(pos)
-                self.word_mz_range[feature_name] = (min_mz,max_mz)
+#         print("Finished fragments, total words now: {}".format(len(self.word_counts)))
 
 
-    def _make_queues(self,ms2):
-
-        fragment_queue = PriorityQueue()
-        loss_queue = PriorityQueue()
-
-        for peak in ms2:
-            frag_mass = peak[0]
-            frag_intensity = peak[2]
-            parent_mass = peak[3].mz
-            if frag_intensity > self.min_intensity and frag_mass >= self.min_frag and frag_mass <= self.max_frag:
-                fragment_queue.put(peak)
-            loss_mass = parent_mass - frag_mass
-            if frag_intensity > self.min_intensity and loss_mass >= self.min_loss and loss_mass <= self.max_loss:
-                new_peak = (loss_mass,peak[1],peak[2],peak[3],peak[4],peak[5])
-                loss_queue.put(new_peak)
-
-        return fragment_queue,loss_queue
-
-class MakeQueueFeatures(MakeFeatures):
-    def __init__(self,min_frag = 0.0,max_frag = 10000.0,
-                      min_loss = 10.0,max_loss = 200.0,
-                      min_intensity = 0.0,gap_ppm = 7.0):
-        self.min_frag = min_frag
-        self.max_frag = max_frag
-        self.min_loss = min_loss
-        self.max_loss = max_loss
-        self.min_intensity = min_intensity
-        self.gap_ppm = gap_ppm
-
-    def make_features(self,ms2):
-        fragment_queue,loss_queue = self._make_queues(ms2)
-        self.corpus = {}
-        self.word_mz_range = {}
-        self._add_queue_to_corpus(fragment_queue,'fragment')
-        self._add_queue_to_corpus(loss_queue,'loss')
-        return self.corpus,self.word_mz_range
-
-    def _add_queue_to_corpus(self,queue,name_prefix):
-        current_item = queue.get()
-        temp_peaks = [current_item]
-        current_mz = current_item[0]
-        while not queue.empty():
-            new_item = queue.get()
-            new_mz = new_item[0]
-            # Check if we have hit a gap
-            if 1e6*abs(new_mz-current_mz)/current_mz < self.gap_ppm:
-                # Still in the same feature
-                current_mz = new_mz
-                temp_peaks.append(new_item)
-            else:
-                # Weve found a gap, so process the ones weve collected
-                # Calculate the average mass
-                masses = [p[0] for p in temp_peaks]
-                tot_mass = sum(masses)
-                min_mass = min(masses)
-                max_mass = max(masses)
-
-                mean_mass = tot_mass/(1.0*len(temp_peaks))
-                word_name = name_prefix + '_{}'.format(mean_mass)
-
-                for peak in temp_peaks:
-                    file_name = peak[4]
-                    doc_name = peak[3].name
-                    intensity = peak[2]
-                    if not file_name in self.corpus:
-                        self.corpus[file_name] = {}
-                    if not doc_name in self.corpus[file_name]:
-                        self.corpus[file_name][doc_name] = {}
-                    if not word_name in self.corpus[file_name][doc_name]:
-                        self.corpus[file_name][doc_name][word_name] = intensity
-                    else:
-                        self.corpus[file_name][doc_name][word_name] += intensity
-
-                self.word_mz_range[word_name] = (min_mass,max_mass)
-
-                temp_peaks = [new_item]
-                current_mz = new_mz
+#     def _make_kde(self,mass_array,ppm,stop_thresh):
+#         kde = np.zeros_like(mass_array)
+#         n_losses = len(mass_array)
+#         for i in range(n_losses):
+#             if i % 1000 == 0:
+#                 print("Done kde for {} of {}".format(i,n_losses))
+#             this_mass = mass_array[i]
+#             ss = ((ppm*(this_mass/1e6))/3.0)**2
+#             finished = False
+#             pos = i-1
+#             while (not finished) and (pos >= 0):
+#                 de = self.gauss_pdf(mass_array[pos],this_mass,ss)
+#                 kde[pos] += de
+#                 if this_mass - mass_array[pos] > stop_thresh*np.sqrt(ss):
+#                     finished = True
+#                 pos -= 1
+#             finished = False
+#             pos = i
+#             while (not finished) and (pos < len(mass_array)):
+#                 de = self.gauss_pdf(mass_array[pos],this_mass,ss)
+#                 kde[pos] += de
+#                 if mass_array[pos] - this_mass > stop_thresh*np.sqrt(ss):
+#                     finished = True
+#                 pos += 1
+#         print("Made kde")
+#         return kde
 
 
-    def _make_queues(self,ms2):
+#     def gauss_pdf(self,x,m,ss):
+#         return (1.0/np.sqrt(2*np.pi*ss))*np.exp(-0.5*((x-m)**2)/ss)
 
-        fragment_queue = PriorityQueue()
-        loss_queue = PriorityQueue()
+#     def _process_kde(self,kde,masses,ppm):
 
-        for peak in ms2:
-            frag_mass = peak[0]
-            frag_intensity = peak[2]
-            parent_mass = peak[3].mz
-            if frag_intensity > self.min_intensity and frag_mass >= self.min_frag and frag_mass <= self.max_frag:
-                fragment_queue.put(peak)
-            loss_mass = parent_mass - frag_mass
-            if frag_intensity > self.min_intensity and loss_mass >= self.min_loss and loss_mass <= self.max_loss:
-                new_peak = (loss_mass,peak[1],peak[2],peak[3],peak[4],peak[5])
-                loss_queue.put(new_peak)
+#         kde_copy = kde.copy()
+#         groups = np.zeros_like(kde) - 1
 
-        return fragment_queue,loss_queue
+#         max_width = 50 # ppm
+#         group_list = []
+#         current_group = 0
+#         # group_formulas = []
+#         # group_mz = []
+#         verbose = False
+#         while True:
+#             biggest_pos = kde_copy.argmax()
+#             peak_values = [biggest_pos]
+#             this_mass = masses[biggest_pos]
+#             ss = ((ppm*(this_mass/1e6))/3.0)**2
+#             min_val = 1.0/(np.sqrt(2*np.pi*ss))
+
+#             pos = biggest_pos
+#             intensity = kde_copy[biggest_pos]
+#             if intensity < 0.8*min_val:
+#                 break # finished
+#             finished = False
+#             lowest_intensity = intensity
+#             lowest_index = biggest_pos
+
+#             if intensity > min_val:
+#                 # Checks that it's not a singleton
+#                 if pos > 0:
+#                     # Check that it's not the last one
+#                     while not finished:
+#                         pos -= 1
+#                         # Decide if this one should be part of the peak or not
+#                         if kde[pos] > lowest_intensity + 0.01*intensity or kde[pos] <= 1.001*min_val:
+#                             # It shouldn't
+#                             finished = True
+#                         elif groups[pos] > -1:
+#                             # We've hit another group!
+#                             finished = True
+#                         elif 1e6*abs(masses[pos] - this_mass)/this_mass > max_width:
+#                             # Gone too far
+#                             finished = True
+#                         else:
+#                             # it should
+#                             peak_values.append(pos)
+#                         # If it's the last one, we're finished
+#                         if pos == 0:
+#                             finished = True
+
+#                         # If it's the lowest we've seen so far remember that
+#                         if kde[pos] < lowest_intensity:
+#                             lowest_intensity = kde[pos]
+#                             lowest_index = pos
+
+
+#                 pos = biggest_pos
+#                 finished = False
+#                 lowest_intensity = intensity
+#                 lowest_index = biggest_pos
+#                 if pos < len(kde)-1:
+#                     while not finished:
+#                         # Move to the right
+#                         pos += 1
+#                         if verbose:
+#                             print(pos)
+#                         # check if this one should be in the peak
+#                         if kde[pos] > lowest_intensity + 0.01*intensity or kde[pos] <= 1.001*min_val:
+#                             # it shouldn't
+#                             finished = True
+#                         elif groups[pos] > -1:
+#                             # We've hit another group!
+#                             finished = True
+#                         elif 1e6*abs(masses[pos] - this_mass)/this_mass > max_width:
+#                             # Gone too far
+#                             finished = True
+#                         else:
+#                             peak_values.append(pos)
+
+#                         # If it's the last value, we're finished
+#                         if pos == len(kde)-1:
+#                             finished = True
+
+#                         # If it's the lowest we've seen, remember that
+#                         if kde[pos] < lowest_intensity:
+#                             lowest_intensity = kde[pos]
+#                             lowest_index = pos
+
+#             else:
+#                 # Singleton peak
+#                 peak_values = [biggest_pos]
+
+#             if len(peak_values) > 0:
+#                 kde_copy[peak_values] = 0.0
+#                 groups[peak_values] = current_group
+#                 group_id = current_group
+#                 current_group += 1
+#                 group_mz = masses[biggest_pos]
+
+#                 # Find formulas
+#                 hit_string = None
+
+#                 new_group = (group_id,group_mz,hit_string,biggest_pos)
+
+#                 group_list.append(new_group)
+#                 if current_group % 100 == 0:
+#                     print("Found {} groups".format(current_group))
+
+#         return groups,group_list
+
+#     def _update_corpus(self,masses,kde,meta,groups,group_list,prefix):
+#         # Loop over the groups
+#         for group in group_list:
+#             group_id = group[0]
+#             group_mz = group[1]
+#             group_formula = group[2]
+#             pos = np.where(groups == group_id)[0]
+#             min_mz = 100000.0
+#             max_mz = 0.0
+#             if len(pos) > 0:
+#                 feature_name = str(group_mz)
+#                 feature_name = prefix + '_' + feature_name
+#                 if group_formula:
+#                     feature_name += '_' + group_formula
+
+#                 # (mass,0.0,intensity,parent,'gnps',float(ms2_id))
+
+#                 for p in pos:
+#                     this_meta = meta[p]
+#                     this_mz = this_meta[0]
+#                     if this_mz <= min_mz:
+#                         min_mz = this_mz
+#                     if this_mz >= max_mz:
+#                         max_mz = this_mz
+#                     intensity = this_meta[2]
+#                     doc_name = this_meta[3].name
+#                     this_file = this_meta[4]
+#                     if not this_file in self.corpus:
+#                         self.corpus[this_file] = {}
+#                     if not doc_name in self.corpus[this_file]:
+#                         self.corpus[this_file][doc_name] = {}
+#                     if not feature_name in self.corpus[this_file][doc_name]:
+#                         self.corpus[this_file][doc_name][feature_name] = 0.0
+#                     if self.replace == 'sum':
+#                         self.corpus[this_file][doc_name][feature_name] += intensity
+#                     else:
+#                         current = self.corpus[this_file][doc_name][feature_name]
+#                         newval = max(current,intensity)
+#                         self.corpus[this_file][doc_name][feature_name] = newval
+
+#                 self.word_counts[feature_name] = len(pos)
+#                 self.word_mz_range[feature_name] = (min_mz,max_mz)
+
+
+#     def _make_queues(self,ms2):
+
+#         fragment_queue = PriorityQueue()
+#         loss_queue = PriorityQueue()
+
+#         for peak in ms2:
+#             frag_mass = peak[0]
+#             frag_intensity = peak[2]
+#             parent_mass = peak[3].mz
+#             if frag_intensity > self.min_intensity and frag_mass >= self.min_frag and frag_mass <= self.max_frag:
+#                 fragment_queue.put(peak)
+#             loss_mass = parent_mass - frag_mass
+#             if frag_intensity > self.min_intensity and loss_mass >= self.min_loss and loss_mass <= self.max_loss:
+#                 new_peak = (loss_mass,peak[1],peak[2],peak[3],peak[4],peak[5])
+#                 loss_queue.put(new_peak)
+
+#         return fragment_queue,loss_queue
+
+# class MakeQueueFeatures(MakeFeatures):
+#     def __init__(self,min_frag = 0.0,max_frag = 10000.0,
+#                       min_loss = 10.0,max_loss = 200.0,
+#                       min_intensity = 0.0,gap_ppm = 7.0):
+#         self.min_frag = min_frag
+#         self.max_frag = max_frag
+#         self.min_loss = min_loss
+#         self.max_loss = max_loss
+#         self.min_intensity = min_intensity
+#         self.gap_ppm = gap_ppm
+
+#     def make_features(self,ms2):
+#         fragment_queue,loss_queue = self._make_queues(ms2)
+#         self.corpus = {}
+#         self.word_mz_range = {}
+#         self._add_queue_to_corpus(fragment_queue,'fragment')
+#         self._add_queue_to_corpus(loss_queue,'loss')
+#         return self.corpus,self.word_mz_range
+
+#     def _add_queue_to_corpus(self,queue,name_prefix):
+#         current_item = queue.get()
+#         temp_peaks = [current_item]
+#         current_mz = current_item[0]
+#         while not queue.empty():
+#             new_item = queue.get()
+#             new_mz = new_item[0]
+#             # Check if we have hit a gap
+#             if 1e6*abs(new_mz-current_mz)/current_mz < self.gap_ppm:
+#                 # Still in the same feature
+#                 current_mz = new_mz
+#                 temp_peaks.append(new_item)
+#             else:
+#                 # Weve found a gap, so process the ones weve collected
+#                 # Calculate the average mass
+#                 masses = [p[0] for p in temp_peaks]
+#                 tot_mass = sum(masses)
+#                 min_mass = min(masses)
+#                 max_mass = max(masses)
+
+#                 mean_mass = tot_mass/(1.0*len(temp_peaks))
+#                 word_name = name_prefix + '_{}'.format(mean_mass)
+
+#                 for peak in temp_peaks:
+#                     file_name = peak[4]
+#                     doc_name = peak[3].name
+#                     intensity = peak[2]
+#                     if not file_name in self.corpus:
+#                         self.corpus[file_name] = {}
+#                     if not doc_name in self.corpus[file_name]:
+#                         self.corpus[file_name][doc_name] = {}
+#                     if not word_name in self.corpus[file_name][doc_name]:
+#                         self.corpus[file_name][doc_name][word_name] = intensity
+#                     else:
+#                         self.corpus[file_name][doc_name][word_name] += intensity
+
+#                 self.word_mz_range[word_name] = (min_mass,max_mass)
+
+#                 temp_peaks = [new_item]
+#                 current_mz = new_mz
+
+
+#     def _make_queues(self,ms2):
+
+#         fragment_queue = PriorityQueue()
+#         loss_queue = PriorityQueue()
+
+#         for peak in ms2:
+#             frag_mass = peak[0]
+#             frag_intensity = peak[2]
+#             parent_mass = peak[3].mz
+#             if frag_intensity > self.min_intensity and frag_mass >= self.min_frag and frag_mass <= self.max_frag:
+#                 fragment_queue.put(peak)
+#             loss_mass = parent_mass - frag_mass
+#             if frag_intensity > self.min_intensity and loss_mass >= self.min_loss and loss_mass <= self.max_loss:
+#                 new_peak = (loss_mass,peak[1],peak[2],peak[3],peak[4],peak[5])
+#                 loss_queue.put(new_peak)
+
+#         return fragment_queue,loss_queue
 
 
 # A utility function that takes a corpus object and returns a numpy matrix and two index objects
@@ -2157,12 +2158,12 @@ class MS2LDAFeatureExtractor(object):
     def __init__(self,input_set,loader,feature_maker):
         self.input_set = input_set
         self.loader = loader
-        print self.loader
+        print(self.loader)
         self.feature_maker = feature_maker
-        print self.feature_maker
-        print "Loading spectra"
+        print(self.feature_maker)
+        print("Loading spectra")
         self.ms1,self.ms2,self.metadata = self.loader.load_spectra(self.input_set)
-        print "Creating corpus"
+        print("Creating corpus")
         self.corpus,self.word_mz_range = self.feature_maker.make_features(self.ms2)
 
     def get_first_corpus(self):
