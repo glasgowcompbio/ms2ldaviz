@@ -1,8 +1,9 @@
 from django import forms
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 from basicviz.constants import AVAILABLE_OPTIONS
-from basicviz.models import SystemOptions, Experiment, UserExperiment, BVFeatureSet
+from basicviz.models import SystemOptions, Experiment, UserExperiment, BVFeatureSet, PublicExperiments
 
 
 class DocFilterForm(forms.Form):
@@ -96,8 +97,24 @@ class MatchMotifForm(forms.Form):
         #     userexperiment__user=user, multilink__isnull=True).order_by('name')
         # Modified by SR to include the multifile ones - 11/7/17
         # Modified by SR again to include only those with a featureset
-        fs = BVFeatureSet.objects.filter(name__in = ['binned_005','binned_01'])
-        experiments = Experiment.objects.filter(featureset__in = fs).order_by('name')
+
+        # modified by SR, 15/10/18 to list those from the stated featuresets that either
+        # are accessible by the user, or are public
+        fs = BVFeatureSet.objects.filter(name__in = ['binned_005','binned_01','binned_1'])
+        ue = UserExperiment.objects.filter(user = user)
+        pe = PublicExperiments.objects.all()
+        experiments = Experiment.objects.filter(Q(featureset__in = fs), 
+            (Q(id__in = [i.experiment.id for i in ue]) | Q(id__in = [p.experiment.id for p in pe])))
+
+        # print len(experiments)
+        # experiments = experiments.filter(userexperiment__user = user) | experiments.filter(publicexperiments )
+        # print len(experiments)
+        # users_experiments += [p.experiment for p in PublicExperiments.objects.all()]
+        # experiments = users_experiments
+        # for e in users_experiments:
+        #     if e.featureset in fs:
+        #         experiments.append(e)
+        # # experiments = Experiment.objects.filter(featureset__in = fs).order_by('name')
         # self.fields['other_experiment'].queryset = Experiment.objects.filter(
         #     userexperiment__user=user).order_by('name')
         self.fields['other_experiment'].queryset = experiments

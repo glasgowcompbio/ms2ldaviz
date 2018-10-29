@@ -1747,7 +1747,9 @@ def get_motifs_with_degree(experiment):
 def summary(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     user_experiments = UserExperiment.objects.filter(experiment=experiment)
-
+    this_permission = check_user(request, experiment)
+    if not this_permission:
+        return HttpResponse("You don't have permission to access this page")
     motif_tuples = get_motifs_with_degree(experiment)
 
     motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment=experiment, probability__gte=0.05).select_related('mass2motif').prefetch_related('feature')
@@ -1764,6 +1766,16 @@ def summary(request, experiment_id):
     context_dict['documents'] = documents
     context_dict['n_docs'] = len(documents)
     context_dict['all_docs_motifs'] = all_docs_motifs
+    if this_permission == 'edit':   
+        context_dict['edit_user'] = True
+    else:
+        context_dict['edit_user'] = False
+
+    pe = PublicExperiments.objects.filter(experiment = experiment)
+    if len(pe) > 0:
+        context_dict['is_public'] = True
+    else:
+        context_dict['is_public'] = False
 
     return render(request, 'basicviz/summary.html', context_dict)
 
@@ -1827,10 +1839,11 @@ def manage_motif_matches(request, experiment_id):
 
 
 def add_link(request, from_motif_id, to_motif_id):
-    from_motif = Mass2Motif.objects.get(id=from_motif_id)
-    to_motif = Mass2Motif.objects.get(id=to_motif_id)
-    from_motif.linkmotif = to_motif
-    from_motif.save()
+    if not from_motif_id == to_motif_id:
+        from_motif = Mass2Motif.objects.get(id=from_motif_id)
+        to_motif = Mass2Motif.objects.get(id=to_motif_id)
+        from_motif.linkmotif = to_motif
+        from_motif.save()
     experiment_id = from_motif.experiment.id
     return manage_motif_matches(request, experiment_id)
 
@@ -1941,3 +1954,26 @@ def get_gnps_summary(request,experiment_id,metadata_columns = ['scans','precurso
     return response
 
 
+def toggle_public(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    permission = check_user(request,experiment)
+    if not permission == 'edit':
+        return HttpResponse("You don't have the permission to do this!")
+    else:
+        pe = PublicExperiments.objects.filter(experiment = experiment)
+        if len(pe) == 0:
+            # add one
+            PublicExperiments.objects.create(experiment = experiment)
+        else:
+            for p in pe:
+                p.delete()
+        return summary(request,experiment_id)
+
+def delete_experiment(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    permission = check_user(request,experiment)
+    if not permission == 'edit':
+        return HttpResponse("You don't have the permission to do this!")
+    else:
+        experiment.delete()
+    return basicviz_index(request)
