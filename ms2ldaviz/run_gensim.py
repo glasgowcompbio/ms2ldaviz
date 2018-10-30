@@ -96,13 +96,15 @@ def msfile2corpus(ms2_file, ms2_format, min_ms1_intensity, min_ms2_intensity, mz
                          min_ms2_intensity=min_ms2_intensity,
                          mz_tol=mz_tol,
                          rt_tol=rt_tol,
-                         peaklist=None)
+                         peaklist=None,
+                         name_field="")
     elif ms2_format == 'mgf':
         loader = LoadMGF(min_ms1_intensity=min_ms1_intensity,
                          min_ms2_intensity=min_ms2_intensity,
                          mz_tol=mz_tol,
                          rt_tol=rt_tol,
-                         peaklist=None)
+                         peaklist=None,
+                         name_field="")
     else:
         raise NotImplementedError('Unknown ms2 format')
     ms1, ms2, metadata = loader.load_spectra([ms2_file])
@@ -162,6 +164,7 @@ def gensim(corpusjson, ldajson,
     if chunksize == 0:
         chunksize = len(corpus)
 
+    logging.warning('Start lda')
     if workers > 0:
         lda = LdaMulticore(corpus,
                            num_topics=k, iterations=n,
@@ -179,6 +182,7 @@ def gensim(corpusjson, ldajson,
                        passes=passes, alpha=alpha, eta=eta,
                        random_state=random_seed,
                        )
+    logging.warning('Build beta matrix')
     beta = {}
     index2word = {v: k for k, v in lda_dict['word_index'].items()}
     for tid, topic in enumerate(lda.get_topics()):
@@ -186,11 +190,13 @@ def gensim(corpusjson, ldajson,
         beta['motif_{0}'.format(tid)] = {index2word[idx]: float(topic[idx]) for idx in np.argsort(-topic) if
                                          topic[idx] > min_prob_to_keep_beta}
 
+    logging.warning('Build theta matrix')
     theta = {}
     for doc_id, bow in enumerate(corpus):
         topics = lda.get_document_topics(bow, minimum_probability=min_prob_to_keep_theta)
         theta[index2doc[doc_id]] = {'motif_{0}'.format(topic_id): float(prob) for topic_id, prob in topics}
 
+    logging.warning('Build phi matrix')
     phi = {}
     for doc_id, bow in enumerate(corpus):
         _, _, topics_per_word_phi = lda.get_document_topics(bow, per_word_topics=True,
@@ -201,12 +207,15 @@ def gensim(corpusjson, ldajson,
             index2word[word_id]: {'motif_{0}'.format(topic_id): phi / word_intens[word_id] for topic_id, phi in topics} for
             word_id, topics in topics_per_word_phi}
 
+    logging.warning('Build alpha matrix')
     lda_dict['alpha'] = [float(d) for d in lda.alpha]
     lda_dict['beta'] = beta
     lda_dict['theta'] = theta
     lda_dict['phi'] = phi
     lda_dict['K'] = k
+    logging.warning('Build overlap_scores matrix')
     lda_dict['overlap_scores'] = compute_overlap_scores(lda_dict)
+    logging.warning('Build json matrix')
     json.dump(lda_dict, ldajson)
 
 
