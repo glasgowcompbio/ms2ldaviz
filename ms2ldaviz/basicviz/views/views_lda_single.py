@@ -282,7 +282,8 @@ def get_doc_context_dict(document):
         if feature.intensity > 0:
             m2m = FeatureMass2MotifInstance.objects.filter(featureinstance=feature)
             subs = FeatureInstance2Sub.objects.filter(feature=feature)
-            item = (feature, m2m, subs,)
+            doc_mol = document.mol_string
+            item = (feature, m2m, subs, doc_mol)
             feature_mass2motif_instances.append(item)
 
     feature_mass2motif_instances = sorted(feature_mass2motif_instances, key=lambda x: x[0].intensity, reverse=True)

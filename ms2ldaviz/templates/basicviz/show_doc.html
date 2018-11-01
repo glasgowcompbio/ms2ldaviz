@@ -48,31 +48,44 @@
             molecule.scaleToAverageBondLength(14.4);
             var lossspecs = new ChemDoodle.structures.VisualSpecifications();
             lossspecs.bonds_width_2D = 2.0;
-            if (type == "loss") {
-                lossspecs.bonds_color = 'red';
-                lossspecs.atoms_color = 'red';
-            }
-            else {
-                lossspecs.bonds_color = 'cyan';
-                lossspecs.atoms_color = 'cyan';
-            }
+
             if (fragatoms != "") {
                 var fragmentAtoms = fragatoms.split(',');
-                molecule.bonds.forEach(function (b) {
-                    // only color bond black if both atoms are in fragmentAtoms
-                    a1 = molecule.atoms.indexOf(b.a1);
-                    a2 = molecule.atoms.indexOf(b.a2);
-                    if (a1 != -1 && fragmentAtoms.indexOf(a1 + '') == -1) {
-                        molecule.atoms[a1].specs = lossspecs;
-                        b.specs = lossspecs;
-                    }
-                    if (a2 != -1 && fragmentAtoms.indexOf(a2 + '') == -1) {
-                        molecule.atoms[a2].specs = lossspecs;
-                        b.specs = lossspecs;
-                    }
-                });
+                if (type == "loss") {
+                    lossspecs.bonds_color = 'red';
+                    lossspecs.atoms_color = 'red';
+                    molecule.bonds.forEach(function (b) {
+                        // only color bond black if both atoms are in fragmentAtoms
+                        a1 = molecule.atoms.indexOf(b.a1);
+                        a2 = molecule.atoms.indexOf(b.a2);
+                        if (a1 != -1 && fragmentAtoms.indexOf(a1 + '') == -1) {
+                            molecule.atoms[a1].specs = lossspecs;
+                            b.specs = lossspecs;
+                        }
+                        if (a2 != -1 && fragmentAtoms.indexOf(a2 + '') == -1) {
+                            molecule.atoms[a2].specs = lossspecs;
+                            b.specs = lossspecs;
+                        }
+                    });
+                } else {
+                    lossspecs.bonds_color = 'cyan';
+                    lossspecs.atoms_color = 'cyan';
+                    molecule.bonds.forEach(function (b) {
+                        // only color bond black if both atoms are in fragmentAtoms
+                        a1 = molecule.atoms.indexOf(b.a1);
+                        a2 = molecule.atoms.indexOf(b.a2);
+                        if (a1 != -1 && a2 != 1 &&
+                            fragmentAtoms.indexOf(a1 + '') != -1 &&
+                            fragmentAtoms.indexOf(a2 + '') != -1
+                        ) {
+                            molecule.atoms[a1].specs = lossspecs;
+                            molecule.atoms[a2].specs = lossspecs;
+                            b.specs = lossspecs;
+                        }
+                    });
+                }
             }
-            ;
+
             viewer.loadMolecule(molecule)
         }
     </script>
@@ -169,7 +182,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for feature,m2minstances,feature2subs in fm2m %}
+                        {% for feature,m2minstances,feature2subs, doc_mol in fm2m %}
                             <tr>
                                 <td>{{ feature.feature.name }}</td>
                                 <td>{{ feature.intensity }}</td>
@@ -184,13 +197,14 @@
                                             <a href="" onclick="e => e.preventDefault();">
                                                 {{ feature2sub.sub.smiles }}
                                             </a>
-                                            {% if feature2sub.sub.mol_string %}
+                                            {% if feature2sub.sub.smiles %}
                                                 <div class="box">
                                                     <script type="text/javascript">
                                                         var canvasId = Date.now(); // random id
-                                                        var molblock = '{{ feature2sub.sub.mol_string | escapejs }}';
-                                                        // var fragatoms = '{{ feature2sub.fragatoms | escapejs }}';
-                                                        var fragatoms = '';
+                                                        debugger;
+                                                        {#var molblock = '{{ feature2sub.sub.mol_string | escapejs }}';#}
+                                                        var molblock = '{{ doc_mol | escapejs }}';
+                                                        var fragatoms = '{{ feature2sub.fragatoms | escapejs }}';
                                                         var subType = '{{ feature2sub.sub_type | escapejs }}';
                                                         show_mol(canvasId, molblock, fragatoms, subType);
                                                     </script>
