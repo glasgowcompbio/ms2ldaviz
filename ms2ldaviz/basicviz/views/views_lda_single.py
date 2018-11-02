@@ -307,13 +307,14 @@ def view_parents(request, motif_id):
     dm2m = get_docm2m_by_motif(experiment, motif)
     documents = [x.document for x in dm2m]
 
+    # get all substructures linked to features in documents
     motif_features_subs = []
     for motif_feature_instance in motif_feature_instances:
         print 'Querying substructures of motif_feature_instance %s' % motif_feature_instance
         feature = motif_feature_instance.feature
         document_feature_instance = FeatureInstance.objects.filter(feature=feature, document__in=documents)
         subs = FeatureInstance2Sub.objects.filter(feature__in=document_feature_instance)
-        most_common = most_common_subs(subs, 5)
+        most_common = most_common_subs(subs, 5) # filter top-5
         motif_features_subs.append((motif_feature_instance, most_common, ))
 
     context_dict['motif_features_subs'] = motif_features_subs
