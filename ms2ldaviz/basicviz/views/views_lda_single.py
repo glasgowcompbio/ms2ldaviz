@@ -1,6 +1,7 @@
 import csv
 import json
 
+from collections import Counter
 import jsonpickle
 import networkx as nx
 import numpy as np
@@ -298,11 +299,24 @@ def view_parents(request, motif_id):
     if not check_user(request, experiment):
         return HttpResponse("You don't have permission to access this page")
     print 'Motif metadata', motif.metadata
-
     context_dict = {'mass2motif': motif}
-    motif_features = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by('-probability')
-    total_prob = sum([m.probability for m in motif_features])
-    context_dict['motif_features'] = motif_features
+    motif_feature_instances = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by('-probability')
+    total_prob = sum([m.probability for m in motif_feature_instances])
+
+    # get all the documents linked above threshold to this motif in this experiment
+    dm2m = get_docm2m_by_motif(experiment, motif)
+    documents = [x.document for x in dm2m]
+
+    motif_features_subs = []
+    for motif_feature_instance in motif_feature_instances:
+        print 'Querying substructures of motif_feature_instance %s' % motif_feature_instance
+        feature = motif_feature_instance.feature
+        document_feature_instance = FeatureInstance.objects.filter(feature=feature, document__in=documents)
+        subs = FeatureInstance2Sub.objects.filter(feature__in=document_feature_instance)
+        most_common = most_common_subs(subs, 5)
+        motif_features_subs.append((motif_feature_instance, most_common, ))
+
+    context_dict['motif_features_subs'] = motif_features_subs
     context_dict['total_prob'] = total_prob
     context_dict['experiment'] = experiment
 
@@ -314,21 +328,6 @@ def view_parents(request, motif_id):
         context_dict['taxa_terms'] = taxa_terms
     if len(substituent_terms) > 0:
         context_dict['substituent_terms'] = substituent_terms
-
-    # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = motif.experiment)
-    # if doc_m2m_threshold:
-    #     doc_m2m_threshold = float(doc_m2m_threshold)
-    # else:
-    #     doc_m2m_threshold = 0.00 # Default value
-
-    # default_score = get_option('default_doc_m2m_score',experiment = motif.experiment)
-    # if not default_score:
-    #     default_score = 'probability'
-
-    # if default_score == 'probability':
-    #     dm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = doc_m2m_threshold)
-    # else:
-    #     dm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = doc_m2m_threshold)
 
     dm2m = get_docm2m(motif)
     context_dict['dm2ms'] = dm2m
@@ -358,10 +357,30 @@ def view_parents(request, motif_id):
             initial={'metadata': motif.annotation, 'short_annotation': motif.short_annotation})
         context_dict['metadata_form'] = metadata_form
 
-    massbank_form = get_massbank_form(motif, motif_features)
+    massbank_form = get_massbank_form(motif, motif_feature_instances)
     context_dict['massbank_form'] = massbank_form
 
     return render(request, 'basicviz/view_parents.html', context_dict)
+
+
+# get N most common substuctures
+def most_common_subs(subs, N):
+    subs_smiles = []
+    subs_types = {}
+    for s in subs:
+        smile = s.sub.smiles
+        mol_string = s.sub.mol_string
+        sub_type = s.sub_type
+        key = (smile, mol_string, )
+        subs_smiles.append(key)
+        subs_types[key] = sub_type
+    subs_counter = Counter(subs_smiles)  # count most common substructures
+    most_common = []
+    for key, count in subs_counter.most_common(N):
+        smile, mol_string = key
+        sub_type = subs_types[key]
+        most_common.append((smile, count, mol_string, sub_type))
+    return most_common
 
 
 @login_required(login_url='/registration/login/')
@@ -1501,6 +1520,15 @@ def get_docm2m_all(experiment, doc_m2m_prob_threshold=None, doc_m2m_overlap_thre
     mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
 
     dm2m = DocumentMass2Motif.objects.filter(mass2motif__in=mass2motifs, probability__gte=doc_m2m_prob_threshold,
+                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
+
+    return dm2m
+
+
+## function is used to get all MocumentMassMass2Motif matchings by experiment and mass2motif
+def get_docm2m_by_motif(experiment, mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
+    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
+    dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=doc_m2m_prob_threshold,
                                              overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
 
     return dm2m

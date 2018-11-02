@@ -134,7 +134,7 @@
             <div class="panel-body">
                 <h4>Fragmentation Spectrum Plot</h4>
                 <p>
-                    The fragmentation spectrum of this molecules is plotted below, alongside
+                    The fragmentation spectrum of this molecule is plotted below, alongside
                     associated Mass2Motifs. Features (fragments and losses) explained by the associated
                     Mass2Motif are coloured in red, while the parent ion is coloured in blue.
                 </p>
@@ -171,6 +171,8 @@
                         The following table lists all features extracted from this fragmentation spectra --
                         alongside Mass2Motifs that explain these features at the threshold specified
                         in the <a href="/options/view_experiment_options/{{ experiment.id }}">experiment option</a>.
+                        The column <strong>MAGMa Substructure Annotation</strong> shows substructures linked to a feature
+                        annotated in this molecule using <a href="https://github.com/NLeSC/MAGMa">MAGMa</a>.
                     </p>
                     <table class="table" id="parenttable">
                         <thead>
@@ -178,7 +180,7 @@
                             <th>Name</th>
                             <th>Intensity</th>
                             <th>Mass2Motif (Probability)</th>
-                            <th>MAGMA Substructure Annotation</th>
+                            <th>MAGMa Substructure Annotation</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -194,14 +196,13 @@
                                 <td>
                                     {% for feature2sub in feature2subs %}
                                         <div class="floatbar">
-                                            <a href="" onclick="e => e.preventDefault();">
+                                            <a href="#" onclick="return false;">
                                                 {{ feature2sub.sub.smiles }}
                                             </a>
                                             {% if feature2sub.sub.smiles %}
                                                 <div class="box">
                                                     <script type="text/javascript">
                                                         var canvasId = Date.now(); // random id
-                                                        debugger;
                                                         {#var molblock = '{{ feature2sub.sub.mol_string | escapejs }}';#}
                                                         var molblock = '{{ doc_mol | escapejs }}';
                                                         var fragatoms = '{{ feature2sub.fragatoms | escapejs }}';
