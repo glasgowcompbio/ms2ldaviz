@@ -4,6 +4,7 @@ from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
 import json
 import os
 import sys
+from tqdm import tqdm
 
 # Never let numpy use more than one core, otherwise each worker of LdaMulticore will use all cores for numpy
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -185,25 +186,39 @@ def gensim(corpusjson, ldajson,
     logging.warning('Build beta matrix')
     beta = {}
     index2word = {v: k for k, v in lda_dict['word_index'].items()}
-    for tid, topic in enumerate(lda.get_topics()):
+    for tid, topic in tqdm(enumerate(lda.get_topics()), total=k):
         topic = topic / topic.sum()  # normalize to probability distribution
         beta['motif_{0}'.format(tid)] = {index2word[idx]: float(topic[idx]) for idx in np.argsort(-topic) if
                                          topic[idx] > min_prob_to_keep_beta}
 
     logging.warning('Build theta matrix')
     theta = {}
-    for doc_id, bow in enumerate(corpus):
+    for doc_id, bow in tqdm(enumerate(corpus), total=len(corpus)):
         topics = lda.get_document_topics(bow, minimum_probability=min_prob_to_keep_theta)
         theta[index2doc[doc_id]] = {'motif_{0}'.format(topic_id): float(prob) for topic_id, prob in topics}
 
     logging.warning('Build phi matrix')
-    phi = {}
-    for doc_id, bow in enumerate(corpus):
+    phis = {}
+    # corpus_topics = lda.get_document_topics(corpus, per_word_topics=True,
+    #                                         minimum_probability=min_prob_to_keep_theta,
+    #                                         minimum_phi_value=min_prob_to_keep_phi)
+    # # corpus_topics is array of [topic_theta, topics_per_word,topics_per_word_phi] for each document
+    # for doc_id, doc_topics in tqdm(enumerate(corpus_topics), total=len(corpus)):
+    #     topics_per_word_phi = doc_topics[2]
+    #     doc_name = index2doc[doc_id]
+    #     word_intens = {k: v for k, v in corpus[doc_id]}
+    #     phis[doc_name] = {
+    #         index2word[word_id]: {
+    #             'motif_{0}'.format(topic_id): phi / word_intens[word_id] for topic_id, phi in topics
+    #         } for word_id, topics in topics_per_word_phi}
+
+    for doc_id, bow in tqdm(enumerate(corpus), total=len(corpus)):
         _, _, topics_per_word_phi = lda.get_document_topics(bow, per_word_topics=True,
                                                             minimum_probability=min_prob_to_keep_theta,
                                                             minimum_phi_value=min_prob_to_keep_phi)
+        doc_name = index2doc[doc_id]
         word_intens = {k: v for k, v in bow}
-        phi[index2doc[doc_id]] = {
+        phis[doc_name] = {
             index2word[word_id]: {'motif_{0}'.format(topic_id): phi / word_intens[word_id] for topic_id, phi in topics} for
             word_id, topics in topics_per_word_phi}
 
@@ -211,7 +226,7 @@ def gensim(corpusjson, ldajson,
     lda_dict['alpha'] = [float(d) for d in lda.alpha]
     lda_dict['beta'] = beta
     lda_dict['theta'] = theta
-    lda_dict['phi'] = phi
+    lda_dict['phi'] = phis
     lda_dict['K'] = k
     logging.warning('Build overlap_scores matrix')
     lda_dict['overlap_scores'] = compute_overlap_scores(lda_dict)
