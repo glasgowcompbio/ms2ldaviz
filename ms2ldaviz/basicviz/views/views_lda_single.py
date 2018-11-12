@@ -267,6 +267,10 @@ def show_doc(request, doc_id):
         context_dict['mol_string'] = document.mol_string
         context_dict['image_url'] = None
 
+    sub_terms = document.substituentinstance_set.all()
+    if len(sub_terms) > 0:
+        context_dict['sub_terms'] = sub_terms
+
     return render(request, 'basicviz/show_doc.html', context_dict)
 
 
@@ -323,13 +327,13 @@ def view_parents(request, motif_id):
     context_dict['experiment'] = experiment
 
     # Get the taxa or substituent terms (if there are any)
-    taxa_terms = motif.taxainstance_set.filter(probability__gte=0.2).order_by('-probability')
-    substituent_terms = motif.substituentinstance_set.filter(probability__gte=0.2).order_by('-probability')
+    # taxa_terms = motif.taxainstance_set.filter(probability__gte=0.2).order_by('-probability')
+    # substituent_terms = motif.substituentinstance_set.filter(probability__gte=0.2).order_by('-probability')
 
-    if len(taxa_terms) > 0:
-        context_dict['taxa_terms'] = taxa_terms
-    if len(substituent_terms) > 0:
-        context_dict['substituent_terms'] = substituent_terms
+    # if len(taxa_terms) > 0:
+    #     context_dict['taxa_terms'] = taxa_terms
+    # if len(substituent_terms) > 0:
+    #     context_dict['substituent_terms'] = substituent_terms
 
     dm2m = get_docm2m(motif)
     context_dict['dm2ms'] = dm2m
@@ -362,6 +366,28 @@ def view_parents(request, motif_id):
     massbank_form = get_massbank_form(motif, motif_feature_instances)
     context_dict['massbank_form'] = massbank_form
 
+
+    # New classyfire code
+    term_counts = {}
+    for dm in dm2m:
+        doc = dm.document
+        sub_terms = doc.substituentinstance_set.all()
+        for s in sub_terms:
+            if not s.subterm in term_counts:
+                term_counts[s.subterm] = 0
+            term_counts[s.subterm] += 1
+    if len(term_counts) > 0:
+        # compute overall percentages for this experiment
+        totals = {}
+        n_docs = len(Document.objects.filter(experiment = experiment))
+        for t in term_counts:
+            totals[t] = 100.0*len(SubstituentInstance.objects.filter(document__experiment = experiment,subterm = t))/n_docs
+        terms = term_counts.keys()
+        counts = term_counts.values()
+        perc = [100.0*v/len(dm2m) for v in term_counts.values()]
+        background = [totals[t] for t in term_counts.keys()]
+        diff = [abs(p-b) for (p,b) in zip(perc,background)]
+        context_dict['term_counts'] = sorted(zip(terms,counts,perc,background,diff),key = lambda x : x[1], reverse=True)
     return render(request, 'basicviz/view_parents.html', context_dict)
 
 

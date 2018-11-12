@@ -226,6 +226,29 @@
                 </div>
             </div>
         {% endif %}
+        {% if sub_terms %}
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Classyfire Substituent Terms</h4>
+                <table class="table" id="termtable">
+                    <thead>
+                    <tr>
+                        <th>Term Name</th>
+                        <th>Source</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for term in sub_terms %}
+                        <tr>
+                            <td>{{term.subterm.name}}</td>
+                            <td>{{term.source}}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
 {% endblock %}
@@ -257,7 +280,13 @@
             ],
             "order": [[2, "desc"]],
         });
-
+        $('#termtable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                'csv',
+            ],
+            "order": [[0, "asc"]],
+        });
         load_parent('/basicviz/get_doc_topics/{{document.id}}');
 
     </script>

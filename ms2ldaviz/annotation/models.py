@@ -23,16 +23,12 @@ class TaxaTerm(models.Model):
 
 class SubstituentInstance(models.Model):
 	subterm = models.ForeignKey(SubstituentTerm,null = False)
-	# motif = models.ForeignKey(Mass2Motif,null = False)
 	document = models.ForeignKey(Document,null = True)
 	probability = models.FloatField(null = True)
-	z_score = models.FloatField(null = True)
-
+	source = models.CharField(max_length=128,null=True)
 
 class TaxaInstance(models.Model):
 	taxterm = models.ForeignKey(TaxaTerm,null = False)
-	# motif = models.ForeignKey(Mass2Motif,null = False)
 	document = models.ForeignKey(Document,null = True)
 	probability = models.FloatField(null = True)
-	z_score = models.FloatField(null = True)
-
+	source = models.CharField(max_length=128,null=True)

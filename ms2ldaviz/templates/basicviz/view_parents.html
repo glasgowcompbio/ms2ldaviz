@@ -189,6 +189,35 @@
                 </div>
             </div>
         </div>
+        {% if term_counts %}
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Counts of Classyfire Substituent terms</h4>
+                <table class='table' id='termtable'>
+                    <thead>
+                    <tr>
+                        <th>Term name</th>
+                        <th>Count in motif</th>
+                        <th>Percentage in motif</th>
+                        <th>Percentage in experiment</th>
+                        <th>Absolute difference</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% for subterm,count,perc,background,diff in term_counts %}
+                        <tr>
+                            <td>{{subterm.name}}</td>
+                            <td>{{count}}</td>
+                            <td>{{perc|floatformat}}</td>
+                            <td>{{background|floatformat}}</td>
+                            <td>{{diff|floatformat}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>Counts of Mass2Motif Features</h4>
@@ -243,49 +272,6 @@
             	<div id="spectra" border="20" padding="20"></div>
             </div>
         </div>
-        <!-- Classyfire terms for this motif, if they exist -->
-        {% if taxa_terms %}
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <h4>Classyfire Taxa Terms</h4>
-                    <table class='table' id='taxa_table'>
-                        <thead>
-                            <tr><th>Taxa Term</th><th>Probability</th><th>Z score</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for term_instance in taxa_terms %}
-                                <tr>
-                                    <td>{{term_instance.taxterm.name}}</td>
-                                    <td>{{term_instance.probability|floatformat:"3"}}</td>
-                                    <td>{{term_instance.z_score|floatformat:"3"}}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        {% endif %}
-        {% if substituent_terms %}
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <h4>Classyfire Substituent Terms</h4>
-                    <table class='table' id='subst_table'>
-                        <thead>
-                            <tr><th>Substituent Term</th><th>Probability</th><th>Z score</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for term_instance in substituent_terms %}
-                                <tr>
-                                    <td>{{term_instance.subterm.name}}</td>
-                                    <td>{{term_instance.probability|floatformat:"3"}}</td>
-                                    <td>{{term_instance.z_score|floatformat:"3"}}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        {% endif %}
 
     </div>
 
@@ -380,19 +366,12 @@
 		        ],
 		        "order": [[ 2, "desc" ]],
 		    });
-			$('#taxa_table').DataTable({
+            $('#termtable').DataTable({
 				dom: 'Bfrtip',
 				buttons: [
 			        'csv',
 		        ],
-		        "order": [[ 2, "desc" ]],
-		    });
-			$('#subst_table').DataTable({
-				dom: 'Bfrtip',
-				buttons: [
-			        'csv',
-		        ],
-		        "order": [[ 2, "desc" ]],
+		        "order": [[ 4, "desc" ]],
 		    });
 
 		});
