@@ -375,6 +375,7 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
     print("Loading phi")
     with transaction.atomic():
         phis = []
+        chunk_size = 1000
         for doc_id, bow in tqdm(enumerate(corpus), total=len(corpus)):
             _, _, topics_per_word_phi = model.get_document_topics(bow, per_word_topics=True,
                                                                   minimum_probability=min_prob_to_keep_theta,
@@ -389,7 +390,7 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
                     probability = phi / word_intens[word_id]
                     phis.append(FeatureMass2MotifInstance(featureinstance=feature_instance,
                                                           mass2motif=mass2motif, probability=probability))
-            if len(phis) > 1000:
+            if len(phis) > chunk_size:
                 # Flush phis to db, to prevent big memory footprint
                 FeatureMass2MotifInstance.objects.bulk_create(phis)
                 phis = []
