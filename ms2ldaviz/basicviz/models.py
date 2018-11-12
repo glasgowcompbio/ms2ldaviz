@@ -94,6 +94,7 @@ class Experiment(models.Model):
     K = models.IntegerField(null=True, default=300)
     featureset = models.ForeignKey(BVFeatureSet,null = True)
 
+    has_magma_annotation = models.BooleanField(null = False, default = False)
 
     def __unicode__(self):
         return self.name
@@ -140,11 +141,11 @@ class UserExperiment(models.Model):
     experiment = models.ForeignKey(Experiment)
     permission = models.CharField(max_length=24,null=False)
 
-
 class Document(models.Model):
     name = models.CharField(max_length=64)
     experiment = models.ForeignKey(Experiment)
     metadata = models.CharField(max_length=2048, null=True)
+    mol_string = models.TextField(null=True)
 
     def get_annotation(self):
         md = jsonpickle.decode(self.metadata)
@@ -415,3 +416,14 @@ class MotifMatch(models.Model):
 
     def __unicode__(self):
         return "{} <-> {} ({})".format(self.frommotif.name,self.tomotif.name,self.score)
+
+class MagmaSub(models.Model):
+    smiles = models.TextField(null = False)
+    mol_string = models.TextField(null = True)
+
+class FeatureInstance2Sub(models.Model):
+    feature = models.ForeignKey(FeatureInstance, null=False)
+    sub = models.ForeignKey(MagmaSub, null=False)
+    fragatoms = models.CharField(max_length=1024, null=False)
+    mz = models.FloatField(null=True)
+    sub_type = models.CharField(max_length=128, null=True)

@@ -2,28 +2,105 @@
 {% load static %}
 
 {% block head_block %}
-	<style>
-	.axis path,
-	.axis line {
-	    fill: none;
-	    stroke: black;
-	    shape-rendering: crispEdges;
-	}
-	.axis text {
-	    font-family: sans-serif;
-	    font-size: 11px;
-	}
-	.axis-label {
-	  font-family: sans-serif;
-	  font-size: 14px;
-	}
-	</style>
+    <link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+    <style>
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: black;
+            shape-rendering: crispEdges;
+        }
+
+        .axis text {
+            font-family: sans-serif;
+            font-size: 11px;
+        }
+
+        .axis-label {
+            font-family: sans-serif;
+            font-size: 14px;
+        }
+
+        .box {
+            display: none;
+            padding: 10px;
+            margin: 10px;
+        }
+
+        a:hover + .box {
+            display: block;
+        }
+    </style>
+    <link rel="stylesheet" href="{% static 'css/ChemDoodleWeb.css' %}" type="text/css">
+    <script type="text/javascript" src="{% static 'js/ChemDoodleWeb.js' %}"></script>
+    <script type="text/javascript">
+        function setColour(molecule, fragmentAtoms, fgColour, bgColour, reverse) {
+            var fgSpecs = new ChemDoodle.structures.VisualSpecifications();
+            var bgSpecs = new ChemDoodle.structures.VisualSpecifications();
+            fgSpecs.bonds_color = fgColour;
+            fgSpecs.atoms_color = fgColour;
+            bgSpecs.bonds_color = bgColour;
+            bgSpecs.atoms_color = bgColour;
+            if (!reverse) {
+                fgSpecs.bonds_width_2D = 4.0;
+                bgSpecs.bonds_width_2D = 2.0;
+            } else {
+                fgSpecs.bonds_width_2D = 2.0;
+                bgSpecs.bonds_width_2D = 4.0;
+            }
+            molecule.bonds.forEach(function (b) {
+                a1 = molecule.atoms.indexOf(b.a1);
+                a2 = molecule.atoms.indexOf(b.a2);
+                if (a1 != -1 && fragmentAtoms.indexOf(a1 + '') == -1) {
+                    molecule.atoms[a1].specs = bgSpecs;
+                    b.specs = bgSpecs;
+                }
+                if (a2 != -1 && fragmentAtoms.indexOf(a2 + '') == -1) {
+                    molecule.atoms[a2].specs = bgSpecs;
+                    b.specs = bgSpecs;
+                }
+                if (a1 != -1 && a2 != 1 &&
+                    fragmentAtoms.indexOf(a1 + '') != -1 &&
+                    fragmentAtoms.indexOf(a2 + '') != -1
+                ) {
+                    molecule.atoms[a1].specs = fgSpecs;
+                    molecule.atoms[a2].specs = fgSpecs;
+                    b.specs = fgSpecs;
+                }
+            });
+
+        }
+        function showMol(id, molblock, fragatoms = "", type = "loss") {
+            var viewer = new ChemDoodle.ViewerCanvas(id, 200, 150);
+            viewer.specs.bonds_width_2D = .6;
+            viewer.specs.bonds_saturationWidthAbs_2D = 2.6;
+            viewer.specs.bonds_hashSpacing_2D = 2.5;
+            viewer.specs.atoms_font_size_2D = 10;
+            viewer.specs.atoms_font_families_2D = ['Helvetica', 'Arial', 'sans-serif'];
+            viewer.specs.atoms_displayTerminalCarbonLabels_2D = false;
+            viewer.specs.atoms_implicitHydrogens_2D = false;
+            var molecule = ChemDoodle.readMOL(molblock);
+            molecule.scaleToAverageBondLength(14.4);
+            if (fragatoms != "") {
+                var fragmentAtoms = fragatoms.split(',');
+                if (type == "loss") {
+                    setColour(molecule, fragmentAtoms, 'black', 'red', true);
+                } else if (type == 'fragment') {
+                    setColour(molecule, fragmentAtoms, 'black', 'red', false);
+                }
+            }
+
+            viewer.loadMolecule(molecule)
+        }
+    </script>
 {% endblock %}
 
+
 {% block body_block %}
-	{% if document %}
-		<h3>{{document.name}} -- {{document.display_name}}</h3>
-	{% endif %}
+    {% if document %}
+        <h3>{{ document.name }} -- {{ document.display_name }}</h3>
+    {% endif %}
 
     <div class="panel-group">
         {% if mass2motifs %}
@@ -33,27 +110,27 @@
                     <p>
                         The following table lists all Mass2Motifs that explain features
                         extracted from this fragmentation spectra -- at the threshold specified
-                        in the <a href="/options/view_experiment_options/{{experiment.id}}">experiment option</a>.
+                        in the <a href="/options/view_experiment_options/{{ experiment.id }}">experiment option</a>.
                     </p>
                     <table class="table" id="motiftable">
                         <thead>
-                            <tr>
-                                <th>Motif</th>
-                                <th>Probability</th>
-                                <th>Overlap Score</th>
-                                <th>Annotation</th>
-                            </tr>
-                        </thead>
-                    <tbody>
-                        {% for mass2motif in mass2motifs %}
                         <tr>
-                            <td>{{mass2motif.mass2motif.name}}</td>
-                            <td>{{mass2motif.probability|floatformat:"3"}}</td>
-                            <td>{{mass2motif.overlap_score|floatformat:"3"}}</td>
-                            <td>{{mass2motif.mass2motif.annotation}}</td>
+                            <th>Motif</th>
+                            <th>Probability</th>
+                            <th>Overlap Score</th>
+                            <th>Annotation</th>
                         </tr>
+                        </thead>
+                        <tbody>
+                        {% for mass2motif in mass2motifs %}
+                            <tr>
+                                <td>{{ mass2motif.mass2motif.name }}</td>
+                                <td>{{ mass2motif.probability|floatformat:"3"}}</td>
+                                <td>{{ mass2motif.overlap_score|floatformat:"3"}}</td>
+                                <td>{{ mass2motif.mass2motif.annotation }}</td>
+                            </tr>
                         {% endfor %}
-                    </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -62,7 +139,7 @@
             <div class="panel-body">
                 <h4>Fragmentation Spectrum Plot</h4>
                 <p>
-                    The fragmentation spectrum of this molecules is plotted below, alongside
+                    The fragmentation spectrum of this molecule is plotted below, alongside
                     associated Mass2Motifs. Features (fragments and losses) explained by the associated
                     Mass2Motif are coloured in red, while the parent ion is coloured in blue.
                 </p>
@@ -70,12 +147,24 @@
                 </div>
             </div>
         </div>
-        {% if image_url %}
+        {% if image_url or mol_string %}
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <h4>ChemSpider</h4>
-                    <img src="{{image_url}}">
-                    <a href="http://www.chemspider.com/Chemical-Structure.{{csid}}.html" target=new>View on ChemSpider</a>
+                    <h4>Molecule Plot</h4>
+                    {% if image_url %}
+                        <img src="{{ image_url }}">
+                    {% endif %}
+                    <a href="http://www.chemspider.com/Chemical-Structure.{{ csid }}.html" target=new>View on
+                        ChemSpider</a>
+                </div>
+                <div class="panel-body">
+                    <script type="text/javascript">
+                        var viewer = new ChemDoodle.ViewerCanvas('viewACS', 200, 200);
+                        viewer.specs.atoms_displayTerminalCarbonLabels_2D = true;
+                        var mol = "{{mol_string | escapejs}}";
+                        var this_mol = ChemDoodle.readMOL(mol);
+                        viewer.loadMolecule(this_mol);
+                    </script>
                 </div>
             </div>
         {% endif %}
@@ -86,27 +175,53 @@
                     <p>
                         The following table lists all features extracted from this fragmentation spectra --
                         alongside Mass2Motifs that explain these features at the threshold specified
-                        in the <a href="/options/view_experiment_options/{{experiment.id}}">experiment option</a>.
+                        in the <a href="/options/view_experiment_options/{{ experiment.id }}">experiment option</a>.
+                        The column <strong>MAGMa Substructure Annotation</strong> shows substructures linked to a feature
+                        annotated in this molecule using <a href="https://github.com/NLeSC/MAGMa">MAGMa</a>.
                     </p>
                     <table class="table" id="parenttable">
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Intensity</th>
-                        <th>Mass2Motif (Probability)</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for feature,m2minstances in fm2m %}
-                        <tr><td>{{feature.feature.name}}</td><td>{{feature.intensity}}</td>
-                        <td>
-                            {% for m2minstance in m2minstances %}
-                                {{m2minstance.mass2motif}} ({{m2minstance.probability|floatformat:"3"}}),
-                            {% endfor %}
-                        </td>
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Intensity</th>
+                            <th>Mass2Motif (Probability)</th>
+                            <th>MAGMa Substructure Annotation</th>
                         </tr>
-                    {% endfor %}
-                    </tbody>
+                        </thead>
+                        <tbody>
+                        {% for feature,m2minstances,feature2subs, doc_mol in fm2m %}
+                            <tr>
+                                <td>{{ feature.feature.name }}</td>
+                                <td>{{ feature.intensity }}</td>
+                                <td>
+                                    {% for m2minstance in m2minstances %}
+                                        {{ m2minstance.mass2motif }} ({{ m2minstance.probability|floatformat:"3"}})<br/>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for feature2sub in feature2subs %}
+                                        <div class="floatbar">
+                                            <a href="#" onclick="return false;">
+                                                {{ feature2sub.sub.smiles }}
+                                            </a>
+                                            {% if feature2sub.sub.smiles %}
+                                                <div class="box">
+                                                    <script type="text/javascript">
+                                                        var canvasId = Date.now(); // random id
+                                                        {#var molblock = '{{ feature2sub.sub.mol_string | escapejs }}';#}
+                                                        var molblock = '{{ doc_mol | escapejs }}';
+                                                        var fragatoms = '{{ feature2sub.fragatoms | escapejs }}';
+                                                        var subType = '{{ feature2sub.sub_type | escapejs }}';
+                                                        showMol(canvasId, molblock, fragatoms, subType);
+                                                    </script>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -116,47 +231,35 @@
 {% endblock %}
 
 {% block js_block %}
-	
-	<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
-	<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
-	<script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
 
+    <script type='text/javascript' src="{% static 'js/d3.v3.min.js' %}"></script>
+    <script type='text/javascript' src="{% static 'js/d3.tip.v0.6.3.js' %}"></script>
+    <script type='text/javascript' src="{% static 'js/basicviz-spectra.js' %}"></script>
 
+    <script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
 
-	<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
-	<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+    <script type="text/javascript">
 
-	<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
-	<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+        $('#parenttable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                'csv',
+            ],
+            "order": [[1, "desc"]],
+        });
+        $('#motiftable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                'csv',
+            ],
+            "order": [[2, "desc"]],
+        });
 
-	<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
-	<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+        load_parent('/basicviz/get_doc_topics/{{document.id}}');
 
-
-
-	<script type="text/javascript">
-
-		$('#parenttable').DataTable({
-			dom: 'Bfrtip',
-			buttons: [
-		        'csv',
-	        ],
-	        "order": [[ 1, "desc" ]],
-	    });
-	    $('#motiftable').DataTable({
-	    	dom: 'Bfrtip',
-	    	buttons: [
-	    		'csv',
-	    	],
-	    	"order": [[ 2, "desc"]],
-	    });
-
-		load_parent('/basicviz/get_doc_topics/{{document.id}}');
-	</script>
-
-
-
-
+    </script>
 
 {% endblock %}
-
