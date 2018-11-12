@@ -4,9 +4,13 @@ from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
 import json
 import os
 import sys
+
+import jsonpickle
+from django.db import transaction
 from tqdm import tqdm
 
 # Never let numpy use more than one core, otherwise each worker of LdaMulticore will use all cores for numpy
+
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
@@ -17,9 +21,12 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 import django
 django.setup()
 
+from annotation.lda_methods import compute_overlap_score
+from ms1analysis.models import DocSampleIntensity
 from ms2lda_feature_extraction import LoadMZML, MakeBinnedFeatures, LoadMSP, LoadMGF
-from basicviz.models import Experiment, User, BVFeatureSet, UserExperiment, JobLog
-from load_dict_functions import load_dict
+from basicviz.models import Experiment, User, BVFeatureSet, UserExperiment, JobLog, Feature, Document, FeatureInstance, \
+    Mass2Motif, Mass2MotifInstance, Alpha, DocumentMass2Motif, FeatureMass2MotifInstance
+from load_dict_functions import load_dict, add_all_features_set, add_sample
 from lda import VariationalLDA
 from gensim.models.ldamulticore import LdaMulticore
 from gensim.models.ldamodel import LdaModel
@@ -58,7 +65,7 @@ def build_parser():
     # lda
     lda = sc.add_parser('gensim', help='Run lda using gensim')
     lda.add_argument('corpusjson', type=FileType('r'), help="corpus file")
-    lda.add_argument('ldajson', type=FileType('w'), help="lda file")
+    lda.add_argument('ldafile', help="lda file")
     lda.add_argument('-k', type=int, default=300, help='Number of topics (default: %(default)s)')
     lda.add_argument('-n', type=int, default=1000, help='Number of iterations (default: %(default)s)')
     lda.add_argument('--gamma_threshold', default=0.001, type=float, help='Minimum change in the value of the gamma parameters to continue iterating (default: %(default)s)')
@@ -73,7 +80,7 @@ def build_parser():
     lda.add_argument('--eta', help='Can be a float or "auto". Default is (default: %(default)s)')
     lda.add_argument('--workers', type=int, default=4, help='Number of workers. 0 will use single core LdaCore otherwise will use LdaMulticore (default: %(default)s)')
     lda.add_argument('--random_seed', type=int, help='Random seed to use, Useful for reproducibility. (default: %(default)s)')
-
+    lda.add_argument('--ldaformat', default='json', choices=('json', 'gensim'), help='Store lda model in json or jensim format')
     lda.set_defaults(func=gensim)
 
     # insert
@@ -83,6 +90,20 @@ def build_parser():
     insert.add_argument('experiment', help='Experiment name')
     insert.add_argument('--description', default='')
     insert.set_defaults(func=insert_lda)
+
+    # insert
+    insert_gensim = sc.add_parser('insert_gensim', help='Insert gensim lda result into db')
+    insert_gensim.add_argument('corpusjson', type=FileType('r'), help="corpus file")
+    insert_gensim.add_argument('ldafile', help="lda gensim file")
+    insert_gensim.add_argument('owner', help='Experiment owner')
+    insert_gensim.add_argument('experiment', help='Experiment name')
+    insert_gensim.add_argument('--description', default='')
+    insert_gensim.add_argument('--normalize', type=int, default=1000, help='Normalize intensities (default: %(default)s)')
+    insert_gensim.add_argument('--min_prob_to_keep_beta', type=float, default=1e-3, help='Minimum probability to keep beta (default: %(default)s)')
+    insert_gensim.add_argument('--min_prob_to_keep_phi', type=float, default=1e-2, help='Minimum probability to keep phi (default: %(default)s)')
+    insert_gensim.add_argument('--min_prob_to_keep_theta', type=float, default=1e-2, help='Minimum probability to keep theta (default: %(default)s)')
+    insert_gensim.set_defaults(func=insert_gensim_lda)
+
     return parser
 
 
@@ -143,25 +164,18 @@ def compute_overlap_scores(lda_dictionary):
     return overlap_scores
 
 
-def gensim(corpusjson, ldajson,
+def gensim(corpusjson, ldafile,
            n, k, gamma_threshold,
            chunksize, batch, normalize, passes,
            min_prob_to_keep_beta, min_prob_to_keep_phi, min_prob_to_keep_theta,
-           alpha, eta, workers, random_seed
+           alpha, eta, workers, random_seed,
+           ldaformat
            ):
 
     if eta is not None and eta != 'auto':
         eta = float(eta)
     lda_dict = json.load(corpusjson)
-    corpus = []
-    index2doc = []
-    for doc, words in lda_dict['corpus'].items():
-        bow = []
-        max_score = max(words.values())
-        for word, score in words.items():
-            bow.append((lda_dict['word_index'][word], int(score * normalize / max_score)))
-        corpus.append(bow)
-        index2doc.append(doc)
+    corpus, index2doc = build_gensim_corpus(lda_dict, normalize)
     if chunksize == 0:
         chunksize = len(corpus)
 
@@ -183,6 +197,11 @@ def gensim(corpusjson, ldajson,
                        passes=passes, alpha=alpha, eta=eta,
                        random_state=random_seed,
                        )
+
+    if ldaformat == 'gensim':
+        lda.save(ldafile)
+        return
+
     logging.warning('Build beta matrix')
     beta = {}
     index2word = {v: k for k, v in lda_dict['word_index'].items()}
@@ -231,11 +250,181 @@ def gensim(corpusjson, ldajson,
     logging.warning('Build overlap_scores matrix')
     lda_dict['overlap_scores'] = compute_overlap_scores(lda_dict)
     logging.warning('Build json matrix')
-    json.dump(lda_dict, ldajson)
+    with open(ldafile, 'w') as f:
+        json.dump(lda_dict, f)
+
+
+def build_gensim_corpus(lda_dict, normalize):
+    corpus = []
+    index2doc = []
+    for doc in sorted(lda_dict['corpus'].keys()):
+        words = lda_dict['corpus'][doc]
+        bow = []
+        max_score = max(words.values())
+        for word in sorted(words.keys()):
+            score = words[word]
+            bow.append((lda_dict['word_index'][word], int(score * normalize / max_score)))
+        corpus.append(bow)
+        index2doc.append(doc)
+    return corpus, index2doc
+
+
+def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, normalize, min_prob_to_keep_beta,
+                      min_prob_to_keep_theta, min_prob_to_keep_phi):
+    featureset, new_experiment = create_experiment(description, experiment, owner)
+
+    lda_dict = json.load(corpusjson)
+    corpus, index2doc = build_gensim_corpus(lda_dict, normalize)
+
+    if 'features' in lda_dict:
+        print("Explicit feature object: loading them all at once")
+        add_all_features_set(experiment, lda_dict['features'], featureset=featureset)
+
+    print("Loading corpus, samples and intensities")
+    features_q = Feature.objects.filter(featureset=featureset)
+    features = {r.name: r for r in features_q}
+    doc_dict = {}
+    with transaction.atomic():
+        for doc in lda_dict['corpus']:
+            # remove 'intensities' from metdat before store it into database
+            metdat = lda_dict['doc_metadata'][doc].copy()
+            metdat.pop('intensities', None)
+            metdat = jsonpickle.encode(metdat)
+            doc_dict[doc] = Document(name=doc, experiment=new_experiment, metadata=metdat)
+        Document.objects.bulk_create(doc_dict.values())
+
+        # Now that each document has an row in the database thus an id, add the document children
+        feature_instances = {}
+        feature_instances_flat = []
+        intensities = []
+        for doc_id, d in doc_dict.items():
+            feature_instances[doc_id] = {}
+            # add_document_words_set(d,doc,experiment,lda_dict,featureset)
+            for word, intensity in lda_dict['corpus'][doc_id].items():
+                fi = FeatureInstance(document=d, feature=features[word], intensity=intensity)
+                feature_instances[doc_id][word] = fi
+                feature_instances_flat.append(fi)
+
+            # load_sample_intensity(d, experiment, lda_dict['doc_metadata'][doc])
+            metdat = lda_dict['doc_metadata'][doc_id]
+            if 'intensities' in metdat:
+                for sample_name, intensity in metdat['intensities'].items():
+                    ## process missing data
+                    ## if intensity not exist, does not save in database
+                    if intensity:
+                        sample = add_sample(sample_name, new_experiment)
+                        # add_doc_sample_intensity(sample, d, intensity)
+                        intensities.append(DocSampleIntensity(sample=sample, document=d, intensity=intensity))
+        FeatureInstance.objects.bulk_create(feature_instances_flat)
+        DocSampleIntensity.objects.bulk_create(intensities)
+
+    model = LdaModel.load(ldafile)
+    # eq to load_dict, but pull directly from gensim model instead of json data struct
+
+    print("Loading topics")
+    with transaction.atomic():
+        # topic
+        m2ms = {}
+        for topic_id, topic_metadata in lda_dict['topic_metadata'].items():
+            metadata = jsonpickle.encode(topic_metadata)
+            m2ms[topic_id] = Mass2Motif(name=topic_id, experiment=new_experiment, metadata=metadata)
+        Mass2Motif.objects.bulk_create(m2ms.values())
+
+        # words of topic
+        m2mis = []
+        index2word = {v: k for k, v in lda_dict['word_index'].items()}
+        for tid, topic in tqdm(enumerate(model.get_topics()), total=model.num_topics):
+            topic = topic / topic.sum()  # normalize to probability distribution
+            topic_id = 'motif_{0}'.format(tid)
+            m2m = m2ms[topic_id]
+            for idx in np.argsort(-topic):
+                if topic[idx] > min_prob_to_keep_beta:
+                    feature = features[index2word[idx]]
+                    probability = float(topic[idx])
+                    m2mis.append(Mass2MotifInstance(feature=feature, mass2motif=m2m, probability=probability))
+        Mass2MotifInstance.objects.bulk_create(m2mis)
+
+        # alphas
+        alphas = []
+        for tid, alpha in tqdm(enumerate(model.alpha), total=model.num_topics):
+            topic_id = 'motif_{0}'.format(tid)
+            m2m = m2ms[topic_id]
+            alphas.append(Alpha(mass2motif=m2m, value=alpha))
+        Alpha.objects.bulk_create(alphas)
+
+    print("Loading theta")
+    with transaction.atomic():
+        docm2ms = []
+        for doc_id, bow in tqdm(enumerate(corpus), total=len(corpus)):
+            document = doc_dict[index2doc[doc_id]]
+            topics = model.get_document_topics(bow, minimum_probability=min_prob_to_keep_theta)
+            for tid, prob in topics:
+                topic_id = 'motif_{0}'.format(tid)
+                mass2motif = m2ms[topic_id]
+                if 'overlap_scores' in lda_dict:
+                    overlap_score = lda_dict['overlap_scores'][index2doc[doc_id]].get(topic_id, None)
+                    if overlap_score:
+                        docm2ms.append(DocumentMass2Motif(document=document, mass2motif=mass2motif,
+                                                          probability=float(prob),
+                                                          overlap_score=overlap_score))
+                else:
+                    docm2ms.append(DocumentMass2Motif(document=document, mass2motif=mass2motif,
+                                                      probability=float(prob)))
+        DocumentMass2Motif.objects.bulk_create(docm2ms)
+
+    print("Loading phi")
+    with transaction.atomic():
+        phis = []
+        for doc_id, bow in tqdm(enumerate(corpus), total=len(corpus)):
+            _, _, topics_per_word_phi = model.get_document_topics(bow, per_word_topics=True,
+                                                                  minimum_probability=min_prob_to_keep_theta,
+                                                                  minimum_phi_value=min_prob_to_keep_phi)
+            doc_name = index2doc[doc_id]
+            word_intens = {k: v for k, v in bow}
+            for word_id, topics in topics_per_word_phi:
+                feature_instance = feature_instances[doc_name][index2word[word_id]]
+                for tid, phi in topics:
+                    topic_id = 'motif_{0}'.format(tid)
+                    mass2motif = m2ms[topic_id]
+                    probability = phi / word_intens[word_id]
+                    phis.append(FeatureMass2MotifInstance(featureinstance=feature_instance,
+                                                          mass2motif=mass2motif, probability=probability))
+            if len(phis) > 1000:
+                # Flush phis to db, to prevent big memory footprint
+                FeatureMass2MotifInstance.objects.bulk_create(phis)
+                phis = []
+        FeatureMass2MotifInstance.objects.bulk_create(phis)
+
+    if 'overlap_scores' not in lda_dict:
+        print("Computing overlap scores")
+        n_done = 0
+        dm2ms = DocumentMass2Motif.objects.filter(document__experiment=new_experiment).select_related('mass2motif', 'document')
+        to_do = len(dm2ms)
+        with transaction.atomic():
+            for dm2m in dm2ms:
+                n_done += 1
+                if n_done % 100 == 0:
+                    print("Done {}/{}".format(n_done,to_do))
+                dm2m.overlap_score = compute_overlap_score(dm2m.mass2motif,dm2m.document)
+                dm2m.save()
+
+    # Done inserting
+    new_experiment.status = '1'
+    new_experiment.save()
 
 
 def insert_lda(ldajson, experiment, owner, description):
+    featureset, new_experiment = create_experiment(description, experiment, owner)
+
+    ldajson = open(ldajson)
     lda_dict = json.load(ldajson)
+    load_dict(lda_dict, new_experiment, feature_set_name=featureset.name)
+
+    new_experiment.status = '1'
+    new_experiment.save()
+
+
+def create_experiment(description, experiment, owner):
     user = User.objects.get(username=owner)
     featureset = BVFeatureSet.objects.first()
     new_experiment = Experiment(name=experiment,
@@ -247,9 +436,7 @@ def insert_lda(ldajson, experiment, owner, description):
     UserExperiment.objects.create(user=user, experiment=new_experiment, permission='edit')
     JobLog.objects.create(user=user, experiment=new_experiment,
                           tasktype='Uploaded and ' + new_experiment.experiment_type)
-    load_dict(lda_dict, new_experiment, feature_set_name=featureset.name)
-    new_experiment.status = '1'
-    new_experiment.save()
+    return featureset, new_experiment
 
 
 def main(argv=sys.argv[1:]):
