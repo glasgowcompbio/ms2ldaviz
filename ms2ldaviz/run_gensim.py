@@ -60,6 +60,9 @@ def build_parser():
     corpus.add_argument('--mz_tol', type=float, default=5.0, help='Mass tolerance when linking peaks from the peaklist to those found in MS2 file (ppm) (default: %(default)s)')
     corpus.add_argument('--rt_tol', type=float, default=10.0, help='Retention time tolerance when linking peaks from the peaklist to those found in MS2 file (seconds)  (default: %(default)s)')
     corpus.add_argument('-k', type=int, default=300, help='Number of topics (default: %(default)s)')
+    corpus.add_argument('--feature_set_name', default='binned_005',
+                        choices=('binned_1', 'binned_01', 'binned_5', 'binned_005', 'binned_05'),
+                        help='Choose width of ms2 bins')
     corpus.set_defaults(func=msfile2corpus)
 
     # lda
@@ -89,6 +92,9 @@ def build_parser():
     insert.add_argument('owner', help='Experiment owner')
     insert.add_argument('experiment', help='Experiment name')
     insert.add_argument('--description', default='')
+    insert.add_argument('--featureset', default='binned_005',
+                        choices=('binned_1', 'binned_01', 'binned_5', 'binned_005', 'binned_05'),
+                        help='Choose width of ms2 bins')
     insert.set_defaults(func=insert_lda)
 
     # insert
@@ -102,12 +108,20 @@ def build_parser():
     insert_gensim.add_argument('--min_prob_to_keep_beta', type=float, default=1e-3, help='Minimum probability to keep beta (default: %(default)s)')
     insert_gensim.add_argument('--min_prob_to_keep_phi', type=float, default=1e-2, help='Minimum probability to keep phi (default: %(default)s)')
     insert_gensim.add_argument('--min_prob_to_keep_theta', type=float, default=1e-2, help='Minimum probability to keep theta (default: %(default)s)')
+    insert_gensim.add_argument('--feature_set_name', default='binned_005',
+                               choices=('binned_1', 'binned_01', 'binned_5', 'binned_005', 'binned_05'),
+                               help='Choose width of ms2 bins')
     insert_gensim.set_defaults(func=insert_gensim_lda)
 
     return parser
 
 
-def msfile2corpus(ms2_file, ms2_format, min_ms1_intensity, min_ms2_intensity, mz_tol, rt_tol, k, corpusjson):
+def msfile2corpus(ms2_file, ms2_format,
+                  min_ms1_intensity, min_ms2_intensity,
+                  mz_tol, rt_tol,
+                  feature_set_name,
+                  k,
+                  corpusjson):
     if ms2_format == 'mzxml':
         loader = LoadMZML(mz_tol=mz_tol,
                           rt_tol=rt_tol, peaklist=None,
@@ -131,7 +145,15 @@ def msfile2corpus(ms2_file, ms2_format, min_ms1_intensity, min_ms2_intensity, mz
         raise NotImplementedError('Unknown ms2 format')
     ms1, ms2, metadata = loader.load_spectra([ms2_file])
 
-    fm = MakeBinnedFeatures()
+    bin_widths = {'binned_005': 0.005,
+                  'binned_01': 0.01,
+                  'binned_05': 0.05,
+                  'binned_1': 0.1,
+                  'binned_5': 0.5}
+
+    bin_width = bin_widths[feature_set_name]
+
+    fm = MakeBinnedFeatures(bin_width=bin_width)
     corpus, features = fm.make_features(ms2)
     corpus = corpus[corpus.keys()[0]]
 
@@ -270,8 +292,8 @@ def build_gensim_corpus(lda_dict, normalize):
 
 
 def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, normalize, min_prob_to_keep_beta,
-                      min_prob_to_keep_theta, min_prob_to_keep_phi):
-    featureset, new_experiment = create_experiment(description, experiment, owner)
+                      min_prob_to_keep_theta, min_prob_to_keep_phi, feature_set_name):
+    featureset, new_experiment = create_experiment(description, experiment, owner, feature_set_name)
 
     lda_dict = json.load(corpusjson)
     corpus, index2doc = build_gensim_corpus(lda_dict, normalize)
@@ -309,8 +331,8 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
             metdat = lda_dict['doc_metadata'][doc_id]
             if 'intensities' in metdat:
                 for sample_name, intensity in metdat['intensities'].items():
-                    ## process missing data
-                    ## if intensity not exist, does not save in database
+                    # process missing data
+                    # if intensity not exist, does not save in database
                     if intensity:
                         sample = add_sample(sample_name, new_experiment)
                         # add_doc_sample_intensity(sample, d, intensity)
@@ -414,8 +436,8 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
     new_experiment.save()
 
 
-def insert_lda(ldajson, experiment, owner, description):
-    featureset, new_experiment = create_experiment(description, experiment, owner)
+def insert_lda(ldajson, experiment, owner, description, feature_set_name):
+    featureset, new_experiment = create_experiment(description, experiment, owner, feature_set_name)
 
     ldajson = open(ldajson)
     lda_dict = json.load(ldajson)
@@ -425,9 +447,9 @@ def insert_lda(ldajson, experiment, owner, description):
     new_experiment.save()
 
 
-def create_experiment(description, experiment, owner):
+def create_experiment(description, experiment, owner, feature_set_name):
     user = User.objects.get(username=owner)
-    featureset = BVFeatureSet.objects.first()
+    featureset = BVFeatureSet.objects.get(name=feature_set_name)
     new_experiment = Experiment(name=experiment,
                                 description=description,
                                 status='0',
