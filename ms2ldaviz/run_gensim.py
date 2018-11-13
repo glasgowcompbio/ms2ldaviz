@@ -6,7 +6,7 @@ import os
 import sys
 
 import jsonpickle
-from django.db import transaction
+from django.db import transaction, connection
 from tqdm import tqdm
 
 # Never let numpy use more than one core, otherwise each worker of LdaMulticore will use all cores for numpy
@@ -173,7 +173,7 @@ def msfile2corpus(ms2_file, ms2_format,
 def compute_overlap_scores(lda_dictionary):
     # Compute the overlap scores for the lda model in dictionary format
     overlap_scores = {}
-    for doc,phi in lda_dictionary['phi'].items():
+    for doc, phi in lda_dictionary['phi'].items():
         motifs = lda_dictionary['theta'][doc].keys()
         doc_overlaps = {m : 0.0 for m in motifs}
         for word, probs in phi.items():
@@ -409,6 +409,56 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
 
     if 'overlap_scores' not in lda_dict:
         print("Computing overlap scores")
+        # Try to compute overlap score with sql
+        # with connection.cursor() as cursor:
+        #     s = """
+        #     explain SELECT dmm.id, sum(mmi.probability * fmmi.probability) AS overlap_score
+        #     FROM
+        #     basicviz_documentmass2motif dmm,
+        #     basicviz_mass2motif mm,
+        #     basicviz_featuremass2motifinstance fmmi,
+        #     basicviz_mass2motifinstance mmi,
+        #     basicviz_featureinstance fi
+        #     WHERE
+        #     mm.id = dmm.mass2motif_id
+        #     AND
+        #     fmmi.mass2motif_id = mm.id
+        #     AND
+        #     mmi.mass2motif_id = mm.id
+        #     AND
+        #     mmi.feature_id = fi.feature_id
+        #     AND
+        #     fi.document_id = dmm.document_id
+        #     AND
+        #     mm.experiment_id = 6
+        #     GROUP BY dmm.id
+        #     LIMIT 10;
+        #     """
+        #
+        #     overlap_score_sql = """UPDATE
+        #       basicviz_documentmass2motif dmm
+        #     SET
+        #       overlap_score = a.overlap_score
+        #     FROM
+        #       (
+        #         SELECT
+        #             dmm.id,
+        #             sum(dmm.probability * fmmi.probability) AS overlap_score
+        #         FROM
+        #             basicviz_documentmass2motif dmm,
+        #             basicviz_mass2motif mm,
+        #             basicviz_featuremass2motifinstance fmmi
+        #         WHERE
+        #             mm.id = dmm.mass2motif_id
+        #         AND
+        #             fmmi.mass2motif_id = mm.id
+        #         AND
+        #             mm.experiment_id = %s
+        #         GROUP BY dmm.id
+        #       ) a
+        #     WHERE dmm.id = a.id
+        #     """
+        #     cursor.execute(overlap_score_sql, [new_experiment.id])
         n_done = 0
         dm2ms = DocumentMass2Motif.objects.filter(document__experiment=new_experiment).select_related('mass2motif', 'document')
         to_do = len(dm2ms)
