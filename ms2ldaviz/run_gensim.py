@@ -240,28 +240,18 @@ def gensim(corpusjson, ldafile,
 
     logging.warning('Build phi matrix')
     phis = {}
-    # corpus_topics = lda.get_document_topics(corpus, per_word_topics=True,
-    #                                         minimum_probability=min_prob_to_keep_theta,
-    #                                         minimum_phi_value=min_prob_to_keep_phi)
-    # # corpus_topics is array of [topic_theta, topics_per_word,topics_per_word_phi] for each document
-    # for doc_id, doc_topics in tqdm(enumerate(corpus_topics), total=len(corpus)):
-    #     topics_per_word_phi = doc_topics[2]
-    #     doc_name = index2doc[doc_id]
-    #     word_intens = {k: v for k, v in corpus[doc_id]}
-    #     phis[doc_name] = {
-    #         index2word[word_id]: {
-    #             'motif_{0}'.format(topic_id): phi / word_intens[word_id] for topic_id, phi in topics
-    #         } for word_id, topics in topics_per_word_phi}
-
-    for doc_id, bow in tqdm(enumerate(corpus), total=len(corpus)):
-        _, _, topics_per_word_phi = lda.get_document_topics(bow, per_word_topics=True,
-                                                            minimum_probability=min_prob_to_keep_theta,
-                                                            minimum_phi_value=min_prob_to_keep_phi)
+    corpus_topics = lda.get_document_topics(corpus, per_word_topics=True,
+                                            minimum_probability=min_prob_to_keep_theta,
+                                            minimum_phi_value=min_prob_to_keep_phi)
+    # corpus_topics is array of [topic_theta, topics_per_word,topics_per_word_phi] for each document
+    for doc_id, doc_topics in tqdm(enumerate(corpus_topics), total=len(corpus)):
+        topics_per_word_phi = doc_topics[2]
         doc_name = index2doc[doc_id]
-        word_intens = {k: v for k, v in bow}
+        word_intens = {k: v for k, v in corpus[doc_id]}
         phis[doc_name] = {
-            index2word[word_id]: {'motif_{0}'.format(topic_id): phi / word_intens[word_id] for topic_id, phi in topics} for
-            word_id, topics in topics_per_word_phi}
+            index2word[word_id]: {
+                'motif_{0}'.format(topic_id): phi / word_intens[word_id] for topic_id, phi in topics
+            } for word_id, topics in topics_per_word_phi}
 
     logging.warning('Build alpha matrix')
     lda_dict['alpha'] = [float(d) for d in lda.alpha]
@@ -397,12 +387,16 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
     print("Loading phi")
     with transaction.atomic():
         phis = []
-        chunk_size = 1000
-        for doc_id, bow in tqdm(enumerate(corpus), total=len(corpus)):
-            _, _, topics_per_word_phi = model.get_document_topics(bow, per_word_topics=True,
-                                                                  minimum_probability=min_prob_to_keep_theta,
-                                                                  minimum_phi_value=min_prob_to_keep_phi)
+        chunk_size = 100000
+        corpus_topics = model.get_document_topics(corpus, per_word_topics=True,
+                                                  minimum_probability=min_prob_to_keep_theta,
+                                                  minimum_phi_value=min_prob_to_keep_phi)
+        # corpus_topics is array of [topic_theta, topics_per_word,topics_per_word_phi] for each document
+        for doc_id, doc_topics in tqdm(enumerate(corpus_topics), total=len(corpus)):
+            topics_per_word_phi = doc_topics[2]
+
             doc_name = index2doc[doc_id]
+            bow = corpus[doc_id]
             word_intens = {k: v for k, v in bow}
             for word_id, topics in topics_per_word_phi:
                 feature_instance = feature_instances[doc_name][index2word[word_id]]
