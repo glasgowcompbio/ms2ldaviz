@@ -21,6 +21,7 @@ pymzML = "==0.7.9"
 redis = "*"
 kombu = "==4.1.0"
 gensim = "*"
+tqdm = "*"
 
 [dev-packages]
 
