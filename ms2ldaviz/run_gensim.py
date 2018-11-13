@@ -21,7 +21,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 import django
 django.setup()
 
-from annotation.lda_methods import compute_overlap_score
+from basicviz.views import compute_overlap_score
 from ms1analysis.models import DocSampleIntensity
 from ms2lda_feature_extraction import LoadMZML, MakeBinnedFeatures, LoadMSP, LoadMGF
 from basicviz.models import Experiment, User, BVFeatureSet, UserExperiment, JobLog, Feature, Document, FeatureInstance, \
@@ -422,7 +422,7 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
                 n_done += 1
                 if n_done % 100 == 0:
                     print("Done {}/{}".format(n_done,to_do))
-                dm2m.overlap_score = compute_overlap_score(dm2m.mass2motif,dm2m.document)
+                dm2m.overlap_score = compute_overlap_score(dm2m.mass2motif, dm2m.document)
                 dm2m.save()
 
     # Done inserting
