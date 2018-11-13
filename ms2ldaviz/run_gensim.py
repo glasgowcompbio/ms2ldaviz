@@ -373,15 +373,8 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
             for tid, prob in topics:
                 topic_id = 'motif_{0}'.format(tid)
                 mass2motif = m2ms[topic_id]
-                if 'overlap_scores' in lda_dict:
-                    overlap_score = lda_dict['overlap_scores'][index2doc[doc_id]].get(topic_id, None)
-                    if overlap_score:
-                        docm2ms.append(DocumentMass2Motif(document=document, mass2motif=mass2motif,
-                                                          probability=float(prob),
-                                                          overlap_score=overlap_score))
-                else:
-                    docm2ms.append(DocumentMass2Motif(document=document, mass2motif=mass2motif,
-                                                      probability=float(prob)))
+                docm2ms.append(DocumentMass2Motif(document=document, mass2motif=mass2motif,
+                                                  probability=float(prob)))
         DocumentMass2Motif.objects.bulk_create(docm2ms)
 
     print("Loading phi")
