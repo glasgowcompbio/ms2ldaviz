@@ -70,7 +70,7 @@ def build_parser():
     lda.add_argument('corpusjson', type=FileType('r'), help="corpus file")
     lda.add_argument('ldafile', help="lda file")
     lda.add_argument('-k', type=int, default=300, help='Number of topics (default: %(default)s)')
-    lda.add_argument('-n', type=int, default=1000, help='Number of iterations (default: %(default)s)')
+    lda.add_argument('-n', type=int, default=50, help='Number of iterations (default: %(default)s)')
     lda.add_argument('--gamma_threshold', default=0.001, type=float, help='Minimum change in the value of the gamma parameters to continue iterating (default: %(default)s)')
     lda.add_argument('--chunksize', default=2000, type=int, help='Number of documents to be used in each training chunk, use 0 for same size as corpus (default: %(default)s)')
     lda.add_argument('--batch', action='store_true', help='When set will use batch learning otherwise online learning (default: %(default)s)')
