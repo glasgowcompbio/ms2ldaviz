@@ -380,6 +380,7 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
     print("Loading phi")
     with transaction.atomic():
         phis = []
+        chunk_size = 100000
         corpus_topics = model.get_document_topics(corpus, per_word_topics=True,
                                                   minimum_probability=min_prob_to_keep_theta,
                                                   minimum_phi_value=min_prob_to_keep_phi)
@@ -398,6 +399,10 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
                     probability = phi / word_intens[word_id]
                     phis.append(FeatureMass2MotifInstance(featureinstance=feature_instance,
                                                           mass2motif=mass2motif, probability=probability))
+            if len(phis) > chunk_size:
+                # Flush phis to db, to prevent big memory footprint
+                FeatureMass2MotifInstance.objects.bulk_create(phis)
+                phis = []
         FeatureMass2MotifInstance.objects.bulk_create(phis)
 
     if 'overlap_scores' not in lda_dict:
