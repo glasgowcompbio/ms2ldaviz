@@ -497,7 +497,7 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
 
             # when db changes this query can fail
             overlap_score_sql = """UPDATE
-                basicviz_documentmass2motif
+                basicviz_documentmass2motif t
             SET
                 overlap_score = a.overlap_score
             FROM (
@@ -511,7 +511,7 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
                 WHERE d.experiment_id = %s
                 GROUP BY dmm.id
             ) a
-            WHERE id = a.id
+            WHERE t.id = a.id
             """
             cursor.execute(overlap_score_sql, [new_experiment.id])
 
