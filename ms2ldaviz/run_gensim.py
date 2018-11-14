@@ -402,67 +402,115 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
 
     if 'overlap_scores' not in lda_dict:
         print("Computing overlap scores")
-        # Try to compute overlap score with sql
-        # with connection.cursor() as cursor:
-        #     s = """
-        #     explain SELECT dmm.id, sum(mmi.probability * fmmi.probability) AS overlap_score
-        #     FROM
-        #     basicviz_documentmass2motif dmm,
-        #     basicviz_mass2motif mm,
-        #     basicviz_featuremass2motifinstance fmmi,
-        #     basicviz_mass2motifinstance mmi,
-        #     basicviz_featureinstance fi
-        #     WHERE
-        #     mm.id = dmm.mass2motif_id
-        #     AND
-        #     fmmi.mass2motif_id = mm.id
-        #     AND
-        #     mmi.mass2motif_id = mm.id
-        #     AND
-        #     mmi.feature_id = fi.feature_id
-        #     AND
-        #     fi.document_id = dmm.document_id
-        #     AND
-        #     mm.experiment_id = 6
-        #     GROUP BY dmm.id
-        #     LIMIT 10;
-        #     """
-        #
-        #     overlap_score_sql = """UPDATE
-        #       basicviz_documentmass2motif dmm
-        #     SET
-        #       overlap_score = a.overlap_score
-        #     FROM
-        #       (
-        #         SELECT
-        #             dmm.id,
-        #             sum(dmm.probability * fmmi.probability) AS overlap_score
-        #         FROM
-        #             basicviz_documentmass2motif dmm,
-        #             basicviz_mass2motif mm,
-        #             basicviz_featuremass2motifinstance fmmi
-        #         WHERE
-        #             mm.id = dmm.mass2motif_id
-        #         AND
-        #             fmmi.mass2motif_id = mm.id
-        #         AND
-        #             mm.experiment_id = %s
-        #         GROUP BY dmm.id
-        #       ) a
-        #     WHERE dmm.id = a.id
-        #     """
-        #     cursor.execute(overlap_score_sql, [new_experiment.id])
-        n_done = 0
-        dm2ms = DocumentMass2Motif.objects.filter(document__experiment=new_experiment).select_related('mass2motif', 'document')
-        to_do = len(dm2ms)
-        with transaction.atomic():
-            for dm2m in dm2ms:
-                n_done += 1
-                if n_done % 100 == 0:
-                    print("Done {}/{}".format(n_done,to_do))
-                dm2m.overlap_score = compute_overlap_score(dm2m.mass2motif, dm2m.document)
-                dm2m.save()
+        # Compute overlap score with sql
+        with connection.cursor() as cursor:
+            """
+            SELECT * FROM basicviz_documentmass2motif WHERE id=149332;
+               id   |    probability     | document_id | mass2motif_id | validated |   overlap_score
+            --------+--------------------+-------------+---------------+-----------+--------------------
+             149332 | 0.0169265381991863 |       76297 |          1150 |           | 0.0275374519023851
 
+            SELECT * FROM
+            basicviz_featureinstance fi
+            WHERE fi.document_id = 76297;
+
+            SELECT * FROM
+            basicviz_featuremass2motifinstance
+            WHERE featureinstance_id IN (
+             SELECT id FROM
+                basicviz_featureinstance fi
+                WHERE fi.document_id = 76297
+            );
+
+            SELECT sum(fmmi.probability * mmi.probability) FROM
+            basicviz_featuremass2motifinstance fmmi
+            JOIN basicviz_featureinstance fi ON fmmi.featureinstance_id = fi.id
+            JOIN basicviz_mass2motifinstance mmi
+                ON  mmi.feature_id = fi.feature_id
+            WHERE fi.document_id = 76297
+            AND mmi.mass2motif_id = 1150
+            ;
+            // Score matches
+
+            SELECT dmm.* FROM basicviz_documentmass2motif dmm
+            JOIN basicviz_document d ON d.id = dmm.document_id
+            WHERE experiment_id = 6;
+               id   |    probability     | document_id | mass2motif_id | validated |    overlap_score
+            --------+--------------------+-------------+---------------+-----------+----------------------
+             150337 | 0.0131358103826642 |       76430 |          1152 |           |    0.142929254448449
+             150234 | 0.0100447973236442 |       76511 |           962 |           |                    0
+
+            SELECT sum(fmmi.probability * mmi.probability) FROM
+            basicviz_featuremass2motifinstance fmmi
+            JOIN basicviz_featureinstance fi ON fmmi.featureinstance_id = fi.id
+            JOIN basicviz_mass2motifinstance mmi
+                ON  mmi.feature_id = fi.feature_id
+            WHERE fi.document_id = 76430
+            AND mmi.mass2motif_id = 1152
+            ;
+            // Score matches
+
+            SELECT sum(fmmi.probability * mmi.probability) FROM
+            basicviz_featuremass2motifinstance fmmi
+            JOIN basicviz_featureinstance fi ON fmmi.featureinstance_id = fi.id
+            JOIN basicviz_mass2motifinstance mmi
+                ON  mmi.feature_id = fi.feature_id
+            WHERE fi.document_id = 76511
+            AND mmi.mass2motif_id = 962
+            ;
+            // No rows, matches score
+
+            SELECT
+                dmm.id, sum(mmi.probability * fmmi.probability) AS overlap_score2,
+                dmm.overlap_score
+            FROM basicviz_document d
+            JOIN basicviz_documentmass2motif dmm ON dmm.document_id=d.id
+            JOIN basicviz_featureinstance fi ON fi.document_id=dmm.document_id
+            JOIN basicviz_featuremass2motifinstance fmmi ON fmmi.featureinstance_id=fi.id
+            JOIN basicviz_mass2motifinstance mmi ON mmi.feature_id = fi.feature_id AND mmi.mass2motif_id=dmm.mass2motif_id
+            WHERE d.experiment_id = 6
+            AND dmm.document_id = 76297
+            AND dmm.mass2motif_id = 1150
+            GROUP BY dmm.id
+            ;
+            // Score matches
+
+            SELECT * FROM (
+                SELECT
+                    dmm.id, sum(mmi.probability * fmmi.probability) AS overlap_score2,
+                    dmm.overlap_score
+                FROM basicviz_document d
+                JOIN basicviz_documentmass2motif dmm ON dmm.document_id=d.id
+                JOIN basicviz_featureinstance fi ON fi.document_id=dmm.document_id
+                JOIN basicviz_featuremass2motifinstance fmmi ON fmmi.featureinstance_id=fi.id
+                JOIN basicviz_mass2motifinstance mmi ON mmi.feature_id = fi.feature_id AND mmi.mass2motif_id=dmm.mass2motif_id
+                WHERE d.experiment_id = 6
+                GROUP BY dmm.id
+            ) a WHERE a.id IN (150337, 150234, 149332);
+            // Scores matches
+            """
+
+            # when db changes this query can fail
+            overlap_score_sql = """UPDATE
+                basicviz_documentmass2motif
+            SET
+                overlap_score = a.overlap_score
+            FROM (
+                SELECT
+                    dmm.id, sum(mmi.probability * fmmi.probability) AS overlap_score
+                FROM basicviz_document d
+                JOIN basicviz_documentmass2motif dmm ON dmm.document_id=d.id
+                JOIN basicviz_featureinstance fi ON fi.document_id=dmm.document_id
+                JOIN basicviz_featuremass2motifinstance fmmi ON fmmi.featureinstance_id=fi.id
+                JOIN basicviz_mass2motifinstance mmi ON mmi.feature_id = fi.feature_id AND mmi.mass2motif_id=dmm.mass2motif_id
+                WHERE d.experiment_id = %s
+                GROUP BY dmm.id
+            ) a
+            WHERE id = a.id
+            """
+            cursor.execute(overlap_score_sql, [new_experiment.id])
+
+            # TODO for current experiment set basicviz_documentmass2motif.overlap_score which are null to 0.0
     # Done inserting
     new_experiment.status = '1'
     new_experiment.save()
