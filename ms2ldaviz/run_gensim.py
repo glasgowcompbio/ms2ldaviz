@@ -514,8 +514,6 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
             WHERE t.id = a.id
             """
             cursor.execute(overlap_score_sql, [new_experiment.id])
-
-            # TODO for current experiment set basicviz_documentmass2motif.overlap_score which are null to 0.0
     # Done inserting
     new_experiment.status = '1'
     new_experiment.save()
