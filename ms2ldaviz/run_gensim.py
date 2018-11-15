@@ -10,6 +10,7 @@ from django.db import transaction, connection
 from tqdm import tqdm
 
 # Never let numpy use more than one core, otherwise each worker of LdaMulticore will use all cores for numpy
+# TODO allow multicore usage when not running LdaMulticore
 
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
@@ -211,6 +212,7 @@ def gensim(corpusjson, ldafile,
                            passes=passes, alpha=alpha, eta=eta,
                            workers=workers,
                            random_state=random_seed,
+                           dtype=np.float64,
                            )
     else:
         lda = LdaModel(corpus,
@@ -219,6 +221,7 @@ def gensim(corpusjson, ldafile,
                        chunksize=chunksize, update_every=0 if batch else 1,
                        passes=passes, alpha=alpha, eta=eta,
                        random_state=random_seed,
+                       dtype=np.float64,
                        )
 
     if ldaformat == 'gensim':
@@ -277,7 +280,8 @@ def build_gensim_corpus(lda_dict, normalize):
         max_score = max(words.values())
         for word in sorted(words.keys()):
             score = words[word]
-            bow.append((lda_dict['word_index'][word], int(score * normalize / max_score)))
+            normalized_score = score * normalize / max_score
+            bow.append((lda_dict['word_index'][word], normalized_score))
         corpus.append(bow)
         index2doc.append(doc)
     return corpus, index2doc
