@@ -194,6 +194,7 @@ def gensim(corpusjson, ldafile,
            ldaformat
            ):
 
+    logging.warning('Reading corpus json')
     if eta is not None and eta != 'auto':
         eta = float(eta)
     lda_dict = json.load(corpusjson)
@@ -221,6 +222,7 @@ def gensim(corpusjson, ldafile,
                        )
 
     if ldaformat == 'gensim':
+        logging.warning('Saving gensim to disk')
         lda.save(ldafile)
         return
 
@@ -285,6 +287,7 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
                       min_prob_to_keep_theta, min_prob_to_keep_phi, feature_set_name):
     featureset, new_experiment = create_experiment(description, experiment, owner, feature_set_name)
 
+    print('Reading corpus json file')
     lda_dict = json.load(corpusjson)
     corpus, index2doc = build_gensim_corpus(lda_dict, normalize)
 
@@ -292,12 +295,12 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
         print("Explicit feature object: loading them all at once")
         add_all_features_set(experiment, lda_dict['features'], featureset=featureset)
 
-    print("Loading corpus, samples and intensities")
     features_q = Feature.objects.filter(featureset=featureset)
     features = {r.name: r for r in features_q}
     doc_dict = {}
     with transaction.atomic():
-        for doc in lda_dict['corpus']:
+        print('Loading mass spectras')
+        for doc in tqdm(lda_dict['corpus']):
             # remove 'intensities' from metdat before store it into database
             metdat = lda_dict['doc_metadata'][doc].copy()
             metdat.pop('intensities', None)
@@ -305,17 +308,20 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
             doc_dict[doc] = Document(name=doc, experiment=new_experiment, metadata=metdat)
         Document.objects.bulk_create(doc_dict.values())
 
+    with transaction.atomic():
+        print('Loading peaks')
         # Now that each document has an row in the database thus an id, add the document children
-        feature_instances = {}
+        fi_chunk_size = 1000000
         feature_instances_flat = []
         intensities = []
-        for doc_id, d in doc_dict.items():
-            feature_instances[doc_id] = {}
+        for doc_id, d in tqdm(doc_dict.items(), total=len(doc_dict)):
             # add_document_words_set(d,doc,experiment,lda_dict,featureset)
             for word, intensity in lda_dict['corpus'][doc_id].items():
                 fi = FeatureInstance(document=d, feature=features[word], intensity=intensity)
-                feature_instances[doc_id][word] = fi
                 feature_instances_flat.append(fi)
+                if len(feature_instances_flat) > fi_chunk_size:
+                    FeatureInstance.objects.bulk_create(feature_instances_flat)
+                    feature_instances_flat = []
 
             # load_sample_intensity(d, experiment, lda_dict['doc_metadata'][doc])
             metdat = lda_dict['doc_metadata'][doc_id]
@@ -328,21 +334,23 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
                         # add_doc_sample_intensity(sample, d, intensity)
                         intensities.append(DocSampleIntensity(sample=sample, document=d, intensity=intensity))
         FeatureInstance.objects.bulk_create(feature_instances_flat)
+        del feature_instances_flat
         DocSampleIntensity.objects.bulk_create(intensities)
 
+    print('Reading lda gensim file')
     model = LdaModel.load(ldafile)
     # eq to load_dict, but pull directly from gensim model instead of json data struct
 
-    print("Loading topics")
+    print("Loading Mass2Motif")
     with transaction.atomic():
-        # topic
         m2ms = {}
         for topic_id, topic_metadata in lda_dict['topic_metadata'].items():
             metadata = jsonpickle.encode(topic_metadata)
             m2ms[topic_id] = Mass2Motif(name=topic_id, experiment=new_experiment, metadata=metadata)
         Mass2Motif.objects.bulk_create(m2ms.values())
 
-        # words of topic
+    print("Loading Mass2MotifInstance")
+    with transaction.atomic():
         m2mis = []
         index2word = {v: k for k, v in lda_dict['word_index'].items()}
         for tid, topic in tqdm(enumerate(model.get_topics()), total=model.num_topics):
@@ -355,8 +363,10 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
                     probability = float(topic[idx])
                     m2mis.append(Mass2MotifInstance(feature=feature, mass2motif=m2m, probability=probability))
         Mass2MotifInstance.objects.bulk_create(m2mis)
+        del m2mis
 
-        # alphas
+    print("Loading Alpha")
+    with transaction.atomic():
         alphas = []
         for tid, alpha in tqdm(enumerate(model.alpha), total=model.num_topics):
             topic_id = 'motif_{0}'.format(tid)
@@ -376,11 +386,12 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
                 docm2ms.append(DocumentMass2Motif(document=document, mass2motif=mass2motif,
                                                   probability=float(prob)))
         DocumentMass2Motif.objects.bulk_create(docm2ms)
+        del docm2ms
 
     print("Loading phi")
     with transaction.atomic():
         phis = []
-        chunk_size = 100000
+        phi_chunk_size = 100000
         corpus_topics = model.get_document_topics(corpus, per_word_topics=True,
                                                   minimum_probability=min_prob_to_keep_theta,
                                                   minimum_phi_value=min_prob_to_keep_phi)
@@ -389,21 +400,24 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
             topics_per_word_phi = doc_topics[2]
 
             doc_name = index2doc[doc_id]
+            doc = doc_dict[doc_name]
             bow = corpus[doc_id]
             word_intens = {k: v for k, v in bow}
+            feature_instances = {r.feature.name: r for r in FeatureInstance.objects.filter(document=doc).select_related('feature')}
             for word_id, topics in topics_per_word_phi:
-                feature_instance = feature_instances[doc_name][index2word[word_id]]
+                feature_instance = feature_instances[index2word[word_id]]
                 for tid, phi in topics:
                     topic_id = 'motif_{0}'.format(tid)
                     mass2motif = m2ms[topic_id]
                     probability = phi / word_intens[word_id]
                     phis.append(FeatureMass2MotifInstance(featureinstance=feature_instance,
                                                           mass2motif=mass2motif, probability=probability))
-            if len(phis) > chunk_size:
+            if len(phis) > phi_chunk_size:
                 # Flush phis to db, to prevent big memory footprint
                 FeatureMass2MotifInstance.objects.bulk_create(phis)
                 phis = []
         FeatureMass2MotifInstance.objects.bulk_create(phis)
+        del phis
 
     if 'overlap_scores' not in lda_dict:
         print("Computing overlap scores")
@@ -514,6 +528,7 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
             WHERE t.id = a.id
             """
             cursor.execute(overlap_score_sql, [new_experiment.id])
+
     # Done inserting
     new_experiment.status = '1'
     new_experiment.save()
