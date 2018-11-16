@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load custom_tags %}
 
 {% block title %}Welcome to motifDB{% endblock %}
 
 {% block head_block %}
-    <style>
-    </style>
+<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
 {% endblock %}
 
 {% block body_block %}
@@ -24,7 +25,7 @@
                         <tbody>
                         {% for motif in motifs %}
                             <tr>
-                                <td>{{ motif.name }}</td>
+                                <td><a href="/motifdb/motif/{{motif.id}}">{{ motif.name }}</a></td>
                                 <td>{{ motif.annotation }}</td>
                             </tr>
                         {% endfor %}
@@ -32,36 +33,29 @@
                     </table>
             </div>
         </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p><a href="/motifdb">Return to motifDB</a></p>
+            </div>
+        </div>
     </div>
 {% endblock %}
 
 {% block js_block %}
 
-<script>
-    $( function() {
-        $( "#accordion" ).accordion({
-            collapsible: true,
-            heightStyle: "content",
-            active: false
-        });
-    } );
-    $( function() {
-        $( "#accordion2" ).accordion({
-            collapsible: true,
-            heightStyle: "content",
-            active: false
-        });
-    } );
-    $( function() {
-        $( "#accordion3" ).accordion({
-            collapsible: true,
-            heightStyle: "content",
-            active: false
-        });
-    } );
-    $( function() {
-        $( "#tabs" ).tabs();
-    } );
+<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+<script>  
+    $('#motiftable').DataTable({
+        dom: 'Bfrtip',
+        buttons: [
+            'csv',
+        ],
+        "order": [[1, "desc"]],
+    });
 </script>
 
 {% endblock %}

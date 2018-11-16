@@ -12,10 +12,10 @@ import glob
 from motifdb.models import *
 from basicviz.models import *
 if __name__ == '__main__':
-    dbpath = '/home/simon/git/motifdb/motifs'
+    dbpath = '/Users/simon/git/motifdb/motifs'
     motif_sets = glob.glob(dbpath+os.sep + '*')
 
-    sys.path.append('/home/simon/git/motifdb/code/utilities')
+    sys.path.append('/Users/simon/git/motifdb/code/utilities')
     
     from motifdb_loader import load_db
 
@@ -31,6 +31,8 @@ if __name__ == '__main__':
                 
                 m,_ = MDBMotif.objects.get_or_create(motif_set = mbs,name = motif)
                 m.annotation = metadata[motif]['annotation']
+                m.comment = metadata[motif]['comment']
+                m.short_annotation = metadata[motif]['short_annotation']
                 m.save()
                 
                 for feature,probability in spec.items():
@@ -38,7 +40,7 @@ if __name__ == '__main__':
                     a,_ = MDBMotifInstance.objects.get_or_create(feature = f,motif = m)
                     a.probability = probability
                     a.save()
-            break
+            
 
 
 

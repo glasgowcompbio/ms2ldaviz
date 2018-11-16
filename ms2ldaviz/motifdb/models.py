@@ -14,11 +14,13 @@ class MDBMotifSet(models.Model):
 class MDBMotif(models.Model):
     name = models.CharField(max_length = 124,null = False)
     motif_set = models.ForeignKey(MDBMotifSet)
+    annotation = models.TextField(null = True)
+    short_annotation = models.TextField(null = True)
+    comment = models.TextField(null = True)
     # todo: add metadata
 
 class MDBMotifInstance(models.Model):
     motif = models.ForeignKey(MDBMotif)
     feature = models.ForeignKey(Feature)
     probability = models.FloatField(null = True)
-    annotation = models.TextField(null = True)
-
+    
