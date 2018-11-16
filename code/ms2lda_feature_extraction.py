@@ -244,6 +244,8 @@ class Loader(object):
         if self.id_field and self.csv_id_col: # if the IDs are provided, we match by that
             print("IDs provided ({},{}), using them to match".format(self.id_field,self.csv_id_col))
             match_by_id = True
+            print(featid)
+            print(len(featid_ms1_dict))
         else:
             print("IDs not provided, matching on m/z, rt")
             match_by_id = False
