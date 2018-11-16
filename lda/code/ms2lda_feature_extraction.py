@@ -1419,6 +1419,7 @@ class LoadMGF(Loader):
                             if key in ["featureid", "feature_id"]:
                                 featid = val
                                 temp_metadata['featid'] = val
+                                temp_metadata[key] = val
 
                             elif key == "rtinseconds":
                                 # val = float(val) if isinstance(val, float) else None
