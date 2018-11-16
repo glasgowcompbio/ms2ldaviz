@@ -237,6 +237,7 @@ class VariationalLDA(object):
     def _add_exact_fixed_topics(self,fixed_topics):
         # first add any missing words
         word_pos = max(self.word_index.values())+1
+
         for topic,spectrum in fixed_topics.items():
             for word in spectrum:
                 if not word in self.word_index:
