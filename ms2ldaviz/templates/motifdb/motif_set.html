@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block title %}Welcome to motifDB{% endblock %}
+
+{% block head_block %}
+    <style>
+    </style>
+{% endblock %}
+
+{% block body_block %}
+
+    <h4>{{motif_set.name}}</h4>
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table class="table" id="motiftable">
+                        <thead>
+                        <tr>
+                            <th>Motif</th>
+                            <th>Annotation</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for motif in motifs %}
+                            <tr>
+                                <td>{{ motif.name }}</td>
+                                <td>{{ motif.annotation }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js_block %}
+
+<script>
+    $( function() {
+        $( "#accordion" ).accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+    } );
+    $( function() {
+        $( "#accordion2" ).accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+    } );
+    $( function() {
+        $( "#accordion3" ).accordion({
+            collapsible: true,
+            heightStyle: "content",
+            active: false
+        });
+    } );
+    $( function() {
+        $( "#tabs" ).tabs();
+    } );
+</script>
+
+{% endblock %}
