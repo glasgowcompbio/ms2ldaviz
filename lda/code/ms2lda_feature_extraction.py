@@ -232,6 +232,10 @@ class Loader(object):
             if self.id_field and (self.id_field.lower() in v):
                 featid = v[self.id_field.lower()]
                 featid_ms1_dict[featid] = doc_ms1[k]
+            else:
+                print(self.id_field)
+                print(v)
+                return
 
         ## build ms1_ms2 dict, to make searching O(1) in the following loop
         ## key: ms1 object
@@ -244,8 +248,6 @@ class Loader(object):
         if self.id_field and self.csv_id_col: # if the IDs are provided, we match by that
             print("IDs provided ({},{}), using them to match".format(self.id_field,self.csv_id_col))
             match_by_id = True
-            print(featid)
-            print(len(featid_ms1_dict))
         else:
             print("IDs not provided, matching on m/z, rt")
             match_by_id = False
