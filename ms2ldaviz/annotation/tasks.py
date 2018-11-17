@@ -4,7 +4,7 @@ import pandas as pd
 from keras.models import load_model
 
 from basicviz.models import Document, FeatureInstance
-from models import SubstituentTerm, SubstituentInstance
+from annotation.models import SubstituentTerm, SubstituentInstance
 from ms2ldaviz.celery_tasks import app
 
 
@@ -24,7 +24,7 @@ def predict_substituent_terms(experiment_id):
     for doc in documents:
         feature_instances = FeatureInstance.objects.filter(document__id=doc.id)
         for feature_instance in feature_instances:
-            mass = feature_instance.feature.name.split("_")[1]
+            mass = float(feature_instance.feature.name.split("_")[1])
             intensity = feature_instance.intensity
 
             # Populate the dataframe using each document's name to place data in the correct row.
