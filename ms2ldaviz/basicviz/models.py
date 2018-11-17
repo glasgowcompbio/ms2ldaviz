@@ -282,7 +282,7 @@ class FeatureInstance(models.Model):
 
 class Mass2Motif(models.Model):
     name = models.CharField(max_length=32)
-    experiment = models.ForeignKey(Experiment)
+    experiment = models.ForeignKey(Experiment,null=True)
     metadata = models.CharField(max_length=1024 * 1024, null=True)
 
     linkmotif = models.ForeignKey('Mass2Motif',null = True)

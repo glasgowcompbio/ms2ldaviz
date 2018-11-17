@@ -3,11 +3,13 @@ import os
 import sys
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings_simon")
 
+
+
 from django.db import transaction
 import django
 django.setup()
 
-import glob
+import glob,jsonpickle
 
 from motifdb.models import *
 from basicviz.models import *
@@ -30,15 +32,16 @@ if __name__ == '__main__':
                 print metadata[motif]
                 
                 m,_ = MDBMotif.objects.get_or_create(motif_set = mbs,name = motif)
-                m.annotation = metadata[motif]['annotation']
-                m.comment = metadata[motif]['comment']
-                m.short_annotation = metadata[motif]['short_annotation']
+                md = metadata[motif]
+                m.metadata = jsonpickle.encode(md)
+                # m.annotation = metadata[motif]['annotation']
+                # m.comment = metadata[motif]['comment']
+                # m.short_annotation = metadata[motif]['short_annotation']
                 m.save()
                 
                 for feature,probability in spec.items():
                     f,_ = Feature.objects.get_or_create(name = feature,featureset = fs)
-                    a,_ = MDBMotifInstance.objects.get_or_create(feature = f,motif = m)
-                    a.probability = probability
+                    a,_ = Mass2MotifInstance.objects.get_or_create(feature = f,mass2motif = m,probability = probability)
                     a.save()
             
 

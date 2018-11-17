@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.shortcuts import render
 
 from motifdb.models import *
+from basicviz.models import *   
 
 # Create your views here.
 def index(request):
@@ -25,21 +26,21 @@ def motif(request,motif_id):
     motif = MDBMotif.objects.get(id = motif_id)
     context_dict = {}
     context_dict['motif'] = motif
-    features = motif.mdbmotifinstance_set.all().order_by('-probability')
+    features = motif.mass2motifinstance_set.all().order_by('-probability')
     context_dict['features'] = features
 
     maxp = 1.0
 
     jcamp = '##TITLE={} (fragments)'.format(motif.name)
     jcamp+='\n##XUNITS= M/Z\n##YUNITS= RELATIVE ABUNDANCE\n'
-    jcamp+= '##BASE PEAK INTENSITY = {}\n'.format(maxp)
+    jcamp+= '##BASE PEAK INTENSITY= {}\n'.format(maxp)
     jcamp+='##PEAK TABLE= (XY..XY)\n'
-
+    jcamp+='0,1\n'
     jcamp_loss = '##TITLE={} (losses)'.format(motif.name)
     jcamp_loss+='\n##XUNITS= M/Z\n##YUNITS= RELATIVE ABUNDANCE\n'
-    jcamp_loss += '##BASE PEAK INTENSITY = {}\n'.format(maxp)
+    jcamp_loss += '##BASE PEAK INTENSITY= {}\n'.format(maxp)
     jcamp_loss+='##PEAK TABLE= (XY..XY)\n'
-
+    jcamp_loss+='0,1\n'
     for f in features:
         if f.feature.name.startswith('fragment'):
             mz = float(f.feature.name.split('_')[1])
