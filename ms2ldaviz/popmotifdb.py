@@ -41,6 +41,9 @@ if __name__ == '__main__':
                 
                 for feature,probability in spec.items():
                     f,_ = Feature.objects.get_or_create(name = feature,featureset = fs)
+                    # delete any old ones
+                    a = Mass2Motif.object.filter(feature = f, mass2motif = m)
+                    a.delete()
                     a,_ = Mass2MotifInstance.objects.get_or_create(feature = f,mass2motif = m,probability = probability)
                     a.save()
             
