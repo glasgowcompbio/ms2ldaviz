@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import jsonpickle
+
 from django.db import models
 
 from basicviz.models import BVFeatureSet,Feature,Mass2Motif
@@ -21,6 +23,12 @@ class MDBMotif(Mass2Motif):
     def save(self,*args,**kwargs):
         super(MDBMotif,self).save(*args,**kwargs)
 
+
+    def get_comment(self):
+        md = jsonpickle.decode(super(MDBMotif,self).metadata)
+        return md.get('comment',None)
+
+    comment = property(get_comment)
 # class MDBMotifInstance(models.Model):
 #     motif = models.ForeignKey(MDBMotif)
 #     feature = models.ForeignKey(Feature)
