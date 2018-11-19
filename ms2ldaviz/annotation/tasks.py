@@ -23,12 +23,14 @@ def predict_substituent_terms(experiment_id):
 
     for doc in documents:
         feature_instances = FeatureInstance.objects.filter(document__id=doc.id)
+        # get the mass and convert to nearest int bin e.g. mass 2.9 will be put in bin 2
         for feature_instance in feature_instances:
             mass = float(feature_instance.feature.name.split("_")[1])
+            mass_bin = (int(mass) // BIN_SIZE) - 1
             intensity = feature_instance.intensity
 
             # Populate the dataframe using each document's name to place data in the correct row.
-            intensities.at[doc.name, mass] = intensity
+            intensities.at[doc.name, mass_bin] = intensity
 
     np_matrix = intensities.values
     np_index = intensities.index
