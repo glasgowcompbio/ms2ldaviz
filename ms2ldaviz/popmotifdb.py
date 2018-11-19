@@ -14,10 +14,10 @@ import glob,jsonpickle
 from motifdb.models import *
 from basicviz.models import *
 if __name__ == '__main__':
-    dbpath = '/Users/simon/git/motifdb/motifs'
+    dbpath = '/home/simon/git/motifdb/motifs'
     motif_sets = glob.glob(dbpath+os.sep + '*')
 
-    sys.path.append('/Users/simon/git/motifdb/code/utilities')
+    sys.path.append('/home/simon/git/motifdb/code/utilities')
     
     from motifdb_loader import load_db
 
@@ -42,7 +42,7 @@ if __name__ == '__main__':
                 for feature,probability in spec.items():
                     f,_ = Feature.objects.get_or_create(name = feature,featureset = fs)
                     # delete any old ones
-                    a = Mass2Motif.object.filter(feature = f, mass2motif = m)
+                    a = Mass2MotifInstance.objects.filter(feature = f, mass2motif = m)
                     a.delete()
                     a,_ = Mass2MotifInstance.objects.get_or_create(feature = f,mass2motif = m,probability = probability)
                     a.save()
