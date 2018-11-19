@@ -21,6 +21,9 @@ if __name__ == '__main__':
     
     from motifdb_loader import load_db
 
+
+    MDBMotifSet.objects.all().delete() # kill the old ones
+
     fs = BVFeatureSet.objects.get(name = 'binned_005')
     with transaction.atomic():
         for motif_set in motif_sets:
