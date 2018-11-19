@@ -379,6 +379,7 @@ def view_parents(request, motif_id):
     for dm in dm2m:
         doc = dm.document
         sub_terms = doc.substituentinstance_set.all()
+        print doc.experiment
         for s in sub_terms:
             if not s.subterm in term_counts:
                 term_counts[s.subterm] = 0
@@ -387,11 +388,15 @@ def view_parents(request, motif_id):
         # compute overall percentages for this experiment
         totals = {}
         n_docs = len(Document.objects.filter(experiment = experiment))
+        temp = {}
         for t in term_counts:
+            temp[t] = len(SubstituentInstance.objects.filter(document__experiment = experiment,subterm = t))
+            if temp[t] < term_counts[t]:
+                print t
             totals[t] = 100.0*len(SubstituentInstance.objects.filter(document__experiment = experiment,subterm = t))/n_docs
         terms = term_counts.keys()
         counts = term_counts.values()
-        perc = [100.0*v/len(dm2m) for v in term_counts.values()]
+        perc = [(100.0*v)/len(dm2m) for v in term_counts.values()]
         background = [totals[t] for t in term_counts.keys()]
         diff = [abs(p-b) for (p,b) in zip(perc,background)]
         context_dict['term_counts'] = sorted(zip(terms,counts,perc,background,diff),key = lambda x : x[1], reverse=True)

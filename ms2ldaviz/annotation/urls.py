@@ -6,4 +6,5 @@ urlpatterns = [
     url(r'^start_annotation/(?P<basicviz_experiment_id>\w+)/$',views.start_annotation, name='start_annotation'),
     url(r'^query/(?P<basicviz_experiment_id>\w+)/$', views.query_annotation, name='query_annotation'),
     url(r'^batch_query/(?P<db_name>\w+)/$', views.batch_query_annotation, name='batch_query_annotation'),
+    url(r'^predict_substituents/(?P<experiment_id>\w+)/$',views.term_prediction,name='term_prediction'),
 ]

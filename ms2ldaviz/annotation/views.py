@@ -1,6 +1,6 @@
 import json
 
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -11,6 +11,7 @@ from .lda_methods import annotate
 from .helpers import deprecated
 from .constants import ANNOTATE_DATABASES
 
+from annotation.tasks import predict_substituent_terms
 
 @login_required(login_url = '/registration/login/')
 def index(request):
@@ -205,3 +206,25 @@ def batch_query_annotation(request, db_name):
             response_data = {'status': 'ERROR: %s' % field_errors}
 
     return JsonResponse(response_data)
+
+def check_user(request, experiment):
+    user = request.user
+    try:
+        ue = UserExperiment.objects.get(experiment=experiment, user=user)
+        return ue.permission
+    except:
+        # try the public experiments
+        e = PublicExperiments.objects.filter(experiment = experiment)
+        if len(e) > 0:
+            return "view"
+        else:
+            # User can't see this one
+            return None
+
+@login_required
+def term_prediction(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    if not check_user(request, experiment) == 'edit':
+        return HttpResponse("You do not have permission to perform this operation")
+    predict_substituent_terms.delay(experiment_id)
+    return redirect('/basicviz')
