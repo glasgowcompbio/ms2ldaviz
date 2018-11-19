@@ -42,7 +42,7 @@ def predict_substituent_terms(experiment_id):
     np_index = intensities.index
     x_train_spectra = np.log(np_matrix + 1)
 
-    model = load_model('/Users/simon/TempStuff/saved_substituents_classifier_model.h5')
+    model = load_model('/home/classyfire/saved_substituents_classifier_model.h5')
     predicted = model.predict(x_train_spectra)
 
     print len(predicted),len(documents)
@@ -51,7 +51,7 @@ def predict_substituent_terms(experiment_id):
     predicted_substituents = np.zeros(predicted.shape)
     predicted_substituents[predicted > 0.8] = 1
 
-    legend_all = pd.read_csv("/Users/simon/TempStuff/filtered_top_substituents_legend.txt", names=["name"])
+    legend_all = pd.read_csv("/home/classyfire/filtered_top_substituents_legend.txt", names=["name"])
     legends = legend_all["name"].values.tolist()
     
     sub_terms = SubstituentTerm.objects.all()
