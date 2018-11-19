@@ -30,7 +30,6 @@ def predict_substituent_terms(experiment_id):
             # Populate the dataframe using each document's name to place data in the correct row.
             intensities.at[doc.name, mass] = intensity
 
-    # Convert populated dataframe into a numpy array for use by neural networks.
     np_matrix = intensities.values
     np_index = intensities.index
     x_train_spectra = np.log(np_matrix + 1)
@@ -38,6 +37,7 @@ def predict_substituent_terms(experiment_id):
     model = load_model('saved_substituents_classifier_model.h5')
     predicted = model.predict(x_train_spectra)
 
+    # turn the probabilities into 0 and 1
     predicted_substituents = np.zeros(predicted.shape)
     predicted_substituents[predicted > 0.8] = 1
 
