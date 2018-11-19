@@ -12,6 +12,10 @@ class MDBMotifSet(models.Model):
     name = models.CharField(max_length=124,null=False)
     description = models.TextField(null = True)
     featureset = models.ForeignKey(BVFeatureSet,null = True)
+    def __str__(self):
+        return self.name
+    def __repr__(self):
+        return self.name
 
 class MDBMotif(Mass2Motif):
     motif_set = models.ForeignKey(MDBMotifSet)

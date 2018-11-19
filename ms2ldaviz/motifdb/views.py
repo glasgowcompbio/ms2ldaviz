@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 
 from motifdb.models import *
 from basicviz.models import *   
+
+from motifdb.forms import MatchMotifDBForm
+from motifdb.tasks import start_motif_matching_task
 
 # Create your views here.
 def index(request):
@@ -54,3 +57,22 @@ def motif(request,motif_id):
     context_dict['jcamp'] = jcamp
     context_dict['jcamp_loss'] = jcamp_loss
     return render(request,'motifdb/motif.html',context_dict)
+
+def start_motif_matching(request, experiment_id):
+    context_dict = {}
+    experiment = Experiment.objects.get(id=experiment_id)
+    context_dict['experiment'] = experiment
+    if request.method == 'POST':
+        match_motif_form = MatchMotifDBForm(request.POST)
+        if match_motif_form.is_valid():
+            motif_set = match_motif_form.cleaned_data['motif_set']
+            motif_set_id = motif_set.id
+            minimum_score_to_save = float(match_motif_form.cleaned_data['min_score_to_save'])
+            start_motif_matching_task.delay(experiment_id,motif_set_id,minimum_score_to_save)
+            # match_motifs.delay(experiment.id, base_experiment_id, min_score_to_save=minimum_score_to_save)
+            # match_motifs_set.delay(experiment.id,base_experiment.id, min_score_to_save = minimum_score_to_save)
+            return redirect('/basicviz/manage_motif_matches/{}'.format(experiment_id))
+    else:
+        match_motif_form = MatchMotifDBForm()
+    context_dict['match_motif_form'] = match_motif_form
+    return render(request, 'motifdb/start_match_motifs.html', context_dict)

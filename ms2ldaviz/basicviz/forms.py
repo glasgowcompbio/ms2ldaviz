@@ -4,6 +4,7 @@ from django.db.models import Q
 
 from basicviz.constants import AVAILABLE_OPTIONS
 from basicviz.models import SystemOptions, Experiment, UserExperiment, BVFeatureSet, PublicExperiments
+from motifdb.models import MDBMotifSet
 
 
 class DocFilterForm(forms.Form):
