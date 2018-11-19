@@ -30,6 +30,8 @@ from basicviz.views import index as basicviz_index
 from ms1analysis.models import Analysis, AnalysisResult, AnalysisResultPlage
 from basicviz.constants import EXPERIMENT_STATUS_CODE
 
+from motifdb.views import motif as db_view_motif
+from motifdb.models import MDBMotif
 
 def check_user(request, experiment):
     user = request.user
@@ -299,8 +301,13 @@ def get_doc_context_dict(document):
 
 # @login_required(login_url='/registration/login/')
 def view_parents(request, motif_id):
-    motif = Mass2Motif.objects.get(id=motif_id)
+    # use the get_subclass method instead of standard get
+    motif = Mass2Motif.objects.get_subclass(id=motif_id)
+    print type(motif)
+    if type(motif) == MDBMotif:
+        return redirect('/motifdb/motif/{}'.format(motif_id))
     experiment = motif.experiment
+
     if not check_user(request, experiment):
         return HttpResponse("You don't have permission to access this page")
     print 'Motif metadata', motif.metadata

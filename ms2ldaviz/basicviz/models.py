@@ -7,6 +7,7 @@ from django.conf import settings
 
 from .constants import EXPERIMENT_STATUS_CODE,EXPERIMENT_TYPE, EXPERIMENT_DECOMPOSITION_SOURCE, EXPERIMENT_MS2_FORMAT
 
+from model_utils.managers import InheritanceManager
 
 # Create your models here.
 class MultiFileExperiment(models.Model):
@@ -281,8 +282,9 @@ class FeatureInstance(models.Model):
 
 
 class Mass2Motif(models.Model):
+    objects = InheritanceManager()
     name = models.CharField(max_length=32)
-    experiment = models.ForeignKey(Experiment)
+    experiment = models.ForeignKey(Experiment,null=True)
     metadata = models.CharField(max_length=1024 * 1024, null=True)
 
     linkmotif = models.ForeignKey('Mass2Motif',null = True)
