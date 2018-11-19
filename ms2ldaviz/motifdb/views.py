@@ -33,14 +33,14 @@ def motif(request,motif_id):
 
     jcamp = '##TITLE={} (fragments)'.format(motif.name)
     jcamp+='\n##XUNITS= M/Z\n##YUNITS= RELATIVE ABUNDANCE\n'
-    jcamp+= '##BASE PEAK INTENSITY= {}\n'.format(maxp)
+    # jcamp+= '##BASE PEAK INTENSITY= {}\n'.format(maxp)
     jcamp+='##PEAK TABLE= (XY..XY)\n'
-    jcamp+='0,1\n'
+    # jcamp+='0,1\n'
     jcamp_loss = '##TITLE={} (losses)'.format(motif.name)
     jcamp_loss+='\n##XUNITS= M/Z\n##YUNITS= RELATIVE ABUNDANCE\n'
-    jcamp_loss += '##BASE PEAK INTENSITY= {}\n'.format(maxp)
+    # jcamp_loss += '##BASE PEAK INTENSITY= {}\n'.format(maxp)
     jcamp_loss+='##PEAK TABLE= (XY..XY)\n'
-    jcamp_loss+='0,1\n'
+    # jcamp_loss+='0,1\n'
     for f in features:
         if f.feature.name.startswith('fragment'):
             mz = float(f.feature.name.split('_')[1])
