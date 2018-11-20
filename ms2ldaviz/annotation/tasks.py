@@ -74,9 +74,8 @@ def predict_substituent_terms(experiment_id):
                     else:
                         subterm = SubstituentTerm.objects.get_or_create(name=term)[0]
                         sub_term_dict[term] = subterm
-                    subintance = SubstituentInstance.objects.get_or_create(subterm=subterm, document=document)[0]
+                    subintance = SubstituentInstance.objects.get_or_create(subterm=subterm, document=document, source="Predicted")[0]
                     subintance.probability = probability
-                    subintance.source = "Predicted"
                     subintance.save()
 
 
