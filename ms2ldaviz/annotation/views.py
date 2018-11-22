@@ -222,6 +222,25 @@ def check_user(request, experiment):
             # User can't see this one
             return None
 
+
+def start_term_prediction(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    if not check_user(request, experiment) == 'edit':
+        return HttpResponse("You do not have permission to perform this operation")
+    existing_terms = SubstituentInstance.objects.filter(document__experiment = experiment,source = "Predicted")
+    context_dict = {}
+    context_dict['experiment'] = experiment
+    context_dict['n_existing_terms'] = len(existing_terms)
+    return render(request,'annotation/start_term_prediction.html',context_dict)
+
+def delete_predictions(request,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    if not check_user(request, experiment) == 'edit':
+        return HttpResponse("You do not have permission to perform this operation")
+    existing_terms = SubstituentInstance.objects.filter(document__experiment = experiment,source = "Predicted")
+    existing_terms.delete()
+    return redirect('/annotation/start_term_prediction/{}'.format(experiment_id))
+
 @login_required
 def term_prediction(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
