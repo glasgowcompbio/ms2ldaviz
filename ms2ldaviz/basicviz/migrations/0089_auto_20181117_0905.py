@@ -13,10 +13,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='mass2motif',
-            name='supermotif_ptr',
-        ),
         migrations.AddField(
             model_name='mass2motif',
             name='id',
