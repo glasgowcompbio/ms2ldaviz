@@ -8,6 +8,7 @@ django-grappelli==2.12.1
 django-ipware==2.1.0
 django-jfu==2.0.9
 django-markdown2==0.3.1
+django-model-utils==3.1.2
 jsonpickle==1.0
 keras==2.2.2
 kombu==4.2.1
