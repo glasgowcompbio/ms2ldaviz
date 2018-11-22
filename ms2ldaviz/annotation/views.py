@@ -12,6 +12,7 @@ from .helpers import deprecated
 from .constants import ANNOTATE_DATABASES
 
 from annotation.tasks import predict_substituent_terms
+from annotation.models import SubstituentInstance,SubstituentTerm
 
 @login_required(login_url = '/registration/login/')
 def index(request):
@@ -228,3 +229,30 @@ def term_prediction(request,experiment_id):
         return HttpResponse("You do not have permission to perform this operation")
     predict_substituent_terms.delay(experiment_id)
     return redirect('/basicviz')
+
+def explore_terms(request,experiment_id):
+    context_dict = {}
+    experiment = Experiment.objects.get(id = experiment_id)
+    context_dict['experiment'] = experiment
+
+    terms = SubstituentInstance.objects.filter(document__experiment = experiment)
+    term_counts = {}
+    for term in terms:
+        if term.subterm in term_counts:
+            term_counts[term.subterm] += 1
+        else:
+            term_counts[term.subterm] = 1
+    context_dict['term_counts'] = list(zip(term_counts.keys(),term_counts.values()))
+    return render(request,'annotation/explore_terms.html',context_dict)
+
+
+def list_docs_for_term(request,experiment_id,term_id):
+    context_dict = {}
+    experiment = Experiment.objects.get(id = experiment_id)
+    context_dict['experiment'] = experiment
+    term = SubstituentTerm.objects.get(id = term_id)
+    terms = SubstituentInstance.objects.filter(document__experiment = experiment,subterm = term)
+    context_dict['term_instances'] = terms
+    context_dict['term'] = term
+    return render(request,'annotation/list_docs_for_term.html',context_dict)
+    
