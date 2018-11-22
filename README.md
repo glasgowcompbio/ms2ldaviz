@@ -51,6 +51,16 @@ cd ms2ldaviz
 ./run_gensim.py insert myexp.ldaresult.json stefanv myexp
 ```
 
+## Run gensim with faster insert
+
+This will exclude the lda info from the json file and write/import a gensim formatted lda dataset.
+
+```bash
+./run_gensim.py corpus -f mgf myexp.mgf myexp.corpus.json
+./run_gensim.py gensim --ldaformat gensim myexp.corpus.json myexp.lda.gensim
+./run_gensim.py insert_gensim myexp.corpus.json myexp.lda.gensim stefanv myexp
+```
+
 # Update lda subtree
 
 The lda directory is a checkout of the https://github.com/sdrogers/lda repo, it can be synced using
