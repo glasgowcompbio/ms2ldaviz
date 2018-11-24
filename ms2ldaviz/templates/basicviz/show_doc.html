@@ -24,8 +24,8 @@
 
         .box {
             display: none;
-            padding: 10px;
-            margin: 10px;
+            padding: 0px;
+            margin: 0px;
         }
 
         a:hover + .box {
@@ -69,7 +69,6 @@
                     b.specs = fgSpecs;
                 }
             });
-
         }
         function showMol(id, molblock, fragatoms = "", type = "loss") {
             var viewer = new ChemDoodle.ViewerCanvas(id, 200, 150);
@@ -90,10 +89,9 @@
                     setColour(molecule, fragmentAtoms, 'black', 'red', false);
                 }
             }
-
             viewer.loadMolecule(molecule)
         }
-    </script>
+        </script>
 {% endblock %}
 
 
@@ -184,12 +182,12 @@
                         <tr>
                             <th>Name</th>
                             <th>Intensity</th>
-                            <th>Mass2Motif (Probability)</th>
+                            <th>Mass2Motif (prob)</th>
                             <th>MAGMa Substructure Annotation</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {% for feature,m2minstances,feature2subs, doc_mol in fm2m %}
+                        {% for feature,m2minstances,most_common_subs in fm2m %}
                             <tr>
                                 <td>{{ feature.feature.name }}</td>
                                 <td>{{ feature.intensity }}</td>
@@ -199,23 +197,23 @@
                                     {% endfor %}
                                 </td>
                                 <td>
-                                    {% for feature2sub in feature2subs %}
+                                    {% for smiles,count,docs_and_subs in most_common_subs %}
                                         <div class="floatbar">
                                             <a href="#" onclick="return false;">
-                                                {{ feature2sub.sub.smiles }}
+                                                {{ smiles }} ({{ count }})
                                             </a>
-                                            {% if feature2sub.sub.smiles %}
                                                 <div class="box">
-                                                    <script type="text/javascript">
-                                                        var canvasId = Date.now(); // random id
-                                                        {#var molblock = '{{ feature2sub.sub.mol_string | escapejs }}';#}
-                                                        var molblock = '{{ doc_mol | escapejs }}';
-                                                        var fragatoms = '{{ feature2sub.fragatoms | escapejs }}';
-                                                        var subType = '{{ feature2sub.sub_type | escapejs }}';
-                                                        showMol(canvasId, molblock, fragatoms, subType);
-                                                    </script>
+                                                    {% for mol, feature2sub in docs_and_subs|slice:":10"  %}
+                                                        <script type="text/javascript">
+                                                            var canvasId = Date.now(); // random id
+                                                            {#var molblock = '{{ feature2sub.sub.mol_string | escapejs }}';#}
+                                                            var molblock = '{{ mol.mol_string | escapejs }}';
+                                                            var fragatoms = '{{ feature2sub.fragatoms | escapejs }}';
+                                                            var subType = '{{ feature2sub.sub_type | escapejs }}';
+                                                            showMol(canvasId, molblock, fragatoms, subType);
+                                                        </script>
+                                                    {% endfor %}
                                                 </div>
-                                            {% endif %}
                                         </div>
                                     {% endfor %}
                                 </td>
@@ -225,31 +223,6 @@
                     </table>
                 </div>
             </div>
-        {% endif %}
-        {% if sub_terms %}
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <h4>Classyfire Substituent Terms</h4>
-                <table class="table" id="termtable">
-                    <thead>
-                    <tr>
-                        <th>Term Name</th>
-                        <th>Source</th>
-                        <th>Probability</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for term in sub_terms %}
-                        <tr>
-                            <td>{{term.subterm.name}}</td>
-                            <td>{{term.source}}</td>
-                            <td>{{term.probability}}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
         {% endif %}
     </div>
 
@@ -282,13 +255,7 @@
             ],
             "order": [[2, "desc"]],
         });
-        $('#termtable').DataTable({
-            dom: 'Bfrtip',
-            buttons: [
-                'csv',
-            ],
-            "order": [[0, "asc"]],
-        });
+
         load_parent('/basicviz/get_doc_topics/{{document.id}}');
 
     </script>
