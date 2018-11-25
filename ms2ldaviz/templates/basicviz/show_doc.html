@@ -188,11 +188,13 @@
                                     {{ original_experiment.name }}
                                 </a>
                             </strong>
-                            experiment. Only the top-5 substructures (highest counts across molecules in the original
+                            experiment. Only the top-5 substructures (highest counts across documents in the original
                             experiment) are listed.
+                            Hovering over each MAGMa substructure shows the plots of 10 random documents containing the substructure.
                         {% else %}
                             The column <strong>MAGMa Substructure Annotation</strong> shows substructures annotations
                             from <a href="https://github.com/NLeSC/MAGMa">MAGMa</a>.
+                            Hovering over each MAGMa substructure shows the plots of 10 random documents containing the substructure.
                         {% endif %}
                     </p>
                     <table class="table" id="parenttable">
@@ -218,7 +220,7 @@
                                     {% for smiles,count,docs_and_subs in most_common_subs %}
                                         <div class="floatbar">
                                             <a href="#" onclick="return false;">
-                                                {{ smiles }} ({{ count }})
+                                                {{ smiles }}{% if original_experiment %}({{ count }}){% endif %}
                                             </a>
                                                 <div class="box">
                                                     {% for mol, feature2sub in docs_and_subs|slice:":10"  %}
