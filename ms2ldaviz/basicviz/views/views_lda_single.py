@@ -285,6 +285,7 @@ def get_doc_context_dict(document):
     mass2motif_instances = get_docm2m_bydoc(document)
     context_dict['mass2motifs'] = mass2motif_instances
     feature_mass2motif_instances = []
+    original_experiment = None
     for feature_instance in features:
         if feature_instance.intensity > 0:
             m2m = FeatureMass2MotifInstance.objects.filter(featureinstance=feature_instance)
@@ -306,7 +307,8 @@ def get_doc_context_dict(document):
                 # if shared_feature.experiment.has_magma_annotation:
 
                 # get original docs having shared feature
-                original_docs = Document.objects.filter(experiment=shared_feature.experiment)
+                original_experiment = shared_feature.experiment
+                original_docs = Document.objects.filter(experiment=original_experiment)
 
                 # get the feature instances in the original docs having shared feature
                 original_feature_instances = FeatureInstance.objects.filter(feature=shared_feature,
@@ -338,6 +340,8 @@ def get_doc_context_dict(document):
             item = (feature_instance, m2m, most_common_subs, )
             feature_mass2motif_instances.append(item)
 
+    if original_experiment:
+        context_dict['original_experiment'] = original_experiment
     feature_mass2motif_instances = sorted(feature_mass2motif_instances, key=lambda x: x[0].intensity, reverse=True)
     context_dict['fm2m'] = feature_mass2motif_instances
     return context_dict

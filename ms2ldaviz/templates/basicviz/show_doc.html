@@ -174,8 +174,20 @@
                         The following table lists all features extracted from this fragmentation spectra --
                         alongside Mass2Motifs that explain these features at the threshold specified
                         in the <a href="/options/view_experiment_options/{{ experiment.id }}">experiment option</a>.
-                        The column <strong>MAGMa Substructure Annotation</strong> shows substructures linked to a feature
-                        annotated in this molecule using <a href="https://github.com/NLeSC/MAGMa">MAGMa</a>.
+                        {% if original_experiment %}
+                            The column <strong>MAGMa Substructure Annotation</strong> shows substructures
+                            annotations from <a href="https://github.com/NLeSC/MAGMa">MAGMa</a>
+                            based on the original
+                            <strong>
+                                <a href="/basicviz/summary/{{original_experiment.id}}">
+                                    {{ original_experiment.name }}
+                                </a>
+                            </strong>
+                            experiment. Only the top-5 substructures (highest counts across molecules) are listed.
+                        {% else %}
+                            The column <strong>MAGMa Substructure Annotation</strong> shows substructures annotations
+                            from <a href="https://github.com/NLeSC/MAGMa">MAGMa</a>.
+                        {% endif %}
                     </p>
                     <table class="table" id="parenttable">
                         <thead>
