@@ -342,6 +342,7 @@ def get_doc_context_dict(document):
 
     if original_experiment:
         context_dict['original_experiment'] = original_experiment
+    context_dict['experiment'] = experiment
     feature_mass2motif_instances = sorted(feature_mass2motif_instances, key=lambda x: x[0].intensity, reverse=True)
     context_dict['fm2m'] = feature_mass2motif_instances
     return context_dict

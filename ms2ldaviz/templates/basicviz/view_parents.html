@@ -99,7 +99,12 @@
 {% endblock %}
 
 {% block body_block %}
-	<h3>Mass2Motif: {{mass2motif.name}} ({{mass2motif.experiment.name}})</h3>
+	<h3>Mass2Motif: {{mass2motif.name}}</h3>
+    <h6>
+        <a href="/basicviz/summary/{{experiment.id}}">
+            Return to experiment {{ experiment.name }}
+        </a>
+    </h6>
     <div class="panel-group">
         {% if metadata_form %}
             <div class="panel panel-default">

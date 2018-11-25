@@ -98,6 +98,11 @@
 {% block body_block %}
     {% if document %}
         <h3>{{ document.name }} -- {{ document.display_name }}</h3>
+        <h6>
+            <a href="/basicviz/summary/{{experiment.id}}">
+                Return to experiment {{ experiment.name }}
+            </a>
+        </h6>
     {% endif %}
 
     <div class="panel-group">
