@@ -36,7 +36,11 @@
         <h5>Pending Experiments</h5>
         <p>The following experiments have been created but are still being processed.
         {% for experiment in pending_experiments %}
-            <li><b>{{experiment.name}}</b> ({{experiment.description}})</li>
+            <li>
+                <strong>{{experiment.name}}</strong> ({{experiment.description}})
+                <a href="/basicviz/show_log_file/{{experiment.id}}">[view log]</a>
+                <a href="/basicviz/delete/{{experiment.id}}">[delete]</a>
+            </li>
         {% endfor %}
         </ul>
     {% endif %}
