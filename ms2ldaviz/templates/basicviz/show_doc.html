@@ -188,8 +188,7 @@
                                     {{ original_experiment.name }}
                                 </a>
                             </strong>
-                            experiment. Only the top-5 substructures (highest counts across documents in the original
-                            experiment) are listed.
+                            experiment.
                             Hovering over each MAGMa substructure shows the plots of 10 random documents containing the substructure.
                         {% else %}
                             The column <strong>MAGMa Substructure Annotation</strong> shows substructures annotations
@@ -207,7 +206,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for feature,m2minstances,most_common_subs in fm2m %}
+                        {% for feature,m2minstances,most_common_subs,subs_count in fm2m %}
                             <tr>
                                 <td>{{ feature.feature.name }}</td>
                                 <td>{{ feature.intensity }}</td>
@@ -217,25 +216,61 @@
                                     {% endfor %}
                                 </td>
                                 <td>
-                                    {% for smiles,count,docs_and_subs in most_common_subs %}
-                                        <div class="floatbar">
-                                            <a href="#" onclick="return false;">
-                                                {{ smiles }}{% if original_experiment %}({{ count }}){% endif %}
-                                            </a>
-                                                <div class="box">
-                                                    {% for mol, feature2sub in docs_and_subs|slice:":10"  %}
-                                                        <script type="text/javascript">
-                                                            var canvasId = Date.now(); // random id
-                                                            {#var molblock = '{{ feature2sub.sub.mol_string | escapejs }}';#}
-                                                            var molblock = '{{ mol.mol_string | escapejs }}';
-                                                            var fragatoms = '{{ feature2sub.fragatoms | escapejs }}';
-                                                            var subType = '{{ feature2sub.sub_type | escapejs }}';
-                                                            showMol(canvasId, molblock, fragatoms, subType);
-                                                        </script>
-                                                    {% endfor %}
-                                                </div>
+                                    <ul>
+                                        {% for smiles,count,docs_and_subs in most_common_subs %}
+                                            {% if forloop.counter0 < top_n %}
+                                                <li>
+                                                    <div class="floatbar">
+                                                        <a href="#" onclick="return false;">
+                                                            {{ smiles }}{% if original_experiment %}({{ count }}){% endif %}
+                                                        </a>
+                                                        <div class="box">
+                                                            {% for mol, feature2sub in docs_and_subs|slice:":10"  %}
+                                                                <script type="text/javascript">
+                                                                    var canvasId = Date.now(); // random id
+                                                                    {#var molblock = '{{ feature2sub.sub.mol_string | escapejs }}';#}
+                                                                    var molblock = '{{ mol.mol_string | escapejs }}';
+                                                                    var fragatoms = '{{ feature2sub.fragatoms | escapejs }}';
+                                                                    var subType = '{{ feature2sub.sub_type | escapejs }}';
+                                                                    showMol(canvasId, molblock, fragatoms, subType);
+                                                                </script>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                    {% if subs_count >= top_n %}
+                                        <a data-toggle="collapse" href="#collapse-{{ motif_feature.feature.id }}">Show More</a>
+                                        <div id="collapse-{{ motif_feature.feature.id }}" class="collapse">
+                                            <ul>
+                                                {% for smiles,count,docs_and_subs in most_common_subs %}
+                                                    {% if forloop.counter0 >= top_n %}
+                                                        <li>
+                                                            <div class="floatbar">
+                                                                <a href="#" onclick="return false;">
+                                                                    {{ smiles }}{% if original_experiment %}({{ count }}){% endif %}
+                                                                </a>
+                                                                <div class="box">
+                                                                    {% for mol, feature2sub in docs_and_subs|slice:":10"  %}
+                                                                        <script type="text/javascript">
+                                                                            var canvasId = Date.now(); // random id
+                                                                            {#var molblock = '{{ feature2sub.sub.mol_string | escapejs }}';#}
+                                                                            var molblock = '{{ mol.mol_string | escapejs }}';
+                                                                            var fragatoms = '{{ feature2sub.fragatoms | escapejs }}';
+                                                                            var subType = '{{ feature2sub.sub_type | escapejs }}';
+                                                                            showMol(canvasId, molblock, fragatoms, subType);
+                                                                        </script>
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </ul>
                                         </div>
-                                    {% endfor %}
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}

@@ -332,12 +332,12 @@ def get_doc_context_dict(document):
                 smiles_docs_count[smiles] += n_docs
 
             most_common_subs = []
-            for smiles, count in smiles_docs_count.most_common(5):
+            for smiles, count in smiles_docs_count.most_common():
                 docs = smiles_to_docs[smiles]
                 subs = [docs_to_subs[d] for d in docs]
                 together = zip(docs, subs)
                 most_common_subs.append((smiles, count, together, ))
-            item = (feature_instance, m2m, most_common_subs, )
+            item = (feature_instance, m2m, most_common_subs, len(most_common_subs), )
             feature_mass2motif_instances.append(item)
 
     if original_experiment:
@@ -345,6 +345,7 @@ def get_doc_context_dict(document):
     context_dict['experiment'] = experiment
     feature_mass2motif_instances = sorted(feature_mass2motif_instances, key=lambda x: x[0].intensity, reverse=True)
     context_dict['fm2m'] = feature_mass2motif_instances
+    context_dict['top_n'] = 5 # show the top-5 magma annotations per feature initially
     return context_dict
 
 
@@ -374,11 +375,13 @@ def view_parents(request, motif_id):
         print 'Querying substructures of motif_feature_instance %s' % motif_feature_instance
         feature = motif_feature_instance.feature
         document_feature_instance = FeatureInstance.objects.filter(feature=feature, document__in=documents)
+        docs = set([x.document for x in document_feature_instance])
         subs = FeatureInstance2Sub.objects.filter(feature__in=document_feature_instance)
-        most_common = most_common_subs(subs, 5) # filter top-5
-        motif_features_subs.append((motif_feature_instance, most_common, ))
+        most_common = most_common_subs(subs, docs) # sort subs by most-common
+        motif_features_subs.append((motif_feature_instance, most_common, len(most_common), ))
 
     context_dict['motif_features_subs'] = motif_features_subs
+    context_dict['top_n'] = 5 # show the top-5 magma annotations per feature initially
     context_dict['total_prob'] = total_prob
     context_dict['experiment'] = experiment
 
@@ -452,10 +455,11 @@ def view_parents(request, motif_id):
     return render(request, 'basicviz/view_parents.html', context_dict)
 
 
-# get N most common substuctures
-def most_common_subs(subs, N):
+# sort substuctures by most common
+def most_common_subs(subs, docs):
     subs_smiles = []
     subs_types = {}
+    seen_docs = set()
     for s in subs:
         smile = s.sub.smiles
         mol_string = s.sub.mol_string
@@ -463,12 +467,17 @@ def most_common_subs(subs, N):
         key = (smile, mol_string, )
         subs_smiles.append(key)
         subs_types[key] = sub_type
+        # also track the documents containing this feature instance and annotated with some magma substructure
+        seen_docs.add(s.feature.document)
     subs_counter = Counter(subs_smiles)  # count most common substructures
     most_common = []
-    for key, count in subs_counter.most_common(N):
+    for key, count in subs_counter.most_common():
         smile, mol_string = key
         sub_type = subs_types[key]
         most_common.append((smile, count, mol_string, sub_type))
+    # add the count for documents which are not annotated with magma substructures
+    num_unseen_docs = len(docs - seen_docs)
+    most_common.append(('None', num_unseen_docs, '', ''))
     return most_common
 
 
