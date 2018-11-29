@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+
+import json
 
 from motifdb.models import *
 from basicviz.models import *   
@@ -76,3 +79,41 @@ def start_motif_matching(request, experiment_id):
         match_motif_form = MatchMotifDBForm()
     context_dict['match_motif_form'] = match_motif_form
     return render(request, 'motifdb/start_match_motifs.html', context_dict)
+
+def list_motifsets(request):
+    motif_sets = MDBMotifSet.objects.all()
+    output = {m.name:m.id for m in motif_sets}
+    return HttpResponse(json.dumps(output), content_type='application/json') 
+
+def get_motifset(request,motifset_id):
+    motifset = MDBMotifSet.objects.get(id = motifset_id)
+    motifs = MDBMotif.objects.filter(motif_set = motifset)
+    output_motifs = {}
+    for motif in motifs:
+        fis = Mass2MotifInstance.objects.filter(mass2motif = motif)
+        output_motifs[motif.name] = {}
+        for fi in fis:
+            output_motifs[motif.name][fi.feature.name] = fi.probability
+    return HttpResponse(json.dumps(output_motifs), content_type='application/json')
+
+@csrf_exempt
+def get_motifset_post(request):
+    motifset_id = int(request.POST['motifset_id'])
+    motifset = MDBMotifSet.objects.get(id = motifset_id)
+    motifs = MDBMotif.objects.filter(motif_set = motifset)
+    output_motifs = {}
+    for motif in motifs:
+        fis = Mass2MotifInstance.objects.filter(mass2motif = motif)
+        output_motifs[motif.name] = {}
+        for fi in fis:
+            output_motifs[motif.name][fi.feature.name] = fi.probability
+    return HttpResponse(json.dumps(output_motifs), content_type='application/json')
+
+def get_motifset_metadata(request,motifset_id):
+    motifset = MDBMotifSet.objects.get(id = motifset_id)
+    motifs = MDBMotif.objects.filter(motif_set = motifset)
+    output_motifs = {}
+    for motif in motifs:
+        md = jsonpickle.decode(motif.metadata)
+        output_motifs[motif.name] = md
+    return HttpResponse(json.dumps(output_motifs), content_type='application/json')
