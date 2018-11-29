@@ -1,7 +1,7 @@
 import csv
 import json
 
-from collections import Counter
+from collections import Counter, defaultdict
 import jsonpickle
 import networkx as nx
 import numpy as np
@@ -281,21 +281,71 @@ def get_doc_context_dict(document):
     context_dict = {}
     context_dict['features'] = features
     experiment = document.experiment
-    doc_m2m_threshold = get_option('doc_m2m_threshold', experiment=experiment)
 
     mass2motif_instances = get_docm2m_bydoc(document)
     context_dict['mass2motifs'] = mass2motif_instances
     feature_mass2motif_instances = []
-    for feature in features:
-        if feature.intensity > 0:
-            m2m = FeatureMass2MotifInstance.objects.filter(featureinstance=feature)
-            subs = FeatureInstance2Sub.objects.filter(feature=feature)
-            doc_mol = document.mol_string
-            item = (feature, m2m, subs, doc_mol)
+    original_experiment = None
+    for feature_instance in features:
+        if feature_instance.intensity > 0:
+            m2m = FeatureMass2MotifInstance.objects.filter(featureinstance=feature_instance)
+            smiles_to_docs = defaultdict(set)
+            docs_to_subs = {}
+
+            # if this experiment already has magma annotation, then we just get the magma annotations
+            # of the feature instances in this document. Otherwise we use the global feature to find
+            # the magma annotation from the original experiment that has the magma annotation
+            if experiment.has_magma_annotation:
+                subs = FeatureInstance2Sub.objects.filter(feature=feature_instance)
+                for sub in subs:
+                    smiles = sub.sub.smiles
+                    smiles_to_docs[smiles].add(document)
+                    docs_to_subs[document] = sub
+            else:
+                # get shared global feature
+                shared_feature = feature_instance.feature
+                # if shared_feature.experiment.has_magma_annotation:
+
+                # get original docs having shared feature
+                original_experiment = shared_feature.experiment
+                original_docs = Document.objects.filter(experiment=original_experiment)
+
+                # get the feature instances in the original docs having shared feature
+                original_feature_instances = FeatureInstance.objects.filter(feature=shared_feature,
+                                                                            document__in=original_docs)
+
+                # get magma subs from the original feature instances
+                subs = FeatureInstance2Sub.objects.filter(feature__in=original_feature_instances)
+                for sub in subs:
+                    smiles = sub.sub.smiles
+                    doc = sub.feature.document
+                    smiles_to_docs[smiles].add(sub.feature.document)
+                    docs_to_subs[doc] = sub
+
+            # count how many docs are found containing each magma substructure linked to this feature instance
+            # if the experiment has_magma_annotation, this should always be one
+            smiles_docs_count = Counter()
+            for smiles in smiles_to_docs:
+                n_docs = len(smiles_to_docs[smiles])
+                if experiment.has_magma_annotation:
+                    assert n_docs == 1
+                smiles_docs_count[smiles] += n_docs
+
+            most_common_subs = []
+            for smiles, count in smiles_docs_count.most_common():
+                docs = smiles_to_docs[smiles]
+                subs = [docs_to_subs[d] for d in docs]
+                together = zip(docs, subs)
+                most_common_subs.append((smiles, count, together, ))
+            item = (feature_instance, m2m, most_common_subs, len(most_common_subs), )
             feature_mass2motif_instances.append(item)
 
+    if original_experiment:
+        context_dict['original_experiment'] = original_experiment
+    context_dict['experiment'] = experiment
     feature_mass2motif_instances = sorted(feature_mass2motif_instances, key=lambda x: x[0].intensity, reverse=True)
     context_dict['fm2m'] = feature_mass2motif_instances
+    context_dict['top_n'] = 5 # show the top-5 magma annotations per feature initially
     return context_dict
 
 
@@ -325,11 +375,13 @@ def view_parents(request, motif_id):
         print 'Querying substructures of motif_feature_instance %s' % motif_feature_instance
         feature = motif_feature_instance.feature
         document_feature_instance = FeatureInstance.objects.filter(feature=feature, document__in=documents)
+        docs = set([x.document for x in document_feature_instance])
         subs = FeatureInstance2Sub.objects.filter(feature__in=document_feature_instance)
-        most_common = most_common_subs(subs, 5) # filter top-5
-        motif_features_subs.append((motif_feature_instance, most_common, ))
+        most_common = most_common_subs(subs, docs) # sort subs by most-common
+        motif_features_subs.append((motif_feature_instance, most_common, len(most_common), ))
 
     context_dict['motif_features_subs'] = motif_features_subs
+    context_dict['top_n'] = 5 # show the top-5 magma annotations per feature initially
     context_dict['total_prob'] = total_prob
     context_dict['experiment'] = experiment
 
@@ -379,6 +431,7 @@ def view_parents(request, motif_id):
     for dm in dm2m:
         doc = dm.document
         sub_terms = doc.substituentinstance_set.all()
+        print doc.experiment
         for s in sub_terms:
             if not s.subterm in term_counts:
                 term_counts[s.subterm] = 0
@@ -387,21 +440,26 @@ def view_parents(request, motif_id):
         # compute overall percentages for this experiment
         totals = {}
         n_docs = len(Document.objects.filter(experiment = experiment))
+        temp = {}
         for t in term_counts:
+            temp[t] = len(SubstituentInstance.objects.filter(document__experiment = experiment,subterm = t))
+            if temp[t] < term_counts[t]:
+                print t
             totals[t] = 100.0*len(SubstituentInstance.objects.filter(document__experiment = experiment,subterm = t))/n_docs
         terms = term_counts.keys()
         counts = term_counts.values()
-        perc = [100.0*v/len(dm2m) for v in term_counts.values()]
+        perc = [(100.0*v)/len(dm2m) for v in term_counts.values()]
         background = [totals[t] for t in term_counts.keys()]
         diff = [abs(p-b) for (p,b) in zip(perc,background)]
         context_dict['term_counts'] = sorted(zip(terms,counts,perc,background,diff),key = lambda x : x[1], reverse=True)
     return render(request, 'basicviz/view_parents.html', context_dict)
 
 
-# get N most common substuctures
-def most_common_subs(subs, N):
+# sort substuctures by most common
+def most_common_subs(subs, docs):
     subs_smiles = []
     subs_types = {}
+    seen_docs = set()
     for s in subs:
         smile = s.sub.smiles
         mol_string = s.sub.mol_string
@@ -409,12 +467,17 @@ def most_common_subs(subs, N):
         key = (smile, mol_string, )
         subs_smiles.append(key)
         subs_types[key] = sub_type
+        # also track the documents containing this feature instance and annotated with some magma substructure
+        seen_docs.add(s.feature.document)
     subs_counter = Counter(subs_smiles)  # count most common substructures
     most_common = []
-    for key, count in subs_counter.most_common(N):
+    for key, count in subs_counter.most_common():
         smile, mol_string = key
         sub_type = subs_types[key]
         most_common.append((smile, count, mol_string, sub_type))
+    # add the count for documents which are not annotated with magma substructures
+    num_unseen_docs = len(docs - seen_docs)
+    most_common.append(('None', num_unseen_docs, '', ''))
     return most_common
 
 

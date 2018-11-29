@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}Explore terms {% endblock %}
+
+{% block head_block %}
+    <link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+{% endblock %}
+
+{% block body_block %}
+
+<h4>Classyfire substituent terms for {{experiment.name}}</h4>
+<div class="panel-group">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <h5>Term frequencies</h5>
+            <table class="table" id="counttable">
+                <thead>
+                    <th>Term</th>
+                    <th>Molecule Count</th>
+                </thead>
+                <tbody>
+                    {% for term,count in term_counts %}
+                        <tr>
+                            <td><a href="/annotation/list_docs_for_term/{{experiment.id}}/{{term.id}}">{{term.name}}</a></td>
+                            <td>{{count}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js_block %}
+    <script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+    <script type="text/javascript">
+
+        $('#counttable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                'csv',
+            ],
+            "order": [[1, "desc"]],
+        });
+
+    </script>
+
+{% endblock %}

@@ -99,7 +99,12 @@
 {% endblock %}
 
 {% block body_block %}
-	<h3>Mass2Motif: {{mass2motif.name}} ({{mass2motif.experiment.name}})</h3>
+	<h3>Mass2Motif: {{mass2motif.name}}</h3>
+    <h6>
+        <a href="/basicviz/summary/{{experiment.id}}">
+            Return to experiment {{ experiment.name }}
+        </a>
+    </h6>
     <div class="panel-group">
         {% if metadata_form %}
             <div class="panel panel-default">
@@ -138,9 +143,10 @@
                     Mass2Motifs and their corresponding probabilities.
                     After thresholding to save the model, the total probability left in this motif is
                     {{total_prob}}.
-                    The column <strong>MAGMa Substructure Annotation</strong> shows substructures and their counts
-                    annotated by <a href="https://github.com/NLeSC/MAGMa">MAGMa</a> for
-                    all the documents linked above threshold to this motif in this experiment.
+                    The column <strong>MAGMa Substructure Annotation</strong> shows substructures and the counts
+                    of <a href="https://github.com/NLeSC/MAGMa">MAGMa</a> annotations for documents linked above
+                    threshold to this motif in this experiment.
+                    Hovering over each MAGMa substructure shows a plot of the substructure.
                 </p>
                     <table class='table' id='featuretable'>
                         <thead>
@@ -151,7 +157,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for motif_feature, subs in motif_features_subs %}
+                        {% for motif_feature, subs, subs_count in motif_features_subs %}
                             <tr>
                                 <td>
                                     <a href="/basicviz/mass2motif_feature/{{ motif_feature.id }}">
@@ -162,25 +168,55 @@
                                 <td>
                                     <ul>
                                         {% for sub, count, mol, sub_type in subs %}
-                                            <li>
-                                                <div class="floatbar">
-                                                    <a href="#" onclick="return false;">
-                                                        {{ sub }} ({{ count }})
-                                                    </a>
-                                                    {% if mol %}
-                                                        <div class="box">
-                                                            <script type="text/javascript">
-                                                                var canvasId = Date.now(); // random id
-                                                                var molblock = '{{ mol | escapejs }}';
-                                                                var subType = '{{ sub_type | escapejs }}';
-                                                                show_mol(canvasId, molblock, "", subType);
-                                                            </script>
-                                                        </div>
-                                                    {% endif %}
-                                                </div>
-                                            </li>
+                                            {% if forloop.counter0 < top_n %}
+                                                <li>
+                                                    <div class="floatbar">
+                                                        <a href="#" onclick="return false;">
+                                                            {{ sub }} ({{ count }})
+                                                        </a>
+                                                        {% if mol %}
+                                                            <div class="box">
+                                                                <script type="text/javascript">
+                                                                    var canvasId = Date.now(); // random id
+                                                                    var molblock = '{{ mol | escapejs }}';
+                                                                    var subType = '{{ sub_type | escapejs }}';
+                                                                    show_mol(canvasId, molblock, "", subType);
+                                                                </script>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </li>
+                                            {% endif %}
                                         {% endfor %}
                                     </ul>
+                                    {% if subs_count >= top_n %}
+                                        <a data-toggle="collapse" href="#collapse-{{ motif_feature.feature.id }}">Show More</a>
+                                        <div id="collapse-{{ motif_feature.feature.id }}" class="collapse">
+                                            <ul>
+                                                {% for sub, count, mol, sub_type in subs %}
+                                                    {% if forloop.counter0 >= top_n %}
+                                                        <li>
+                                                            <div class="floatbar">
+                                                                <a href="#" onclick="return false;">
+                                                                    {{ sub }} ({{ count }})
+                                                                </a>
+                                                                {% if mol %}
+                                                                    <div class="box">
+                                                                        <script type="text/javascript">
+                                                                            var canvasId = Date.now(); // random id
+                                                                            var molblock = '{{ mol | escapejs }}';
+                                                                            var subType = '{{ sub_type | escapejs }}';
+                                                                            show_mol(canvasId, molblock, "", subType);
+                                                                        </script>
+                                                                    </div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </li>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}

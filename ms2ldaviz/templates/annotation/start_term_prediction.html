@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}Explore terms {% endblock %}
+
+{% block head_block %}
+    <link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+{% endblock %}
+
+{% block body_block %}
+
+<h4>Classyfire term prediction for {{experiment.name}}</h4>
+<div class="panel-group">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <p>This tool enables you to predict the Classyfire substituent terms for the spectra in your dataset using a neural network.</p>
+            {% if n_existing_terms == 0 %}
+            {% else %}
+                <p>There are currently {{n_existing_terms}} predictions for your data. We reommend deleting these before you continue</p>
+                <p></p><a href="/annotation/delete_predictions/{{experiment.id}}" class="btn btn-block btn-danger" style="color:white;"><span class="glyphicon glyphicon-remove"></span>&nbsp;Delete terms</a></div>
+            {% endif %}
+            <p><a href="/annotation/predict_substituents/{{experiment.id}}" class = "btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-random"></span>&nbsp;Submit job</a></p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js_block %}
+    <script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+    <script type="text/javascript">
+
+        $('#doctable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                'csv',
+            ],
+        });
+
+    </script>
+
+{% endblock %}

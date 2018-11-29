@@ -23,10 +23,4 @@ class Migration(migrations.Migration):
             model_name='mass2motif',
             name='id',
         ),
-        migrations.AddField(
-            model_name='mass2motif',
-            name='supermotif_ptr',
-            field=models.OneToOneField(auto_created=True, default=None, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='basicviz.SuperMotif'),
-            preserve_default=False,
-        ),
     ]

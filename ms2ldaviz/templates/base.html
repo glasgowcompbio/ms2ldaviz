@@ -34,8 +34,8 @@
   <body role="document">
 
   <!-- Fixed navbar -->
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
+    <nav class="navbar navbar-inverse navbar-static-top">
+      <div class="container" style="width: 95%;">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
             <span class="sr-only">Toggle navigation</span>
@@ -72,10 +72,8 @@
         </div><!--/.nav-collapse -->
       </div>
     </nav>
-    <div class="container">
-      <div class="jumbotron">
+    <div class="container" style="margin-top: 50px; width: 95%;">
         {% block body_block %}<h1>Hello, world!</h1>{% endblock %}
-      </div>
     </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
