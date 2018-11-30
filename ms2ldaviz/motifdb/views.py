@@ -120,6 +120,7 @@ def get_motifset_post(request):
                 output_motifs[motif.name][fi.feature.name] = fi.probability
             md = jsonpickle.decode(motif.metadata)
             md['motifdb_id'] = motif.id
+            md['motifdb_url'] = 'http://ms2lda.org/motifdb/motif/{}'.format(motif.id)
             output_metadata[motif.name] = md
     
     if request.POST.get('filter',"False") == "True":
@@ -139,6 +140,7 @@ def get_motifset_metadata(request,motifset_id):
     for motif in motifs:
         md = jsonpickle.decode(motif.metadata)
         md['motifdb_id'] = motif.id
+        md['motifdb_url'] = 'http://ms2lda.org/motifdb/motif/{}'.format(motif.id)
         output_motifs[motif.name] = md
     return HttpResponse(json.dumps(output_motifs), content_type='application/json')
 
