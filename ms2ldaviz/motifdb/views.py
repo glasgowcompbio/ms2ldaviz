@@ -119,6 +119,7 @@ def get_motifset_post(request):
             for fi in fis:
                 output_motifs[motif.name][fi.feature.name] = fi.probability
             md = jsonpickle.decode(motif.metadata)
+            md['motifdb_id'] = motif.id
             output_metadata[motif.name] = md
     
     if request.POST.get('filter',"False") == "True":
@@ -137,6 +138,7 @@ def get_motifset_metadata(request,motifset_id):
     output_motifs = {}
     for motif in motifs:
         md = jsonpickle.decode(motif.metadata)
+        md['motifdb_id'] = motif.id
         output_motifs[motif.name] = md
     return HttpResponse(json.dumps(output_motifs), content_type='application/json')
 
