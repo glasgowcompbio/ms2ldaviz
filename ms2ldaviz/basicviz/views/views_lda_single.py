@@ -458,26 +458,23 @@ def view_parents(request, motif_id):
 # sort substuctures by most common
 def most_common_subs(subs, docs):
     subs_smiles = []
-    subs_types = {}
+    subs_dict = defaultdict(set)
     seen_docs = set()
     for s in subs:
-        smile = s.sub.smiles
-        mol_string = s.sub.mol_string
-        sub_type = s.sub_type
-        key = (smile, mol_string, )
+        key = s.sub.smiles
         subs_smiles.append(key)
-        subs_types[key] = sub_type
+        subs_dict[key].add(s)
         # also track the documents containing this feature instance and annotated with some magma substructure
-        seen_docs.add(s.feature.document)
+        feature_doc = s.feature.document
+        seen_docs.add(feature_doc)
     subs_counter = Counter(subs_smiles)  # count most common substructures
     most_common = []
-    for key, count in subs_counter.most_common():
-        smile, mol_string = key
-        sub_type = subs_types[key]
-        most_common.append((smile, count, mol_string, sub_type))
+    for smile, count in subs_counter.most_common():
+        feature_sub_instances = subs_dict[smile]
+        most_common.append((smile, count, feature_sub_instances, ))
     # add the count for documents which are not annotated with magma substructures
     num_unseen_docs = len(docs - seen_docs)
-    most_common.append(('None', num_unseen_docs, '', ''))
+    most_common.append(('None', num_unseen_docs, set()))
     return most_common
 
 

@@ -42,7 +42,42 @@
     <link rel="stylesheet" href="{% static 'css/ChemDoodleWeb.css' %}" type="text/css">
     <script type="text/javascript" src="{% static 'js/ChemDoodleWeb.js' %}"></script>
     <script type="text/javascript">
-        function show_mol(id, molblock, fragatoms = "", type = "loss") {
+        function setColour(molecule, fragmentAtoms, fgColour, bgColour, reverse) {
+            var fgSpecs = new ChemDoodle.structures.VisualSpecifications();
+            var bgSpecs = new ChemDoodle.structures.VisualSpecifications();
+            fgSpecs.bonds_color = fgColour;
+            fgSpecs.atoms_color = fgColour;
+            bgSpecs.bonds_color = bgColour;
+            bgSpecs.atoms_color = bgColour;
+            if (!reverse) {
+                fgSpecs.bonds_width_2D = 4.0;
+                bgSpecs.bonds_width_2D = 2.0;
+            } else {
+                fgSpecs.bonds_width_2D = 2.0;
+                bgSpecs.bonds_width_2D = 4.0;
+            }
+            molecule.bonds.forEach(function (b) {
+                a1 = molecule.atoms.indexOf(b.a1);
+                a2 = molecule.atoms.indexOf(b.a2);
+                if (a1 != -1 && fragmentAtoms.indexOf(a1 + '') == -1) {
+                    molecule.atoms[a1].specs = bgSpecs;
+                    b.specs = bgSpecs;
+                }
+                if (a2 != -1 && fragmentAtoms.indexOf(a2 + '') == -1) {
+                    molecule.atoms[a2].specs = bgSpecs;
+                    b.specs = bgSpecs;
+                }
+                if (a1 != -1 && a2 != 1 &&
+                    fragmentAtoms.indexOf(a1 + '') != -1 &&
+                    fragmentAtoms.indexOf(a2 + '') != -1
+                ) {
+                    molecule.atoms[a1].specs = fgSpecs;
+                    molecule.atoms[a2].specs = fgSpecs;
+                    b.specs = fgSpecs;
+                }
+            });
+        }
+        function showMol(id, molblock, fragatoms = "", type = "loss") {
             var viewer = new ChemDoodle.ViewerCanvas(id, 200, 150);
             viewer.specs.bonds_width_2D = .6;
             viewer.specs.bonds_saturationWidthAbs_2D = 2.6;
@@ -53,46 +88,14 @@
             viewer.specs.atoms_implicitHydrogens_2D = false;
             var molecule = ChemDoodle.readMOL(molblock);
             molecule.scaleToAverageBondLength(14.4);
-            var lossspecs = new ChemDoodle.structures.VisualSpecifications();
-            lossspecs.bonds_width_2D = 2.0;
-
             if (fragatoms != "") {
                 var fragmentAtoms = fragatoms.split(',');
                 if (type == "loss") {
-                    lossspecs.bonds_color = 'red';
-                    lossspecs.atoms_color = 'red';
-                    molecule.bonds.forEach(function (b) {
-                        // only color bond black if both atoms are in fragmentAtoms
-                        a1 = molecule.atoms.indexOf(b.a1);
-                        a2 = molecule.atoms.indexOf(b.a2);
-                        if (a1 != -1 && fragmentAtoms.indexOf(a1 + '') == -1) {
-                            molecule.atoms[a1].specs = lossspecs;
-                            b.specs = lossspecs;
-                        }
-                        if (a2 != -1 && fragmentAtoms.indexOf(a2 + '') == -1) {
-                            molecule.atoms[a2].specs = lossspecs;
-                            b.specs = lossspecs;
-                        }
-                    });
-                } else {
-                    lossspecs.bonds_color = 'cyan';
-                    lossspecs.atoms_color = 'cyan';
-                    molecule.bonds.forEach(function (b) {
-                        // only color bond black if both atoms are in fragmentAtoms
-                        a1 = molecule.atoms.indexOf(b.a1);
-                        a2 = molecule.atoms.indexOf(b.a2);
-                        if (a1 != -1 && a2 != 1 &&
-                            fragmentAtoms.indexOf(a1 + '') != -1 &&
-                            fragmentAtoms.indexOf(a2 + '') != -1
-                        ) {
-                            molecule.atoms[a1].specs = lossspecs;
-                            molecule.atoms[a2].specs = lossspecs;
-                            b.specs = lossspecs;
-                        }
-                    });
+                    setColour(molecule, fragmentAtoms, 'black', 'red', true);
+                } else if (type == 'fragment') {
+                    setColour(molecule, fragmentAtoms, 'black', 'red', false);
                 }
             }
-
             viewer.loadMolecule(molecule)
         }
     </script>
@@ -167,23 +170,24 @@
                                 <td>{{ motif_feature.probability|floatformat:"3" }}</td>
                                 <td>
                                     <ul>
-                                        {% for sub, count, mol, sub_type in subs %}
+                                        {% for smile, count, feature_sub_instances in subs %}
                                             {% if forloop.counter0 < top_n %}
                                                 <li>
                                                     <div class="floatbar">
                                                         <a href="#" onclick="return false;">
-                                                            {{ sub }} ({{ count }})
+                                                            {{ smile }} ({{ count }})
                                                         </a>
-                                                        {% if mol %}
-                                                            <div class="box">
+                                                        <div class="box">
+                                                            {% for feature2sub in feature_sub_instances|slice:":10"  %}
                                                                 <script type="text/javascript">
                                                                     var canvasId = Date.now(); // random id
-                                                                    var molblock = '{{ mol | escapejs }}';
-                                                                    var subType = '{{ sub_type | escapejs }}';
-                                                                    show_mol(canvasId, molblock, "", subType);
+                                                                    var molblock = '{{ feature2sub.feature.document.mol_string | escapejs }}';
+                                                                    var fragAtoms = '{{ feature2sub.fragatoms | escapejs }}';
+                                                                    var subType = '{{ feature2sub.sub_type | escapejs }}';
+                                                                    showMol(canvasId, molblock, fragAtoms, subType);
                                                                 </script>
-                                                            </div>
-                                                        {% endif %}
+                                                            {% endfor %}
+                                                        </div>
                                                     </div>
                                                 </li>
                                             {% endif %}
@@ -193,23 +197,24 @@
                                         <a data-toggle="collapse" href="#collapse-{{ motif_feature.feature.id }}">Show More</a>
                                         <div id="collapse-{{ motif_feature.feature.id }}" class="collapse">
                                             <ul>
-                                                {% for sub, count, mol, sub_type in subs %}
+                                                {% for smile, count, feature_sub_instances in subs %}
                                                     {% if forloop.counter0 >= top_n %}
                                                         <li>
                                                             <div class="floatbar">
                                                                 <a href="#" onclick="return false;">
-                                                                    {{ sub }} ({{ count }})
+                                                                    {{ smile }} ({{ count }})
                                                                 </a>
-                                                                {% if mol %}
-                                                                    <div class="box">
+                                                                <div class="box">
+                                                                    {% for feature2sub in feature_sub_instances|slice:":10"  %}
                                                                         <script type="text/javascript">
                                                                             var canvasId = Date.now(); // random id
-                                                                            var molblock = '{{ mol | escapejs }}';
-                                                                            var subType = '{{ sub_type | escapejs }}';
-                                                                            show_mol(canvasId, molblock, "", subType);
+                                                                            var molblock = '{{ feature2sub.feature.document.mol_string | escapejs }}';
+                                                                            var fragAtoms = '{{ feature2sub.fragatoms | escapejs }}';
+                                                                            var subType = '{{ feature2sub.sub_type | escapejs }}';
+                                                                            showMol(canvasId, molblock, fragAtoms, subType);
                                                                         </script>
-                                                                    </div>
-                                                                {% endif %}
+                                                                    {% endfor %}
+                                                                </div>
                                                             </div>
                                                         </li>
                                                     {% endif %}
