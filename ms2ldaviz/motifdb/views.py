@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.middleware.csrf import get_token
+
+import json
+import numpy as np
 
 from motifdb.models import *
 from basicviz.models import *   
@@ -76,3 +81,126 @@ def start_motif_matching(request, experiment_id):
         match_motif_form = MatchMotifDBForm()
     context_dict['match_motif_form'] = match_motif_form
     return render(request, 'motifdb/start_match_motifs.html', context_dict)
+
+def list_motifsets(request):
+    motif_sets = MDBMotifSet.objects.all()
+    output = {m.name:m.id for m in motif_sets}
+    return HttpResponse(json.dumps(output), content_type='application/json') 
+
+def get_motifset(request,motifset_id):
+    motifset = MDBMotifSet.objects.get(id = motifset_id)
+    motifs = MDBMotif.objects.filter(motif_set = motifset)
+    output_motifs = {}
+    for motif in motifs:
+        fis = Mass2MotifInstance.objects.filter(mass2motif = motif)
+        output_motifs[motif.name] = {}
+        for fi in fis:
+            output_motifs[motif.name][fi.feature.name] = fi.probability
+    return HttpResponse(json.dumps(output_motifs), content_type='application/json')
+
+
+def initialise_api(request):
+    token = get_token(request)
+    output = {'token':token}
+    return HttpResponse(json.dumps(output),content_type = 'application/json')
+
+def get_motifset_post(request):
+    motifset_id_list = request.POST['motifset_id_list']
+    output_motifs = {}
+    output_metadata = {}
+    for motifset_id in motifset_id_list:
+        motifset_id = int(motifset_id)
+        motifset = MDBMotifSet.objects.get(id = motifset_id)
+        motifs = MDBMotif.objects.filter(motif_set = motifset)
+    
+        for motif in motifs:
+            fis = Mass2MotifInstance.objects.filter(mass2motif = motif)
+            output_motifs[motif.name] = {}
+            for fi in fis:
+                output_motifs[motif.name][fi.feature.name] = fi.probability
+            md = jsonpickle.decode(motif.metadata)
+            md['motifdb_id'] = motif.id
+            md['motifdb_url'] = 'http://ms2lda.org/motifdb/motif/{}'.format(motif.id)
+            output_metadata[motif.name] = md
+    
+    if request.POST.get('filter',"False") == "True":
+        filter_threshold = float(request.POST.get('filter_threshold',0.95))
+        m = MotifFilter(output_motifs,output_metadata,threshold = filter_threshold)
+        output_motifs,output_metadata = m.filter()
+    
+    output = {'motifs':output_motifs,'metadata':output_metadata}
+
+
+    return HttpResponse(json.dumps(output), content_type='application/json')
+
+def get_motifset_metadata(request,motifset_id):
+    motifset = MDBMotifSet.objects.get(id = motifset_id)
+    motifs = MDBMotif.objects.filter(motif_set = motifset)
+    output_motifs = {}
+    for motif in motifs:
+        md = jsonpickle.decode(motif.metadata)
+        md['motifdb_id'] = motif.id
+        md['motifdb_url'] = 'http://ms2lda.org/motifdb/motif/{}'.format(motif.id)
+        output_motifs[motif.name] = md
+    return HttpResponse(json.dumps(output_motifs), content_type='application/json')
+
+
+
+
+
+class MotifFilter(object):
+    def __init__(self,spectra,metadata,threshold = 0.95):
+        self.input_spectra = spectra
+        self.input_metadata = metadata
+        self.threshold = threshold
+
+    def filter(self):
+        # Greedy filtering
+        # Loops through the spectra and for each one computes its similarity with 
+        # the remaining. Any that exceed the threshold are merged
+        # Merging invovles the latter one and puts it into the metadata of the 
+        # original so we can always check back. 
+        spec_names = sorted(self.input_metadata.keys())
+        final_spec_list = []
+        while len(spec_names) > 0:
+            current_spec = spec_names[0]
+            final_spec_list.append(current_spec)
+            del spec_names[0]
+            merge_list = []
+            for spec in spec_names:
+                sim = self.compute_similarity(current_spec,spec)
+                if sim >= self.threshold:
+                    merge_list.append((spec,sim))
+            if len(merge_list) > 0:
+                merge_data = []
+                spec_list = []
+                for spec,sim in merge_list:
+                    spec_list.append(spec)
+                    print "Merging: {} and {} ({})".format(current_spec,spec,sim)
+                    # chuck the merged motif into metadata so that we can find it later
+                    merge_data.append((spec,self.input_spectra[spec],self.input_metadata[spec],sim))
+                    pos = spec_names.index(spec)
+                    del spec_names[pos]
+                # self.input_metadata[current_spec]['merged'] = merge_data
+                self.input_metadata[current_spec]['merged'] = ",".join(spec_list)
+        
+        output_spectra = {}
+        output_metadata = {}
+        for spec in final_spec_list:
+            output_spectra[spec] = self.input_spectra[spec]
+            output_metadata[spec] = self.input_metadata[spec]
+        print "After merging, {} motifs remain".format(len(output_spectra))
+        return output_spectra,output_metadata
+
+    def compute_similarity(self,k,k2):
+        # compute the cosine similarity of the two spectra
+        prod = 0
+        i1 = 0
+        for mz,intensity in self.input_spectra[k].items():
+            i1 += intensity**2
+            for mz2,intensity2 in self.input_spectra[k2].items():
+                if mz == mz2:
+                    prod += intensity * intensity2
+        i2 = sum([i**2 for i in self.input_spectra[k2].values()])
+        return prod/(np.sqrt(i1)*np.sqrt(i2))
+

@@ -22,6 +22,53 @@
                 </ul>
             </div>
         </div>
+        <div class="panel panel-default">
+            <div class = "panel-body">
+                <h5>API access</h5>
+                <p>MotifDB is accessible via an API.</p>
+                <p>The following instructions demonstrate how to interact with the API</p>
+                <p>http://m2slda.org/motifdb/list_motifsets will return a json dictionary that gives the names of available motif sets and their IDs.</p>
+                <p>
+                    To access a particular motifset, there are two options. Send a get request to http://ms2lda.org/motifdb/get_motifset/ID, where ID is the ID obtained from the motifset list
+                    will return a json object including all of the motifs in that motifset. Replacing get_motifset with get_metadata will return the metadata for those motifs.
+                </p>
+                <p>
+                    Alternatively, if you want to get the motifs and metadata together for multiple motifsets, you can send a POST request to http://ms2lda.org/motifdb/get_motifset.
+                    Within the payload dictionary you should include a field motifset_id_list which holds a list of the IDs of the motifsets you'd like.
+                </p>
+                <p>
+                    In addition, you will need to include a field called csrfmiddlewaretoken which holds a valid token.
+                    You can get one by sending a GET request to http://ms2lda.org/motifdb/initialise_api.
+                </p>
+                <p>
+                    This way of getting motifs also allows you to filter duplicates. Simply add the field filter with the value "True" to your payload.
+                    The default filter threshold (cosine score) is 0.95. To change this, add a field "filter_threshold" to your payload.
+                </p>
+                <p><b>Example</b></p>
+                <pre>
+                        import requests
+                        server_url = "http://ms2lda.org"
+
+                        # Get the list of motif sets
+                        output = requests.get(server_url + '/motifdb/list_motifsets')
+                        motifset_list = output.json()
+
+                        # Get a token
+                        url = server_url + '/motifdb/initialise_api'
+                        client = requests.session()
+                        token = client.get(url).json()['token']
+
+        
+                        url = server_url + '/motifdb/get_motifset/'
+                        data = {'csrfmiddlewaretoken': token}
+                        data['motifset_id_list'] = [motifset_list['massbank_binned_005'],motifset_list['gnps_binned_005']]
+                        data['filter'] = "True"
+                        # data['filter_threshold'] = 0.95 # Default value - not required
+                        output = client.post(url,data = data).json()
+                        print len(output['motifs']),len(output['metadata'])
+                </pre>
+            </div>
+        </div>
     </div>
 {% endblock %}
 
