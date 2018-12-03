@@ -421,6 +421,9 @@ def view_parents(request, motif_id):
         metadata_form = Mass2MotifMetadataForm(
             initial={'metadata': motif.annotation, 'short_annotation': motif.short_annotation})
         context_dict['metadata_form'] = metadata_form
+    else: # read only permission
+        context_dict['motif_annotation'] = motif.annotation
+        context_dict['short_annotation'] = motif.short_annotation
 
     massbank_form = get_massbank_form(motif, motif_feature_instances)
     context_dict['massbank_form'] = massbank_form

@@ -137,6 +137,25 @@
                     </form>
                 </div>
             </div>
+        {% else %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>Mass2Motif Annotation</h4>
+                    <p>
+                        The following are the full annotation and the short annotation (used for network visualisation)
+                        assigned to this Mass2Motif.
+                    </p>
+                    {% if status %}
+                        <p><strong>{{ status }}</strong></p>
+                    {% endif %}
+                    <p>
+                        <strong>Annotation: </strong> {{ motif_annotation }}
+                    </p>
+                    <p>
+                        <strong>Short Annotation: </strong> {{ short_annotation }}
+                    </p>
+                </div>
+            </div>
         {% endif %}
         <div class="panel panel-default">
             <div class="panel-body">
