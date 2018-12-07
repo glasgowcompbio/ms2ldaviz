@@ -287,6 +287,20 @@ def build_gensim_corpus(lda_dict, normalize):
     return corpus, index2doc
 
 
+def gen_topic_metadata(k):
+    """Topic metadata generation copied from lda/lda.py:VariationalLDA:__init__:229-233
+
+    Sets fixed topics to 0
+    """
+    topic_index = {}
+    topic_metadata = {}
+    for topic_pos in range(0, k):
+        topic_name = 'motif_{}'.format(topic_pos)
+        topic_index[topic_name] = topic_pos
+        topic_metadata[topic_name] = {'name': topic_name, 'type': 'learnt'}
+    return topic_metadata, topic_index
+
+
 def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, normalize, min_prob_to_keep_beta,
                       min_prob_to_keep_theta, min_prob_to_keep_phi, feature_set_name):
     featureset, new_experiment = create_experiment(description, experiment, owner, feature_set_name)
@@ -348,7 +362,11 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
     print("Loading Mass2Motif")
     with transaction.atomic():
         m2ms = {}
-        for topic_id, topic_metadata in lda_dict['topic_metadata'].items():
+        topic_metadatas = lda_dict['topic_metadata']
+        if len(topic_metadatas) != model.num_topics:
+            # if gensim was run with different num topics than corpus then recompute metadata
+            topic_metadatas, topic_index = gen_topic_metadata(model.num_topics)
+        for topic_id, topic_metadata in topic_metadatas.items():
             metadata = jsonpickle.encode(topic_metadata)
             m2ms[topic_id] = Mass2Motif(name=topic_id, experiment=new_experiment, metadata=metadata)
         Mass2Motif.objects.bulk_create(m2ms.values())
