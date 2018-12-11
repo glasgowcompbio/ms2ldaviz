@@ -105,7 +105,8 @@ def initialise_api(request):
     return HttpResponse(json.dumps(output),content_type = 'application/json')
 
 def get_motifset_post(request):
-    motifset_id_list = request.POST['motifset_id_list']
+    motifset_id_list = request.POST.getlist('motifset_id_list')
+    print "*****",motifset_id_list
     output_motifs = {}
     output_metadata = {}
     for motifset_id in motifset_id_list:
