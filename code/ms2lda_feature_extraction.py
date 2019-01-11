@@ -232,6 +232,10 @@ class Loader(object):
             if self.id_field and (self.id_field.lower() in v):
                 featid = v[self.id_field.lower()]
                 featid_ms1_dict[featid] = doc_ms1[k]
+            else:
+                print(self.id_field)
+                print(v)
+                return
 
         ## build ms1_ms2 dict, to make searching O(1) in the following loop
         ## key: ms1 object
@@ -1415,6 +1419,7 @@ class LoadMGF(Loader):
                             if key in ["featureid", "feature_id"]:
                                 featid = val
                                 temp_metadata['featid'] = val
+                                temp_metadata[key] = val
 
                             elif key == "rtinseconds":
                                 # val = float(val) if isinstance(val, float) else None
