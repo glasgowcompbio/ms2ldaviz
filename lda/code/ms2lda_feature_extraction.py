@@ -235,7 +235,6 @@ class Loader(object):
             else:
                 print(self.id_field)
                 print(v)
-                return
 
         ## build ms1_ms2 dict, to make searching O(1) in the following loop
         ## key: ms1 object
@@ -277,7 +276,7 @@ class Loader(object):
                 max_rt = peak_rt + self.rt_tol
 
 
-                ms1_hits = filter(lambda x: x.mz >= min_mz and x.mz <= max_mz and x.rt >= min_rt and x.rt <= max_rt,ms1)
+                ms1_hits = list(filter(lambda x: x.mz >= min_mz and x.mz <= max_mz and x.rt >= min_rt and x.rt <= max_rt,ms1))
 
 
                 if len(ms1_hits) == 1:
@@ -353,15 +352,15 @@ class Loader(object):
         ## Use filter function to simplify code
         print("Filtering MS1 on intensity")
         ## Sometimes ms1 intensity could be None
-        ms1 = filter(lambda x: False if x.intensity and x.intensity < min_ms1_intensity else True, ms1)
+        ms1 = list(filter(lambda x: False if x.intensity and x.intensity < min_ms1_intensity else True, ms1))
         print("{} MS1 remaining".format(len(ms1)))
-        ms2 = filter(lambda x: x[3] in set(ms1), ms2)
+        ms2 = list(filter(lambda x: x[3] in set(ms1), ms2))
         print("{} MS2 remaining".format(len(ms2)))
         return ms1, ms2
 
     def filter_ms2_intensity(self,ms2, min_ms2_intensity = 1e6):
         print("Filtering MS2 on intensity")
-        ms2 = filter(lambda x: x[2] >= min_ms2_intensity, ms2)
+        ms2 = list(filter(lambda x: x[2] >= min_ms2_intensity, ms2))
         print("{} MS2 remaining".format(len(ms2)))
         return ms2
 
@@ -393,7 +392,7 @@ class Loader(object):
             max_rt = current_ms1.rt + rt_tol
 
             # find things inside this region
-            hits = filter(lambda x: x.mz > min_mz and x.mz < max_mz and x.rt > min_rt and x.rt < max_rt,ms1_by_intensity)
+            hits = list(filter(lambda x: x.mz > min_mz and x.mz < max_mz and x.rt > min_rt and x.rt < max_rt,ms1_by_intensity))
             for hit in hits:
                 pos = ms1_by_intensity.index(hit)
                 del ms1_by_intensity[pos]
@@ -1473,7 +1472,11 @@ class LoadMGF(Loader):
                                 new_ms1 = MS1(ms1_id,precursor_mass,parentrt,parentintensity,file_name,single_charge_precursor_mass = single_charge_precursor_mass)
                                 ms1_id += 1
 
-                                doc_name = temp_metadata.get(self.name_field.lower(),None)
+                                if self.name_field:
+                                    doc_name = temp_metadata.get(self.name_field.lower(),None)
+                                else:
+                                    doc_name = None
+                                    
                                 if not doc_name:
                                     if 'name' in temp_metadata:
                                         doc_name = temp_metadata['name']
