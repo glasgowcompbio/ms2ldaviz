@@ -144,7 +144,7 @@ def write_output_files(lda_dictionary,pairs_file,output_name_prefix,metadata,ove
 	            retention_time = 'NA'
 	        annotation = metadata[doc].get('annotation','')
 	        new_row += [precursor_mz,retention_time,annotation]
-	        motif_list = [0 for m in all_motifs]
+	        motif_list = [0.0 for m in all_motifs]
 	        for m in motifs:
 	            pos = all_motifs.index(m)
 	            o = lda_dictionary['overlap_scores'][doc][m]

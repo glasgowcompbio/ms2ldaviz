@@ -235,7 +235,6 @@ class Loader(object):
             else:
                 print(self.id_field)
                 print(v)
-                return
 
         ## build ms1_ms2 dict, to make searching O(1) in the following loop
         ## key: ms1 object
