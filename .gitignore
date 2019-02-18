@@ -96,3 +96,5 @@ ENV/
 # pycharm
 .xml
 .idea
+
+ms2ldaviz/nohup.out
