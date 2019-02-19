@@ -14,10 +14,10 @@ import glob,jsonpickle
 from motifdb.models import *
 from basicviz.models import *
 if __name__ == '__main__':
-    dbpath = '/home/simon/git/motifdb/motifs'
+    dbpath = '/Users/simon/git/motifdb/motifs'
     motif_sets = glob.glob(dbpath+os.sep + '*')
 
-    sys.path.append('/home/simon/git/motifdb/code/utilities')
+    sys.path.append('/Users/simon/git/motifdb/code/utilities')
     
     from motifdb_loader import load_db
 

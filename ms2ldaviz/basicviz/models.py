@@ -5,9 +5,12 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.conf import settings
 
+
 from .constants import EXPERIMENT_STATUS_CODE,EXPERIMENT_TYPE, EXPERIMENT_DECOMPOSITION_SOURCE, EXPERIMENT_MS2_FORMAT
 
 from model_utils.managers import InheritanceManager
+
+
 
 # Create your models here.
 class MultiFileExperiment(models.Model):
@@ -41,9 +44,23 @@ class BVFeatureSet(models.Model):
             return self.name
     def __unicode__(self):
         return str(self)
+    def get_width(self):
+        bin_widths = {'binned_005':0.005,
+                  'binned_01': 0.01,
+                  'binned_05': 0.05,
+                  'binned_1': 0.1,
+                  'binned_5': 0.5}
+        try:
+            return bin_widths[self.name]
+        except:
+            return None
+        
+
+
 
 
 class Experiment(models.Model):
+    
     name = models.CharField(max_length=128, unique=True)
     description = models.CharField(max_length=1024, null=True)
 
@@ -97,6 +114,8 @@ class Experiment(models.Model):
 
     has_magma_annotation = models.BooleanField(null = False, default = False)
 
+    include_motifset = models.TextField(null = True)
+
     def __unicode__(self):
         return self.name
 
@@ -122,6 +141,17 @@ class Experiment(models.Model):
 
         # actually does the saving here
         super(Experiment, self).save(*args, **kwargs)
+
+
+class Feature(models.Model):
+    name = models.CharField(max_length=64)
+    experiment = models.ForeignKey(Experiment,null=True)
+    min_mz = models.FloatField(null = True)
+    max_mz = models.FloatField(null = True)
+    featureset = models.ForeignKey(BVFeatureSet,null = True)
+
+    def __unicode__(self):
+        return self.name
 
 
 class PublicExperiments(models.Model):
@@ -261,15 +291,6 @@ class JobLog(models.Model):
     timestamp = models.DateField(default= datetime.date.today, null = False)
     tasktype = models.CharField(max_length=1028, null = True)
 
-class Feature(models.Model):
-    name = models.CharField(max_length=64)
-    experiment = models.ForeignKey(Experiment,null=True)
-    min_mz = models.FloatField(null = True)
-    max_mz = models.FloatField(null = True)
-    featureset = models.ForeignKey(BVFeatureSet,null = True)
-
-    def __unicode__(self):
-        return self.name
 
 
 class FeatureInstance(models.Model):

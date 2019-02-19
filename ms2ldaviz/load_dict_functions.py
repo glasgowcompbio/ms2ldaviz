@@ -114,9 +114,12 @@ def add_theta(doc_name,experiment,lda_dict):
         if 'overlap_scores' in lda_dict:
             os = lda_dict['overlap_scores'][doc_name].get(topic,None)
         if os:
-            DocumentMass2Motif.objects.get_or_create(document = document,mass2motif = mass2motif,probability = lda_dict['theta'][doc_name][topic],overlap_score = os)[0]
+            assert document.experiment == mass2motif.experiment
+            DocumentMass2Motif.objects.get_or_create(document = document,mass2motif = mass2motif,probability = lda_dict['theta'][doc_name][topic],overlap_score = os)[0]            
         else:
+            assert document.experiment == mass2motif.experiment
             DocumentMass2Motif.objects.get_or_create(document = document,mass2motif = mass2motif,probability = lda_dict['theta'][doc_name][topic])[0]
+
 
 def load_phi(doc_name,experiment,lda_dict):
     document = Document.objects.get(name = doc_name,experiment=experiment)
@@ -177,7 +180,6 @@ def load_sample_intensity(document, experiment, metadata):
 def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'):
 
 
-    # Hard-coded to use the binned 005 featureset
     featureset = BVFeatureSet.objects.get(name = feature_set_name)
     experiment.featureset = featureset
     experiment.save()
@@ -225,7 +227,13 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
         for topic in lda_dict['beta']:
             metadata = jsonpickle.encode(lda_dict['topic_metadata'].get(topic, {}))
             m2ms[topic]= Mass2Motif(name=topic, experiment=experiment, metadata=metadata)
+            # m2ms[topic].save()
         Mass2Motif.objects.bulk_create(m2ms.values())
+        
+        #Do we need this? Seemed to be needed on Simon's local install
+        # m2ms = {}
+        # for topic in lda_dict['beta']:
+        #     m2ms[topic] = Mass2Motif.objects.get(name = topic,experiment = experiment)
 
         # words of topic
         m2mis = []
