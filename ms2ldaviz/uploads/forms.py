@@ -2,6 +2,7 @@ from django import forms
 
 from basicviz.models import Experiment, BVFeatureSet
 from decomposition.models import MotifSet
+from motifdb.models import MDBMotifSet
 from basicviz.constants import EXPERIMENT_DECOMPOSITION_SOURCE
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
@@ -22,6 +23,12 @@ class CreateExperimentForm(forms.ModelForm):
         )
         self.fields['ms2_file'].required = True
         self.fields['decompose_from'].required = False
+
+        self.fields['include_motifset'] = forms.MultipleChoiceField(
+            choices = [(m.id,m.name) for m in MDBMotifSet.objects.all()],
+            label='Select zero or more motifsets to for initial model population'
+        )
+        self.fields['include_motifset'].required = False
 
     def is_valid(self):
         valid = super(CreateExperimentForm, self).is_valid()
@@ -94,7 +101,7 @@ class CreateExperimentForm(forms.ModelForm):
             'min_ms2_intensity',
             'featureset',
             'filter_duplicates', 'duplicate_filter_mz_tol', 'duplicate_filter_rt_tol',
-            'K', 'n_its',
+            'K', 'n_its','include_motifset',
         ]
         exclude = ('status',)
 

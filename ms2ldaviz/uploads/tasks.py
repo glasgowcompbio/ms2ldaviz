@@ -53,7 +53,7 @@ def custom_logger(exp):
 @app.task
 def lda_task(exp_id, params):
 
-    exp = Experiment.objects.get(pk=exp_id)
+    exp = Experiment.objects.get(id=exp_id)
     K = int(params['K'])
     n_its = int(params['n_its'])
 
@@ -70,7 +70,7 @@ def lda_task(exp_id, params):
     try:
         app.log.redirect_stdouts_to_logger(logger, rlevel)
         corpus, metadata, word_mz_range = lda_load_mzml_and_make_documents(exp)
-        lda_dict = run_lda(corpus, metadata, word_mz_range, K, n_its=n_its)
+        lda_dict = run_lda(corpus, metadata, word_mz_range, K, exp.id, bin_width = exp.featureset.get_width(),n_its=n_its,include_motifset = exp.include_motifset)
         feature_set_name = exp.featureset.name
         load_dict(lda_dict, exp, feature_set_name = feature_set_name)
 

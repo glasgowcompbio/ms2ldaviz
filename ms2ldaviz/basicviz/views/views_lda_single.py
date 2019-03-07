@@ -1864,7 +1864,7 @@ def get_motifs_with_degree(experiment):
     motifs = Mass2Motif.objects.filter(experiment=experiment).prefetch_related('experiment')
     docm2m_q = DocumentMass2Motif.objects.values_list('mass2motif__id').filter(mass2motif__experiment=experiment,
                                                                                probability__gte=doc_m2m_prob_threshold,
-                                                                               overlap_score__gte=doc_m2m_overlap_threshold
+                                                                               overlap_score__gte=doc_m2m_overlap_threshold,
                                                                                ).annotate(degree=Count('*'))
     docm2m = {r[0]: r[1] for r in docm2m_q}
 
