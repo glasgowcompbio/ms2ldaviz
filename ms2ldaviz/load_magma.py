@@ -1,5 +1,5 @@
 import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings_joe")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 
 import django
 django.setup()
