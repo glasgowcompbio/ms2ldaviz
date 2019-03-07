@@ -255,14 +255,13 @@ def choose_motifs(request,motif_set_id,experiment_id):
                 for i in instances:
                     new_instance = Mass2MotifInstance(mass2motif = mdb,feature = i.feature,probability = i.probability)
                     new_instance.save()
+            return redirect('/motifdb/')
     else:
-
         context_dict['motif_set'] = motifset
         context_dict['experiment'] = experiment
         motif_form = ChooseMotifs(motifs)
-
-    context_dict['motif_form'] = motif_form
-    return render(request,'motifdb/choose_motifs.html',context_dict)
+        context_dict['motif_form'] = motif_form
+        return render(request,'motifdb/choose_motifs.html',context_dict)
 
 class MotifFilter(object):
     def __init__(self,spectra,metadata,threshold = 0.95):
