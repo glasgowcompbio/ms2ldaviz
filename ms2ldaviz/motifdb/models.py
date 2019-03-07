@@ -4,14 +4,16 @@ from __future__ import unicode_literals
 import jsonpickle
 
 from django.db import models
-
+from django.contrib.auth.models import User
 from basicviz.models import BVFeatureSet,Feature,Mass2Motif
 
 # Create your models here.
 class MDBMotifSet(models.Model):
-    name = models.CharField(max_length=124,null=False)
+    name = models.CharField(max_length=124,null=False,unique=True)
     description = models.TextField(null = True)
-    featureset = models.ForeignKey(BVFeatureSet,null = True)
+    featureset = models.ForeignKey(BVFeatureSet,null = True,blank=True)
+    metadata = models.TextField(null = True)
+    owner = models.ForeignKey(User,null = True)
     def __str__(self):
         return self.name
     def __repr__(self):

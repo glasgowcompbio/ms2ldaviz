@@ -119,4 +119,3 @@ class MatchMotifForm(forms.Form):
         # self.fields['other_experiment'].queryset = Experiment.objects.filter(
         #     userexperiment__user=user).order_by('name')
         self.fields['other_experiment'].queryset = experiments
-

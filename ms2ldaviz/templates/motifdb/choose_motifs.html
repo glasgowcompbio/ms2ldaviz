@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}Welcome to motifDB{% endblock %}
+
+{% block head_block %}
+<style>
+    #id_motifs {
+    width: 800px;
+    height: 400px;
+    }
+</style>
+
+{% endblock %}
+
+{% block body_block %}
+
+    <h4>Select motifs for {{motif_set.name}} from {{experiment.name}}</h4>
+    <div class="panel-group">
+        {% if motif_form %}
+            <form id="motif_form" method="post" action="/motifdb/choose_motifs/{{motif_set.id}}/{{experiment.id}}/">
+                {% csrf_token %}
+                {% for hidden in motif_form.hidden_fields %}
+                    {{ hidden }}
+                {% endfor %}
+            
+                {% for field in motif_form.visible_fields %}
+                    <p>{{ field.errors }}</p>
+                    <p>{{ field }}
+                    {{ field.label }}</p>
+                {% endfor %}
+                <input type="submit" name="submit" value="Choose motifs" class="btn btn-primary" />
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block js_block %}
+
+
+
+{% endblock %}

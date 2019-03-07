@@ -10,5 +10,7 @@ urlpatterns = [
     url(r'^get_motifset/(?P<motifset_id>\w+)/$', views.get_motifset,name='get_motifset'),
     url(r'^get_motifset/$', views.get_motifset_post,name='get_motifset_post'),
     url(r'^get_motifset_metadata/(?P<motifset_id>\w+)/$', views.get_motifset_metadata,name='get_motifset_metadata'),
-    url(r'^initialise_api/$', views.initialise_api,name = 'initialise_api')
+    url(r'^initialise_api/$', views.initialise_api,name = 'initialise_api'),
+    url(r'^create_motifset/$',views.create_motifset,name = 'create_motifset'),
+    url(r'^choose_motifs/(?P<motif_set_id>\w+)/(?P<experiment_id>\w+)/$',views.choose_motifs,name = 'choose_motifs'),
 ]

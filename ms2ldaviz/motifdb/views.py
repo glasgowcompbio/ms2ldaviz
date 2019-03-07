@@ -5,14 +5,34 @@ from django.shortcuts import render,redirect,HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.middleware.csrf import get_token
 
+from django.contrib.auth.decorators import login_required
+
 import json
 import numpy as np
 
 from motifdb.models import *
 from basicviz.models import *   
 
-from motifdb.forms import MatchMotifDBForm
+
+
+from motifdb.forms import MatchMotifDBForm,NewMotifSetForm,ChooseMotifs
 from motifdb.tasks import start_motif_matching_task
+
+
+def check_user(request, experiment):
+    user = request.user
+    try:
+        ue = UserExperiment.objects.get(experiment=experiment, user=user)
+        return ue.permission
+    except:
+        # try the public experiments
+        e = PublicExperiments.objects.filter(experiment = experiment)
+        if len(e) > 0:
+            return "view"
+        else:
+            # User can't see this one
+            return None
+
 
 # Create your views here.
 def index(request):
@@ -145,9 +165,104 @@ def get_motifset_metadata(request,motifset_id):
         output_motifs[motif.name] = md
     return HttpResponse(json.dumps(output_motifs), content_type='application/json')
 
+@login_required(login_url='/registration/login/')
+def create_motifset(request):
+    if request.method == 'POST':
+        new_form = NewMotifSetForm(request.user,request.POST)
+        if new_form.is_valid():
+            # make and save the motifset object
+            mm = MDBMotifSet(name = new_form.cleaned_data['motifset_name'],description = new_form.cleaned_data['description'])
+            mm.owner = request.user
+            
+            metadata = {}
+            metadata['motif_name_prefix'] = new_form.cleaned_data['motif_name_prefix']
+            metadata['ionization'] = new_form.cleaned_data['ionization']
+            experiment = new_form.cleaned_data.get('ms2lda_experiment',None)
+            if experiment:
+                metadata['ms2lda_experiment_id'] = experiment.id
+                if experiment.feature_set:
+                    metadata['featureset_id'] = experiment.featureset.id
+                    metadata['featureset_name'] = experiment.featureset.name
+                    mm.featureset = experiment.featureset
+            metadata['mass_spectrometer'] = new_form.cleaned_data['mass_spectrometer']
+            metadata['collision_energy'] = new_form.cleaned_data['collision_energy']
+            metadata['taxon_id'] = new_form.cleaned_data['taxon_id']
+            metadata['scientific_name'] = new_form.cleaned_data['scientific_name']
+            metadata['sample_type'] = new_form.cleaned_data['sample_type']
+            metadata['paper_url'] = new_form.cleaned_data['paper_url']
+            metadata['chomratography'] = new_form.cleaned_data['chromatography']
+            metadata['other_information'] = new_form.cleaned_data['other_information']
+            metadata['massive_id'] = new_form.cleaned_data['massive_id']
+
+            mm.metadata = jsonpickle.encode(metadata)
+            mm.save()
+            mm_id = mm.id
+
+            if 'ms2lda_experiment_id' in metadata:
+                return redirect('/motifdb/choose_motifs/{}/{}/'.format(mm.id,experiment.id))
+            else:
+                print "NO EXPERIMENT, not implemented yet!"
+
+            mm_id = mm.id
+
+            experiment = new_form.cleaned_data['ms2lda_experiment']
+            if experiment:    
+
+                pass
+            else:
+                pass
+
+        else:
+            pass
+    else:
+        new_form = NewMotifSetForm(request.user)
+    
+    context_dict = {}
+    context_dict['new_motifset_form'] = new_form
+    return render(request,'motifdb/create_motifset.html',context_dict)
+
+def choose_motifs(request,motif_set_id,experiment_id):
+    experiment = Experiment.objects.get(id = experiment_id)
+    if not check_user(request, experiment):
+        return HttpResponse("You don't have permission to access this page")
 
 
+    context_dict = {}
+    motifset = MDBMotifSet.objects.get(id = motif_set_id)
+    experiment_motifs = Mass2Motif.objects.filter(experiment = experiment)
+    experiment_motifs = list(experiment_motifs)
+    not_annotated = filter(lambda x: x.annotation == None,experiment_motifs)
+    annotated = filter(lambda x: not x.annotation == None,experiment_motifs)
+    experiment_motifs = annotated + not_annotated
+    motifs = [(m.id,"{}: {}".format(m.name,m.short_annotation)) for m in experiment_motifs]
 
+    mm_metadata = jsonpickle.decode(motifset.metadata)
+
+    if request.method == 'POST':
+        motif_form = ChooseMotifs(motifs,request.POST)
+        if motif_form.is_valid():
+            print motif_form.cleaned_data['motifs']
+            motifs = Mass2Motif.objects.filter(id__in = motif_form.cleaned_data['motifs'])
+            # make new motifdb motifs based upon these
+            prefix = mm_metadata['motif_name_prefix']
+            for motif in motifs:
+                name = prefix + '_' + motif.name + '.m2m'
+                mdb = MDBMotif(name = name,motif_set = motifset)
+                mdb.metadata = motif.metadata
+                mdb.save()
+
+                instances = Mass2MotifInstance.objects.filter(mass2motif = motif)
+                for i in instances:
+                    new_instance = Mass2MotifInstance(mass2motif = mdb,feature = i.feature,probability = i.probability)
+                    new_instance.save()
+    else:
+
+        context_dict['motif_set'] = motifset
+        context_dict['experiment'] = experiment
+        motif_form = ChooseMotifs(motifs)
+
+    context_dict['motif_form'] = motif_form
+    return render(request,'motifdb/choose_motifs.html',context_dict)
 
 class MotifFilter(object):
     def __init__(self,spectra,metadata,threshold = 0.95):
@@ -204,4 +319,5 @@ class MotifFilter(object):
                     prod += intensity * intensity2
         i2 = sum([i**2 for i in self.input_spectra[k2].values()])
         return prod/(np.sqrt(i1)*np.sqrt(i2))
+
 

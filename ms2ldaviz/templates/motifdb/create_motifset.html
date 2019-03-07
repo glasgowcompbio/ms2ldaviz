@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}Welcome to motifDB{% endblock %}
+
+{% block head_block %}
+{% endblock %}
+
+{% block body_block %}
+
+    <h4>Create a new MotifSet</h4>
+    <div class="panel-group">
+        {% if new_motifset_form %}
+            <form id="new_motifset_form" method="post" action="/motifdb/create_motifset/">
+                {% csrf_token %}
+                {% for hidden in new_motifset_form.hidden_fields %}
+                    {{ hidden }}
+                {% endfor %}
+            
+                {% for field in new_motifset_form.visible_fields %}
+                    <p>{{ field.errors }}</p>
+                    <p>{{ field }}
+                    {{ field.label }}</p>
+                {% endfor %}
+                <input type="submit" name="submit" value="Create MotifSet" class="btn btn-primary" />
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block js_block %}
+
+
+
+{% endblock %}
