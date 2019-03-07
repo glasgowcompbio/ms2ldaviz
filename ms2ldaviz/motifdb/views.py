@@ -195,22 +195,17 @@ def create_motifset(request):
             metadata['massive_id'] = new_form.cleaned_data['massive_id']
 
             mm.metadata = jsonpickle.encode(metadata)
-            mm.save()
             mm_id = mm.id
 
             if 'ms2lda_experiment_id' in metadata:
+                mm.save()
                 return redirect('/motifdb/choose_motifs/{}/{}/'.format(mm.id,experiment.id))
             else:
-                print "NO EXPERIMENT, not implemented yet!"
+                return HttpResponse("Import from non ms2lda not yet implemented")
+                
 
             mm_id = mm.id
 
-            experiment = new_form.cleaned_data['ms2lda_experiment']
-            if experiment:    
-
-                pass
-            else:
-                pass
 
         else:
             pass
@@ -256,6 +251,11 @@ def choose_motifs(request,motif_set_id,experiment_id):
                     new_instance = Mass2MotifInstance(mass2motif = mdb,feature = i.feature,probability = i.probability)
                     new_instance.save()
             return redirect('/motifdb/')
+        else:
+            context_dict['motif_set'] = motifset
+            context_dict['experiment'] = experiment
+            context_dict['motif_form'] = motif_form
+            return render(request,'motifdb/choose_motifs.html',context_dict)    
     else:
         context_dict['motif_set'] = motifset
         context_dict['experiment'] = experiment
