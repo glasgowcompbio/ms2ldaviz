@@ -46,6 +46,10 @@ def motif_set(request,motif_set_id):
     ms = MDBMotifSet.objects.get(id = motif_set_id)
     context_dict = {}
     context_dict['motif_set'] = ms
+    try:
+        context_dict['metadata'] = jsonpickle.decode(ms.metadata)
+    except:
+        context_dict['metadata'] = {}
     motifs = MDBMotif.objects.filter(motif_set = ms)
     context_dict['motifs'] = motifs
     return render(request,'motifdb/motif_set.html',context_dict)

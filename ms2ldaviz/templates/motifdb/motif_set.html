@@ -13,6 +13,18 @@
 
     <h4>{{motif_set.name}}</h4>
     <div class="panel-group">
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p>Description: {{motif_set.description}}</p>
+                <p>Metadata:</p>
+                <ul>
+                    {% for key,value in metadata.items %}
+                        <ul><b>{{key}}:</b> {{value}}</ul>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
         <div class="panel panel-default">
             <div class="panel-body">
                 <table class="table" id="motiftable">
