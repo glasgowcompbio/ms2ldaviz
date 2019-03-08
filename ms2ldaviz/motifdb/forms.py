@@ -17,9 +17,9 @@ class NewMotifSetForm(forms.Form):
     ms2lda_experiment = forms.ModelChoiceField(queryset=Experiment.objects.none(),
                                               required=False, label="Create from MS2LDA experiment")
     
-    ionization = forms.ChoiceField(required = False,choices = (
-        ("electrospray ionization (+ve)","electrospray ionization (+ve)"),
-        ("electrospray ionization (+ve)","electrospray ionization (+ve)"),
+    ionization = forms.ChoiceField(required = True,choices = (
+        ("positive ionisation mode","positive ionisation mode"),
+        ("negative ionisation mode","negative ionisation mode"),
     )) 
     
     # only show this if ms2lda_experiment isn't selected
