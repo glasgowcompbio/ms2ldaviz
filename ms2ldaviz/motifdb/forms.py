@@ -36,7 +36,7 @@ class NewMotifSetForm(forms.Form):
         ("micrOTOF-Q II","micrOTOF-Q II"),
         ("Ion Trap","Ion Trap"), 
         ("Orbitrap","Orbitrap"), 
-        ("Time-Of_Flight (ToF)","Time-Of_Flight (ToF)"),
+        ("Time-Of-Flight (ToF)","Time-Of-Flight (ToF)"),
         ("other high resolution instrument","other high resolution instrument"), 
         ("other low resolution instrument","other low resolution instrument"), 
         ("mixture","mixture"),
