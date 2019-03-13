@@ -179,8 +179,8 @@ def create_motifset(request):
             mm.owner = request.user
             
             metadata = {}
-            metadata['motif_name_prefix'] = new_form.cleaned_data['motif_name_prefix']
-            metadata['ionization'] = new_form.cleaned_data['ionization']
+            metadata['Motif Name Prefix'] = new_form.cleaned_data['motif_name_prefix']
+            metadata['Analysis_Polarity'] = new_form.cleaned_data['ionization']
             experiment = new_form.cleaned_data.get('ms2lda_experiment',None)
             if experiment:
                 metadata['ms2lda_experiment_id'] = experiment.id
@@ -188,15 +188,16 @@ def create_motifset(request):
                     metadata['featureset_id'] = experiment.featureset.id
                     metadata['featureset_name'] = experiment.featureset.name
                     mm.featureset = experiment.featureset
-            metadata['mass_spectrometer'] = new_form.cleaned_data['mass_spectrometer']
+            metadata['Analysis_MassSpectrometer'] = new_form.cleaned_data['mass_spectrometer']
             metadata['collision_energy'] = new_form.cleaned_data['collision_energy']
-            metadata['taxon_id'] = new_form.cleaned_data['taxon_id']
-            metadata['scientific_name'] = new_form.cleaned_data['scientific_name']
-            metadata['sample_type'] = new_form.cleaned_data['sample_type']
-            metadata['paper_url'] = new_form.cleaned_data['paper_url']
-            metadata['chomratography'] = new_form.cleaned_data['chromatography']
-            metadata['other_information'] = new_form.cleaned_data['other_information']
-            metadata['massive_id'] = new_form.cleaned_data['massive_id']
+            metadata['Taxon_id'] = new_form.cleaned_data['taxon_id']
+            metadata['Scientific_name'] = new_form.cleaned_data['scientific_name']
+            metadata['Sample_type'] = new_form.cleaned_data['sample_type']
+            metadata['Paper_URL'] = new_form.cleaned_data['paper_url']
+            metadata['Analysis_ChromatographyAndPhase'] = new_form.cleaned_data['chromatography']
+            metadata['Other Information'] = new_form.cleaned_data['other_information']
+            metadata['Massive ID'] = new_form.cleaned_data['massive_id']
+            metadata['Analysis_IonizationSource'] = new_form.cleaned_data['ionization_source']
 
             mm.metadata = jsonpickle.encode(metadata)
             mm_id = mm.id

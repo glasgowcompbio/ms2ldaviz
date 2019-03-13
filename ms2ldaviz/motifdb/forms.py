@@ -11,21 +11,25 @@ class MatchMotifDBForm(forms.Form):
 
 
 class NewMotifSetForm(forms.Form):
-    motifset_name = forms.CharField(max_length=1024,required = True)
-    motif_name_prefix = forms.CharField(max_length=10,required = True)
+    motifset_name = forms.CharField(max_length=1024,required = True, label = "Name")
+    motif_name_prefix = forms.CharField(max_length=10,required = True, label = "Motif Name Prefix")
     description = forms.CharField(required=True,widget = forms.Textarea)
     ms2lda_experiment = forms.ModelChoiceField(queryset=Experiment.objects.none(),
                                               required=False, label="Create from MS2LDA experiment")
     
-    ionization = forms.ChoiceField(required = True,choices = (
+    ionization = forms.ChoiceField(required = True,label = "Analysis_Polarity", choices = (
         ("positive ionisation mode","positive ionisation mode"),
         ("negative ionisation mode","negative ionisation mode"),
     )) 
     
+    ionization_source = forms.ChoiceField(required = True,label = "Analysis_IonizationSource", choices = (
+        ("electospray ionization","electospray ionization"),
+        ("other","other"),
+    ))
     # only show this if ms2lda_experiment isn't selected
     # bin_width = forms.DecimalField(required = False)
 
-    mass_spectrometer = forms.ChoiceField(required = True, choices = (
+    mass_spectrometer = forms.ChoiceField(required = True, label = "Analysis_MassSpectrometer",choices = (
         ("Maxis_Impact","Maxis_Impact"), 
         ("Maxis_ImpactHD","Maxis_ImpactHD"), 
         ("QExactive","QExactive"), 
@@ -51,12 +55,13 @@ class NewMotifSetForm(forms.Form):
 
     paper_url = forms.CharField(required = False)
 
-    chromatography = forms.ChoiceField(required = False, choices = (
+    chromatography = forms.ChoiceField(required = False, label = "Analysis_ChromatographyAndPhase", choices = (
         ("reverse phase (C18)","reverse phase (C18)"),
         ("reverse phase (C8)","reverse phase (C8)"),
         ("reverse phase (Phenyl-Hexyl)","reverse phase (Phenyl-Hexyl)"),
         ("normal phase (HILIC)","normal phase (HILIC)"), 
-        ("mixed mode (Scherzo SM-C18, direct infusion (DI)","mixed mode (Scherzo SM-C18, direct infusion (DI)"),
+        ("mixed mode (Scherzo SM-C18)","mixed mode (Scherzo SM-C18)"),
+        ("direct infusion (DI)","direct infusion (DI)"),
     ))
 
     other_information = forms.CharField(widget=forms.Textarea,required= False)
