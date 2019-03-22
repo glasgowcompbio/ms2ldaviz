@@ -45,7 +45,11 @@
             <tr>
                 <td><a href="/basicviz/view_parents/{{match.frommotif.id}}/"><strong>{{match.frommotif}}</strong> ({{match.frommotif.annotation}})</a></td>
                 <td><a href="/basicviz/view_parents/{{match.tomotif.id}}/"><strong>{{match.tomotif}}</strong> ({{match.tomotif.annotation}})</a></td>
-                <td>{{match.tomotif.experiment}}</td>
+                <td>{% if match.tomotif.experiment %}
+                        {{match.tomotif.experiment}}
+                    {% else %}
+                        MotifDB
+                    {% endif %}</td>
                 <td>{{match.score|floatformat:"3"}}</td>
                 <td>{{match.frommotif.linkmotif}} ({{match.frommotif.linkmotif.experiment}},{{match.frommotif.linkmotif.annotation}})</td>
                 <td>

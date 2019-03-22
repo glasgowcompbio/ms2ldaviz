@@ -1,6 +1,6 @@
 import csv
 
-def write_output_files(lda_dictionary,pairs_file,output_name_prefix,metadata,overlap_thresh=0.3,p_thresh=0.1,X=5):
+def write_output_files(lda_dictionary,pairs_file,output_name_prefix,metadata,overlap_thresh=0.3,p_thresh=0.1,X=5,motif_metadata = {}):
 	# load the pairs file
 
 	components_to_ignore = set()
@@ -107,8 +107,25 @@ def write_output_files(lda_dictionary,pairs_file,output_name_prefix,metadata,ove
 	with open(nodes_file,'w') as f:
 	    writer = csv.writer(f,delimiter = '\t')
 	    heads = ['scans','document','motif','probability','overlap','precursor.mass','retention.time','document.annotation']
-	    heads += all_motifs
-	    writer.writerow(heads)
+	    if len(motif_metadata) > 0:
+			motifs_with_links = []
+			for m in all_motifs:
+				md = motif_metadata.get(m,None)
+				if md:
+					motif_string = m
+					link_url = md.get('motifdb_url',None)
+					if link_url:
+						motif_string += " "+link_url
+					annotation = md.get('annotation',None)
+					if annotation:
+						motif_string += " " + annotation
+					motifs_with_links.append(motif_string)
+				else:
+					motifs_with_links.append(m)
+			heads += motifs_with_links
+	    else:
+	    	heads += all_motifs
+	    writer.writerow([s.encode('utf-8') for s in heads])
 	    for doc in all_docs:
 	        try:
 	            motifs = list(doc_to_motif[doc])
@@ -127,7 +144,7 @@ def write_output_files(lda_dictionary,pairs_file,output_name_prefix,metadata,ove
 	            retention_time = 'NA'
 	        annotation = metadata[doc].get('annotation','')
 	        new_row += [precursor_mz,retention_time,annotation]
-	        motif_list = [0 for m in all_motifs]
+	        motif_list = [0.0 for m in all_motifs]
 	        for m in motifs:
 	            pos = all_motifs.index(m)
 	            o = lda_dictionary['overlap_scores'][doc][m]

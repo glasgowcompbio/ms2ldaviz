@@ -18,6 +18,15 @@
 		  font-family: sans-serif;
 		  font-size: 14px;
 		}
+        .box {
+            display: none;
+            padding: 10px;
+            margin: 10px;
+        }
+
+        a:hover + .box {
+            display: block;
+        }
 
         /* for massbank dialog */
         .required:after {
@@ -30,10 +39,75 @@
         .massbank-form .field input { display:inline-block; }
 
 	</style>
+    <link rel="stylesheet" href="{% static 'css/ChemDoodleWeb.css' %}" type="text/css">
+    <script type="text/javascript" src="{% static 'js/ChemDoodleWeb.js' %}"></script>
+    <script type="text/javascript">
+        function setColour(molecule, fragmentAtoms, fgColour, bgColour, reverse) {
+            var fgSpecs = new ChemDoodle.structures.VisualSpecifications();
+            var bgSpecs = new ChemDoodle.structures.VisualSpecifications();
+            fgSpecs.bonds_color = fgColour;
+            fgSpecs.atoms_color = fgColour;
+            bgSpecs.bonds_color = bgColour;
+            bgSpecs.atoms_color = bgColour;
+            if (!reverse) {
+                fgSpecs.bonds_width_2D = 4.0;
+                bgSpecs.bonds_width_2D = 2.0;
+            } else {
+                fgSpecs.bonds_width_2D = 2.0;
+                bgSpecs.bonds_width_2D = 4.0;
+            }
+            molecule.bonds.forEach(function (b) {
+                a1 = molecule.atoms.indexOf(b.a1);
+                a2 = molecule.atoms.indexOf(b.a2);
+                if (a1 != -1 && fragmentAtoms.indexOf(a1 + '') == -1) {
+                    molecule.atoms[a1].specs = bgSpecs;
+                    b.specs = bgSpecs;
+                }
+                if (a2 != -1 && fragmentAtoms.indexOf(a2 + '') == -1) {
+                    molecule.atoms[a2].specs = bgSpecs;
+                    b.specs = bgSpecs;
+                }
+                if (a1 != -1 && a2 != 1 &&
+                    fragmentAtoms.indexOf(a1 + '') != -1 &&
+                    fragmentAtoms.indexOf(a2 + '') != -1
+                ) {
+                    molecule.atoms[a1].specs = fgSpecs;
+                    molecule.atoms[a2].specs = fgSpecs;
+                    b.specs = fgSpecs;
+                }
+            });
+        }
+        function showMol(id, molblock, fragatoms = "", type = "loss") {
+            var viewer = new ChemDoodle.ViewerCanvas(id, 200, 150);
+            viewer.specs.bonds_width_2D = .6;
+            viewer.specs.bonds_saturationWidthAbs_2D = 2.6;
+            viewer.specs.bonds_hashSpacing_2D = 2.5;
+            viewer.specs.atoms_font_size_2D = 10;
+            viewer.specs.atoms_font_families_2D = ['Helvetica', 'Arial', 'sans-serif'];
+            viewer.specs.atoms_displayTerminalCarbonLabels_2D = false;
+            viewer.specs.atoms_implicitHydrogens_2D = false;
+            var molecule = ChemDoodle.readMOL(molblock);
+            molecule.scaleToAverageBondLength(14.4);
+            if (fragatoms != "") {
+                var fragmentAtoms = fragatoms.split(',');
+                if (type == "loss") {
+                    setColour(molecule, fragmentAtoms, 'black', 'red', true);
+                } else if (type == 'fragment') {
+                    setColour(molecule, fragmentAtoms, 'black', 'red', false);
+                }
+            }
+            viewer.loadMolecule(molecule)
+        }
+    </script>
 {% endblock %}
 
 {% block body_block %}
-	<h3>Mass2Motif: {{mass2motif.name}} ({{mass2motif.experiment.name}})</h3>
+	<h3>Mass2Motif: {{mass2motif.name}}</h3>
+    <h6>
+        <a href="/basicviz/summary/{{experiment.id}}">
+            Return to experiment {{ experiment.name }}
+        </a>
+    </h6>
     <div class="panel-group">
         {% if metadata_form %}
             <div class="panel panel-default">
@@ -63,6 +137,25 @@
                     </form>
                 </div>
             </div>
+        {% else %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>Mass2Motif Annotation</h4>
+                    <p>
+                        The following are the full annotation and the short annotation (used for network visualisation)
+                        assigned to this Mass2Motif.
+                    </p>
+                    {% if status %}
+                        <p><strong>{{ status }}</strong></p>
+                    {% endif %}
+                    <p>
+                        <strong>Annotation: </strong> {{ motif_annotation }}
+                    </p>
+                    <p>
+                        <strong>Short Annotation: </strong> {{ short_annotation }}
+                    </p>
+                </div>
+            </div>
         {% endif %}
         <div class="panel panel-default">
             <div class="panel-body">
@@ -71,20 +164,84 @@
                     The following table shows the fragment and loss features that are explained by this
                     Mass2Motifs and their corresponding probabilities.
                     After thresholding to save the model, the total probability left in this motif is
-                    {{total_prob}}
+                    {{total_prob}}.
+                    The column <strong>MAGMa Substructure Annotation</strong> shows substructures and the counts
+                    of <a href="https://github.com/NLeSC/MAGMa">MAGMa</a> annotations for documents linked above
+                    threshold to this motif in this experiment.
+                    Hovering over each MAGMa substructure shows a plot of the substructure.
                 </p>
                     <table class='table' id='featuretable'>
                         <thead>
                         <tr>
                             <th>Feature</th>
                             <th>Probability</th>
+                            <th>MAGMA Substructure Annotation</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {% for motif_feature in motif_features %}
+                        {% for motif_feature, subs, subs_count in motif_features_subs %}
                             <tr>
-                                <td><a href="/basicviz/mass2motif_feature/{{motif_feature.id}}">{{motif_feature.feature.name}}</a></td>
-                                <td>{{motif_feature.probability|floatformat:"3"}}</td>
+                                <td>
+                                    <a href="/basicviz/mass2motif_feature/{{ motif_feature.id }}">
+                                        {{ motif_feature.feature.name }}
+                                    </a>
+                                </td>
+                                <td>{{ motif_feature.probability|floatformat:"3" }}</td>
+                                <td>
+                                    <ul>
+                                        {% for smile, count, feature_sub_instances in subs %}
+                                            {% if forloop.counter0 < top_n %}
+                                                <li>
+                                                    <div class="floatbar">
+                                                        <a href="#" onclick="return false;">
+                                                            {{ smile }} ({{ count }})
+                                                        </a>
+                                                        <div class="box">
+                                                            {% for feature2sub in feature_sub_instances|slice:":10"  %}
+                                                                <script type="text/javascript">
+                                                                    var canvasId = Date.now(); // random id
+                                                                    var molblock = '{{ feature2sub.feature.document.mol_string | escapejs }}';
+                                                                    var fragAtoms = '{{ feature2sub.fragatoms | escapejs }}';
+                                                                    var subType = '{{ feature2sub.sub_type | escapejs }}';
+                                                                    showMol(canvasId, molblock, fragAtoms, subType);
+                                                                </script>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                    {% if subs_count >= top_n %}
+                                        <a data-toggle="collapse" href="#collapse-{{ motif_feature.feature.id }}">Show More</a>
+                                        <div id="collapse-{{ motif_feature.feature.id }}" class="collapse">
+                                            <ul>
+                                                {% for smile, count, feature_sub_instances in subs %}
+                                                    {% if forloop.counter0 >= top_n %}
+                                                        <li>
+                                                            <div class="floatbar">
+                                                                <a href="#" onclick="return false;">
+                                                                    {{ smile }} ({{ count }})
+                                                                </a>
+                                                                <div class="box">
+                                                                    {% for feature2sub in feature_sub_instances|slice:":10"  %}
+                                                                        <script type="text/javascript">
+                                                                            var canvasId = Date.now(); // random id
+                                                                            var molblock = '{{ feature2sub.feature.document.mol_string | escapejs }}';
+                                                                            var fragAtoms = '{{ feature2sub.fragatoms | escapejs }}';
+                                                                            var subType = '{{ feature2sub.sub_type | escapejs }}';
+                                                                            showMol(canvasId, molblock, fragAtoms, subType);
+                                                                        </script>
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+                                </td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -92,6 +249,35 @@
                 </div>
             </div>
         </div>
+        {% if term_counts %}
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>Counts of Classyfire Substituent terms</h4>
+                <table class='table' id='termtable'>
+                    <thead>
+                    <tr>
+                        <th>Term name</th>
+                        <th>Count in motif</th>
+                        <th>Percentage in motif</th>
+                        <th>Percentage in experiment</th>
+                        <th>Absolute difference</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% for subterm,count,perc,background,diff in term_counts %}
+                        <tr>
+                            <td>{{subterm.name}}</td>
+                            <td>{{count}}</td>
+                            <td>{{perc|floatformat}}</td>
+                            <td>{{background|floatformat}}</td>
+                            <td>{{diff|floatformat}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>Counts of Mass2Motif Features</h4>
@@ -116,14 +302,14 @@
                 </p>
                 <table class='table' id='doctable'>
                     <thead>
-			    <tr><th>Fragmentation spectra</th><th>Precursor Mass</th><th>Parent mass</th><th>Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
+        			    <tr><th>Fragmentation spectra</th><th>Precursor Mass</th><th>Parent mass</th><th>Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
                     </thead>
                     <tbody>
                         {% for dm2m in dm2ms %}
                             <tr>
                                 <td><a href="/basicviz/show_doc/{{dm2m.document.id}}">{{dm2m.document.name}}</a></td>
                                 <td>{{dm2m.document.mass|floatformat:4}}</td>
-				<td>{{dm2m.document.parentmass|floatformat:4}}</td>
+                				<td>{{dm2m.document.parentmass|floatformat:4}}</td>
                                 <td>{{dm2m.document.annotation}}</td>
                                 <td>{{dm2m.probability|floatformat:"3"}}</td>
                                 <td>{{dm2m.overlap_score|floatformat:"3"}}</td>
@@ -146,49 +332,6 @@
             	<div id="spectra" border="20" padding="20"></div>
             </div>
         </div>
-        <!-- Classyfire terms for this motif, if they exist -->
-        {% if taxa_terms %}
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <h4>Classyfire Taxa Terms</h4>
-                    <table class='table' id='taxa_table'>
-                        <thead>
-                            <tr><th>Taxa Term</th><th>Probability</th><th>Z score</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for term_instance in taxa_terms %}
-                                <tr>
-                                    <td>{{term_instance.taxterm.name}}</td>
-                                    <td>{{term_instance.probability|floatformat:"3"}}</td>
-                                    <td>{{term_instance.z_score|floatformat:"3"}}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        {% endif %}
-        {% if substituent_terms %}
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <h4>Classyfire Substituent Terms</h4>
-                    <table class='table' id='subst_table'>
-                        <thead>
-                            <tr><th>Substituent Term</th><th>Probability</th><th>Z score</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for term_instance in substituent_terms %}
-                                <tr>
-                                    <td>{{term_instance.subterm.name}}</td>
-                                    <td>{{term_instance.probability|floatformat:"3"}}</td>
-                                    <td>{{term_instance.z_score|floatformat:"3"}}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        {% endif %}
 
     </div>
 
@@ -283,19 +426,12 @@
 		        ],
 		        "order": [[ 2, "desc" ]],
 		    });
-			$('#taxa_table').DataTable({
+            $('#termtable').DataTable({
 				dom: 'Bfrtip',
 				buttons: [
 			        'csv',
 		        ],
-		        "order": [[ 2, "desc" ]],
-		    });
-			$('#subst_table').DataTable({
-				dom: 'Bfrtip',
-				buttons: [
-			        'csv',
-		        ],
-		        "order": [[ 2, "desc" ]],
+		        "order": [[ 4, "desc" ]],
 		    });
 
 		});

@@ -1,6 +1,7 @@
 import csv
 import json
 
+from collections import Counter, defaultdict
 import jsonpickle
 import networkx as nx
 import numpy as np
@@ -17,7 +18,8 @@ from basicviz.forms import DocFilterForm, ValidationForm, VizForm, \
     TopicScoringForm, MatchMotifForm
 from massbank.forms import Mass2MotifMetadataForm
 from basicviz.models import Feature, Experiment, Document, FeatureInstance, DocumentMass2Motif, \
-    FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment, MotifMatch, PublicExperiments
+    FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment, MotifMatch, \
+    PublicExperiments, FeatureInstance2Sub
 from basicviz.tasks import match_motifs,match_motifs_set
 from massbank.views import get_massbank_form
 from options.views import get_option
@@ -28,6 +30,8 @@ from basicviz.views import index as basicviz_index
 from ms1analysis.models import Analysis, AnalysisResult, AnalysisResultPlage
 from basicviz.constants import EXPERIMENT_STATUS_CODE
 
+from motifdb.views import motif as db_view_motif
+from motifdb.models import MDBMotif
 
 def check_user(request, experiment):
     user = request.user
@@ -261,6 +265,14 @@ def show_doc(request, doc_id):
     if document.image_url:
         context_dict['image_url'] = document.image_url
 
+    if document.mol_string:
+        context_dict['mol_string'] = document.mol_string
+        context_dict['image_url'] = None
+
+    sub_terms = document.substituentinstance_set.all()
+    if len(sub_terms) > 0:
+        context_dict['sub_terms'] = sub_terms
+
     return render(request, 'basicviz/show_doc.html', context_dict)
 
 
@@ -269,59 +281,118 @@ def get_doc_context_dict(document):
     context_dict = {}
     context_dict['features'] = features
     experiment = document.experiment
-    doc_m2m_threshold = get_option('doc_m2m_threshold', experiment=experiment)
 
     mass2motif_instances = get_docm2m_bydoc(document)
     context_dict['mass2motifs'] = mass2motif_instances
     feature_mass2motif_instances = []
-    for feature in features:
-        if feature.intensity > 0:
-            feature_mass2motif_instances.append(
-                (feature, FeatureMass2MotifInstance.objects.filter(featureinstance=feature)))
+    original_experiment = None
+    for feature_instance in features:
+        if feature_instance.intensity > 0:
+            m2m = FeatureMass2MotifInstance.objects.filter(featureinstance=feature_instance)
+            smiles_to_docs = defaultdict(set)
+            docs_to_subs = {}
 
+            # if this experiment already has magma annotation, then we just get the magma annotations
+            # of the feature instances in this document. Otherwise we use the global feature to find
+            # the magma annotation from the original experiment that has the magma annotation
+            if experiment.has_magma_annotation:
+                subs = FeatureInstance2Sub.objects.filter(feature=feature_instance)
+                for sub in subs:
+                    smiles = sub.sub.smiles
+                    smiles_to_docs[smiles].add(document)
+                    docs_to_subs[document] = sub
+            else:
+                # get shared global feature
+                shared_feature = feature_instance.feature
+                # if shared_feature.experiment.has_magma_annotation:
+
+                # get original docs having shared feature
+                original_experiment = shared_feature.experiment
+                original_docs = Document.objects.filter(experiment=original_experiment)
+
+                # get the feature instances in the original docs having shared feature
+                original_feature_instances = FeatureInstance.objects.filter(feature=shared_feature,
+                                                                            document__in=original_docs)
+
+                # get magma subs from the original feature instances
+                subs = FeatureInstance2Sub.objects.filter(feature__in=original_feature_instances)
+                for sub in subs:
+                    smiles = sub.sub.smiles
+                    doc = sub.feature.document
+                    smiles_to_docs[smiles].add(sub.feature.document)
+                    docs_to_subs[doc] = sub
+
+            # count how many docs are found containing each magma substructure linked to this feature instance
+            # if the experiment has_magma_annotation, this should always be one
+            smiles_docs_count = Counter()
+            for smiles in smiles_to_docs:
+                n_docs = len(smiles_to_docs[smiles])
+                if experiment.has_magma_annotation:
+                    assert n_docs == 1
+                smiles_docs_count[smiles] += n_docs
+
+            most_common_subs = []
+            for smiles, count in smiles_docs_count.most_common():
+                docs = smiles_to_docs[smiles]
+                subs = [docs_to_subs[d] for d in docs]
+                together = zip(docs, subs)
+                most_common_subs.append((smiles, count, together, ))
+            item = (feature_instance, m2m, most_common_subs, len(most_common_subs), )
+            feature_mass2motif_instances.append(item)
+
+    if original_experiment:
+        context_dict['original_experiment'] = original_experiment
+    context_dict['experiment'] = experiment
     feature_mass2motif_instances = sorted(feature_mass2motif_instances, key=lambda x: x[0].intensity, reverse=True)
     context_dict['fm2m'] = feature_mass2motif_instances
+    context_dict['top_n'] = 5 # show the top-5 magma annotations per feature initially
     return context_dict
 
 
 # @login_required(login_url='/registration/login/')
 def view_parents(request, motif_id):
-    motif = Mass2Motif.objects.get(id=motif_id)
+    # use the get_subclass method instead of standard get
+    motif = Mass2Motif.objects.get_subclass(id=motif_id)
+    print type(motif)
+    if type(motif) == MDBMotif:
+        return redirect('/motifdb/motif/{}'.format(motif_id))
     experiment = motif.experiment
+
     if not check_user(request, experiment):
         return HttpResponse("You don't have permission to access this page")
     print 'Motif metadata', motif.metadata
-
     context_dict = {'mass2motif': motif}
-    motif_features = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by('-probability')
-    total_prob = sum([m.probability for m in motif_features])
-    context_dict['motif_features'] = motif_features
+    motif_feature_instances = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by('-probability')
+    total_prob = sum([m.probability for m in motif_feature_instances])
+
+    # get all the documents linked above threshold to this motif in this experiment
+    dm2m = get_docm2m_by_motif(experiment, motif)
+    documents = [x.document for x in dm2m]
+
+    # get all substructures linked to features in documents
+    motif_features_subs = []
+    for motif_feature_instance in motif_feature_instances:
+        print 'Querying substructures of motif_feature_instance %s' % motif_feature_instance
+        feature = motif_feature_instance.feature
+        document_feature_instance = FeatureInstance.objects.filter(feature=feature, document__in=documents)
+        docs = set([x.document for x in document_feature_instance])
+        subs = FeatureInstance2Sub.objects.filter(feature__in=document_feature_instance)
+        most_common = most_common_subs(subs, docs) # sort subs by most-common
+        motif_features_subs.append((motif_feature_instance, most_common, len(most_common), ))
+
+    context_dict['motif_features_subs'] = motif_features_subs
+    context_dict['top_n'] = 5 # show the top-5 magma annotations per feature initially
     context_dict['total_prob'] = total_prob
     context_dict['experiment'] = experiment
 
     # Get the taxa or substituent terms (if there are any)
-    taxa_terms = motif.taxainstance_set.filter(probability__gte=0.2).order_by('-probability')
-    substituent_terms = motif.substituentinstance_set.filter(probability__gte=0.2).order_by('-probability')
+    # taxa_terms = motif.taxainstance_set.filter(probability__gte=0.2).order_by('-probability')
+    # substituent_terms = motif.substituentinstance_set.filter(probability__gte=0.2).order_by('-probability')
 
-    if len(taxa_terms) > 0:
-        context_dict['taxa_terms'] = taxa_terms
-    if len(substituent_terms) > 0:
-        context_dict['substituent_terms'] = substituent_terms
-
-    # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = motif.experiment)
-    # if doc_m2m_threshold:
-    #     doc_m2m_threshold = float(doc_m2m_threshold)
-    # else:
-    #     doc_m2m_threshold = 0.00 # Default value
-
-    # default_score = get_option('default_doc_m2m_score',experiment = motif.experiment)
-    # if not default_score:
-    #     default_score = 'probability'
-
-    # if default_score == 'probability':
-    #     dm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = doc_m2m_threshold)
-    # else:
-    #     dm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = doc_m2m_threshold)
+    # if len(taxa_terms) > 0:
+    #     context_dict['taxa_terms'] = taxa_terms
+    # if len(substituent_terms) > 0:
+    #     context_dict['substituent_terms'] = substituent_terms
 
     dm2m = get_docm2m(motif)
     context_dict['dm2ms'] = dm2m
@@ -350,11 +421,64 @@ def view_parents(request, motif_id):
         metadata_form = Mass2MotifMetadataForm(
             initial={'metadata': motif.annotation, 'short_annotation': motif.short_annotation})
         context_dict['metadata_form'] = metadata_form
+    else: # read only permission
+        context_dict['motif_annotation'] = motif.annotation
+        context_dict['short_annotation'] = motif.short_annotation
 
-    massbank_form = get_massbank_form(motif, motif_features)
+    massbank_form = get_massbank_form(motif, motif_feature_instances)
     context_dict['massbank_form'] = massbank_form
 
+
+    # New classyfire code
+    term_counts = {}
+    for dm in dm2m:
+        doc = dm.document
+        sub_terms = doc.substituentinstance_set.all()
+        print doc.experiment
+        for s in sub_terms:
+            if not s.subterm in term_counts:
+                term_counts[s.subterm] = 0
+            term_counts[s.subterm] += 1
+    if len(term_counts) > 0:
+        # compute overall percentages for this experiment
+        totals = {}
+        n_docs = len(Document.objects.filter(experiment = experiment))
+        temp = {}
+        for t in term_counts:
+            temp[t] = len(SubstituentInstance.objects.filter(document__experiment = experiment,subterm = t))
+            if temp[t] < term_counts[t]:
+                print t
+            totals[t] = 100.0*len(SubstituentInstance.objects.filter(document__experiment = experiment,subterm = t))/n_docs
+        terms = term_counts.keys()
+        counts = term_counts.values()
+        perc = [(100.0*v)/len(dm2m) for v in term_counts.values()]
+        background = [totals[t] for t in term_counts.keys()]
+        diff = [abs(p-b) for (p,b) in zip(perc,background)]
+        context_dict['term_counts'] = sorted(zip(terms,counts,perc,background,diff),key = lambda x : x[1], reverse=True)
     return render(request, 'basicviz/view_parents.html', context_dict)
+
+
+# sort substuctures by most common
+def most_common_subs(subs, docs):
+    subs_smiles = []
+    subs_dict = defaultdict(set)
+    seen_docs = set()
+    for s in subs:
+        key = s.sub.smiles
+        subs_smiles.append(key)
+        subs_dict[key].add(s)
+        # also track the documents containing this feature instance and annotated with some magma substructure
+        feature_doc = s.feature.document
+        seen_docs.add(feature_doc)
+    subs_counter = Counter(subs_smiles)  # count most common substructures
+    most_common = []
+    for smile, count in subs_counter.most_common():
+        feature_sub_instances = subs_dict[smile]
+        most_common.append((smile, count, feature_sub_instances, ))
+    # add the count for documents which are not annotated with magma substructures
+    num_unseen_docs = len(docs - seen_docs)
+    most_common.append(('None', num_unseen_docs, set()))
+    return most_common
 
 
 @login_required(login_url='/registration/login/')
@@ -1507,6 +1631,15 @@ def get_docm2m_all(experiment, doc_m2m_prob_threshold=None, doc_m2m_overlap_thre
     return dm2m
 
 
+## function is used to get all MocumentMassMass2Motif matchings by experiment and mass2motif
+def get_docm2m_by_motif(experiment, mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
+    doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
+    dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=doc_m2m_prob_threshold,
+                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
+
+    return dm2m
+
+
 ## function is used to get MocumentMassMass2Motif by document only
 def get_docm2m_bydoc(document, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
     experiment = document.experiment
@@ -1731,7 +1864,7 @@ def get_motifs_with_degree(experiment):
     motifs = Mass2Motif.objects.filter(experiment=experiment).prefetch_related('experiment')
     docm2m_q = DocumentMass2Motif.objects.values_list('mass2motif__id').filter(mass2motif__experiment=experiment,
                                                                                probability__gte=doc_m2m_prob_threshold,
-                                                                               overlap_score__gte=doc_m2m_overlap_threshold
+                                                                               overlap_score__gte=doc_m2m_overlap_threshold,
                                                                                ).annotate(degree=Count('*'))
     docm2m = {r[0]: r[1] for r in docm2m_q}
 

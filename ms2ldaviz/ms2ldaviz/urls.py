@@ -22,4 +22,5 @@ urlpatterns = [
     url(r'^uploads/', include('uploads.urls')),
     url(r'^decomposition/',include('decomposition.urls')),
     url(r'^ms1analysis/', include('ms1analysis.urls')),
+    url(r'^motifdb/', include('motifdb.urls')),
 ]

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}Explore terms {% endblock %}
+
+{% block head_block %}
+    <link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+{% endblock %}
+
+{% block body_block %}
+
+<h4>Molecules in {{experiment.name}} with term {{term.name}}</h4>
+<div class="panel-group">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <table class="table" id="doctable">
+                <thead>
+                    <th>Molecule</th>
+                    <th>Annotation</th>
+                </thead>
+                <tbody>
+                    {% for term_instance in term_instances %}
+                        <tr>
+                            <td><a href="/basicviz/show_doc/{{term_instance.document.id}}">{{term_instance.document.name}}</a></td>
+                            <td>{{term_instance.document.annotation}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js_block %}
+    <script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+    <script type="text/javascript">
+
+        $('#doctable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                'csv',
+            ],
+        });
+
+    </script>
+
+{% endblock %}

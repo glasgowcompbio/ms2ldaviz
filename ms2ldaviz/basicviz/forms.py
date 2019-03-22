@@ -4,6 +4,7 @@ from django.db.models import Q
 
 from basicviz.constants import AVAILABLE_OPTIONS
 from basicviz.models import SystemOptions, Experiment, UserExperiment, BVFeatureSet, PublicExperiments
+from motifdb.models import MDBMotifSet
 
 
 class DocFilterForm(forms.Form):
@@ -118,4 +119,3 @@ class MatchMotifForm(forms.Form):
         # self.fields['other_experiment'].queryset = Experiment.objects.filter(
         #     userexperiment__user=user).order_by('name')
         self.fields['other_experiment'].queryset = experiments
-

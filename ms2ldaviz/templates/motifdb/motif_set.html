@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}Welcome to motifDB{% endblock %}
+
+{% block head_block %}
+<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+{% endblock %}
+
+{% block body_block %}
+
+    <h4>{{motif_set.name}}</h4>
+    <div class="panel-group">
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p>Description: {{motif_set.description}}</p>
+                <p>Metadata:</p>
+                <ul>
+                    {% for key,value in metadata.items %}
+                        <ul><b>{{key}}:</b> {{value}}</ul>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table class="table" id="motiftable">
+                        <thead>
+                        <tr>
+                            <th>Motif</th>
+                            <th>Annotation</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for motif in motifs %}
+                            <tr>
+                                <td><a href="/motifdb/motif/{{motif.id}}">{{ motif.name }}</a></td>
+                                <td>{{ motif.annotation }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p><a href="/motifdb">Return to motifDB</a></p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js_block %}
+
+<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+<script>  
+    $('#motiftable').DataTable({
+        dom: 'Bfrtip',
+        buttons: [
+            'csv',
+        ],
+        "order": [[1, "desc"]],
+    });
+</script>
+
+{% endblock %}

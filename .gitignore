@@ -97,3 +97,5 @@ ENV/
 .xml
 .idea
 db.sqlite3-journal
+
+ms2ldaviz/nohup.out

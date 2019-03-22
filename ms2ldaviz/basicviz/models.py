@@ -5,7 +5,11 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.conf import settings
 
+
 from .constants import EXPERIMENT_STATUS_CODE,EXPERIMENT_TYPE, EXPERIMENT_DECOMPOSITION_SOURCE, EXPERIMENT_MS2_FORMAT
+
+from model_utils.managers import InheritanceManager
+
 
 
 # Create your models here.
@@ -40,9 +44,23 @@ class BVFeatureSet(models.Model):
             return self.name
     def __unicode__(self):
         return str(self)
+    def get_width(self):
+        bin_widths = {'binned_005':0.005,
+                  'binned_01': 0.01,
+                  'binned_05': 0.05,
+                  'binned_1': 0.1,
+                  'binned_5': 0.5}
+        try:
+            return bin_widths[self.name]
+        except:
+            return None
+        
+
+
 
 
 class Experiment(models.Model):
+    
     name = models.CharField(max_length=128, unique=True)
     description = models.CharField(max_length=1024, null=True)
 
@@ -94,6 +112,9 @@ class Experiment(models.Model):
     K = models.IntegerField(null=True, default=300)
     featureset = models.ForeignKey(BVFeatureSet,null = True)
 
+    has_magma_annotation = models.BooleanField(null = False, default = False)
+
+    include_motifset = models.TextField(null = True)
 
     def __unicode__(self):
         return self.name
@@ -122,6 +143,17 @@ class Experiment(models.Model):
         super(Experiment, self).save(*args, **kwargs)
 
 
+class Feature(models.Model):
+    name = models.CharField(max_length=64)
+    experiment = models.ForeignKey(Experiment,null=True)
+    min_mz = models.FloatField(null = True)
+    max_mz = models.FloatField(null = True)
+    featureset = models.ForeignKey(BVFeatureSet,null = True)
+
+    def __unicode__(self):
+        return self.name
+
+
 class PublicExperiments(models.Model):
     experiment = models.ForeignKey(Experiment)
 
@@ -140,11 +172,11 @@ class UserExperiment(models.Model):
     experiment = models.ForeignKey(Experiment)
     permission = models.CharField(max_length=24,null=False)
 
-
 class Document(models.Model):
     name = models.CharField(max_length=64)
     experiment = models.ForeignKey(Experiment)
     metadata = models.CharField(max_length=2048, null=True)
+    mol_string = models.TextField(null=True)
 
     def get_annotation(self):
         md = jsonpickle.decode(self.metadata)
@@ -259,15 +291,6 @@ class JobLog(models.Model):
     timestamp = models.DateField(default= datetime.date.today, null = False)
     tasktype = models.CharField(max_length=1028, null = True)
 
-class Feature(models.Model):
-    name = models.CharField(max_length=64)
-    experiment = models.ForeignKey(Experiment,null=True)
-    min_mz = models.FloatField(null = True)
-    max_mz = models.FloatField(null = True)
-    featureset = models.ForeignKey(BVFeatureSet,null = True)
-
-    def __unicode__(self):
-        return self.name
 
 
 class FeatureInstance(models.Model):
@@ -280,8 +303,9 @@ class FeatureInstance(models.Model):
 
 
 class Mass2Motif(models.Model):
+    objects = InheritanceManager()
     name = models.CharField(max_length=32)
-    experiment = models.ForeignKey(Experiment)
+    experiment = models.ForeignKey(Experiment,null=True)
     metadata = models.CharField(max_length=1024 * 1024, null=True)
 
     linkmotif = models.ForeignKey('Mass2Motif',null = True)
@@ -415,3 +439,14 @@ class MotifMatch(models.Model):
 
     def __unicode__(self):
         return "{} <-> {} ({})".format(self.frommotif.name,self.tomotif.name,self.score)
+
+class MagmaSub(models.Model):
+    smiles = models.TextField(null = False)
+    mol_string = models.TextField(null = True)
+
+class FeatureInstance2Sub(models.Model):
+    feature = models.ForeignKey(FeatureInstance, null=False)
+    sub = models.ForeignKey(MagmaSub, null=False)
+    fragatoms = models.CharField(max_length=1024, null=False)
+    mz = models.FloatField(null=True)
+    sub_type = models.CharField(max_length=128, null=True)

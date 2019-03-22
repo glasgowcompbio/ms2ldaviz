@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'uploads',
     'decomposition',
     'ms1analysis',
+    'django_extensions',
+    'motifdb'
 ]
 
 MIDDLEWARE_CLASSES = [

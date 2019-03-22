@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}Welcome to motifDB{% endblock %}
+
+{% block head_block %}
+<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+{% endblock %}
+
+{% block body_block %}
+
+    <h4>{{motif.name}} ({{motif.motif_set.name}})</h4>
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <ul>
+                    <li>Motif name: {{motif.name}}</li>
+                    <li>Motif set name: {{motif.motif_set.name}}</li>
+                    <li>Annotation: {{motif.annotation}}</li>
+                    <li>Short annotation: {{motif.short_annotation}}</li>
+                    <li>Comment: {{motif.comment}}</li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table class="table" id="featuretable">
+                        <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Probability</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for feature in features %}
+                            <tr>
+                                <td>{{ feature.feature.name }}</td>
+                                <td>{{ feature.probability }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p>Please note: the following plots both show <b>relative intensity</b> such that the biggest feature (fragment / loss) has a value of 100%. For the absolute values, please see the table above.</p>
+                <p>Click and drag (or use mouse-wheel) to zoom. Double click to return to original view.</p>
+                    <link rel="stylesheet" href="{% static 'css/ChemDoodleWeb.css' %}" type="text/css">
+                    <script type="text/javascript" src="{% static 'js/ChemDoodleWeb.js' %}"></script>
+                    <script type="text/javascript">
+                        var perspectiveMass = new ChemDoodle.PerspectiveCanvas('perspectiveMass', 800, 400);
+                        perspectiveMass.specs.plots_color="#FF0000";
+                        perspectiveMass.specs.plots_width=2;
+                        perspectiveMass.specs.text_font_size = 14;
+                        perspectiveMass.specs.text_font_families[0] = "Impact";
+                        perspectiveMass.specs.text_font_families[1] = "Charcoal";
+                        perspectiveMass.specs.text_font_families[2] = 'sans-serif';
+                        var spectrumJcampFile = '##TITLE= 2-Chlorophenol\n##JCAMP-DX= 5.00   $$ ISAS JCAMP-DX program (V.1.0)\n##DATA TYPE= MASS SPECTRUM\n##DATA CLASS= PEAKTABLE\n##ORIGIN= H. Mayer, ISAS Dortmund\n##OWNER= COPYRIGHT (C) 1993 by ISAS Dortmund, FRG\n##SPECTROMETER/DATA SYSTEM= Finnigan MAT Magnum\n##INSTRUMENTAL PARAMETERS= LOW RESOLUTION\n##.SPECTROMETER TYPE= TRAP  $$ ion trap spectrometer\n##.INLET= GC                $$ gas chromatograph as inlet\n##.IONIZATION MODE= EI+     $$ electron impact ionization with positiv polarity\n##.BASE PEAK= 128\n##.BASE PEAK INTENSITY= 687729 COUNTS\n##.RIC= 3063043\n##XUNITS= M/Z\n##YUNITS= RELATIVE ABUNDANCE\n##NPOINTS= 26\n##PEAK TABLE= (XY..XY)\n50, 5.84\n51, 9.55\n52, 4.19\n53, 1.12\n54, 12.67\n60, 3.80\n61, 10.16\n62, 13.47\n63, 58.30\n64, 60.43\n65, 33.02\n66, 4.32\n72, 1.70\n75, 1.62\n91, 1.03\n92, 24.95\n93, 4.20\n94, 1.25\n99, 7.20\n100, 19.83\n101, 3.45\n102, 6.47\n128, 100.00\n129, 6.52\n130, 32.45\n131, 2.13\n##END=\n';
+                        var spectrumJcampFile = '{{jcamp|escapejs}}';
+                        var spectrum = ChemDoodle.readJCAMP(spectrumJcampFile);
+                        spectrum.xUnit = "m/z";
+                        spectrum.yUnit = "Relative Abundance";
+                        perspectiveMass.loadSpectrum(spectrum);
+                    </script>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                    <script type="text/javascript">
+                        var perspectiveMassLoss = new ChemDoodle.PerspectiveCanvas('perspectiveMassLoss', 800, 400);
+                        perspectiveMassLoss.specs.plots_color="#0000FF";
+                        perspectiveMassLoss.specs.plots_width=2;
+                        perspectiveMassLoss.specs.text_font_size = 14;
+                        perspectiveMassLoss.specs.text_font_families[0] = "Impact";
+                        perspectiveMassLoss.specs.text_font_families[1] = "Charcoal";
+                        perspectiveMassLoss.specs.text_font_families[2] = 'sans-serif';
+                        var spectrumJcampFile = '##TITLE= 2-Chlorophenol\n##JCAMP-DX= 5.00   $$ ISAS JCAMP-DX program (V.1.0)\n##DATA TYPE= MASS SPECTRUM\n##DATA CLASS= PEAKTABLE\n##ORIGIN= H. Mayer, ISAS Dortmund\n##OWNER= COPYRIGHT (C) 1993 by ISAS Dortmund, FRG\n##SPECTROMETER/DATA SYSTEM= Finnigan MAT Magnum\n##INSTRUMENTAL PARAMETERS= LOW RESOLUTION\n##.SPECTROMETER TYPE= TRAP  $$ ion trap spectrometer\n##.INLET= GC                $$ gas chromatograph as inlet\n##.IONIZATION MODE= EI+     $$ electron impact ionization with positiv polarity\n##.BASE PEAK= 128\n##.BASE PEAK INTENSITY= 687729 COUNTS\n##.RIC= 3063043\n##XUNITS= M/Z\n##YUNITS= RELATIVE ABUNDANCE\n##NPOINTS= 26\n##PEAK TABLE= (XY..XY)\n50, 5.84\n51, 9.55\n52, 4.19\n53, 1.12\n54, 12.67\n60, 3.80\n61, 10.16\n62, 13.47\n63, 58.30\n64, 60.43\n65, 33.02\n66, 4.32\n72, 1.70\n75, 1.62\n91, 1.03\n92, 24.95\n93, 4.20\n94, 1.25\n99, 7.20\n100, 19.83\n101, 3.45\n102, 6.47\n128, 100.00\n129, 6.52\n130, 32.45\n131, 2.13\n##END=\n';
+                        var spectrumJcampFile = '{{jcamp_loss|escapejs}}';
+                        var spectrumLoss = ChemDoodle.readJCAMP(spectrumJcampFile);
+                        spectrum.xUnit = "m/z";
+                        spectrum.yUnit = "Relative Abundance";
+                        perspectiveMassLoss.loadSpectrum(spectrumLoss);
+                    </script>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <p><a href="/motifdb/motif_set/{{motif.motif_set.id}}">Return to motif set</a></p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js_block %}
+
+<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+
+<script>  
+    $('#featuretable').DataTable({
+        dom: 'Bfrtip',
+        buttons: [
+            'csv',
+        ],
+        "order": [[1, "desc"]],
+    });
+</script>
+
+{% endblock %}
