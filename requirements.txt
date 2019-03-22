@@ -24,3 +24,4 @@ scipy==0.18.1
 six==1.11.0
 typing==3.6.6
 vine==1.1.4
+tensorflow
