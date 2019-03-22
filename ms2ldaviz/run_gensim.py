@@ -5,8 +5,6 @@ import json
 import os
 import sys
 
-import jsonpickle
-from django.db import transaction, connection
 from tqdm import tqdm
 
 # Never let numpy use more than one core, otherwise each worker of LdaMulticore will use all cores for numpy
@@ -22,12 +20,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 import django
 django.setup()
 
-from basicviz.views import compute_overlap_score
-from ms1analysis.models import DocSampleIntensity
 from ms2lda_feature_extraction import LoadMZML, MakeBinnedFeatures, LoadMSP, LoadMGF
-from basicviz.models import Experiment, User, BVFeatureSet, UserExperiment, JobLog, Feature, Document, FeatureInstance, \
-    Mass2Motif, Mass2MotifInstance, Alpha, DocumentMass2Motif, FeatureMass2MotifInstance
-from load_dict_functions import load_dict, add_all_features_set, add_sample
+from basicviz.models import Experiment, User, BVFeatureSet, UserExperiment, JobLog
+from load_dict_functions import load_dict, load_corpus_gensim, build_gensim_corpus
 from lda import VariationalLDA
 from gensim.models.ldamulticore import LdaMulticore
 from gensim.models.ldamodel import LdaModel
@@ -271,285 +266,15 @@ def gensim(corpusjson, ldafile,
         json.dump(lda_dict, f)
 
 
-def build_gensim_corpus(lda_dict, normalize):
-    corpus = []
-    index2doc = []
-    for doc in sorted(lda_dict['corpus'].keys()):
-        words = lda_dict['corpus'][doc]
-        bow = []
-        max_score = max(words.values())
-        for word in sorted(words.keys()):
-            score = words[word]
-            normalized_score = score * normalize / max_score
-            bow.append((lda_dict['word_index'][word], normalized_score))
-        corpus.append(bow)
-        index2doc.append(doc)
-    return corpus, index2doc
-
-
-def gen_topic_metadata(k):
-    """Topic metadata generation copied from lda/lda.py:VariationalLDA:__init__:229-233
-
-    Sets fixed topics to 0
-    """
-    topic_index = {}
-    topic_metadata = {}
-    for topic_pos in range(0, k):
-        topic_name = 'motif_{}'.format(topic_pos)
-        topic_index[topic_name] = topic_pos
-        topic_metadata[topic_name] = {'name': topic_name, 'type': 'learnt'}
-    return topic_metadata, topic_index
-
-
 def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, normalize, min_prob_to_keep_beta,
                       min_prob_to_keep_theta, min_prob_to_keep_phi, feature_set_name):
     featureset, new_experiment = create_experiment(description, experiment, owner, feature_set_name)
+    verbose = True
 
     print('Reading corpus json file')
-    lda_dict = json.load(corpusjson)
-    corpus, index2doc = build_gensim_corpus(lda_dict, normalize)
-
-    if 'features' in lda_dict:
-        print("Explicit feature object: loading them all at once")
-        add_all_features_set(experiment, lda_dict['features'], featureset=featureset)
-
-    features_q = Feature.objects.filter(featureset=featureset)
-    features = {r.name: r for r in features_q}
-    doc_dict = {}
-    with transaction.atomic():
-        print('Loading mass spectras')
-        for doc in tqdm(lda_dict['corpus']):
-            # remove 'intensities' from metdat before store it into database
-            metdat = lda_dict['doc_metadata'][doc].copy()
-            metdat.pop('intensities', None)
-            metdat = jsonpickle.encode(metdat)
-            doc_dict[doc] = Document(name=doc, experiment=new_experiment, metadata=metdat)
-        Document.objects.bulk_create(doc_dict.values())
-
-    with transaction.atomic():
-        print('Loading peaks')
-        # Now that each document has an row in the database thus an id, add the document children
-        fi_chunk_size = 1000000
-        feature_instances_flat = []
-        intensities = []
-        for doc_id, d in tqdm(doc_dict.items(), total=len(doc_dict)):
-            # add_document_words_set(d,doc,experiment,lda_dict,featureset)
-            for word, intensity in lda_dict['corpus'][doc_id].items():
-                fi = FeatureInstance(document=d, feature=features[word], intensity=intensity)
-                feature_instances_flat.append(fi)
-                if len(feature_instances_flat) > fi_chunk_size:
-                    FeatureInstance.objects.bulk_create(feature_instances_flat)
-                    feature_instances_flat = []
-
-            # load_sample_intensity(d, experiment, lda_dict['doc_metadata'][doc])
-            metdat = lda_dict['doc_metadata'][doc_id]
-            if 'intensities' in metdat:
-                for sample_name, intensity in metdat['intensities'].items():
-                    # process missing data
-                    # if intensity not exist, does not save in database
-                    if intensity:
-                        sample = add_sample(sample_name, new_experiment)
-                        # add_doc_sample_intensity(sample, d, intensity)
-                        intensities.append(DocSampleIntensity(sample=sample, document=d, intensity=intensity))
-        FeatureInstance.objects.bulk_create(feature_instances_flat)
-        del feature_instances_flat
-        DocSampleIntensity.objects.bulk_create(intensities)
-
-    print('Reading lda gensim file')
-    model = LdaModel.load(ldafile)
-    # eq to load_dict, but pull directly from gensim model instead of json data struct
-
-    print("Loading Mass2Motif")
-    with transaction.atomic():
-        m2ms = {}
-        topic_metadatas = lda_dict['topic_metadata']
-        if len(topic_metadatas) != model.num_topics:
-            # if gensim was run with different num topics than corpus then recompute metadata
-            topic_metadatas, topic_index = gen_topic_metadata(model.num_topics)
-        for topic_id, topic_metadata in topic_metadatas.items():
-            metadata = jsonpickle.encode(topic_metadata)
-            m2ms[topic_id] = Mass2Motif(name=topic_id, experiment=new_experiment, metadata=metadata)
-        Mass2Motif.objects.bulk_create(m2ms.values())
-
-    print("Loading Mass2MotifInstance")
-    with transaction.atomic():
-        m2mis = []
-        index2word = {v: k for k, v in lda_dict['word_index'].items()}
-        for tid, topic in tqdm(enumerate(model.get_topics()), total=model.num_topics):
-            topic = topic / topic.sum()  # normalize to probability distribution
-            topic_id = 'motif_{0}'.format(tid)
-            m2m = m2ms[topic_id]
-            for idx in np.argsort(-topic):
-                if topic[idx] > min_prob_to_keep_beta:
-                    feature = features[index2word[idx]]
-                    probability = float(topic[idx])
-                    m2mis.append(Mass2MotifInstance(feature=feature, mass2motif=m2m, probability=probability))
-        Mass2MotifInstance.objects.bulk_create(m2mis)
-        del m2mis
-
-    print("Loading Alpha")
-    with transaction.atomic():
-        alphas = []
-        for tid, alpha in tqdm(enumerate(model.alpha), total=model.num_topics):
-            topic_id = 'motif_{0}'.format(tid)
-            m2m = m2ms[topic_id]
-            alphas.append(Alpha(mass2motif=m2m, value=alpha))
-        Alpha.objects.bulk_create(alphas)
-
-    print("Loading theta")
-    with transaction.atomic():
-        docm2ms = []
-        for doc_id, bow in tqdm(enumerate(corpus), total=len(corpus)):
-            document = doc_dict[index2doc[doc_id]]
-            topics = model.get_document_topics(bow, minimum_probability=min_prob_to_keep_theta)
-            for tid, prob in topics:
-                topic_id = 'motif_{0}'.format(tid)
-                mass2motif = m2ms[topic_id]
-                docm2ms.append(DocumentMass2Motif(document=document, mass2motif=mass2motif,
-                                                  probability=float(prob)))
-        DocumentMass2Motif.objects.bulk_create(docm2ms)
-        del docm2ms
-
-    print("Loading phi")
-    with transaction.atomic():
-        phis = []
-        phi_chunk_size = 100000
-        corpus_topics = model.get_document_topics(corpus, per_word_topics=True,
-                                                  minimum_probability=min_prob_to_keep_theta,
-                                                  minimum_phi_value=min_prob_to_keep_phi)
-        # corpus_topics is array of [topic_theta, topics_per_word,topics_per_word_phi] for each document
-        for doc_id, doc_topics in tqdm(enumerate(corpus_topics), total=len(corpus)):
-            topics_per_word_phi = doc_topics[2]
-
-            doc_name = index2doc[doc_id]
-            doc = doc_dict[doc_name]
-            bow = corpus[doc_id]
-            word_intens = {k: v for k, v in bow}
-            feature_instances = {r.feature.name: r for r in FeatureInstance.objects.filter(document=doc).select_related('feature')}
-            for word_id, topics in topics_per_word_phi:
-                feature_instance = feature_instances[index2word[word_id]]
-                for tid, phi in topics:
-                    topic_id = 'motif_{0}'.format(tid)
-                    mass2motif = m2ms[topic_id]
-                    probability = phi / word_intens[word_id]
-                    phis.append(FeatureMass2MotifInstance(featureinstance=feature_instance,
-                                                          mass2motif=mass2motif, probability=probability))
-            if len(phis) > phi_chunk_size:
-                # Flush phis to db, to prevent big memory footprint
-                FeatureMass2MotifInstance.objects.bulk_create(phis)
-                phis = []
-        FeatureMass2MotifInstance.objects.bulk_create(phis)
-        del phis
-
-    if 'overlap_scores' not in lda_dict:
-        print("Computing overlap scores")
-        # Compute overlap score with sql
-        with connection.cursor() as cursor:
-            """
-            SELECT * FROM basicviz_documentmass2motif WHERE id=149332;
-               id   |    probability     | document_id | mass2motif_id | validated |   overlap_score
-            --------+--------------------+-------------+---------------+-----------+--------------------
-             149332 | 0.0169265381991863 |       76297 |          1150 |           | 0.0275374519023851
-
-            SELECT * FROM
-            basicviz_featureinstance fi
-            WHERE fi.document_id = 76297;
-
-            SELECT * FROM
-            basicviz_featuremass2motifinstance
-            WHERE featureinstance_id IN (
-             SELECT id FROM
-                basicviz_featureinstance fi
-                WHERE fi.document_id = 76297
-            );
-
-            SELECT sum(fmmi.probability * mmi.probability) FROM
-            basicviz_featuremass2motifinstance fmmi
-            JOIN basicviz_featureinstance fi ON fmmi.featureinstance_id = fi.id
-            JOIN basicviz_mass2motifinstance mmi
-                ON  mmi.feature_id = fi.feature_id
-            WHERE fi.document_id = 76297
-            AND mmi.mass2motif_id = 1150
-            ;
-            // Score matches
-
-            SELECT dmm.* FROM basicviz_documentmass2motif dmm
-            JOIN basicviz_document d ON d.id = dmm.document_id
-            WHERE experiment_id = 6;
-               id   |    probability     | document_id | mass2motif_id | validated |    overlap_score
-            --------+--------------------+-------------+---------------+-----------+----------------------
-             150337 | 0.0131358103826642 |       76430 |          1152 |           |    0.142929254448449
-             150234 | 0.0100447973236442 |       76511 |           962 |           |                    0
-
-            SELECT sum(fmmi.probability * mmi.probability) FROM
-            basicviz_featuremass2motifinstance fmmi
-            JOIN basicviz_featureinstance fi ON fmmi.featureinstance_id = fi.id
-            JOIN basicviz_mass2motifinstance mmi
-                ON  mmi.feature_id = fi.feature_id
-            WHERE fi.document_id = 76430
-            AND mmi.mass2motif_id = 1152
-            ;
-            // Score matches
-
-            SELECT sum(fmmi.probability * mmi.probability) FROM
-            basicviz_featuremass2motifinstance fmmi
-            JOIN basicviz_featureinstance fi ON fmmi.featureinstance_id = fi.id
-            JOIN basicviz_mass2motifinstance mmi
-                ON  mmi.feature_id = fi.feature_id
-            WHERE fi.document_id = 76511
-            AND mmi.mass2motif_id = 962
-            ;
-            // No rows, matches score
-
-            SELECT
-                dmm.id, sum(mmi.probability * fmmi.probability) AS overlap_score2,
-                dmm.overlap_score
-            FROM basicviz_document d
-            JOIN basicviz_documentmass2motif dmm ON dmm.document_id=d.id
-            JOIN basicviz_featureinstance fi ON fi.document_id=dmm.document_id
-            JOIN basicviz_featuremass2motifinstance fmmi ON fmmi.featureinstance_id=fi.id
-            JOIN basicviz_mass2motifinstance mmi ON mmi.feature_id = fi.feature_id AND mmi.mass2motif_id=dmm.mass2motif_id
-            WHERE d.experiment_id = 6
-            AND dmm.document_id = 76297
-            AND dmm.mass2motif_id = 1150
-            GROUP BY dmm.id
-            ;
-            // Score matches
-
-            SELECT * FROM (
-                SELECT
-                    dmm.id, sum(mmi.probability * fmmi.probability) AS overlap_score2,
-                    dmm.overlap_score
-                FROM basicviz_document d
-                JOIN basicviz_documentmass2motif dmm ON dmm.document_id=d.id
-                JOIN basicviz_featureinstance fi ON fi.document_id=dmm.document_id
-                JOIN basicviz_featuremass2motifinstance fmmi ON fmmi.featureinstance_id=fi.id
-                JOIN basicviz_mass2motifinstance mmi ON mmi.feature_id = fi.feature_id AND mmi.mass2motif_id=dmm.mass2motif_id
-                WHERE d.experiment_id = 6
-                GROUP BY dmm.id
-            ) a WHERE a.id IN (150337, 150234, 149332);
-            // Scores matches
-            """
-
-            # when db changes this query can fail
-            overlap_score_sql = """UPDATE
-                basicviz_documentmass2motif t
-            SET
-                overlap_score = a.overlap_score
-            FROM (
-                SELECT
-                    dmm.id, sum(mmi.probability * fmmi.probability) AS overlap_score
-                FROM basicviz_document d
-                JOIN basicviz_documentmass2motif dmm ON dmm.document_id=d.id
-                JOIN basicviz_featureinstance fi ON fi.document_id=dmm.document_id
-                JOIN basicviz_featuremass2motifinstance fmmi ON fmmi.featureinstance_id=fi.id
-                JOIN basicviz_mass2motifinstance mmi ON mmi.feature_id = fi.feature_id AND mmi.mass2motif_id=dmm.mass2motif_id
-                WHERE d.experiment_id = %s
-                GROUP BY dmm.id
-            ) a
-            WHERE t.id = a.id
-            """
-            cursor.execute(overlap_score_sql, [new_experiment.id])
+    corpus_dict = json.load(corpusjson)
+    load_corpus_gensim(new_experiment, corpus_dict, featureset, ldafile, min_prob_to_keep_beta, min_prob_to_keep_phi,
+                       min_prob_to_keep_theta, normalize, verbose)
 
     # Done inserting
     new_experiment.status = '1'

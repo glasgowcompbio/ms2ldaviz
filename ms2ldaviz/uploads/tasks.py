@@ -10,11 +10,11 @@ import json
 
 from celery.utils.log import get_task_logger
 
-from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_DECOMPOSITION_SOURCE, EXPERIMENT_TYPE
+from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_DECOMPOSITION_SOURCE
 from basicviz.models import Experiment
 from decomposition.decomposition_functions import decompose, load_mzml_and_make_documents
 from decomposition.models import MotifSet, Decomposition
-from load_dict_functions import load_dict
+from load_dict_functions import load_dict, load_corpus_gensim, prepare_gensim_archive
 from ms2ldaviz.celery_tasks import app
 from .lda_functions import load_mzml_and_make_documents as lda_load_mzml_and_make_documents
 from .lda_functions import run_lda
@@ -180,6 +180,49 @@ def upload_task(exp_id, params):
             experiment.save()
             delete_analysis_dir(experiment)
 
+    except:
+        traceback.print_exc()
+    finally:
+        sys.stdout, sys.stderr = old_outs
+
+
+@app.task
+def upload_gensim_task(exp_id, params):
+    experiment = Experiment.objects.get(pk=exp_id)
+
+    logger = custom_logger(experiment)
+    logger.info('Running upload on experiment_%d (%s)' % (exp_id, experiment.description))
+    logger.info('corpus json file = %s' % experiment.ms2_file)
+    logger.info('gensim lda archive file = %s' % experiment.csv_file)
+
+    old_outs = sys.stdout, sys.stderr
+    rlevel = app.conf.worker_redirect_stdouts_level
+    try:
+        app.log.redirect_stdouts_to_logger(logger, rlevel)
+
+        filename = params['corpus_filename']
+        featureset = params['featureset']
+        with open(filename, 'r') as f:
+            corpus_dict = json.load(f)
+
+        logger.info('Loaded %s' % filename)
+        verbose = False
+
+        gensim_model_path = prepare_gensim_archive(params['gensim_filename'])
+        load_corpus_gensim(experiment,
+                           corpus_dict,
+                           feature_set_name=featureset,
+                           ldafile=gensim_model_path,
+                           min_prob_to_keep_beta=1e-3,
+                           min_prob_to_keep_phi=1e-2,
+                           min_prob_to_keep_theta=1e-2,
+                           normalize=1000,
+                           verbose=verbose)
+
+        ready, _ = EXPERIMENT_STATUS_CODE[1]
+        experiment.status = ready
+        experiment.save()
+        delete_analysis_dir(experiment)
     except:
         traceback.print_exc()
     finally:

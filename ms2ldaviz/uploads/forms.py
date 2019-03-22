@@ -133,3 +133,35 @@ class UploadExperimentForm(forms.ModelForm):
             'name', 'description', 'ms2_file', 'featureset'
         ]
         exclude = ('status', 'experiment_type')
+
+
+class UploadGensimExperimentForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(UploadGensimExperimentForm, self).__init__(*args, **kwargs)
+        self.fields['featureset'] = forms.ModelChoiceField(
+            queryset=BVFeatureSet.objects.filter(name__startswith='binned'),
+            label='Choose width of ms2 bins (to enable comparison with characterised motifs, we strongly recommend default value of 0.005 Da)',
+            initial=BVFeatureSet.objects.get(name='binned_005')
+        )
+        self.fields['ms2_file'].required = True
+        self.fields['csv_file'].required = True
+
+    class Meta:
+        model = Experiment
+        widgets = {
+            'name': forms.TextInput(attrs={'style': 'width:300px'}),
+            'description': forms.Textarea(attrs={'rows': 3, 'cols': 56}),
+            'ms2_file': forms.ClearableFileInput(),
+            'csv_file': forms.ClearableFileInput(),
+        }
+        labels = {
+            'name': '(Required) Experiment name. Note that this must be unique in the system',
+            'description': '(Required) Experiment description.',
+            'ms2_file': 'Corpus json file',
+            'csv_file': 'Gensim LDA output archive file (a big gensim lda model is stored in seperate files, ms2lda website requires a tarball file with all those files)',
+        }
+        fields = [
+            'name', 'description', 'ms2_file', 'csv_file', 'featureset'
+        ]
+        exclude = ('status', 'experiment_type')

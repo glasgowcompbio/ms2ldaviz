@@ -1,36 +1,36 @@
 {% extends 'base.html' %}
 
-{% load static %}
+ {% load static %}
 
-{% block head_block %}
+ {% block head_block %}
 {% endblock %}
 
-{% block body_block %}
+ {% block body_block %}
 
-	<h3>Add a new experiment</h3>
+    <h3>Add a new experiment</h3>
     <ul class="nav nav-tabs">
       <li role="presentation"><a href="/uploads/create_experiment">Create</a></li>
-      <li role="presentation" class="active"><a href="/uploads/upload_experiment">Upload</a></li>
-      <li role="presentation"><a href="/uploads/upload_gensim_experiment">Upload gensim</a></li>
+      <li role="presentation"><a href="/uploads/upload_experiment">Upload</a></li>
+      <li role="presentation" class="active"><a href="/uploads/upload_gensim_experiment">Upload gensim</a></li>
     </ul>
     <div class="panel-group">
         <div class="panel panel-default">
             <div class="panel-body">
                 <p>
-                    You can upload LDA experiments that have been performed locally in your computer
-                    <a href="https://github.com/sdrogers/lda">(download script)</a>.
+                    You can upload big LDA experiments that have been performed locally in your computer
+                    <a href="https://github.com/iomega/ms2ldaviz/blob/pipenv-sqlite-redis/ms2ldaviz/run_gensim.py">(download script)</a>.
                 </p>
             </div>
         </div>
         <div class="panel panel-default">
             <div class="panel-body">
-                <form id="experiment_form" method="post" action="/uploads/upload_experiment/" enctype="multipart/form-data">
+                <form id="experiment_form" method="post" action="/uploads/upload_gensim_experiment/" enctype="multipart/form-data">
                     {% csrf_token %}
                     {% for hidden in experiment_form.hidden_fields %}
                         {{ hidden }}
                     {% endfor %}
 
-                    {% for field in experiment_form.visible_fields %}
+                     {% for field in experiment_form.visible_fields %}
                         <p>{{ field.errors }}</p>
                         <p>  {{field.label}} {% if field.field.required %} * {% endif %} {{ field }}</p>
                     {% endfor %}
@@ -41,4 +41,4 @@
     </div>
 
 
-{% endblock %}
+ {% endblock %}

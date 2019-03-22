@@ -2,6 +2,7 @@ pymzml==0.7.7
 psycopg2
 amqp==2.3.2
 billiard==3.5.0.4
+redis==2.10.6
 celery==4.2.1
 decorator==4.3.0
 Django==1.11.16
@@ -24,4 +25,5 @@ scipy==0.18.1
 six==1.11.0
 typing==3.6.6
 vine==1.1.4
+gensim==3.7.1
 tensorflow
