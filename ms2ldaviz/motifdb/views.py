@@ -287,6 +287,7 @@ def edit_motifset_metadata(request,motif_set_id):
             metadata['Analysis_IonizationSource'] = mdbform.cleaned_data['ionization_source']
 
             motif_set.metadata = jsonpickle.encode(metadata)
+            motif_set.name = mdbform.cleaned_data['motifset_name']
             motif_set.save()
         return  redirect('/motifdb/motif_set/{}'.format(motif_set_id))
     else:
