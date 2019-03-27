@@ -270,7 +270,10 @@ def choose_motifs(request,motif_set_id,experiment_id):
 
 def edit_motifset_metadata(request,motif_set_id):
     motif_set = MDBMotifSet.objects.get(id = motif_set_id)
-    metadata = jsonpickle.decode(motif_set.metadata)
+    try:
+        metadata = jsonpickle.decode(motif_set.metadata)
+    except:
+        metadata = {}
     if request.method == 'POST':
         mdbform = MetadataForm(request.POST)
         if mdbform.is_valid():
