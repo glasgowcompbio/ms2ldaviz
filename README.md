@@ -61,6 +61,10 @@ This will exclude the lda info from the json file and write/import a gensim form
 ./run_gensim.py insert_gensim myexp.corpus.json myexp.lda.gensim stefanv myexp
 ```
 
+The last command inserts the gensim lda results into the database. 
+This can also be done by using the web interface by going to `/uploads/upload_gensim_experiment/` url on the ms2lda server.
+The gensim result must be tarballed with for example `tar -zcf myexp.lda.gensim.tar.gz myexp.lda.gensim*` and then uploaded in the form.
+
 # Update lda subtree
 
 The lda directory is a checkout of the https://github.com/sdrogers/lda repo, it can be synced using
