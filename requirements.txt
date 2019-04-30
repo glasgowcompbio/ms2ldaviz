@@ -13,7 +13,7 @@ django-jfu==2.0.9
 django-markdown2==0.3.1
 django-model-utils==3.1.2
 jsonpickle==1.0
-keras==2.2.2
+keras==2.2.4
 kombu==4.2.1
 markdown2==2.3.6
 networkx==2.2
@@ -26,4 +26,4 @@ six==1.11.0
 typing==3.6.6
 vine==1.1.4
 gensim==3.7.1
-tensorflow
+tensorflow==1.13.1
