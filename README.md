@@ -73,3 +73,25 @@ The lda directory is a checkout of the https://github.com/sdrogers/lda repo, it 
 git remote add lda https://github.com/sdrogers/lda.git
 git subtree pull --prefix=lda lda master
 ```
+
+# Docker
+
+Run ms2lda website using docker-compose with
+
+```bash
+# Make sure lda/ is filled
+docker-compose up -d
+# For first time initialize db with
+docker-compose run web python manage.py migrate
+docker-compose run web python manage.py createsuperuser
+docker-compose run web python setup_feat.py
+```
+
+Goto http://localhost:8000 to visit site
+
+To run on different port then 8000 change `8000:8000` in `docker-compose.yml` file to `<insert port here>:8000`.
+
+To clean up run
+```bash
+docker-compose down
+```

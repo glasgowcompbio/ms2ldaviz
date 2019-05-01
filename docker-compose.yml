@@ -1,0 +1,33 @@
+version: '3'
+services:
+  web:
+    build: .
+    image: iomega/ms2ldaviz
+    ports:
+     - "8000:8000"
+    depends_on:
+     - db
+     - redis
+    volumes:
+     - jobs:/code/ms2ldaviz/media
+  redis:
+    image: "redis:alpine"
+  db:
+    image: "postgres:alpine"
+    environment:
+      POSTGRES_PASSWORD: j7z3rL40w9
+      POSTGRES_USER: django
+    volumes:
+     - datadir:/var/lib/postgresql/data
+  worker:
+    build: .
+    image: iomega/ms2ldaviz
+    command: [celery, -A, ms2ldaviz, worker, -l, info, --max-tasks-per-child, '20', --concurrency, '1']
+    depends_on:
+     - db
+     - redis
+    volumes:
+     - jobs:/code/ms2ldaviz/media
+volumes:
+  jobs:
+  datadir:
