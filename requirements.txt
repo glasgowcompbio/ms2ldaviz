@@ -28,3 +28,5 @@ vine==1.1.4
 gensim==3.7.1
 tensorflow==1.13.1
 tqdm==4.31.1
+chemspipy==1.0.4
+requests==2.21.0
