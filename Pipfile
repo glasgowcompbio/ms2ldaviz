@@ -35,6 +35,7 @@ typing = "==3.6.6"
 vine = "==1.1.4"
 tensorflow = "==1.13.1"
 Keras = "==2.2.4"
+funcsigs = "==1.0.2"
 
 [dev-packages]
 

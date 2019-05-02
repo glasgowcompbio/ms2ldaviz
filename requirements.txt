@@ -30,3 +30,4 @@ tensorflow==1.13.1
 tqdm==4.31.1
 chemspipy==1.0.4
 requests==2.21.0
+funcsigs==1.0.2
