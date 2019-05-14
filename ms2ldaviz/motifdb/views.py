@@ -286,16 +286,23 @@ def edit_motifset_metadata(request,motif_set_id):
             metadata['Paper_URL'] = mdbform.cleaned_data['paper_url']
             metadata['Analysis_ChromatographyAndPhase'] = mdbform.cleaned_data['chromatography']
             metadata['Other Information'] = mdbform.cleaned_data['other_information']
-            metadata['Massive ID'] = mdbform.cleaned_data['massive_id']
+            metadata['massive_id'] = mdbform.cleaned_data['massive_id']
             metadata['Analysis_IonizationSource'] = mdbform.cleaned_data['ionization_source']
+
+            motif_set.description = mdbform.cleaned_data['description']
 
             motif_set.metadata = jsonpickle.encode(metadata)
             motif_set.name = mdbform.cleaned_data['motifset_name']
             motif_set.save()
-        return  redirect('/motifdb/motif_set/{}'.format(motif_set_id))
+            return  redirect('/motifdb/motif_set/{}'.format(motif_set_id))
+        else:
+            context_dict['mdbform'] = mdbform
+            context_dict['motifset'] = motif_set
+
     else:
         initial = metadata
         initial['motifset_name'] = motif_set.name
+        initial['description'] = motif_set.description
         mdbform = MetadataForm(initial = initial)
 
         context_dict = {}
