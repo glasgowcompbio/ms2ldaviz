@@ -270,6 +270,9 @@ def choose_motifs(request,motif_set_id,experiment_id):
 
 def edit_motifset_metadata(request,motif_set_id):
     motif_set = MDBMotifSet.objects.get(id = motif_set_id)
+    # check if the creator is the current user
+    if not motif_set.owner == request.user:
+        return HttpResponse("You can only edit motifsets that you created!")
     try:
         metadata = jsonpickle.decode(motif_set.metadata)
     except:
