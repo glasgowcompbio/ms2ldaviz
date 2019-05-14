@@ -42,19 +42,19 @@ class NewMotifSetForm(forms.Form):
         ("mixture","mixture"),
     ))
 
-    collision_energy = forms.ChoiceField(required = True, choices = (
+    collision_energy = forms.ChoiceField(label = "Collision_Energy",required = True, choices = (
         ("HCD","HCD"),
         ("CID","CID"),
         ("mixture","mixture"),
     ))
 
-    taxon_id = forms.CharField(required = False)
+    taxon_id = forms.CharField(label = "Taxon_ID",required = False)
 
-    scientific_name = forms.CharField(required = False)
+    scientific_name = forms.CharField(label = "Scientific_Name",required = False)
 
-    sample_type = forms.CharField(required = False)
+    sample_type = forms.CharField(label = "Sample_Type",required = False)
 
-    paper_url = forms.CharField(required = False)
+    paper_url = forms.CharField(label = "Paper_URL",required = False)
 
     chromatography = forms.ChoiceField(required = False, label = "Analysis_ChromatographyAndPhase", choices = (
         ("reverse phase (C18)","reverse phase (C18)"),
@@ -65,8 +65,8 @@ class NewMotifSetForm(forms.Form):
         ("direct infusion (DI)","direct infusion (DI)"),
     ))
 
-    other_information = forms.CharField(widget=forms.Textarea,required= False)
-    massive_id = forms.CharField(required = False)
+    other_information = forms.CharField(label = "Other_Information",widget=forms.Textarea,required= False)
+    massive_id = forms.CharField(label = "Massive_ID",required = False)
 
 
 

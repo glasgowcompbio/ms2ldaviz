@@ -50,9 +50,21 @@ def motif_set(request,motif_set_id):
         context_dict['correct_user'] = True
     context_dict['motif_set'] = ms
     try:
-        context_dict['metadata'] = jsonpickle.decode(ms.metadata)
+        metadata = jsonpickle.decode(ms.metadata)
     except:
-        context_dict['metadata'] = {}
+        metadata = {}
+    
+    # fix the metadata to look nice...
+    fixed_metadata = {}
+    for k,v in metadata.items():
+        tokens = k.split("_")
+        new_tokens = []
+        for t in tokens:
+            new_tokens.append(t[0].capitalize() + t[1:])
+        new_key = '_'.join(new_tokens)
+        fixed_metadata[new_key] = v
+    context_dict['metadata'] = fixed_metadata
+    
     motifs = MDBMotif.objects.filter(motif_set = ms)
     context_dict['motifs'] = motifs
     return render(request,'motifdb/motif_set.html',context_dict)
