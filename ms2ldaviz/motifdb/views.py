@@ -247,7 +247,7 @@ def choose_motifs(request,motif_set_id,experiment_id):
             print motif_form.cleaned_data['motifs']
             motifs = Mass2Motif.objects.filter(id__in = motif_form.cleaned_data['motifs'])
             # make new motifdb motifs based upon these
-            prefix = mm_metadata['motif_name_prefix']
+            prefix = mm_metadata['Motif Name Prefix']
             for motif in motifs:
                 name = prefix + '_' + motif.name + '.m2m'
                 mdb = MDBMotif(name = name,motif_set = motifset)
