@@ -48,6 +48,8 @@ def motif_set(request,motif_set_id):
     context_dict = {}
     if request.user == ms.owner:
         context_dict['correct_user'] = True
+    else:
+        context_dict['correct_user'] = False
     context_dict['motif_set'] = ms
     try:
         metadata = jsonpickle.decode(ms.metadata)
