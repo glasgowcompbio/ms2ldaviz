@@ -44,7 +44,10 @@ def index(request):
 
 def motif_set(request,motif_set_id):
     ms = MDBMotifSet.objects.get(id = motif_set_id)
+
     context_dict = {}
+    if request.user == ms.owner:
+        context_dict['correct_user'] = True
     context_dict['motif_set'] = ms
     try:
         context_dict['metadata'] = jsonpickle.decode(ms.metadata)
@@ -271,8 +274,11 @@ def choose_motifs(request,motif_set_id,experiment_id):
 def edit_motifset_metadata(request,motif_set_id):
     motif_set = MDBMotifSet.objects.get(id = motif_set_id)
     # check if the creator is the current user
+    context_dict = {'motifset':motif_set}
     if not motif_set.owner == request.user:
         return HttpResponse("You can only edit motifsets that you created!")
+    else:
+        context_dict['correct_user'] = True
     try:
         metadata = jsonpickle.decode(motif_set.metadata)
     except:
@@ -307,10 +313,7 @@ def edit_motifset_metadata(request,motif_set_id):
         initial['motifset_name'] = motif_set.name
         initial['description'] = motif_set.description
         mdbform = MetadataForm(initial = initial)
-
-        context_dict = {}
         context_dict['mdbform'] = mdbform
-        context_dict['motifset'] = motif_set
     return render(request,'motifdb/edit_motif_set_metadata.html',context_dict)
 
 class MotifFilter(object):

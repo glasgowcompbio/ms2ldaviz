@@ -24,7 +24,9 @@
                     {% endfor %}
                 </ul>
                 <div>
-                    <a href="/motifdb/edit_motifset_metadata/{{motif_set.id}}">Edit metadata</a>
+                    {% if correct_user %}
+                        <a href="/motifdb/edit_motifset_metadata/{{motif_set.id}}">Edit metadata</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
