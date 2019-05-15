@@ -204,6 +204,7 @@ class Document(models.Model):
         else:
             return None
 
+    # this method probably doesn't work so well...
     def get_image_url(self):
         md = jsonpickle.decode(self.metadata)
         if 'csid' in md:
