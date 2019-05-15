@@ -25,7 +25,7 @@ class CreateExperimentForm(forms.ModelForm):
         self.fields['decompose_from'].required = False
 
         self.fields['include_motifset'] = forms.MultipleChoiceField(
-            choices = [(m.id,m.name) for m in MDBMotifSet.objects.all()],
+            choices = [(m.id,str(m)) for m in MDBMotifSet.objects.all()],
             label='Select zero or more motifsets to for initial model population'
         )
         self.fields['include_motifset'].required = False
