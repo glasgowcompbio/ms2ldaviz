@@ -276,6 +276,7 @@ def choose_motifs(request,motif_set_id,experiment_id):
                 name = prefix + '_' + motif.name + '.m2m'
                 mdb = MDBMotif(name = name,motif_set = motifset)
                 mdb.metadata = motif.metadata
+                mdb.linkmotif = motif
                 mdb.save()
 
                 instances = Mass2MotifInstance.objects.filter(mass2motif = motif)
