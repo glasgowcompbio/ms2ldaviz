@@ -172,6 +172,11 @@ class UserExperiment(models.Model):
     experiment = models.ForeignKey(Experiment)
     permission = models.CharField(max_length=24,null=False)
 
+
+
+# Use cs.convert to convert an InChIKey to a mol file...
+# cs = ChemSpider('b2VqZPJug1yDvbPgawGdGO59pdBw4eaf')
+# mol = cs.convert(ik,'InChIKey','mol')
 class Document(models.Model):
     name = models.CharField(max_length=64)
     experiment = models.ForeignKey(Experiment)
@@ -199,6 +204,7 @@ class Document(models.Model):
         else:
             return None
 
+    # this method probably doesn't work so well...
     def get_image_url(self):
         md = jsonpickle.decode(self.metadata)
         if 'csid' in md:

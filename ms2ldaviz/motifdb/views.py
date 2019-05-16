@@ -15,7 +15,7 @@ from basicviz.models import *
 
 
 
-from motifdb.forms import MatchMotifDBForm,NewMotifSetForm,ChooseMotifs
+from motifdb.forms import MatchMotifDBForm,NewMotifSetForm,ChooseMotifs,MetadataForm
 from motifdb.tasks import start_motif_matching_task
 
 
@@ -44,12 +44,29 @@ def index(request):
 
 def motif_set(request,motif_set_id):
     ms = MDBMotifSet.objects.get(id = motif_set_id)
+
     context_dict = {}
+    if request.user == ms.owner:
+        context_dict['correct_user'] = True
+    else:
+        context_dict['correct_user'] = False
     context_dict['motif_set'] = ms
     try:
-        context_dict['metadata'] = jsonpickle.decode(ms.metadata)
+        metadata = jsonpickle.decode(ms.metadata)
     except:
-        context_dict['metadata'] = {}
+        metadata = {}
+    
+    # fix the metadata to look nice...
+    fixed_metadata = {}
+    for k,v in metadata.items():
+        tokens = k.split("_")
+        new_tokens = []
+        for t in tokens:
+            new_tokens.append(t[0].capitalize() + t[1:])
+        new_key = '_'.join(new_tokens)
+        fixed_metadata[new_key] = v
+    context_dict['metadata'] = fixed_metadata
+    
     motifs = MDBMotif.objects.filter(motif_set = ms)
     context_dict['motifs'] = motifs
     return render(request,'motifdb/motif_set.html',context_dict)
@@ -244,7 +261,7 @@ def choose_motifs(request,motif_set_id,experiment_id):
             print motif_form.cleaned_data['motifs']
             motifs = Mass2Motif.objects.filter(id__in = motif_form.cleaned_data['motifs'])
             # make new motifdb motifs based upon these
-            prefix = mm_metadata['motif_name_prefix']
+            prefix = mm_metadata['Motif Name Prefix']
             for motif in motifs:
                 name = prefix + '_' + motif.name + '.m2m'
                 mdb = MDBMotif(name = name,motif_set = motifset)
@@ -267,6 +284,51 @@ def choose_motifs(request,motif_set_id,experiment_id):
         motif_form = ChooseMotifs(motifs)
         context_dict['motif_form'] = motif_form
         return render(request,'motifdb/choose_motifs.html',context_dict)
+
+def edit_motifset_metadata(request,motif_set_id):
+    motif_set = MDBMotifSet.objects.get(id = motif_set_id)
+    # check if the creator is the current user
+    context_dict = {'motifset':motif_set}
+    if not motif_set.owner == request.user:
+        return HttpResponse("You can only edit motifsets that you created!")
+    else:
+        context_dict['correct_user'] = True
+    try:
+        metadata = jsonpickle.decode(motif_set.metadata)
+    except:
+        metadata = {}
+    if request.method == 'POST':
+        mdbform = MetadataForm(request.POST)
+        if mdbform.is_valid():
+            metadata['Analysis_Polarity'] = mdbform.cleaned_data['ionization']
+            metadata['Analysis_MassSpectrometer'] = mdbform.cleaned_data['mass_spectrometer']
+            metadata['collision_energy'] = mdbform.cleaned_data['collision_energy']
+            metadata['Taxon_id'] = mdbform.cleaned_data['taxon_id']
+            metadata['Scientific_name'] = mdbform.cleaned_data['scientific_name']
+            metadata['Sample_type'] = mdbform.cleaned_data['sample_type']
+            metadata['Paper_URL'] = mdbform.cleaned_data['paper_url']
+            metadata['Analysis_ChromatographyAndPhase'] = mdbform.cleaned_data['chromatography']
+            metadata['Other Information'] = mdbform.cleaned_data['other_information']
+            metadata['massive_id'] = mdbform.cleaned_data['massive_id']
+            metadata['Analysis_IonizationSource'] = mdbform.cleaned_data['ionization_source']
+
+            motif_set.description = mdbform.cleaned_data['description']
+
+            motif_set.metadata = jsonpickle.encode(metadata)
+            motif_set.name = mdbform.cleaned_data['motifset_name']
+            motif_set.save()
+            return  redirect('/motifdb/motif_set/{}'.format(motif_set_id))
+        else:
+            context_dict['mdbform'] = mdbform
+            context_dict['motifset'] = motif_set
+
+    else:
+        initial = metadata
+        initial['motifset_name'] = motif_set.name
+        initial['description'] = motif_set.description
+        mdbform = MetadataForm(initial = initial)
+        context_dict['mdbform'] = mdbform
+    return render(request,'motifdb/edit_motif_set_metadata.html',context_dict)
 
 class MotifFilter(object):
     def __init__(self,spectra,metadata,threshold = 0.95):

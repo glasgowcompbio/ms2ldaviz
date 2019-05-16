@@ -262,8 +262,19 @@ def show_doc(request, doc_id):
     if document.csid:
         context_dict['csid'] = document.csid
 
+    # remove this -- deprecated...
     if document.image_url:
         context_dict['image_url'] = document.image_url
+
+    if not document.mol_string:
+        from chemspipy import ChemSpider
+        cs = ChemSpider('b2VqZPJug1yDvbPgawGdGO59pdBw4eaf')  
+        md = jsonpickle.decode(document.metadata)
+        if 'InChIKey' in md:
+            mol = cs.convert(md['InChIKey'],'InChIKey','mol')
+            if mol:
+                document.mol_string = mol
+                document.save()
 
     if document.mol_string:
         context_dict['mol_string'] = document.mol_string

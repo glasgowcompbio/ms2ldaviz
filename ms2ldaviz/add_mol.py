@@ -13,7 +13,7 @@ from chemspipy import ChemSpider
 from basicviz.models import *
 
 if __name__ == '__main__':
-    cs = ChemSpider('b07b7eb2-0ba7-40db-abc3-2a77a7544a3d')
+    cs = ChemSpider('b2VqZPJug1yDvbPgawGdGO59pdBw4eaf')
 
     exp_name = sys.argv[1]
     e = Experiment.objects.get(name = exp_name)

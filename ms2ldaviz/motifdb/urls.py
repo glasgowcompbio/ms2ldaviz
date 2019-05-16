@@ -13,4 +13,5 @@ urlpatterns = [
     url(r'^initialise_api/$', views.initialise_api,name = 'initialise_api'),
     url(r'^create_motifset/$',views.create_motifset,name = 'create_motifset'),
     url(r'^choose_motifs/(?P<motif_set_id>\w+)/(?P<experiment_id>\w+)/$',views.choose_motifs,name = 'choose_motifs'),
+    url(r'^edit_motifset_metadata/(?P<motif_set_id>\w+)/$',views.edit_motifset_metadata,name = 'edit_motifset_metadata'),
 ]

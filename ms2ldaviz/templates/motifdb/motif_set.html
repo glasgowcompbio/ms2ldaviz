@@ -23,6 +23,11 @@
                         <ul><b>{{key}}:</b> {{value}}</ul>
                     {% endfor %}
                 </ul>
+                <div>
+                    {% if correct_user %}
+                        <a href="/motifdb/edit_motifset_metadata/{{motif_set.id}}">Edit metadata</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
         <div class="panel panel-default">
