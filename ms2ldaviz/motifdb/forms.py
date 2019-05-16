@@ -119,7 +119,7 @@ class MetadataForm(forms.Form):
         ("mixture","mixture"),
     ))
 
-    Taxon_ID = forms.CharField(required = False)
+    Taxon_ID = forms.CharField(label = "Taxon_ID",required = False)
 
     Scientific_Name = forms.CharField(required = False)
 
@@ -137,7 +137,7 @@ class MetadataForm(forms.Form):
     ))
 
     Other_Information = forms.CharField(widget=forms.Textarea,required= False)
-    Massive_ID = forms.CharField(required = False)
+    Massive_ID = forms.CharField(label = "Massive_ID",required = False)
 
 
 
