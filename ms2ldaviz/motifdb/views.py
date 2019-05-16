@@ -39,7 +39,11 @@ def index(request):
     context_dict = {}
 
     motif_sets = MDBMotifSet.objects.all()
-    context_dict['motif_sets'] = motif_sets
+    ms = []
+    for m in motif_sets:
+        n_m = len(MDBMotif.objects.filter(motif_set = m))
+        ms.append((m,n_m))
+    context_dict['motif_sets'] = ms
     return render(request, 'motifdb/index.html', context_dict)
 
 def motif_set(request,motif_set_id):
