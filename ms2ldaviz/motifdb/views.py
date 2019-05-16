@@ -106,6 +106,12 @@ def motif(request,motif_id):
     jcamp_loss += '##END=\n'
     context_dict['jcamp'] = jcamp
     context_dict['jcamp_loss'] = jcamp_loss
+
+    if request.user == motif.motif_set.owner:
+        context_dict['correct_user'] = True
+    else:
+        context_dict['correct_user'] = False
+
     return render(request,'motifdb/motif.html',context_dict)
 
 def start_motif_matching(request, experiment_id):
@@ -333,6 +339,16 @@ def edit_motifset_metadata(request,motif_set_id):
         mdbform = MetadataForm(initial = initial)
         context_dict['mdbform'] = mdbform
     return render(request,'motifdb/edit_motif_set_metadata.html',context_dict)
+
+def update_annotation(request,motif_id):
+    motif = MDBMotif.objects.get(id = motif_id)
+    link_annotation = motif.linkmotif.annotation
+    md = jsonpickle.decode(motif.metadata)
+    md['annotation'] = link_annotation
+    md['short_annotation'] = motif.linkmotif.short_annotation
+    motif.metadata = jsonpickle.encode(md)
+    motif.save()
+    return redirect('/motifdb/motif/{}'.format(motif_id))
 
 class MotifFilter(object):
     def __init__(self,spectra,metadata,threshold = 0.95):
