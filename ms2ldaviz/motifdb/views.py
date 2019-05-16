@@ -196,25 +196,25 @@ def create_motifset(request):
             mm.owner = request.user
             
             metadata = {}
-            metadata['Motif Name Prefix'] = new_form.cleaned_data['motif_name_prefix']
-            metadata['Analysis_Polarity'] = new_form.cleaned_data['ionization']
+            metadata['Motif_Name_Prefix'] = new_form.cleaned_data['Motif_Name_Prefix']
+            metadata['Analysis_Polarity'] = new_form.cleaned_data['Analysis_Polarity']
             experiment = new_form.cleaned_data.get('ms2lda_experiment',None)
             if experiment:
-                metadata['ms2lda_experiment_id'] = experiment.id
+                metadata['MS2LDA_Experiment_ID'] = experiment.id
                 if experiment.feature_set:
                     metadata['featureset_id'] = experiment.featureset.id
                     metadata['featureset_name'] = experiment.featureset.name
                     mm.featureset = experiment.featureset
-            metadata['Analysis_MassSpectrometer'] = new_form.cleaned_data['mass_spectrometer']
-            metadata['collision_energy'] = new_form.cleaned_data['collision_energy']
-            metadata['Taxon_id'] = new_form.cleaned_data['taxon_id']
-            metadata['Scientific_name'] = new_form.cleaned_data['scientific_name']
-            metadata['Sample_type'] = new_form.cleaned_data['sample_type']
-            metadata['Paper_URL'] = new_form.cleaned_data['paper_url']
-            metadata['Analysis_ChromatographyAndPhase'] = new_form.cleaned_data['chromatography']
-            metadata['Other Information'] = new_form.cleaned_data['other_information']
-            metadata['Massive ID'] = new_form.cleaned_data['massive_id']
-            metadata['Analysis_IonizationSource'] = new_form.cleaned_data['ionization_source']
+            metadata['Analysis_MassSpectrometer'] = new_form.cleaned_data['Analysis_MassSpectrometer']
+            metadata['Collision_Energy'] = new_form.cleaned_data['Collision_Energy']
+            metadata['Taxon_ID'] = new_form.cleaned_data['Taxon_ID']
+            metadata['Scientific_Name'] = new_form.cleaned_data['Scientific_Name']
+            metadata['Sample_Type'] = new_form.cleaned_data['Sample_Type']
+            metadata['Paper_URL'] = new_form.cleaned_data['Paper_URL']
+            metadata['Analysis_ChromatographyAndPhase'] = new_form.cleaned_data['Analysis_ChromatographyAndPhase']
+            metadata['Other_Information'] = new_form.cleaned_data['Other_Information']
+            metadata['Massive_ID'] = new_form.cleaned_data['Massive_ID']
+            metadata['Analysis_IonizationSource'] = new_form.cleaned_data['Analysis_IonizationSource']
 
             mm.metadata = jsonpickle.encode(metadata)
             mm_id = mm.id
@@ -300,19 +300,19 @@ def edit_motifset_metadata(request,motif_set_id):
     if request.method == 'POST':
         mdbform = MetadataForm(request.POST)
         if mdbform.is_valid():
-            metadata['Analysis_Polarity'] = mdbform.cleaned_data['ionization']
-            metadata['Analysis_MassSpectrometer'] = mdbform.cleaned_data['mass_spectrometer']
-            metadata['collision_energy'] = mdbform.cleaned_data['collision_energy']
-            metadata['Taxon_id'] = mdbform.cleaned_data['taxon_id']
-            metadata['Scientific_name'] = mdbform.cleaned_data['scientific_name']
-            metadata['Sample_type'] = mdbform.cleaned_data['sample_type']
-            metadata['Paper_URL'] = mdbform.cleaned_data['paper_url']
-            metadata['Analysis_ChromatographyAndPhase'] = mdbform.cleaned_data['chromatography']
-            metadata['Other Information'] = mdbform.cleaned_data['other_information']
-            metadata['massive_id'] = mdbform.cleaned_data['massive_id']
-            metadata['Analysis_IonizationSource'] = mdbform.cleaned_data['ionization_source']
+            metadata['Analysis_Polarity'] = mdbform.cleaned_data['Analysis_Polarity']
+            metadata['Analysis_MassSpectrometer'] = mdbform.cleaned_data['Analysis_MassSpectrometer']
+            metadata['Collision_Energy'] = mdbform.cleaned_data['Collision_Energy']
+            metadata['Taxon_ID'] = mdbform.cleaned_data['Taxon_ID']
+            metadata['Scientific_Name'] = mdbform.cleaned_data['Scientific_Name']
+            metadata['Sample_Type'] = mdbform.cleaned_data['Sample_Type']
+            metadata['Paper_URL'] = mdbform.cleaned_data['Paper_URL']
+            metadata['Analysis_ChromatographyAndPhase'] = mdbform.cleaned_data['Analysis_ChromatographyAndPhase']
+            metadata['Other_Information'] = mdbform.cleaned_data['Other_Information']
+            metadata['Massive_ID'] = mdbform.cleaned_data['Massive_ID']
+            metadata['Analysis_IonizationSource'] = mdbform.cleaned_data['Analysis_IonizationSource']
 
-            motif_set.description = mdbform.cleaned_data['description']
+            motif_set.description = mdbform.cleaned_data['Description']
 
             motif_set.metadata = jsonpickle.encode(metadata)
             motif_set.name = mdbform.cleaned_data['motifset_name']

@@ -14,22 +14,22 @@ class NewMotifSetForm(forms.Form):
     motifset_name = forms.CharField(max_length=1024,required = True, label = "Name")
     motif_name_prefix = forms.CharField(max_length=10,required = True, label = "Motif Name Prefix")
     description = forms.CharField(required=True,widget = forms.Textarea)
-    ms2lda_experiment = forms.ModelChoiceField(queryset=Experiment.objects.none(),
+    ms2lda_experiment_id = forms.ModelChoiceField(queryset=Experiment.objects.none(),
                                               required=False, label="Create from MS2LDA experiment")
     
-    ionization = forms.ChoiceField(required = True,label = "Analysis_Polarity", choices = (
+    analysis_polarity = forms.ChoiceField(required = True,label = "Analysis_Polarity", choices = (
         ("positive ionisation mode","positive ionisation mode"),
         ("negative ionisation mode","negative ionisation mode"),
     )) 
     
-    ionization_source = forms.ChoiceField(required = True,label = "Analysis_IonizationSource", choices = (
+    analysis_ionization_source = forms.ChoiceField(required = True,label = "Analysis_IonizationSource", choices = (
         ("electospray ionization","electospray ionization"),
         ("other","other"),
     ))
     # only show this if ms2lda_experiment isn't selected
     # bin_width = forms.DecimalField(required = False)
 
-    mass_spectrometer = forms.ChoiceField(required = True, label = "Analysis_MassSpectrometer",choices = (
+    analysis_mass_spectrometer = forms.ChoiceField(required = True, label = "Analysis_MassSpectrometer",choices = (
         ("Maxis_Impact","Maxis_Impact"), 
         ("Maxis_ImpactHD","Maxis_ImpactHD"), 
         ("QExactive","QExactive"), 
@@ -56,7 +56,7 @@ class NewMotifSetForm(forms.Form):
 
     paper_url = forms.CharField(label = "Paper_URL",required = False)
 
-    chromatography = forms.ChoiceField(required = False, label = "Analysis_ChromatographyAndPhase", choices = (
+    analysis_chromatography_and_phase = forms.ChoiceField(required = False, label = "Analysis_ChromatographyAndPhase", choices = (
         ("reverse phase (C18)","reverse phase (C18)"),
         ("reverse phase (C8)","reverse phase (C8)"),
         ("reverse phase (Phenyl-Hexyl)","reverse phase (Phenyl-Hexyl)"),
@@ -88,19 +88,19 @@ class MetadataForm(forms.Form):
     # ms2lda_experiment = forms.ModelChoiceField(queryset=Experiment.objects.none(),
                                             #   required=False, label="Create from MS2LDA experiment")
     
-    ionization = forms.ChoiceField(required = True,label = "Analysis_Polarity", choices = (
+    Analysis_Polarity = forms.ChoiceField(required = True,label = "Analysis_Polarity", choices = (
         ("positive ionisation mode","positive ionisation mode"),
         ("negative ionisation mode","negative ionisation mode"),
     )) 
     
-    ionization_source = forms.ChoiceField(required = True,label = "Analysis_IonizationSource", choices = (
+    Analysis_IonizationSource = forms.ChoiceField(required = True,label = "Analysis_IonizationSource", choices = (
         ("electospray ionization","electospray ionization"),
         ("other","other"),
     ))
     # only show this if ms2lda_experiment isn't selected
     # bin_width = forms.DecimalField(required = False)
 
-    mass_spectrometer = forms.ChoiceField(required = True, label = "Analysis_MassSpectrometer",choices = (
+    Analysis_MassSpectrometer = forms.ChoiceField(required = True, label = "Analysis_MassSpectrometer",choices = (
         ("Maxis_Impact","Maxis_Impact"), 
         ("Maxis_ImpactHD","Maxis_ImpactHD"), 
         ("QExactive","QExactive"), 
@@ -113,21 +113,21 @@ class MetadataForm(forms.Form):
         ("mixture","mixture"),
     ))
 
-    collision_energy = forms.ChoiceField(required = True, choices = (
+    Collision_Energe = forms.ChoiceField(required = True, choices = (
         ("HCD","HCD"),
         ("CID","CID"),
         ("mixture","mixture"),
     ))
 
-    taxon_id = forms.CharField(required = False)
+    Taxon_ID = forms.CharField(required = False)
 
-    scientific_name = forms.CharField(required = False)
+    Scientific_Name = forms.CharField(required = False)
 
-    sample_type = forms.CharField(required = False)
+    Sample_Type = forms.CharField(required = False)
 
-    paper_url = forms.CharField(required = False)
+    Paper_URL = forms.CharField(label = "Paper_URL",required = False)
 
-    chromatography = forms.ChoiceField(required = False, label = "Analysis_ChromatographyAndPhase", choices = (
+    Analysis_ChromatographyAndPhase = forms.ChoiceField(required = False, label = "Analysis_ChromatographyAndPhase", choices = (
         ("reverse phase (C18)","reverse phase (C18)"),
         ("reverse phase (C8)","reverse phase (C8)"),
         ("reverse phase (Phenyl-Hexyl)","reverse phase (Phenyl-Hexyl)"),
@@ -136,8 +136,8 @@ class MetadataForm(forms.Form):
         ("direct infusion (DI)","direct infusion (DI)"),
     ))
 
-    other_information = forms.CharField(widget=forms.Textarea,required= False)
-    massive_id = forms.CharField(required = False)
+    Other_Information = forms.CharField(widget=forms.Textarea,required= False)
+    Massive_ID = forms.CharField(required = False)
 
 
 
