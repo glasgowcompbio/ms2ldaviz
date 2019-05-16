@@ -113,7 +113,7 @@ class MetadataForm(forms.Form):
         ("mixture","mixture"),
     ))
 
-    Collision_Energe = forms.ChoiceField(required = True, choices = (
+    Collision_Energy = forms.ChoiceField(required = True, choices = (
         ("HCD","HCD"),
         ("CID","CID"),
         ("mixture","mixture"),

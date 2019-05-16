@@ -312,7 +312,7 @@ def edit_motifset_metadata(request,motif_set_id):
             metadata['Massive_ID'] = mdbform.cleaned_data['Massive_ID']
             metadata['Analysis_IonizationSource'] = mdbform.cleaned_data['Analysis_IonizationSource']
 
-            motif_set.description = mdbform.cleaned_data['Description']
+            motif_set.description = mdbform.cleaned_data['description']
 
             motif_set.metadata = jsonpickle.encode(metadata)
             motif_set.name = mdbform.cleaned_data['motifset_name']
