@@ -11,7 +11,7 @@ pipenv --python 2.7
 pipenv install
 pipenv shell
 cd ms2ldaviz
-export DJANGO_SETTINGS_MODULE=ms2ldaviz/settings_redisdebug.py
+export DJANGO_SETTINGS_MODULE=ms2ldaviz.settings_redisdebug
 ```
 
 In their own shell (within pipenv shell) run:
@@ -21,7 +21,7 @@ docker run --name some-pg -d -p 5432:5432 -e POSTGRES_PASSWORD=j7z3rL40w9 -e POS
 ```
 and
 ```
-./start_celery_prod.sh
+./start_celery_redisdebug.sh
 ```
 and
 ```
