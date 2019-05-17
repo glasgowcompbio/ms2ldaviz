@@ -4,7 +4,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
 from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_TYPE, EXPERIMENT_MS2_FORMAT
-from basicviz.models import UserExperiment,JobLog
+from basicviz.models import ExtraUsers, UserExperiment, JobLog
 from .forms import CreateExperimentForm, UploadExperimentForm, UploadGensimExperimentForm
 from .tasks import lda_task, decomposition_task, upload_task, upload_gensim_task
 
@@ -37,6 +37,14 @@ def create_experiment(request):
         experiment_form = CreateExperimentForm()
         context_dict['experiment_form'] = experiment_form
 
+    # to display additional links on the basicviz index page
+    eu = ExtraUsers.objects.filter(user=request.user)
+    if len(eu) > 0:
+        extra_user = True
+    else:
+        extra_user = False
+    context_dict['extra_user'] = extra_user
+
     return render(request, 'uploads/add_experiment.html', context_dict)
 
 
@@ -64,6 +72,14 @@ def upload_experiment(request):
     else:
         experiment_form = UploadExperimentForm()
         context_dict['experiment_form'] = experiment_form
+
+    # to display additional links on the basicviz index page
+    eu = ExtraUsers.objects.filter(user=request.user)
+    if len(eu) > 0:
+        extra_user = True
+    else:
+        extra_user = False
+    context_dict['extra_user'] = extra_user
 
     return render(request, 'uploads/upload_experiment.html', context_dict)
 
