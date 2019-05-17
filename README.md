@@ -4,7 +4,6 @@ A web application developed in Django+D3 to visualise how topics inferred from L
 
 Demo available at www.ms2lda.org (please email us to gain access)
 
-
 # Run it
 
 ```
@@ -33,7 +32,6 @@ python manage.py runserver
 
 Goto http://localhost:8000
 
-
 # Run gensim lda
 
 Requires server to be up and running.
@@ -42,7 +40,6 @@ Performs 3 steps:
 1. Generate corpus/features from MS2 file
 2. Run lda using gensim
 3. Insert lda result into db
-
 
 ```bash
 cd ms2ldaviz
@@ -87,9 +84,9 @@ docker-compose run web python manage.py createsuperuser
 docker-compose run web python setup_feat.py
 ```
 
-Goto http://localhost:8000 to visit site
+Goto http://localhost:8001 to visit site
 
-To run on different port then 8000 change `8000:8000` in `docker-compose.yml` file to `<insert port here>:8000`.
+To run on different port then 8001 use `PORT=8123 docker-compose up -d`.
 
 To clean up run
 ```bash

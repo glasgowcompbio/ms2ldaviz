@@ -3,8 +3,6 @@ services:
   web:
     build: .
     image: iomega/ms2ldaviz
-    ports:
-     - "8000:8000"
     depends_on:
      - db
      - redis
@@ -28,6 +26,15 @@ services:
      - redis
     volumes:
      - jobs:/code/ms2ldaviz/media
+  proxy:
+    image: nginx:alpine
+    volumes:
+      - ./ms2ldaviz/static:/static:ro
+      - ./docker.nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${PORT:-8001}:80"
+    depends_on:
+      - web
 volumes:
   jobs:
   datadir:
