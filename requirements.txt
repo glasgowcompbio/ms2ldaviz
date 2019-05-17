@@ -1,5 +1,5 @@
 pymzml==0.7.7
-psycopg2
+psycopg2-binary
 amqp==2.3.2
 billiard==3.5.0.4
 redis==2.10.6
@@ -28,6 +28,6 @@ vine==1.1.4
 gensim==3.7.1
 tensorflow==1.13.1
 tqdm==4.31.1
-chemspipy==1.0.4
+chemspipy==2.0.0
 requests==2.21.0
 funcsigs==1.0.2
