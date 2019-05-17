@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '^(2&40trp_*ei%$_*p-k598#hu3-w(@9%&&dr&#0##dpag=c%+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -149,6 +149,3 @@ STATICFILES_DIRS = (
 
 # Approx 10MB for big API requests
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10000000
-
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-

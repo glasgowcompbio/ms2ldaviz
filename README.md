@@ -4,13 +4,14 @@ A web application developed in Django+D3 to visualise how topics inferred from L
 
 Demo available at www.ms2lda.org (please email us to gain access)
 
-# Run it
+# Run it for development
 
 ```
 pipenv --python 2.7
 pipenv install
 pipenv shell
 cd ms2ldaviz
+export DJANGO_SETTINGS_MODULE=ms2ldaviz/settings_redisdebug.py
 ```
 
 In their own shell (within pipenv shell) run:
