@@ -175,7 +175,7 @@ class UserExperiment(models.Model):
 
 
 # Use cs.convert to convert an InChIKey to a mol file...
-# cs = ChemSpider('b2VqZPJug1yDvbPgawGdGO59pdBw4eaf')
+# cs = ChemSpider(settings.CHEMSPIDER_APIKEY)
 # mol = cs.convert(ik,'InChIKey','mol')
 class Document(models.Model):
     name = models.CharField(max_length=64)
@@ -213,7 +213,7 @@ class Document(models.Model):
         elif 'InChIKey' in md or 'inchikey' in md:
             # If it doesnt but it does have an InChIKey get the csid and make the image url
             from chemspipy import ChemSpider
-            cs = ChemSpider('b07b7eb2-0ba7-40db-abc3-2a77a7544a3d')
+            cs = ChemSpider(settings.CHEMSPIDER_APIKEY)
             ikey = md.get('InChIKey',md.get('inchikey'))
             results = cs.search(ikey)
             if results:

@@ -5,11 +5,12 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 import django
 django.setup()
 
+from django.conf import settings
 from basicviz.models import Experiment,Document
 
 if __name__ == '__main__':
 	from chemspipy import ChemSpider
-	cs = ChemSpider('b07b7eb2-0ba7-40db-abc3-2a77a7544a3d')
+	cs = ChemSpider(settings.CHEMSPIDER_APIKEY)
 
 	experiment_name = sys.argv[1]
 	experiment = Experiment.objects.get(name = experiment_name)

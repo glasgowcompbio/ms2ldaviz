@@ -10,6 +10,7 @@ from django.db.models import Count
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
+from django.conf import settings
 from networkx.readwrite import json_graph
 from sklearn.decomposition import PCA
 
@@ -268,10 +269,10 @@ def show_doc(request, doc_id):
 
     if not document.mol_string:
         from chemspipy import ChemSpider
-        cs = ChemSpider('b2VqZPJug1yDvbPgawGdGO59pdBw4eaf')  
+        cs = ChemSpider(settings.CHEMSPIDER_APIKEY)
         md = jsonpickle.decode(document.metadata)
-        if 'InChIKey' in md:
-            mol = cs.convert(md['InChIKey'],'InChIKey','mol')
+        if 'InChIKey' in md or 'inchikey' in md:
+            mol = cs.convert(md.get('InChIKey', md['inchikey']),'InChIKey','mol')
             if mol:
                 document.mol_string = mol
                 document.save()

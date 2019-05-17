@@ -20,3 +20,5 @@ DATABASES = {
 }
 
 CELERY_BROKER_URL = "redis://redis:6379/0"
+
+CHEMSPIDER_APIKEY='fLazuvY8CEiRgF8QfhgrGCr7v1xqD8f9'
