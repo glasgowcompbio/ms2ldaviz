@@ -39,7 +39,11 @@ def index(request):
     context_dict = {}
 
     motif_sets = MDBMotifSet.objects.all()
-    context_dict['motif_sets'] = motif_sets
+    ms = []
+    for m in motif_sets:
+        n_m = len(MDBMotif.objects.filter(motif_set = m))
+        ms.append((m,n_m))
+    context_dict['motif_sets'] = ms
     return render(request, 'motifdb/index.html', context_dict)
 
 def motif_set(request,motif_set_id):
@@ -102,6 +106,12 @@ def motif(request,motif_id):
     jcamp_loss += '##END=\n'
     context_dict['jcamp'] = jcamp
     context_dict['jcamp_loss'] = jcamp_loss
+
+    if request.user == motif.motif_set.owner:
+        context_dict['correct_user'] = True
+    else:
+        context_dict['correct_user'] = False
+
     return render(request,'motifdb/motif.html',context_dict)
 
 def start_motif_matching(request, experiment_id):
@@ -196,25 +206,25 @@ def create_motifset(request):
             mm.owner = request.user
             
             metadata = {}
-            metadata['Motif Name Prefix'] = new_form.cleaned_data['motif_name_prefix']
-            metadata['Analysis_Polarity'] = new_form.cleaned_data['ionization']
+            metadata['Motif_Name_Prefix'] = new_form.cleaned_data['Motif_Name_Prefix']
+            metadata['Analysis_Polarity'] = new_form.cleaned_data['Analysis_Polarity']
             experiment = new_form.cleaned_data.get('ms2lda_experiment',None)
             if experiment:
-                metadata['ms2lda_experiment_id'] = experiment.id
+                metadata['MS2LDA_Experiment_ID'] = experiment.id
                 if experiment.feature_set:
                     metadata['featureset_id'] = experiment.featureset.id
                     metadata['featureset_name'] = experiment.featureset.name
                     mm.featureset = experiment.featureset
-            metadata['Analysis_MassSpectrometer'] = new_form.cleaned_data['mass_spectrometer']
-            metadata['collision_energy'] = new_form.cleaned_data['collision_energy']
-            metadata['Taxon_id'] = new_form.cleaned_data['taxon_id']
-            metadata['Scientific_name'] = new_form.cleaned_data['scientific_name']
-            metadata['Sample_type'] = new_form.cleaned_data['sample_type']
-            metadata['Paper_URL'] = new_form.cleaned_data['paper_url']
-            metadata['Analysis_ChromatographyAndPhase'] = new_form.cleaned_data['chromatography']
-            metadata['Other Information'] = new_form.cleaned_data['other_information']
-            metadata['Massive ID'] = new_form.cleaned_data['massive_id']
-            metadata['Analysis_IonizationSource'] = new_form.cleaned_data['ionization_source']
+            metadata['Analysis_MassSpectrometer'] = new_form.cleaned_data['Analysis_MassSpectrometer']
+            metadata['Collision_Energy'] = new_form.cleaned_data['Collision_Energy']
+            metadata['Taxon_ID'] = new_form.cleaned_data['Taxon_ID']
+            metadata['Scientific_Name'] = new_form.cleaned_data['Scientific_Name']
+            metadata['Sample_Type'] = new_form.cleaned_data['Sample_Type']
+            metadata['Paper_URL'] = new_form.cleaned_data['Paper_URL']
+            metadata['Analysis_ChromatographyAndPhase'] = new_form.cleaned_data['Analysis_ChromatographyAndPhase']
+            metadata['Other_Information'] = new_form.cleaned_data['Other_Information']
+            metadata['Massive_ID'] = new_form.cleaned_data['Massive_ID']
+            metadata['Analysis_IonizationSource'] = new_form.cleaned_data['Analysis_IonizationSource']
 
             mm.metadata = jsonpickle.encode(metadata)
             mm_id = mm.id
@@ -266,6 +276,7 @@ def choose_motifs(request,motif_set_id,experiment_id):
                 name = prefix + '_' + motif.name + '.m2m'
                 mdb = MDBMotif(name = name,motif_set = motifset)
                 mdb.metadata = motif.metadata
+                mdb.linkmotif = motif
                 mdb.save()
 
                 instances = Mass2MotifInstance.objects.filter(mass2motif = motif)
@@ -300,17 +311,17 @@ def edit_motifset_metadata(request,motif_set_id):
     if request.method == 'POST':
         mdbform = MetadataForm(request.POST)
         if mdbform.is_valid():
-            metadata['Analysis_Polarity'] = mdbform.cleaned_data['ionization']
-            metadata['Analysis_MassSpectrometer'] = mdbform.cleaned_data['mass_spectrometer']
-            metadata['collision_energy'] = mdbform.cleaned_data['collision_energy']
-            metadata['Taxon_id'] = mdbform.cleaned_data['taxon_id']
-            metadata['Scientific_name'] = mdbform.cleaned_data['scientific_name']
-            metadata['Sample_type'] = mdbform.cleaned_data['sample_type']
-            metadata['Paper_URL'] = mdbform.cleaned_data['paper_url']
-            metadata['Analysis_ChromatographyAndPhase'] = mdbform.cleaned_data['chromatography']
-            metadata['Other Information'] = mdbform.cleaned_data['other_information']
-            metadata['massive_id'] = mdbform.cleaned_data['massive_id']
-            metadata['Analysis_IonizationSource'] = mdbform.cleaned_data['ionization_source']
+            metadata['Analysis_Polarity'] = mdbform.cleaned_data['Analysis_Polarity']
+            metadata['Analysis_MassSpectrometer'] = mdbform.cleaned_data['Analysis_MassSpectrometer']
+            metadata['Collision_Energy'] = mdbform.cleaned_data['Collision_Energy']
+            metadata['Taxon_ID'] = mdbform.cleaned_data['Taxon_ID']
+            metadata['Scientific_Name'] = mdbform.cleaned_data['Scientific_Name']
+            metadata['Sample_Type'] = mdbform.cleaned_data['Sample_Type']
+            metadata['Paper_URL'] = mdbform.cleaned_data['Paper_URL']
+            metadata['Analysis_ChromatographyAndPhase'] = mdbform.cleaned_data['Analysis_ChromatographyAndPhase']
+            metadata['Other_Information'] = mdbform.cleaned_data['Other_Information']
+            metadata['Massive_ID'] = mdbform.cleaned_data['Massive_ID']
+            metadata['Analysis_IonizationSource'] = mdbform.cleaned_data['Analysis_IonizationSource']
 
             motif_set.description = mdbform.cleaned_data['description']
 
@@ -329,6 +340,16 @@ def edit_motifset_metadata(request,motif_set_id):
         mdbform = MetadataForm(initial = initial)
         context_dict['mdbform'] = mdbform
     return render(request,'motifdb/edit_motif_set_metadata.html',context_dict)
+
+def update_annotation(request,motif_id):
+    motif = MDBMotif.objects.get(id = motif_id)
+    link_annotation = motif.linkmotif.annotation
+    md = jsonpickle.decode(motif.metadata)
+    md['annotation'] = link_annotation
+    md['short_annotation'] = motif.linkmotif.short_annotation
+    motif.metadata = jsonpickle.encode(md)
+    motif.save()
+    return redirect('/motifdb/motif/{}'.format(motif_id))
 
 class MotifFilter(object):
     def __init__(self,spectra,metadata,threshold = 0.95):

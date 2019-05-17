@@ -15,7 +15,20 @@ class MDBMotifSet(models.Model):
     metadata = models.TextField(null = True)
     owner = models.ForeignKey(User,null = True)
     def __str__(self):
-        return self.name
+        ch = []
+        if self.featureset:
+            ch.append(str(self.featureset))
+        try:
+            md = jsonpickle.decode(self.metadata)
+            ap = md['Analysis_Polarity']
+            if ap:
+                ch.append(ap)
+            sample_type = md['Sample_type']
+            if sample_type:
+                ch.append(sample_type)
+        except:
+            pass
+        return self.name + " ({})".format(", ".join(ch))
     def __repr__(self):
         return self.name
 

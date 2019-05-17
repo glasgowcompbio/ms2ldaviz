@@ -16,8 +16,8 @@
             <div class="panel-body">
                 <h5>The following motif sets are available</h5>
                 <ul>
-                    {% for motif_set in motif_sets %}
-                    <li><a href="/motifdb/motif_set/{{motif_set.id}}">{{motif_set.name}}</a> ({{motif_set.featureset}}), {{motif_set.description}}</li>
+                    {% for motif_set,count in motif_sets %}
+                    <li><a href="/motifdb/motif_set/{{motif_set.id}}">{{motif_set.name}}</a> ({{motif_set.featureset}}), {{motif_set.description}}, [{{count}} motifs]</li>
                     {% endfor %}
                 </ul>
             </div>

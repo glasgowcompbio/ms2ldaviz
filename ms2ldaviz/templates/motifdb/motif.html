@@ -21,6 +21,14 @@
                     <li>Annotation: {{motif.annotation}}</li>
                     <li>Short annotation: {{motif.short_annotation}}</li>
                     <li>Comment: {{motif.comment}}</li>
+                    {% if motif.linkmotif %}
+                    <li>Original motif: <a href="/basicviz/view_parents/{{motif.linkmotif.id}}/">{{motif.linkmotif.name}}</a>
+                         ({{motif.linkmotif.experiment}})
+                         {%if correct_user %}
+                            <a href="/motifdb/update_annotation/{{motif.id}}">Update annotation</a>
+                         {% endif %}
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
