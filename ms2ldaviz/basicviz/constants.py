@@ -29,7 +29,8 @@ EXPERIMENT_MS2_FORMAT = [
     ('0', 'mzML'),
     ('1', 'msp'),
     ('2', 'mgf'),
-    ('3', 'upload')
+    ('3', 'upload'),
+    ('4', 'uploadgensim'),
 ]
 
 MASSBANK_AUTHORS = "van der Hooft, J. J. J., Wandy J., Rogers, S., University of Glasgow"

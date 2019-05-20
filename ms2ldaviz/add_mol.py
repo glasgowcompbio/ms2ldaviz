@@ -9,24 +9,28 @@ import jsonpickle
 django.setup()
 
 from chemspipy import ChemSpider
+from django.conf import settings
 
 from basicviz.models import *
 
 if __name__ == '__main__':
-    cs = ChemSpider('b2VqZPJug1yDvbPgawGdGO59pdBw4eaf')
+    cs = ChemSpider(settings.CHEMSPIDER_APIKEY)
 
     exp_name = sys.argv[1]
     e = Experiment.objects.get(name = exp_name)
     print e
-    docs = Document.objects.filter(experiment = e)
+    docs = Document.objects.filter(experiment = e).filter(mol_string__isnull=True)
     for doc in docs:
         md = jsonpickle.decode(doc.metadata)
         ik = md.get('InChIKey',md.get('inchikey',None))
+        if not ik:
+            next
         print ik
-        # search in chemspi
-        results = cs.search(ik)
-        if len(results) > 0:
-            m = results[0].mol_2d
-            if len(m) > 0:
-                doc.mol_string = m
+        try:
+            mol = cs.convert(ik,'InChIKey','mol')
+            if mol:
+                doc.mol_string = mol
                 doc.save()
+        except Exception as e:
+            print 'Failed mol fetch of ' + ik + ' : '
+            print e

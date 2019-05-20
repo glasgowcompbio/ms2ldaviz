@@ -10,6 +10,7 @@ from django.db.models import Count
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
+from django.conf import settings
 from networkx.readwrite import json_graph
 from sklearn.decomposition import PCA
 
@@ -268,10 +269,10 @@ def show_doc(request, doc_id):
 
     if not document.mol_string:
         from chemspipy import ChemSpider
-        cs = ChemSpider('b2VqZPJug1yDvbPgawGdGO59pdBw4eaf')  
+        cs = ChemSpider(settings.CHEMSPIDER_APIKEY)
         md = jsonpickle.decode(document.metadata)
-        if 'InChIKey' in md:
-            mol = cs.convert(md['InChIKey'],'InChIKey','mol')
+        if 'InChIKey' in md or 'inchikey' in md:
+            mol = cs.convert(md.get('InChIKey', md['inchikey']),'InChIKey','mol')
             if mol:
                 document.mol_string = mol
                 document.save()
@@ -1718,7 +1719,7 @@ def compute_overlap_score(mass2motif, document):
     document_feature_instances = FeatureInstance.objects.filter(document=document)
     # Following are the phi scores
     feature_mass2motif_instances = FeatureMass2MotifInstance.objects.filter(
-        featureinstance__in=document_feature_instances)
+        featureinstance__in=document_feature_instances).select_related('featureinstance__feature')
     score = 0.0
     for feature_mass2motif_instance in feature_mass2motif_instances:
         feature = feature_mass2motif_instance.featureinstance.feature

@@ -149,3 +149,7 @@ STATICFILES_DIRS = (
 
 # Approx 10MB for big API requests
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10000000
+
+# Chemspider token used on production server,
+# Replace it with own token (https://developer.rsc.org/) for your own server.
+CHEMSPIDER_APIKEY='b2VqZPJug1yDvbPgawGdGO59pdBw4eaf'
