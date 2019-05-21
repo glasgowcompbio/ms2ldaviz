@@ -24,8 +24,8 @@ from ms2lda_feature_extraction import LoadMZML, MakeBinnedFeatures, LoadMSP, Loa
 from basicviz.models import Experiment, User, BVFeatureSet, UserExperiment, JobLog
 from load_dict_functions import load_dict, load_corpus_gensim, build_gensim_corpus
 from lda import VariationalLDA
-from gensim.models.ldamulticore import LdaMulticore
-from gensim.models.ldamodel import LdaModel
+# from gensim.models.ldamulticore import LdaMulticore
+# from gensim.models.ldamodel import LdaModel
 import numpy as np
 
 import logging
