@@ -78,7 +78,7 @@ class NewMotifSetForm(forms.Form):
         pe = PublicExperiments.objects.all()
         experiments = Experiment.objects.filter(Q(featureset__in = fs), 
             (Q(id__in = [i.experiment.id for i in ue]) | Q(id__in = [p.experiment.id for p in pe])))
-        self.fields['ms2lda_experiment'].queryset = experiments
+        self.fields['ms2lda_experiment_id'].queryset = experiments
 
 
 class MetadataForm(forms.Form):
