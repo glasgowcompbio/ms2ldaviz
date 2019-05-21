@@ -212,6 +212,8 @@ class Document(models.Model):
             return 'http://www.chemspider.com/ImagesHandler.ashx?id=' + str(self.csid)
         elif 'InChIKey' in md or 'inchikey' in md:
             # If it doesnt but it does have an InChIKey get the csid and make the image url
+            # this code doesn't work...due to an upgrade in chemspider
+            # if you want images, get the mol
             from chemspipy import ChemSpider
             cs = ChemSpider(settings.CHEMSPIDER_APIKEY)
             ikey = md.get('InChIKey',md.get('inchikey'))

@@ -29,7 +29,7 @@
                                 <th>{{ user_col_name }}</th>
                             {% endfor %}
                         {% endif %}
-			<th>Name</th><th>Precursor Mass</th><th>Parent Mass</th><th>link</th><th>Display Name</th></tr>
+			<th>Name</th><th>Precursor Mass</th><th>Parent Mass</th><th>chemspider link (where available)</th><th>Search on chembl</th></th><th>Display Name</th></tr>
                     </thead>
                     <tbody>
                     {% for doc in documents %}
@@ -44,6 +44,11 @@
 			    <td>{{doc.parentmass}}</td>
                             <td>{% if doc.csid %}
                                 <a href="http://www.chemspider.com/Chemical-Structure.{{doc.csid}}.html" target=new>View on ChemSpider</a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if doc.inchikey %}
+                                    <a href="https://www.ebi.ac.uk/chembl/g/#search_results/all/query={{doc.inchikey}}">Search</a>
                                 {% endif %}
                             </td>
                             <td>{{doc.display_name}}</td>

@@ -157,8 +157,16 @@
                     {% if image_url %}
                         <img src="{{ image_url }}">
                     {% endif %}
-                    <a href="http://www.chemspider.com/Chemical-Structure.{{ csid }}.html" target=new>View on
-                        ChemSpider</a>
+                    <ul>
+                        {% if document.csid %}
+                            <li><a href="http://www.chemspider.com/Chemical-Structure.{{ csid }}.html" target=new>View on
+                            ChemSpider</a></li>
+                        {% endif %}
+
+                        {% if document.inchikey %}
+                            <li><a href="https://www.ebi.ac.uk/chembl/g/#search_results/all/query={{document.inchikey}}">Search InChIKey on chembl</a></li>
+                        {% endif %}
+                    </ul>
                 </div>
                 <div class="panel-body">
                     <script type="text/javascript">
