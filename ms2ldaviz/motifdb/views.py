@@ -229,7 +229,7 @@ def create_motifset(request):
             mm.metadata = jsonpickle.encode(metadata)
             mm_id = mm.id
 
-            if 'ms2lda_experiment_id' in metadata:
+            if 'MS2LDA_Experiment_ID' in metadata:
                 mm.save()
                 return redirect('/motifdb/choose_motifs/{}/{}/'.format(mm.id,experiment.id))
             else:
