@@ -22,7 +22,7 @@ class NewMotifSetForm(forms.Form):
         ("negative ionisation mode","negative ionisation mode"),
     )) 
     
-    Analysis_IonizationSources_ionization_source = forms.ChoiceField(required = True,label = "Analysis_IonizationSource", choices = (
+    Analysis_IonizationSource = forms.ChoiceField(required = True,label = "Analysis_IonizationSource", choices = (
         ("electospray ionization","electospray ionization"),
         ("other","other"),
     ))
