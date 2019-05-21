@@ -12,24 +12,24 @@ class MatchMotifDBForm(forms.Form):
 
 class NewMotifSetForm(forms.Form):
     motifset_name = forms.CharField(max_length=1024,required = True, label = "Name")
-    motif_name_prefix = forms.CharField(max_length=10,required = True, label = "Motif Name Prefix")
+    Motif_Name_Prefix = forms.CharField(max_length=10,required = True, label = "Motif Name Prefix")
     description = forms.CharField(required=True,widget = forms.Textarea)
-    ms2lda_experiment_id = forms.ModelChoiceField(queryset=Experiment.objects.none(),
+    ms2lda_experiment = forms.ModelChoiceField(queryset=Experiment.objects.none(),
                                               required=False, label="Create from MS2LDA experiment")
     
-    analysis_polarity = forms.ChoiceField(required = True,label = "Analysis_Polarity", choices = (
+    Analysis_Polarity = forms.ChoiceField(required = True,label = "Analysis_Polarity", choices = (
         ("positive ionisation mode","positive ionisation mode"),
         ("negative ionisation mode","negative ionisation mode"),
     )) 
     
-    analysis_ionization_source = forms.ChoiceField(required = True,label = "Analysis_IonizationSource", choices = (
+    Analysis_IonizationSources_ionization_source = forms.ChoiceField(required = True,label = "Analysis_IonizationSource", choices = (
         ("electospray ionization","electospray ionization"),
         ("other","other"),
     ))
     # only show this if ms2lda_experiment isn't selected
     # bin_width = forms.DecimalField(required = False)
 
-    analysis_mass_spectrometer = forms.ChoiceField(required = True, label = "Analysis_MassSpectrometer",choices = (
+    Analysis_MassSpectrometer = forms.ChoiceField(required = True, label = "Analysis_MassSpectrometer",choices = (
         ("Maxis_Impact","Maxis_Impact"), 
         ("Maxis_ImpactHD","Maxis_ImpactHD"), 
         ("QExactive","QExactive"), 
@@ -42,21 +42,21 @@ class NewMotifSetForm(forms.Form):
         ("mixture","mixture"),
     ))
 
-    collision_energy = forms.ChoiceField(label = "Collision_Energy",required = True, choices = (
+    Collision_Energy = forms.ChoiceField(label = "Collision_Energy",required = True, choices = (
         ("HCD","HCD"),
         ("CID","CID"),
         ("mixture","mixture"),
     ))
 
-    taxon_id = forms.CharField(label = "Taxon_ID",required = False)
+    Taxon_ID = forms.CharField(label = "Taxon_ID",required = False)
 
-    scientific_name = forms.CharField(label = "Scientific_Name",required = False)
+    Scientific_Name = forms.CharField(label = "Scientific_Name",required = False)
 
-    sample_type = forms.CharField(label = "Sample_Type",required = False)
+    Sample_Type = forms.CharField(label = "Sample_Type",required = False)
 
-    paper_url = forms.CharField(label = "Paper_URL",required = False)
+    Paper_URL = forms.CharField(label = "Paper_URL",required = False)
 
-    analysis_chromatography_and_phase = forms.ChoiceField(required = False, label = "Analysis_ChromatographyAndPhase", choices = (
+    Analysis_ChromatographyAndPhase = forms.ChoiceField(required = False, label = "Analysis_ChromatographyAndPhase", choices = (
         ("reverse phase (C18)","reverse phase (C18)"),
         ("reverse phase (C8)","reverse phase (C8)"),
         ("reverse phase (Phenyl-Hexyl)","reverse phase (Phenyl-Hexyl)"),
@@ -65,8 +65,8 @@ class NewMotifSetForm(forms.Form):
         ("direct infusion (DI)","direct infusion (DI)"),
     ))
 
-    other_information = forms.CharField(label = "Other_Information",widget=forms.Textarea,required= False)
-    massive_id = forms.CharField(label = "Massive_ID",required = False)
+    Other_Information = forms.CharField(label = "Other_Information",widget=forms.Textarea,required= False)
+    Massive_ID = forms.CharField(label = "Massive_ID",required = False)
 
 
 
