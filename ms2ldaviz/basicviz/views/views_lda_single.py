@@ -1781,6 +1781,26 @@ def get_features(request, experiment_id):
     output_features = [(f.name, f.min_mz, f.max_mz) for f in features]
     return HttpResponse(json.dumps(output_features), content_type='application/json')
 
+def get_document(request):
+    return_val = {}
+    # try:
+    # todo: add check for public experiment
+    experiment_id = request.GET['experiment_id']
+    document_id = request.GET['document_id']
+    experiment = Experiment.objects.get(id = int(experiment_id))
+    return_val['experiment_name'] = experiment.name
+    document = Document.objects.get(id = int(document_id))
+    fi = FeatureInstance.objects.filter(document = document)
+    peaks = []
+    for f in fi:
+        if f.feature.name.startswith('fragment'):
+            mz = float(f.feature.name.split('_')[1])
+            intensity = f.intensity
+            peaks.append((mz,intensity))
+    return_val = peaks
+    # except:
+    #     return_val['status'] = 'failed'
+    return HttpResponse(json.dumps(return_val),content_type='application/json')
 
 def get_annotated_topics(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
