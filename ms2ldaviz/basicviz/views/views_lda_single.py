@@ -28,6 +28,7 @@ from decomposition.models import DocumentGlobalMass2Motif, GlobalMotif, Document
 from decomposition.decomposition_functions import get_parents_decomposition, get_parent_for_plot_decomp, \
     get_decomp_doc_context_dict
 from basicviz.views import index as basicviz_index
+from basicviz.views.views_lda_admin import list_all_experiments
 from ms1analysis.models import Analysis, AnalysisResult, AnalysisResultPlage
 from basicviz.constants import EXPERIMENT_STATUS_CODE
 
@@ -36,6 +37,9 @@ from motifdb.models import MDBMotif
 
 def check_user(request, experiment):
     user = request.user
+    if user.is_staff: # staff can view all experiments
+        return 'edit'
+
     try:
         ue = UserExperiment.objects.get(experiment=experiment, user=user)
         return ue.permission
@@ -2134,6 +2138,7 @@ def toggle_public(request,experiment_id):
                 p.delete()
         return summary(request,experiment_id)
 
+
 def delete_experiment(request,experiment_id):
     experiment = Experiment.objects.get(id = experiment_id)
     permission = check_user(request,experiment)
@@ -2141,4 +2146,10 @@ def delete_experiment(request,experiment_id):
         return HttpResponse("You don't have the permission to do this!")
     else:
         experiment.delete()
+
+    # different return page for staff
+    if request.user.is_staff and request.GET['admin'] == 'true':
+        return list_all_experiments(request)
+
+    # normally return to the basicviz index page
     return basicviz_index(request)

@@ -1,10 +1,11 @@
 import os
 
-from django.contrib.auth.decorators import login_required,user_passes_test
-from django.shortcuts import render
-from basicviz.models import JobLog
-from django.http import StreamingHttpResponse
 from django.conf import settings
+from django.contrib.auth.decorators import user_passes_test
+from django.http import StreamingHttpResponse
+from django.shortcuts import render
+
+from basicviz.models import JobLog, Experiment, UserExperiment
 
 
 @user_passes_test(lambda u: u.is_staff)
@@ -27,3 +28,18 @@ def show_log_file(request, experiment_id):
     response = StreamingHttpResponse(content)
     response['Content-Type'] = 'text/plain; charset=utf8'
     return response
+
+
+@user_passes_test(lambda u: u.is_staff)
+def list_all_experiments(request):
+    experiments = Experiment.objects.all()
+    results = []
+    for experiment in experiments:
+        user_experiments = UserExperiment.objects.filter(experiment=experiment)
+        joblog = JobLog.objects.filter(experiment=experiment).first()
+        row = [experiment, user_experiments, joblog]
+        results.append(row)
+
+    context_dict = {}
+    context_dict['results'] = results
+    return render(request, 'basicviz/list_all_experiments.html', context_dict)

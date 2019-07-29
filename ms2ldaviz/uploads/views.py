@@ -1,10 +1,11 @@
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
 from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_TYPE, EXPERIMENT_MS2_FORMAT
-from basicviz.models import ExtraUsers, UserExperiment, JobLog
+from basicviz.models import ExtraUsers, UserExperiment, JobLog, Experiment
+from basicviz.views import list_all_experiments
 from .forms import CreateExperimentForm, UploadExperimentForm, UploadGensimExperimentForm
 from .tasks import lda_task, decomposition_task, upload_task, upload_gensim_task
 
@@ -140,3 +141,26 @@ def process_experiment(exp, cleaned_data):
                 task = lda_task
 
         task.delay(exp.id, params)
+
+
+@user_passes_test(lambda u: u.is_staff)
+def rerun_experiment(request, experiment_id):
+    exp = Experiment.objects.get(id = experiment_id)
+    print(exp)
+    params = {}
+    if exp.experiment_ms2_format == EXPERIMENT_MS2_FORMAT[3][0]:
+        params['filename'] = exp.ms2_file.path
+        params['featureset'] = exp.featureset.name
+        task = upload_task
+    elif exp.experiment_ms2_format == EXPERIMENT_MS2_FORMAT[4][0]:
+        params['corpus_filename'] = exp.ms2_file.path
+        params['gensim_filename'] = exp.csv_file.path
+        params['featureset'] = exp.featureset.name
+        task = upload_gensim_task
+    else:  # run lda inference
+        params['K'] = exp.K
+        params['n_its'] = exp.n_its
+        task = lda_task
+
+    task.delay(exp.id, params)
+    return list_all_experiments(request)

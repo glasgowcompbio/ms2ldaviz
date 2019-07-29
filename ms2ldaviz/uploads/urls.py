@@ -8,4 +8,5 @@ urlpatterns = [
     url(r'^ms1_format/$', TemplateView.as_view(template_name="uploads/ms1_format.html"), name='ms1_format'),
     url(r'^upload_experiment/$', views.upload_experiment, name='upload_experiment'),
     url(r'^upload_gensim_experiment/$', views.upload_gensim_experiment, name='upload_gensim_experiment'),
+    url(r'^rerun/(?P<experiment_id>\w+)/$', views.rerun_experiment, name='rerun_experiment'),
 ]

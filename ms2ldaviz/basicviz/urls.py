@@ -62,7 +62,7 @@ lda_single_patterns = [
     url(r'^get_gnps_summary/(?P<experiment_id>\w+)/$',views.get_gnps_summary,name = 'get_gnps_summary'),
     url(r'^toggle_public/(?P<experiment_id>\w+)/$',views.toggle_public,name = 'toggle_public'),
     url(r'^delete/(?P<experiment_id>\w+)/$',views.delete_experiment,name = 'delete_experiment'),
-    url(r'^get_doc/$',views.get_document,name='get_document'),    
+    url(r'^get_doc/$',views.get_document,name='get_document'),
 ]
 
 # for multi-file LDA experiments
@@ -94,6 +94,7 @@ lda_multi_patterns = [
 lda_admin_patterns = [
     url(r'^list_log/$',views.list_log,name = 'list_log'),
     url(r'^show_log_file/(?P<experiment_id>\w+)/$', views.show_log_file, name='show_log_file'),
+    url(r'^list_all_experiments/$', views.list_all_experiments, name='list_all_experiments'),
 ]
 
 urlpatterns = [
