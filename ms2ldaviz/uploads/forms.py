@@ -90,11 +90,12 @@ class CreateExperimentForm(forms.ModelForm):
             'K': 'Number of Mass2Motifs',
             'decomposition_source': 'Use for decomposition in the future?',
             'n_its': 'Number of iterations (for LDA).',
-            'experiment_type': '(Required) LDA, or decomposition,'
+            # 'experiment_type': '(Required) LDA, or decomposition,'
         }
         fields = [
             'name', 'description',
-            'experiment_type', 'experiment_ms2_format', 'ms2_file', 'csv_file', 'csv_mz_column',
+            # 'experiment_type',
+            'experiment_ms2_format', 'ms2_file', 'csv_file', 'csv_mz_column',
             # 'csv_rt_column',
             'csv_rt_units',
             'csv_id_column', 'ms2_id_field',
