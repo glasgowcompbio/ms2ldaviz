@@ -19,10 +19,13 @@
         <div class="panel panel-default">
             <div class="panel-body">
                 <p>
-                    You can choose either to decompose your spectra in a completely
-                    unsupervised manner (experiment type <strong>LDA</strong>) or with respect to
-                    existing Mass2Motifs that we have annotated
-                    (experiment type <strong>Decomposition</strong>). Please scroll down for more detailed instructions.
+                    When setting up LDA experiments, we recommend users to choose a number of relevant MotifDB motif sets
+                    to find in your mass spectrometry fragmentation data with the parameter <i>Select zero or more motifsets
+                    for initial model population</i>.
+                </p>
+                <p>
+                    We also advise to add a few “free LDA motifs” with the parameter <i>Number of Mass2Motifs</i> to
+                    cover the chemistry that does not match with any annotated Mass2Motif.
                 </p>
                 <p>
                     If an <a href="{%  url 'ms1_format' %}" target="_blank">MS1 CSV file</a> is provided, it will be used to seed the precursor peaks during the extraction of fragmentation spectra.
@@ -54,20 +57,20 @@
 {% block js_block %}
     <script type='text/javascript'>
 
-        function experiment_type_actions(){
-            var a = $('#id_experiment_type').val();
+//        function experiment_type_actions(){
+//            var a = $('#id_experiment_type').val();
 
-            if (a === '0') { // ms2lda
-                $('#id_decomposition_source').parent().show();
-                $('#id_K').parent().show();
-                $('#id_decompose_from').parent().hide();
+//            if (a === '0') { // ms2lda
+//                $('#id_decomposition_source').parent().show();
+//                $('#id_K').parent().show();
+//                $('#id_decompose_from').parent().hide();
 
-            } else { // decomposition
-                $('#id_decomposition_source').parent().hide();
-                $('#id_K').parent().hide();
-                $('#id_decompose_from').parent().show();
-            }
-        }
+//            } else { // decomposition
+//                $('#id_decomposition_source').parent().hide();
+//                $('#id_K').parent().hide();
+//                $('#id_decompose_from').parent().show();
+//            }
+//        }
 
         function experiment_ms2_format_actions(){
             var a = $('#id_experiment_ms2_format').val();
@@ -101,9 +104,9 @@
             }
         }
 
-        $('#id_experiment_type').on('change', function() {
-            experiment_type_actions();
-        });
+//        $('#id_experiment_type').on('change', function() {
+//            experiment_type_actions();
+//        });
 
         $('#id_experiment_ms2_format').on('change', function() {
             experiment_ms2_format_actions();

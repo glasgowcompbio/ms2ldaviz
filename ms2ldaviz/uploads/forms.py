@@ -13,21 +13,21 @@ class CreateExperimentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CreateExperimentForm, self).__init__(*args, **kwargs)
-        self.fields['decompose_from'] = forms.ModelChoiceField(
-            queryset=MotifSet.objects.all(),
-            label='Decompose using Mass2Motifs in'
-        )
+        # self.fields['decompose_from'] = forms.ModelChoiceField(
+        #     queryset=MotifSet.objects.all(),
+        #     label='Decompose using Mass2Motifs in'
+        # )
         self.fields['featureset'] = forms.ModelChoiceField(
             queryset=BVFeatureSet.objects.filter(name__startswith='binned'),
             label='Choose width of ms2 bins (to enable comparison with characterised motifs, we strongly recommend default value of 0.005 Da)',
             initial=BVFeatureSet.objects.get(name='binned_005')
         )
         self.fields['ms2_file'].required = True
-        self.fields['decompose_from'].required = False
+        # self.fields['decompose_from'].required = False
 
         self.fields['include_motifset'] = forms.MultipleChoiceField(
             choices = [(m.id,str(m)) for m in MDBMotifSet.objects.all()],
-            label='Select zero or more motifsets to for initial model population',
+            label='Select zero or more motifsets for initial model population',
             widget=forms.SelectMultiple(attrs={'size': 10})
         )
         self.fields['include_motifset'].required = False
@@ -88,7 +88,7 @@ class CreateExperimentForm(forms.ModelForm):
             'duplicate_filter_mz_tol': 'mz tol (ppm) for duplicate filtering',
             'duplicate_filter_rt_tol': 'rt tol (seconds) for duplicate filtering',
             'K': 'Number of Mass2Motifs',
-            'decomposition_source': 'Use for decomposition in the future?',
+            # 'decomposition_source': 'Use for decomposition in the future?',
             'n_its': 'Number of iterations (for LDA).',
             # 'experiment_type': '(Required) LDA, or decomposition,'
         }

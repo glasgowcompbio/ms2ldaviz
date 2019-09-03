@@ -38,8 +38,10 @@ def index(request):
                 show_lda = True
                 if len(Analysis.objects.filter(experiment_id = experiment.id)) > 0:
                     show_ms1_set.add(experiment.id)
-            if experiment.experiment_type == decomposition_code:
-                show_decomposition = True
+
+            # permanently disabled
+            # if experiment.experiment_type == decomposition_code:
+            #     show_decomposition = True
 
     show_pending = False if len(pending_individuals) == 0 else True
     for e in exclude_individuals:
