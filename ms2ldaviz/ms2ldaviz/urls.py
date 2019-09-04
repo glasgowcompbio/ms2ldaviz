@@ -1,9 +1,8 @@
-from django.conf.urls import include, url
-from django.contrib import admin
-from django.conf.urls.static import static
 from django.conf import settings
-import views
+from django.conf.urls import include, url  # For django versions before 2.0
+from django.contrib import admin
 
+import views
 
 urlpatterns = [
     url(r'^$', views.home, name='home'),
@@ -24,3 +23,10 @@ urlpatterns = [
     url(r'^ms1analysis/', include('ms1analysis.urls')),
     url(r'^motifdb/', include('motifdb.urls')),
 ]
+
+# for django debug toolbar
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns

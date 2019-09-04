@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'debug_toolbar',
     'basicviz',
     'annotation',
     'massbank',
@@ -52,6 +53,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE_CLASSES = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'debug_toolbar_force.middleware.ForceDebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -153,3 +156,19 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10000000
 # Chemspider token used on production server,
 # Replace it with own token (https://developer.rsc.org/) for your own server.
 CHEMSPIDER_APIKEY='b2VqZPJug1yDvbPgawGdGO59pdBw4eaf'
+
+DEFAULT_CACHE_TIMEOUT = 60 * 60 * 24
+
+# TODO: not sure if this will work with docker-compose?!
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
+        'TIMEOUT': DEFAULT_CACHE_TIMEOUT
+    }
+}
+
+# for django debug toolbar
+INTERNAL_IPS = [
+    '127.0.0.1',
+]

@@ -31,3 +31,6 @@ tqdm==4.31.1
 chemspipy==2.0.0
 requests==2.21.0
 funcsigs==1.0.2
+python-memcached==1.59
+django-debug-toolbar==1.11
+django-debug-toolbar-force==0.1.5

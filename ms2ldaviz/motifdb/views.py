@@ -6,6 +6,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.middleware.csrf import get_token
 
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_page
+from django.conf import settings
 
 import json
 import numpy as np

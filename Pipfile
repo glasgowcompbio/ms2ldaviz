@@ -39,6 +39,9 @@ funcsigs = "==1.0.2"
 Django = "==1.11.16"
 Keras = "==2.2.4"
 ChemSpiPy = "==2.0.0"
+python-memcached = "==1.59"
+django-debug-toolbar = "==1.11"
+django-debug-toolbar-force = "==0.1.5"
 
 [requires]
 python_version = "2.7"
