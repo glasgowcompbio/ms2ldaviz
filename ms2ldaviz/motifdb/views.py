@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import base64
+import hashlib
+
 from django.shortcuts import render,redirect,HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.middleware.csrf import get_token
@@ -8,6 +11,8 @@ from django.middleware.csrf import get_token
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
 from django.conf import settings
+from django.core.cache import cache
+
 
 import json
 import numpy as np
@@ -135,11 +140,13 @@ def start_motif_matching(request, experiment_id):
     context_dict['match_motif_form'] = match_motif_form
     return render(request, 'motifdb/start_match_motifs.html', context_dict)
 
+@cache_page(settings.DEFAULT_CACHE_TIMEOUT)
 def list_motifsets(request):
     motif_sets = MDBMotifSet.objects.all()
     output = {m.name:m.id for m in motif_sets}
     return HttpResponse(json.dumps(output), content_type='application/json') 
 
+@cache_page(settings.DEFAULT_CACHE_TIMEOUT)
 def get_motifset(request,motifset_id):
     motifset = MDBMotifSet.objects.get(id = motifset_id)
     motifs = MDBMotif.objects.filter(motif_set = motifset)
@@ -159,31 +166,43 @@ def initialise_api(request):
 
 def get_motifset_post(request):
     motifset_id_list = request.POST.getlist('motifset_id_list')
-    print "*****",motifset_id_list
-    output_motifs = {}
-    output_metadata = {}
-    for motifset_id in motifset_id_list:
-        motifset_id = int(motifset_id)
-        motifset = MDBMotifSet.objects.get(id = motifset_id)
-        motifs = MDBMotif.objects.filter(motif_set = motifset)
-    
-        for motif in motifs:
-            fis = Mass2MotifInstance.objects.filter(mass2motif = motif)
-            output_motifs[motif.name] = {}
-            for fi in fis:
-                output_motifs[motif.name][fi.feature.name] = fi.probability
-            md = jsonpickle.decode(motif.metadata)
-            md['motifdb_id'] = motif.id
-            md['motifdb_url'] = 'http://ms2lda.org/motifdb/motif/{}'.format(motif.id)
-            output_metadata[motif.name] = md
-    
-    if request.POST.get('filter',"False") == "True":
-        filter_threshold = float(request.POST.get('filter_threshold',0.95))
-        m = MotifFilter(output_motifs,output_metadata,threshold = filter_threshold)
-        output_motifs,output_metadata = m.filter()
-    
-    output = {'motifs':output_motifs,'metadata':output_metadata}
+    do_filter = request.POST.get('filter', "False") == "True"
+    filter_threshold = float(request.POST.get('filter_threshold', 0.95))
+    key = (motifset_id_list, do_filter, filter_threshold, )
 
+    # https://stackoverflow.com/questions/45164551/removing-control-space-characters-from-cache-key-in-python
+    encoded_key = json.dumps(key)
+    encoded_key = hashlib.md5(encoded_key).hexdigest().strip()
+    print key, "*****", encoded_key
+
+    output = cache.get(encoded_key)
+    if output is None:
+        print 'Not found', key, ' in cache'
+        output_motifs = {}
+        output_metadata = {}
+        for motifset_id in motifset_id_list:
+            motifset_id = int(motifset_id)
+            motifset = MDBMotifSet.objects.get(id = motifset_id)
+            motifs = MDBMotif.objects.filter(motif_set = motifset)
+
+            for motif in motifs:
+                fis = Mass2MotifInstance.objects.filter(mass2motif = motif)
+                output_motifs[motif.name] = {}
+                for fi in fis:
+                    output_motifs[motif.name][fi.feature.name] = fi.probability
+                md = jsonpickle.decode(motif.metadata)
+                md['motifdb_id'] = motif.id
+                md['motifdb_url'] = 'http://ms2lda.org/motifdb/motif/{}'.format(motif.id)
+                output_metadata[motif.name] = md
+
+        if do_filter:
+            m = MotifFilter(output_motifs,output_metadata,threshold = filter_threshold)
+            output_motifs,output_metadata = m.filter()
+
+        output = {'motifs':output_motifs,'metadata':output_metadata}
+        cache.set(encoded_key, output)
+    else:
+        print 'Found', key, ' in cache'
 
     return HttpResponse(json.dumps(output), content_type='application/json')
 
