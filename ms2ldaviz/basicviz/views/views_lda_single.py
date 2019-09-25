@@ -1032,6 +1032,22 @@ def get_graph(request, vo_id):
         #                edge_choice=viz_options.edge_choice)
         raise Http404("page not found")
     d = json_graph.node_link_data(G)
+
+    # convert links from nodes ids to node indices
+    print('Converting links to indices')
+    node_indices = {d['nodes'][i]['id']: i for i in range(len(d['nodes']))}
+    new_links = []
+    for link in d['links']:
+        source_id = node_indices[link['source']]
+        target_id = node_indices[link['target']]
+        weight = link['weight']
+        new_link = {
+            'source': source_id,
+            'target': target_id,
+            'weight': weight
+        }
+        new_links.append(new_link)
+    d['links'] = new_links
     return HttpResponse(json.dumps(d), content_type='application/json')
 
 
