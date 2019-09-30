@@ -5,6 +5,7 @@ urlpatterns = [
     url(r'^$', views.index, name='motifdb_index'),
     url(r'^motif_set/(?P<motif_set_id>\w+)/$', views.motif_set,name='motif_set'),
     url(r'^motif/(?P<motif_id>\w+)/$', views.motif,name='motif'),
+    url(r'^get_motif/(?P<motif_id>\w+)/$',views.get_motif,name='get_motif'),
     url(r'^update_annotation/(?P<motif_id>\w+)/$', views.update_annotation,name='update_annotation'),
     url(r'^start_motif_matching/(?P<experiment_id>\w+)/$', views.start_motif_matching,name='start_motif_matching'),
     url(r'^list_motifsets/$',views.list_motifsets,name = 'list_motifsets'),
