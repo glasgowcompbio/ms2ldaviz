@@ -159,6 +159,17 @@ def get_motifset(request,motifset_id):
     return HttpResponse(json.dumps(output_motifs), content_type='application/json')
 
 
+@cache_page(settings.DEFAULT_CACHE_TIMEOUT)
+def get_motif(request,motif_id):
+    motif = MDBMotif.objects.get(id = motif_id)
+    fis = Mass2MotifInstance.objects.filter(mass2motif = motif)
+    output_list = []
+    for fi in fis:
+        if fi.feature.name.startswith('fragment'):
+            mz = fi.feature.name.split('_')[1]
+            output_list.append((mz,fi.probability))
+    return HttpResponse(json.dumps(output_list),content_type = 'application/json')
+
 def initialise_api(request):
     token = get_token(request)
     output = {'token':token}
