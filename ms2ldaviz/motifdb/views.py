@@ -166,7 +166,7 @@ def get_motif(request,motif_id):
     output_list = []
     for fi in fis:
         if fi.feature.name.startswith('fragment'):
-            mz = fi.feature.name.split('_')[1]
+            mz = float(fi.feature.name.split('_')[1])
             output_list.append((mz,fi.probability))
     return HttpResponse(json.dumps(output_list),content_type = 'application/json')
 
