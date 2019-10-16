@@ -1817,7 +1817,8 @@ def get_document(request):
             mz = float(f.feature.name.split('_')[1])
             intensity = f.intensity
             peaks.append((mz,intensity))
-    return_val = peaks
+    return_val['peaks'] = peaks
+    return_val['precursor_mz'] = document.get_mass()
     # except:
     #     return_val['status'] = 'failed'
     return HttpResponse(json.dumps(return_val),content_type='application/json')
