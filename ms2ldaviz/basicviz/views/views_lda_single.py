@@ -760,18 +760,19 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
 
     # Get the parent info
     metadata = jsonpickle.decode(document.metadata)
-    if 'parentmass' in metadata:
-        parent_mass = float(metadata['parentmass'])
-    elif 'mz' in metadata:
-        parent_mass = float(metadata['mz'])
-    elif '_' in document.name:
-        try:
-            parent_mass = float(document.name.split('_')[0])
-        except:
-            # in case the name isnt that format
-            parent_mass = 0.0
-    else:
-        parent_mass = 0.0
+    precursor_mass = document.mass
+    # if 'parentmass' in metadata:
+    #     parent_mass = float(metadata['parentmass'])
+    # elif 'mz' in metadata:
+    #     parent_mass = float(metadata['mz'])
+    # elif '_' in document.name:
+    #     try:
+    #         parent_mass = float(document.name.split('_')[0])
+    #     except:
+    #         # in case the name isnt that format
+    #         parent_mass = 0.0
+    # else:
+    #     parent_mass = 0.0
     probability = "na"
 
     # default_score = get_option('default_doc_m2m_score', experiment=document.experiment)
@@ -796,7 +797,7 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
         #     else:
         #         probability = dm2m.overlap_score
 
-    parent_data = (parent_mass, 100.0, document.display_name, document.annotation, probability)
+    parent_data = (precursor_mass, 100.0, document.display_name, document.annotation, probability)
     plot_fragments.append(parent_data)
     child_data = []
 
