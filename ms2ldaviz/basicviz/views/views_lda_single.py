@@ -867,7 +867,7 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
                         other_topics += proportion
                 child_data.append((mass, mass, this_intensity - other_topics, this_intensity, 1, 'gray', feature_name))
             elif feature_name.startswith('loss'):
-                cum_pos = parent_mass - mass
+                cum_pos = precursor_mass - mass
                 other_topics = 0.0
                 for phi_value in phi_values:
                     if phi_value.mass2motif in topics_to_plot:
@@ -880,7 +880,7 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
                         proportion = mass * phi_value.probability
                         other_topics += proportion
                 child_data.append(
-                    (parent_mass - other_topics, parent_mass, this_intensity, this_intensity, 0, 'gray', feature_name))
+                    (precursor_mass - other_topics, precursor_mass, this_intensity, this_intensity, 0, 'gray', feature_name))
             elif feature_name.startswith('mzdiff'):
                 # note we only plot them in the correct colour if they have phi > 0.5
                 diff_mass = feature_name.split('_')[1]
