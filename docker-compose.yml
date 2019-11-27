@@ -6,6 +6,7 @@ services:
     depends_on:
      - db
      - redis
+     - cache
     volumes:
      - jobs:/code/ms2ldaviz/media
   redis:
@@ -35,6 +36,8 @@ services:
       - "${PORT:-8001}:80"
     depends_on:
       - web
+  cache:
+    image: memcached
 volumes:
   jobs:
   datadir:

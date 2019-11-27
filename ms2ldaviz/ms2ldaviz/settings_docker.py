@@ -8,17 +8,10 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'django',
-        'USER': 'django',
-        'PASSWORD': 'j7z3rL40w9',
-        'HOST': 'db',
-        'PORT': '',
-    }
-}
+DATABASES['default']['HOST'] = 'db'
 
 CELERY_BROKER_URL = "redis://redis:6379/0"
 
 CHEMSPIDER_APIKEY='fLazuvY8CEiRgF8QfhgrGCr7v1xqD8f9'
+
+CACHES['default']['LOCATION'] = 'cache:11211'
