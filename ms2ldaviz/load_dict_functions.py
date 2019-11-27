@@ -7,7 +7,7 @@ import os
 from glob import glob
 
 import jsonpickle
-# from gensim.models import LdaModel
+from gensim.models import LdaModel
 from tqdm import tqdm
 
 from basicviz.models import Document,Feature,FeatureInstance,Mass2Motif,Mass2MotifInstance,DocumentMass2Motif,FeatureMass2MotifInstance,Alpha
