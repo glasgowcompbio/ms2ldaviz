@@ -178,9 +178,9 @@ class UserExperiment(models.Model):
 # cs = ChemSpider(settings.CHEMSPIDER_APIKEY)
 # mol = cs.convert(ik,'InChIKey','mol')
 class Document(models.Model):
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=1024)
     experiment = models.ForeignKey(Experiment)
-    metadata = models.CharField(max_length=2048, null=True)
+    metadata = models.CharField(max_length=4096, null=True)
     mol_string = models.TextField(null=True)
 
     def get_annotation(self):

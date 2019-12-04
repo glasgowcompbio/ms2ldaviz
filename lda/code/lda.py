@@ -178,7 +178,7 @@ class LDA(object):
 class VariationalLDA(object):
     def __init__(self,corpus=None,K = 20,eta=0.1,
         alpha=1,update_alpha=True,word_index=None,normalise = -1,fixed_topics = None,fixed_topics_metadata = None,
-        topic_index = None):
+        topic_index = None,top_verbose = True):
         self.corpus = corpus
         self.word_index = word_index
         self.normalise = normalise
@@ -187,11 +187,13 @@ class VariationalLDA(object):
             self.n_docs = len(self.corpus)
             if self.word_index == None:
                 self.word_index = self.find_unique_words()
-            print "Object created with {} documents".format(self.n_docs)
+            if top_verbose:
+                print "Object created with {} documents".format(self.n_docs)
             self.n_words = len(self.word_index)
             self.make_doc_index()
             if self.normalise > -1:
-                print "Normalising intensities"
+                if top_verbose:
+                    print "Normalising intensities"
                 self.normalise_intensities()
         
         self.K = K
@@ -477,9 +479,11 @@ class VariationalLDA(object):
     # First time its run, initialise has to be True
     def run_vb(self,n_its = 1,verbose=True,initialise=True):
         if initialise:
-            print "Initialising"
+            if verbose:
+                print "Initialising"
             self.init_vb()
-        print "Starting iterations"
+        if verbose:
+            print "Starting iterations"
         for it in range(n_its):
             start_time = time.clock()
             diff = self.vb_step()
