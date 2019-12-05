@@ -159,7 +159,7 @@ CHEMSPIDER_APIKEY='b2VqZPJug1yDvbPgawGdGO59pdBw4eaf'
 
 DEFAULT_CACHE_TIMEOUT = 60 * 60 * 24
 
-# TODO: not sure if this will work with docker-compose?!
+# Page cache
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',

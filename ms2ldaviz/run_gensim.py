@@ -273,7 +273,7 @@ def insert_gensim_lda(corpusjson, ldafile, experiment, owner, description, norma
 
     print('Reading corpus json file')
     corpus_dict = json.load(corpusjson)
-    load_corpus_gensim(new_experiment, corpus_dict, featureset, ldafile, min_prob_to_keep_beta, min_prob_to_keep_phi,
+    load_corpus_gensim(new_experiment, corpus_dict, feature_set_name, ldafile, min_prob_to_keep_beta, min_prob_to_keep_phi,
                        min_prob_to_keep_theta, normalize, verbose)
 
     # Done inserting

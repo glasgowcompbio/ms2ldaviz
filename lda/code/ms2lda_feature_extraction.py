@@ -278,7 +278,7 @@ class Loader(object):
 
                 ms1_hits = list(filter(lambda x: x.mz >= min_mz and x.mz <= max_mz and x.rt >= min_rt and x.rt <= max_rt,ms1))
 
-
+                print(peak_mz,peak_rt,len(ms1_hits))
                 if len(ms1_hits) == 1:
                     # Found one hit, easy
                     old_ms1 = ms1_hits[0]
@@ -1612,7 +1612,10 @@ class MakeBinnedFeatures(MakeFeatures):
                 loss_mz = 0.0
             else:
                 do_losses = True
-                loss_mz = peak[3].single_charge_precursor_mass - mz
+                if peak[3].single_charge_precursor_mass:
+                    loss_mz = peak[3].single_charge_precursor_mass - mz
+                else:
+                    loss_mz = peak[3].mz - mz
             intensity = peak[2]
             if intensity >= self.min_intensity:
                 doc_name = peak[3].name
