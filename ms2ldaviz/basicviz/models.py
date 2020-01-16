@@ -245,7 +245,7 @@ class Document(models.Model):
         elif 'precursor_mass' in md:
             return md['precursor_mass']
         elif 'parentmass' in md:
-            return md['parentmass']
+            return float(md['parentmass'])
         elif 'mz' in md:
             return md['mz']
         else:
