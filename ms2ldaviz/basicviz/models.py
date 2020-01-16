@@ -244,6 +244,8 @@ class Document(models.Model):
             return md['precursormass']
         elif 'precursor_mass' in md:
             return md['precursor_mass']
+        elif 'parentmass' in md:
+            return md['parentmass']
         elif 'mz' in md:
             return md['mz']
         else:
