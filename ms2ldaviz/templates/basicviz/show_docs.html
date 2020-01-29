@@ -29,7 +29,15 @@
                                 <th>{{ user_col_name }}</th>
                             {% endfor %}
                         {% endif %}
-			<th>Name</th><th>Precursor Mass</th><th>Parent Mass</th><th>chemspider link (where available)</th><th>Search on chembl</th></th><th>Display Name</th><th>Resolver</th></tr>
+                        <th>Name</th>
+                        <th>Precursor Mass</th>
+                        <th>Parent Mass</th>
+                        <th>chemspider link (where available)</th>
+                        <th>Search on chembl</th>
+                        <th>Display Name</th>
+                        {% if experiment.is_public %}
+                        <th>Resolver</th></tr>
+                        {$ endif %}
                     </thead>
                     <tbody>
                     {% for doc in documents %}
