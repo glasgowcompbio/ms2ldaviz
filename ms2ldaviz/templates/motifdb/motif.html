@@ -27,8 +27,8 @@
                          {%if correct_user %}
                             <a href="/motifdb/update_annotation/{{motif.id}}">Update annotation</a>
                          {% endif %}
-                    </li>
                     {% endif %}
+                    <li>Resolver: <a href="https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MOTIFDB:motif:{{ motif.id}}">mzspec:MOTIFDB:motif:{{ motif.id}}</a></li>
                 </ul>
             </div>
         </div>
