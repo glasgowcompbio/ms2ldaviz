@@ -41,7 +41,7 @@
                             {% endif %}
                             <td><a href="/basicviz/show_doc/{{doc.id}}">{{doc.name}}</a></td>
                             <td>{{doc.mass}}</td>
-			    <td>{{doc.parentmass}}</td>
+			                <td>{{doc.parentmass}}</td>
                             <td>{% if doc.csid %}
                                 <a href="http://www.chemspider.com/Chemical-Structure.{{doc.csid}}.html" target=new>View on ChemSpider</a>
                                 {% endif %}
@@ -52,6 +52,7 @@
                                 {% endif %}
                             </td>
                             <td>{{doc.display_name}}</td>
+                            <td><a href="https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MS2LDATASK-{{experiment.id}}:document:{{doc.id}}">mzspec:MS2LDATASK-{{experiment.id}}:document:{{doc.id}}</a></td>
                         </tr>
                     {% endfor %}
                     </tbody>
