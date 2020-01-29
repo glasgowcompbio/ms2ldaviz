@@ -35,8 +35,8 @@
                         <th>chemspider link (where available)</th>
                         <th>Search on chembl</th>
                         <th>Display Name</th>
-                        {% if experiment.is_public %}
-                        <th>Resolver</th></tr>
+                        {% if is_public %}
+                            <th>Resolver</th></tr>
                         {% endif %}
                     </thead>
                     <tbody>
@@ -60,7 +60,7 @@
                                 {% endif %}
                             </td>
                             <td>{{doc.display_name}}</td>
-                            {% if experiment.is_public %}
+                            {% if is_public %}
                                 <td><a href="https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MS2LDATASK-{{experiment.id}}:document:{{doc.id}}">mzspec:MS2LDATASK-{{experiment.id}}:document:{{doc.id}}</a></td>
                             {% endif %}
                         </tr>
