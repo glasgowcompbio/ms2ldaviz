@@ -243,8 +243,16 @@ def show_docs(request, experiment_id):
     context_dict['experiment'] = experiment
     context_dict['documents'] = documents
     context_dict['n_docs'] = len(documents)
+    context_dict['is_public'] = is_public(experiment)
     return render(request, 'basicviz/show_docs.html', context_dict)
 
+
+def is_public(experiment):
+    test = PublicExperiments.objects.filter(experiment = experiment)
+    if len(test) > 0:
+        return True
+    else:
+        return False
 
 # @login_required(login_url='/registration/login/')
 def show_doc(request, doc_id):
@@ -263,6 +271,7 @@ def show_doc(request, doc_id):
     print context_dict
     context_dict['document'] = document
     context_dict['experiment'] = experiment
+    context_dict['is_public'] = is_public(experiment)
 
     if document.csid:
         context_dict['csid'] = document.csid
@@ -1809,8 +1818,8 @@ def get_document(request):
     experiment_id = request.GET['experiment_id']
     document_id = request.GET['document_id']
     experiment = Experiment.objects.get(id = int(experiment_id))
-    test = PublicExperiments.objects.filter(experiment = experiment)
-    if len(test) > 0:
+    
+    if is_public(experiment):
         return_val['experiment_name'] = experiment.name
         document = Document.objects.get(id = int(document_id))
         fi = FeatureInstance.objects.filter(document = document)
