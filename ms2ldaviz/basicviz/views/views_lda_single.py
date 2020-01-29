@@ -1809,17 +1809,21 @@ def get_document(request):
     experiment_id = request.GET['experiment_id']
     document_id = request.GET['document_id']
     experiment = Experiment.objects.get(id = int(experiment_id))
-    return_val['experiment_name'] = experiment.name
-    document = Document.objects.get(id = int(document_id))
-    fi = FeatureInstance.objects.filter(document = document)
-    peaks = []
-    for f in fi:
-        if f.feature.name.startswith('fragment'):
-            mz = float(f.feature.name.split('_')[1])
-            intensity = f.intensity
-            peaks.append((mz,intensity))
-    return_val['peaks'] = peaks
-    return_val['precursor_mz'] = document.get_mass()
+    test = PublicExperiments.objects.filter(experiment = experiment)
+    if len(test) > 0:
+        return_val['experiment_name'] = experiment.name
+        document = Document.objects.get(id = int(document_id))
+        fi = FeatureInstance.objects.filter(document = document)
+        peaks = []
+        for f in fi:
+            if f.feature.name.startswith('fragment'):
+                mz = float(f.feature.name.split('_')[1])
+                intensity = f.intensity
+                peaks.append((mz,intensity))
+        return_val['peaks'] = peaks
+        return_val['precursor_mz'] = document.get_mass()
+    else:
+        return_val['error'] = "This feature only works for public experiments"
     # except:
     #     return_val['status'] = 'failed'
     return HttpResponse(json.dumps(return_val),content_type='application/json')
