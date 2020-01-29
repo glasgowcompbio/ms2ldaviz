@@ -44,6 +44,7 @@
                             <tr>
                                 <td><a href="/motifdb/motif/{{motif.id}}">{{ motif.name }}</a></td>
                                 <td>{{ motif.annotation }}</td>
+                                <tf><a href="https://metabolomics-usi.ucsd.edu/spectrum/?usi=mzspec:MOTIFDB:motif:{{ motif.id}}">Resolver: mzspec:MOTIFDB:motif:{{ motif.id}}</a></td>
                             </tr>
                         {% endfor %}
                         </tbody>
