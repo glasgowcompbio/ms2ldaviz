@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-from key import SECRET_KEY
+from ms2ldaviz.key import SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'motifdb'
 ]
 
-MIDDLEWARE_CLASSES = [
+MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'debug_toolbar_force.middleware.ForceDebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -59,7 +59,6 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -90,7 +89,7 @@ WSGI_APPLICATION = 'ms2ldaviz.wsgi.application'
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
 # for the digital ocean server
-from database_info import DATABASES
+from ms2ldaviz.database_info import DATABASES
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -159,4 +158,9 @@ CACHES = {
 # for django debug toolbar
 INTERNAL_IPS = [
     '127.0.0.1',
+]
+
+
+SILENCED_SYSTEM_CHECKS = [
+    'admin.E408',
 ]
