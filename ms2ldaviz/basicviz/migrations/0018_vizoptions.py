@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('edge_thresh', models.FloatField()),
                 ('min_degree', models.IntegerField()),
-                ('experiment', models.ForeignKey(to='basicviz.Experiment')),
+                ('experiment', models.ForeignKey(to='basicviz.Experiment', on_delete=models.CASCADE)),
             ],
             options={
             },

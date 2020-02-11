@@ -42,7 +42,7 @@ def add_all_features_set(experiment,features,featureset):
                 pass
             ndone+=1
             if ndone % 100 == 0:
-                print "Done {} of {}".format(ndone,nfeatures)
+                print("Done {} of {}".format(ndone,nfeatures))
         Feature.objects.bulk_create(features2add)
 
 
@@ -59,7 +59,7 @@ def add_all_features(experiment,features):
         f.save()
         ndone += 1
         if ndone % 100 == 0:
-            print "Done {} of {}".format(ndone,nfeatures)
+            print("Done {} of {}".format(ndone,nfeatures))
 
 
 def add_document(name,experiment,metadata):
@@ -70,7 +70,7 @@ def add_feature(name,experiment):
     try:
         f = Feature.objects.get_or_create(name = name,experiment = experiment)[0]
     except:
-        print name,experiment
+        print(name,experiment)
         sys.exit(0)
     return f
 
@@ -83,18 +83,18 @@ def add_feature_set(name,featureset):
         elif len(current) == 1:
             return current[0]
         elif len(current) > 1:
-            print "MULTIPLE FEATURE",name,featureset
+            print("MULTIPLE FEATURE",name,featureset)
             sys.exit(0)
         # f = Feature.objects.get_or_create(name = name,featureset = featureset)[0]
     except:
-        print name,featureset
+        print(name,featureset)
         sys.exit(0)
 
 def add_feature_instance(document,feature,intensity):
     try:
         fi = FeatureInstance.objects.get_or_create(document=document,feature=feature,intensity=intensity)[0]
     except:
-        print document,feature,intensity
+        print(document,feature,intensity)
         sys.exit(0)
 
 
@@ -166,7 +166,7 @@ def add_document_words_set(document,doc_name,experiment,lda_dict,featureset):
         try:
             fi = FeatureInstance.objects.get_or_create(document = document,feature=feature,intensity = intensity)
         except:
-            print document,word,experiment
+            print(document,word,experiment)
             sys.exit(0)
 
 def add_sample(sample_name, experiment):
@@ -194,10 +194,10 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
     experiment.featureset = featureset
     experiment.save()
     if 'features' in lda_dict:
-        print "Explicit feature object: loading them all at once"
+        print("Explicit feature object: loading them all at once")
         add_all_features_set(experiment,lda_dict['features'],featureset = featureset)
 
-    print "Loading corpus, samples and intensities"
+    print("Loading corpus, samples and intensities")
     features_q = Feature.objects.filter(featureset=featureset)
     features = {r.name: r for r in features_q}
     n_done = 0
@@ -207,7 +207,7 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
         for doc in lda_dict['corpus']:
             n_done += 1
             if n_done % 100 == 0:
-                print "Done {}/{}".format(n_done, to_do)
+                print("Done {}/{}".format(n_done, to_do))
                 experiment.status = "Done {}/{} docs".format(n_done, to_do)
                 experiment.save()
             ## remove 'intensities' from metdat before store it into database
@@ -215,7 +215,7 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
             metdat.pop('intensities', None)
             metdat = jsonpickle.encode(metdat)
             if verbose:
-                print doc, experiment, metdat
+                print(doc, experiment, metdat)
             doc_dict[doc] = Document(name=doc, experiment=experiment, metadata=metdat)
         Document.objects.bulk_create(doc_dict.values())
 
@@ -244,7 +244,7 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
         FeatureInstance.objects.bulk_create(feature_instances_flat)
         DocSampleIntensity.objects.bulk_create(intensities)
 
-    print "Loading topics"
+    print("Loading topics")
     n_done = 0
     to_do = len(lda_dict['beta'])
     with transaction.atomic():
@@ -279,7 +279,7 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
             alphas.append(Alpha(mass2motif=m2m, value=alpha))
         Alpha.objects.bulk_create(alphas)
 
-    print "Loading theta"
+    print("Loading theta")
     n_done = 0
     to_do = len(lda_dict['theta'])
     with transaction.atomic():
@@ -287,7 +287,7 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
         for doc in lda_dict['theta']:
             n_done += 1
             if n_done % 100 == 0:
-                print "Done {}/{}".format(n_done,to_do) 
+                print("Done {}/{}".format(n_done,to_do) )
                 experiment.status = "Done {}/{} theta".format(n_done,to_do)     
                 experiment.save()
             # add_theta(doc,experiment,lda_dict)
@@ -310,7 +310,7 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
             #   mass2motif = Mass2Motif.objects.get(name = topic,experiment = experiment)
             #   DocumentMass2Motif.objects.get_or_create(document = document,mass2motif = mass2motif,probability = lda_dict['theta'][doc][topic])
 
-    print "Loading phi"
+    print("Loading phi")
     n_done = 0
     to_do = len(lda_dict['phi'])
     with transaction.atomic():
@@ -318,7 +318,7 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
         for doc_id in lda_dict['phi']:
             n_done += 1
             if n_done % 100 == 0:
-                print "Done {}/{}".format(n_done,to_do)
+                print("Done {}/{}".format(n_done,to_do))
                 experiment.status = "Done {}/{} phi".format(n_done,to_do)
                 experiment.save()
             #load_phi_set(doc,experiment,lda_dict,featureset)
@@ -340,7 +340,7 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
             #       FeatureMass2MotifInstance.objects.get_or_create(featureinstance = feature_instance,mass2motif = mass2motif,probability = probability)
 
     if not 'overlap_scores' in lda_dict:
-        print "Computing overlap scores"
+        print("Computing overlap scores")
         n_done = 0
         dm2ms = DocumentMass2Motif.objects.filter(document__experiment = experiment).select_related('mass2motif', 'document')
         to_do = len(dm2ms)
@@ -348,7 +348,7 @@ def load_dict(lda_dict,experiment,verbose = True,feature_set_name = 'binned_005'
             for dm2m in dm2ms:
                 n_done += 1
                 if n_done % 100 == 0:
-                    print "Done {}/{}".format(n_done,to_do)
+                    print("Done {}/{}".format(n_done,to_do))
                 dm2m.overlap_score = compute_overlap_score(dm2m.mass2motif,dm2m.document)
                 dm2m.save()
 

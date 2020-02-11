@@ -11,9 +11,9 @@ from basicviz.models import BVFeatureSet,Feature,Mass2Motif
 class MDBMotifSet(models.Model):
     name = models.CharField(max_length=124,null=False,unique=True)
     description = models.TextField(null = True)
-    featureset = models.ForeignKey(BVFeatureSet,null = True,blank=True)
+    featureset = models.ForeignKey(BVFeatureSet,null = True,blank=True, on_delete=models.CASCADE)
     metadata = models.TextField(null = True)
-    owner = models.ForeignKey(User,null = True)
+    owner = models.ForeignKey(User,null = True, on_delete=models.CASCADE)
     def __str__(self):
         ch = []
         if self.featureset:
@@ -33,7 +33,7 @@ class MDBMotifSet(models.Model):
         return self.name
 
 class MDBMotif(Mass2Motif):
-    motif_set = models.ForeignKey(MDBMotifSet)
+    motif_set = models.ForeignKey(MDBMotifSet, on_delete=models.CASCADE)
     def save(self,*args,**kwargs):
         super(MDBMotif,self).save(*args,**kwargs)
 

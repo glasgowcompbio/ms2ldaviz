@@ -26,7 +26,7 @@ def annotate(spectrum,basicviz_experiment_id):
 
 def get_sub_term_probs(high_motifs):
     motifs = high_motifs.keys()
-    print [m.name for m in motifs]
+    print([m.name for m in motifs])
     sub_instances = SubstituentInstance.objects.filter(motif__in = motifs) \
         .select_related('subterm') \
         .select_related('motif')
@@ -42,7 +42,7 @@ def get_sub_term_probs(high_motifs):
 
 def get_taxa_term_probs(high_motifs):
     motifs = high_motifs.keys()
-    print [m.name for m in motifs]
+    print([m.name for m in motifs])
     taxa_instances = TaxaInstance.objects.filter(motif__in = motifs) \
         .select_related('taxterm') \
         .select_related('motif')
@@ -68,7 +68,7 @@ def create_document_dictionary(spectrum,basicviz_experiment_id):
     fragments = [f for f in features if f.name.startswith('fragment')]
     losses = [f for f in features if f.name.startswith('loss')]
 
-    print "Found {} features ({} fragments, {} losses)".format(len(features),len(fragments),len(losses))
+    print("Found {} features ({} fragments, {} losses)".format(len(features),len(fragments),len(losses)))
 
     document = {}
 
@@ -80,14 +80,14 @@ def create_document_dictionary(spectrum,basicviz_experiment_id):
     total_loss_intensity = 0.0
 
     for p in peaks:
-        print "Searching for {}".format(p[0])
+        print("Searching for {}".format(p[0]))
         pos = 0
         fragment_mass = p[0]
         total_fragment_intensity += p[1]
         while True:
             if fragment_mass >= fragments[pos].min_mz and fragment_mass <= fragments[pos].max_mz:
                 document[fragments[pos]] = p[1]
-                print "\tFound fragment"
+                print("\tFound fragment")
                 fragment_match += 1
                 fragment_intensity_match += p[1]
                 break
@@ -103,7 +103,7 @@ def create_document_dictionary(spectrum,basicviz_experiment_id):
         while True:
             if loss_mass >= losses[pos].min_mz and loss_mass <= losses[pos].max_mz:
                 document[losses[pos]] = p[1]
-                print "\tFound loss"
+                print("\tFound loss")
                 loss_match += 1
                 loss_intensity_match += p[1]
                 break
@@ -120,8 +120,8 @@ def create_document_dictionary(spectrum,basicviz_experiment_id):
         'loss_intensity' : loss_intensity_match / total_loss_intensity,
     }
 
-    print matches_count
-    print document
+    print(matches_count)
+    print(document)
 
     return document, matches_count
 
@@ -147,9 +147,9 @@ def do_e_steps(parentmass,document,basicviz_experiment_id,nsteps = 500):
     alpha =np.array(alpha)
     # alpha = np.array([1.0 for m in motifs]) # This seems to make things work better? But alpha should probably be the learnt value...
 
-    print "Got {} motifs".format(len(motifs))
-    print "Got {} alphas".format(len(alpha))
-    print "Got {} features".format(len(features))
+    print("Got {} motifs".format(len(motifs)))
+    print("Got {} alphas".format(len(alpha)))
+    print("Got {} features".format(len(features)))
 
     sub_beta = np.zeros((len(motifs),len(features)))
     word_index = {}
@@ -160,11 +160,11 @@ def do_e_steps(parentmass,document,basicviz_experiment_id,nsteps = 500):
     #         word_index[feature] = j
     #         try:
     #             mi = Mass2MotifInstance.objects.get(mass2motif = motif,feature = feature)
-    #             print motif,feature
+    #             print(motif,feature)
     #             sub_beta[i,j] = mi.probability
     #         except:
     #             sub_beta[i,j] = 0.0 # Small value to avoid numerical errors
-    # print sub_beta.sum(axis=0)
+    # print(sub_beta.sum(axis=0))
 
     # single query, faster
     mis = Mass2MotifInstance.objects.filter(mass2motif__in=motifs, feature__in=features)
@@ -179,7 +179,7 @@ def do_e_steps(parentmass,document,basicviz_experiment_id,nsteps = 500):
                 sub_beta[i, j] = mi.probability
             except:
                 sub_beta[i, j] = 0.0
-    print sub_beta.sum(axis=0)
+    print(sub_beta.sum(axis=0))
 
     gamma = np.ones(K)
     phi = {}
@@ -187,7 +187,7 @@ def do_e_steps(parentmass,document,basicviz_experiment_id,nsteps = 500):
         phi[word] = np.zeros(K)
 
     for step in range(nsteps):
-        print 'E-step', step
+        print('E-step', step)
         temp_gamma = np.zeros(K) + alpha
         for word in document:
             word_pos = word_index[word]

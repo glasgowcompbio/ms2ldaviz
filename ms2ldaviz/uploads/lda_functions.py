@@ -28,7 +28,7 @@ class FeatureMatcher(object):
         other_min_mz = [self.other_features[f][0] for f in self.other_features if f.startswith(ftype)]
         other_max_mz = [self.other_features[f][1] for f in self.other_features if f.startswith(ftype)]
 
-        temp = zip(other_names,other_min_mz,other_max_mz)
+        temp = list(zip(other_names,other_min_mz,other_max_mz))
         temp.sort(key = lambda x: x[1])
         other_names,other_min_mz,other_max_mz = zip(*temp)
         other_names = list(other_names)
@@ -58,7 +58,7 @@ class FeatureMatcher(object):
                     self.fmap[f] = f
                     self.augmented_features[f] = (fmz-self.bin_width/2,fmz+self.bin_width/2)
                     new_ones += 1
-        print "Finished matching ({}). {} exact matches, {} overlap matches, {} new features".format(ftype,exact_match,overlap_match,new_ones)
+        print("Finished matching ({}). {} exact matches, {} overlap matches, {} new features".format(ftype,exact_match,overlap_match,new_ones))
 
     def convert(self,dbspectra):
         for doc,spec in dbspectra.items():
@@ -114,9 +114,9 @@ def load_mzml_and_make_documents(experiment):
                         id_field = experiment.ms2_id_field,
                         name_field = experiment.ms2_name_field)
 
-    print "Loading peaks from {} using peaklist {}".format(experiment.ms2_file.path, peaklist)
+    print("Loading peaks from {} using peaklist {}".format(experiment.ms2_file.path, peaklist))
     ms1, ms2, metadata = loader.load_spectra([experiment.ms2_file.path])
-    print "Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1), len(ms2))
+    print("Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1), len(ms2)))
 
 
     
@@ -130,7 +130,7 @@ def load_mzml_and_make_documents(experiment):
     bin_width = bin_widths[experiment.featureset.name]
     fm = MakeBinnedFeatures(bin_width = bin_width)
     corpus, word_mz_range = fm.make_features(ms2)
-    corpus = corpus[corpus.keys()[0]]
+    corpus = corpus[list(corpus.keys())[0]]
 
     return corpus, metadata, word_mz_range
 
@@ -159,7 +159,7 @@ def run_lda(corpus, metadata, word_mz_range, K, experiment_id, bin_width = 0.005
                     motifdb_metadata[new_motif_name][key] = value
 
         # filter to remove duplicates
-        print "Filtering motifs to remove duplicates"
+        print("Filtering motifs to remove duplicates")
         from motifdb.views import MotifFilter
         mf = MotifFilter(motifdb_spectra,motifdb_metadata)
         motifdb_spectra,motifdb_metadata = mf.filter()
@@ -183,7 +183,7 @@ def run_lda(corpus, metadata, word_mz_range, K, experiment_id, bin_width = 0.005
                 word_mz_range[f] = (word_mz_min, word_mz_max)
                 added += 1
 
-        print "Added {} features".format(added)
+        print("Added {} features".format(added))
 
         vlda = VariationalLDA(corpus, K=K, normalise=1000.0,
                       fixed_topics=motifdb_spectra,
@@ -194,7 +194,7 @@ def run_lda(corpus, metadata, word_mz_range, K, experiment_id, bin_width = 0.005
         lda_dict = vlda.make_dictionary(metadata=metadata,features=word_mz_range)
         
     else:
-        print "Standard with no added motifs"
+        print("Standard with no added motifs")
         vlda = VariationalLDA(corpus=corpus, K=K, normalise=1000.0)
     
         vlda.run_vb(n_its=n_its, initialise=True)

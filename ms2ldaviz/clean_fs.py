@@ -18,8 +18,8 @@ for f in features:
 		names[f.name] = []
 	names[f.name].append(f)
 
-print len(features)
-print len(names)
+print(len(features))
+print(len(names))
 
 todelete = {}
 
@@ -33,11 +33,11 @@ for name,subfs in names.items():
 				todelete[f] = True
 				ndeleted += 1
 		if ndeleted == 0:
-			print "Problem: ",name
+			print("Problem: ",name)
 			for f in subfs:
-				print '\t',[q.document.experiment for q in f.featureinstance_set.all()]
+				print('\t',[q.document.experiment for q in f.featureinstance_set.all()])
 
-print len(features) - len(names)
-print len(todelete)
+print(len(features) - len(names))
+print(len(todelete))
 for feature in todelete:
 	feature.delete()

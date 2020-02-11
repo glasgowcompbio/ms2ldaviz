@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
 	mfe = MultiFileExperiment.objects.get(name = multifile_experiment_name)
 	links = mfe.multilink_set.all()
-	print "Found {} links".format(len(links))
+	print("Found {} links".format(len(links)))
 	experiments = [l.experiment for l in links]
 	
 	raw_data = []
@@ -54,13 +54,13 @@ if __name__ == '__main__':
  			rt_list.append(rt)
  			id_list.append(id)
 
-	print "Loaded {} peaksets".format(len(raw_data))
-	print "Diagnostics: intensities present:"
+	print("Loaded {} peaksets".format(len(raw_data)))
+	print("Diagnostics: intensities present:")
 	ch = zip(count_hist.keys(),count_hist.values())
 	ch = sorted(ch,key = lambda x: x[0])
 
 	for c,h in ch:
-		print c,h
+		print(c,h)
 
 
 	# Hack the names about to make them match - this should be provided to the script
@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
 	
 
-	print "Making the peakset objects"
+	print("Making the peakset objects")
 	for i,mz_value in enumerate(mz_list):
 		rt_value = rt_list[i]
 		new_peakset = PeakSet.objects.get_or_create(multifileexperiment = mfe,mz = mz_value,rt = rt_value,
@@ -90,5 +90,5 @@ if __name__ == '__main__':
 				ii.intensity = intense
 				ii.save()
 		if i%100 == 0:
-			print "Done: {}".format(i)
+			print("Done: {}".format(i))
 

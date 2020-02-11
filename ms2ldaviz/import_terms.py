@@ -22,11 +22,11 @@ if __name__ == '__main__':
 	try:
 		experiment = Experiment.objects.get(name = experiment_name)
 	except:
-		print "Experiment with name {} not found".format(experiment_name)
+		print("Experiment with name {} not found".format(experiment_name))
 		sys.exit(0)
 
 	if (not term_type == 'taxa') and (not term_type == 'substituent'):
-		print "Unrecognized term type: {}".format(term_type)
+		print("Unrecognized term type: {}".format(term_type))
 		sys.exit(0)
 
 	with open(csv_file,'r') as f:
@@ -38,7 +38,7 @@ if __name__ == '__main__':
 			for motif_name in motif_names:
 				motifs.append(Mass2Motif.objects.get(name = motif_name,experiment = experiment))
 		except:
-			print "Unable to load load motifs from the database"
+			print("Unable to load load motifs from the database")
 			sys.exit(0)
 
 		for row in reader:
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 				term_object = TaxaTerm.objects.get_or_create(name = term)[0]
 			elif term_type == 'substituent':
 				term_object = SubstituentTerm.objects.get_or_create(name = term)[0]
-			print term_object
+			print(term_object)
 
 			for i,motif in enumerate(motifs):
 				probability = probabilities[i]

@@ -9,7 +9,7 @@ from basicviz.tasks import get_experiment_features,map_the_features
 
 @app.task
 def start_motif_matching_task(experiment_id,motif_set_id,min_score_to_save):
-    print experiment_id,motif_set_id
+    print(experiment_id,motif_set_id)
     motif_set = MDBMotifSet.objects.get(id = motif_set_id)
     experiment = Experiment.objects.get(id = experiment_id)
 
@@ -17,7 +17,7 @@ def start_motif_matching_task(experiment_id,motif_set_id,min_score_to_save):
     fs = experiment.featureset
     base_fs = motif_set.featureset
 
-    print fs,base_fs
+    print(fs,base_fs)
 
     # get the features used in each experiment
     features = get_experiment_features(experiment)
@@ -30,7 +30,7 @@ def start_motif_matching_task(experiment_id,motif_set_id,min_score_to_save):
         # TODO: put in a useful response here!
         return None
 
-    print "Found matches of {} out of {} features".format(len(feature_map),len(features))
+    print("Found matches of {} out of {} features".format(len(feature_map),len(features)))
 
     # get the motifs
     motifs = experiment.mass2motif_set.all()
@@ -107,7 +107,7 @@ def start_motif_matching_task(experiment_id,motif_set_id,min_score_to_save):
                 best_list = match_list
         if best_score >= min_score_to_save:
             matches.append((motif,best_base,best_score,best_list))
-            print motif,best_score,best_base
+            print(motif,best_score,best_base)
 
     for match in matches:
         frommotif = match[0]

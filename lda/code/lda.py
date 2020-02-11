@@ -72,7 +72,7 @@ class LDA(object):
         # Does one gibbs step
         for sample in range(n_samples):
             if verbose:
-                print "Sample {} of {} (Burn is {})".format(sample,n_samples,burn)
+                print("Sample {} of {} (Burn is {})".format(sample,n_samples,burn))
             for doc in self.corpus:
                 di = self.doc_index[doc]
                 for word in self.corpus[doc]:
@@ -188,12 +188,12 @@ class VariationalLDA(object):
             if self.word_index == None:
                 self.word_index = self.find_unique_words()
             if top_verbose:
-                print "Object created with {} documents".format(self.n_docs)
+                print("Object created with {} documents".format(self.n_docs))
             self.n_words = len(self.word_index)
             self.make_doc_index()
             if self.normalise > -1:
                 if top_verbose:
-                    print "Normalising intensities"
+                    print("Normalising intensities")
                 self.normalise_intensities()
         
         self.K = K
@@ -261,7 +261,7 @@ class VariationalLDA(object):
     def add_fixed_topics_formulas(self,topics,prob_thresh = 0.5):
         # Adds fixed topics by matching on chemical formulas
         from formula import Formula
-        print "Matching topics based on formulas"
+        print("Matching topics based on formulas")
         ti = [(topic,self.topic_index[topic]) for topic in self.topic_index]
         ti = sorted(ti,key = lambda x:x[1])
         topic_reverse,_ = zip(*ti)
@@ -297,8 +297,8 @@ class VariationalLDA(object):
                         matches[word] = matched_word
                         matched_probability += probability
 
-            print "Topic: {}, {} probability matched ({})".format(topic,matched_probability,
-                topics['topic_metadata'][topic].get('annotation',""))
+            print("Topic: {}, {} probability matched ({})".format(topic,matched_probability,
+                topics['topic_metadata'][topic].get('annotation',"")))
             if matched_probability > prob_thresh:
                 # We have a match
                 for word in matches:
@@ -306,7 +306,7 @@ class VariationalLDA(object):
                 # Normalise
                 self.beta_matrix[self.n_fixed_topics,:] /= self.beta_matrix[self.n_fixed_topics,:].sum()
                 topic_here = topic_reverse[self.n_fixed_topics]
-                print "Match accepted, storing as {}".format(topic_here)
+                print("Match accepted, storing as {}".format(topic_here))
                 self.topic_metadata[topic_here]['type'] = 'fixed'
                 for key,val in topics['topic_metadata'][topic].items():
                     self.topic_metadata[topic_here][key] = val
@@ -314,7 +314,7 @@ class VariationalLDA(object):
 
 
     def add_fixed_topics(self,topics,topic_metadata = None,mass_tol = 5,prob_thresh = 0.5):
-        print "Matching topics"
+        print("Matching topics")
         ti = [(topic,self.topic_index[topic]) for topic in self.topic_index]
         ti = sorted(ti,key = lambda x:x[1])
         topic_reverse,_ = zip(*ti)
@@ -327,7 +327,7 @@ class VariationalLDA(object):
 
 
         for topic in topics:
-            print "Mass2Motif: {}".format(topic)
+            print("Mass2Motif: {}".format(topic))
             topic_name_here = topic_reverse[self.n_fixed_topics]
             
             # self.n_fixed_topics = len(topics)
@@ -344,9 +344,9 @@ class VariationalLDA(object):
                         matched_word = fragment_names[mass_err.argmin()]
                         temp_beta[self.word_index[matched_word]] = topics[topic][word]
                         probability_matched += topics[topic][word]
-                        # print "\t Matched: {} with {}".format(word,matched_word)
+                        # print("\t Matched: {} with {}".format(word,matched_word))
                     else:
-                        # print "\t Couldn't match {}".format(word)
+                        # print("\t Couldn't match {}".format(word))
                         pass
                 else:
                     mass_err = 1e6*np.abs(loss_masses - word_mass)/loss_masses
@@ -355,11 +355,11 @@ class VariationalLDA(object):
                         matched_word = loss_names[mass_err.argmin()]
                         temp_beta[self.word_index[matched_word]] = topics[topic][word]
                         probability_matched += topics[topic][word]
-                        # print "\t Matched: {} with {}".format(word,matched_word)
+                        # print("\t Matched: {} with {}".format(word,matched_word))
                     else:
-                        # print "\t Couldn't match {}".format(word)
+                        # print("\t Couldn't match {}".format(word))
                         pass
-            print "\t matched {} of the probability".format(probability_matched)
+            print("\t matched {} of the probability".format(probability_matched))
             if probability_matched > prob_thresh:
                 self.topic_metadata[topic_name_here]['type'] = 'fixed'
                 self.beta_matrix[self.n_fixed_topics,:] = temp_beta
@@ -374,7 +374,7 @@ class VariationalLDA(object):
 
         # Normalise
         self.beta_matrix[:self.n_fixed_topics,:] /= self.beta_matrix[:self.n_fixed_topics,:].sum(axis=1)[:,None]
-        print "Matched {}/{} topics at prob_thresh={}".format(self.n_fixed_topics,len(topics),prob_thresh)
+        print("Matched {}/{} topics at prob_thresh={}".format(self.n_fixed_topics,len(topics),prob_thresh))
 
     def normalise_intensities(self):
         for doc in self.corpus:
@@ -409,7 +409,7 @@ class VariationalLDA(object):
                 self.doc_metadata[name]['rt'] = rt
                 self.doc_metadata[name]['intensity'] = intensity
                 self.doc_metadata[name]['id'] = ms1_id
-        print "Loaded {} MS1 peaks".format(len(self.ms1peaks))
+        print("Loaded {} MS1 peaks".format(len(self.ms1peaks)))
         parent_id_list = [self.doc_metadata[name]['id'] for name in self.ms1peaks]
 
         # Load the ms2 objects
@@ -447,9 +447,9 @@ class VariationalLDA(object):
                 parent = self.ms1peaks[parent_id_list.index(parent_id)]
                 
                 if parent == '156.076766819657_621.074':
-                    print loss_id
-                    print frag_id
-                    print line
+                    print(loss_id)
+                    print(frag_id)
+                    print(line)
                 
                 # If we've not seen this parent before, create it as an empty dict
                 if not parent in self.corpus:
@@ -464,13 +464,13 @@ class VariationalLDA(object):
         self.n_docs = len(self.corpus)
         if self.word_index == None:
             self.word_index = self.find_unique_words()
-        print "Object created with {} documents".format(self.n_docs)
+        print("Object created with {} documents".format(self.n_docs))
         self.n_words = len(self.word_index)
 
         # I don't think this does anything - I will check
         self.make_doc_index()
         if self.normalise > -1:
-            print "Normalising intensities"
+            print("Normalising intensities")
             self.normalise_intensities()
 
     # Run the VB inference. Verbose = True means it gives output each iteration
@@ -480,10 +480,10 @@ class VariationalLDA(object):
     def run_vb(self,n_its = 1,verbose=True,initialise=True):
         if initialise:
             if verbose:
-                print "Initialising"
+                print("Initialising")
             self.init_vb()
         if verbose:
-            print "Starting iterations"
+            print("Starting iterations")
         for it in range(n_its):
             start_time = time.clock()
             diff = self.vb_step()
@@ -491,7 +491,7 @@ class VariationalLDA(object):
             self.its_performed += 1
             estimated_finish = ((end_time - start_time)*(n_its - it)/60.0)
             if verbose:
-                print "Iteration {} (change = {}) ({} seconds, I think I'll finish in {} minutes). Alpha: ({},{})".format(it,diff,end_time - start_time,estimated_finish,self.alpha.min(),self.alpha.max())
+                print("Iteration {} (change = {}) ({} seconds, I think I'll finish in {} minutes). Alpha: ({},{})".format(it,diff,end_time - start_time,estimated_finish,self.alpha.min(),self.alpha.max()))
 
     # D a VB step
     def vb_step(self):
@@ -589,7 +589,7 @@ class VariationalLDA(object):
                 if not word in word_index:
                     word_index[word] = pos
                     pos += 1
-        print "Found {} unique words".format(len(word_index))
+        print("Found {} unique words".format(len(word_index)))
         return word_index
 
     # Pretty sure this matrix is never used
@@ -748,7 +748,7 @@ class VariationalLDA(object):
                     motif_name = reverse[p]
                     lda_dict['phi'][doc][word][motif_name] = self.phi_matrix[doc][word][p]
             if ndocs % 500 == 0:
-                print "Done {}".format(ndocs)
+                print("Done {}".format(ndocs))
 
         if compute_overlaps:
             os = compute_overlap_scores(lda_dict)
@@ -813,14 +813,14 @@ class MultiFileVariationalLDA(object):
 
         if parallel:
             num_cores = multiprocessing.cpu_count()
-            print 'parallel=%s num_cores=%d' % (parallel, num_cores)
+            print('parallel=%s num_cores=%d' % (parallel, num_cores))
             pool = multiprocessing.Pool(num_cores)
         else:
-            print 'serial processing'
+            print('serial processing')
         
         for it in range(n_its):
 
-            print "Iteration: {}".format(it)
+            print("Iteration: {}".format(it))
             temp_beta = np.zeros((self.K,self.n_words),np.float)
             total_difference = []
             
@@ -860,7 +860,7 @@ class MultiFileVariationalLDA(object):
             total_difference = (np.abs(temp_beta - first_lda.beta_matrix)).sum()
             for lda_name in self.individual_lda:
                 self.individual_lda[lda_name].beta_matrix = temp_beta
-            print total_difference
+            print(total_difference)
 
     def make_dictionary(self,min_prob_to_keep_beta = 1e-3,
                         min_prob_to_keep_phi = 1e-2,min_prob_to_keep_theta = 1e-2,
@@ -899,7 +899,7 @@ class SpectraSampler(object):
     def __init__(self,variational_lda):
         self.vlda = variational_lda
         self.compute_avg_word_count()
-        print "Average {} words per document".format(self.mean_word_count)
+        print("Average {} words per document".format(self.mean_word_count))
         self.vocab_size = len(self.vlda.word_index)
         self.K = self.vlda.K
         self.compute_MS1_dist()
@@ -938,11 +938,11 @@ class SpectraSampler(object):
         if not n_words:
             # n_words = np.random.poisson(self.mean_word_count)
             n_words = self.wcounts[np.random.choice(len(self.vlda.corpus))]
-            print "Generating {} words".format(n_words)
+            print("Generating {} words".format(n_words))
             theta = np.random.dirichlet(self.vlda.alpha)
             s_theta = zip(theta,['topic_{}'.format(i) for i in range(len(theta))])
             s_theta = sorted(s_theta,key = lambda x: x[0],reverse = True)
-            print s_theta[:10]
+            print(s_theta[:10])
             for word in range(n_words):
                 # Select a topic
                 topic = np.random.choice(self.K,p=theta)

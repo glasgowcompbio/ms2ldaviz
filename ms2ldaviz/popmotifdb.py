@@ -31,8 +31,8 @@ if __name__ == '__main__':
             mbs,_ = MDBMotifSet.objects.get_or_create(name = name,featureset = fs)
             motifs,metadata,_ = load_db([name],dbpath)
             for motif,spec in motifs.items():
-                print motif
-                print metadata[motif]
+                print(motif)
+                print(metadata[motif])
                 
                 m,_ = MDBMotif.objects.get_or_create(motif_set = mbs,name = motif)
                 md = metadata[motif]

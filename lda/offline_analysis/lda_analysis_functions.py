@@ -56,13 +56,13 @@ def print_mols(lda_dict,mols,fields = ['precursormass','parentrt']):
 	heads = "{:20s}\t".format("Spectra name")
 	for field in fields:
 		heads += "{:20s}\t".format(field)
-	print heads
+	print(heads)
 	for doc in mols:
 		md = lda_dict['doc_metadata'][doc]
 		line = "{:20s}\t".format(doc)
 		for field in fields:
 			line += "{:20s}\t".format(str(md.get(field,'NA')))
-		print line
+		print(line)
 
 def get_motif_mols(lda_dict,motif,p_thresh,o_thresh):
 	theta = lda_dict['theta']

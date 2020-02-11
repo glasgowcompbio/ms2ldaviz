@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('probability', models.FloatField()),
-                ('motif', models.ForeignKey(to='basicviz.Mass2Motif')),
+                ('motif', models.ForeignKey(to='basicviz.Mass2Motif', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('probability', models.FloatField()),
-                ('motif', models.ForeignKey(to='basicviz.Mass2Motif')),
+                ('motif', models.ForeignKey(to='basicviz.Mass2Motif', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -56,13 +56,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='taxainstance',
             name='taxterm',
-            field=models.ForeignKey(to='annotation.TaxaTerm'),
+            field=models.ForeignKey(to='annotation.TaxaTerm', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='substituentinstance',
             name='subterm',
-            field=models.ForeignKey(to='annotation.SubstituentTerm'),
+            field=models.ForeignKey(to='annotation.SubstituentTerm', on_delete=models.CASCADE),
             preserve_default=True,
         ),
     ]

@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
 	with open(dict_file,'r') as f:
 		lda_dict = pickle.load(f)
-	print "Loaded LDA dictionary from {}".format(dict_file)
+	print("Loaded LDA dictionary from {}".format(dict_file))
 
 	documents = Document.objects.filter(experiment = experiment)
 	for document in documents:
@@ -31,10 +31,10 @@ if __name__ == '__main__':
 			for field in lda_dict['doc_metadata'][document.name]:
 				if merge:
 					if not field in current_metadata:
-						# print "Adding {} ({}) to {}".format(field,lda_dict['doc_metadata'][document.name][field],document.name)
+						# print("Adding {} ({}) to {}".format(field,lda_dict['doc_metadata'][document.name][field],document.name))
 						current_metadata[field] = lda_dict['doc_metadata'][document.name][field]
 				else:
-						# print "Adding {} ({}) to {}".format(field,lda_dict['doc_metadata'][document.name][field],document.name)
+						# print("Adding {} ({}) to {}".format(field,lda_dict['doc_metadata'][document.name][field],document.name))
 						current_metadata[field] = lda_dict['doc_metadata'][document.name][field]					
 				# if field == 'standard_mol':
 				# 	current_metadata['annotation'] = lda_dict['doc_metadata'][document.name][field]

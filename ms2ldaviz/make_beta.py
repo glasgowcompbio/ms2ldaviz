@@ -16,16 +16,16 @@ from decomposition.models import FeatureSet,MotifSet,GlobalFeature,FeatureMap,Gl
 
 if __name__=='__main__':
     experiment = Experiment.objects.get(name = 'massbank_binned_005_alpha') 
-    print "Got experiment ",experiment
+    print("Got experiment ",experiment)
 
     featureset = FeatureSet.objects.get(name = 'binned_005')
-    print "Got featureset ",featureset
+    print("Got featureset ",featureset)
 
     experiment_motifs = Mass2Motif.objects.filter(experiment = experiment)
-    print "Got {} motifs".format(len(experiment_motifs))
+    print("Got {} motifs".format(len(experiment_motifs)))
 
     experiment_features = Feature.objects.filter(experiment = experiment)
-    print "Got {} features".format(len(experiment_features))
+    print("Got {} features".format(len(experiment_features)))
 
 
     n_added = 0
@@ -37,13 +37,13 @@ if __name__=='__main__':
             n_added += 1
         n_done += 1
         if n_done % 1000 == 0:
-            print n_done,n_added
+            print(n_done,n_added)
 
-    print "Added {} features to {}".format(n_added,featureset)
+    print("Added {} features to {}".format(n_added,featureset))
 
     motifset,status = MotifSet.objects.get_or_create(name = 'massbank_motifset_alpha',featureset = featureset)
     if status:
-        print "Created {}".format(motifset)
+        print("Created {}".format(motifset))
 
     n_added = 0
     for motif in experiment_motifs:
@@ -52,13 +52,13 @@ if __name__=='__main__':
             n_added += 1
         gm,status = GlobalMotifsToSets.objects.get_or_create(motif = g,motifset = motifset)
 
-    print "Added {} global motifs".format(n_added)
+    print("Added {} global motifs".format(n_added))
 
     gmms = GlobalMotifsToSets.objects.filter(motifset = motifset)
     global_motifs = [g.motif for g in gmms]
-    print "{} motifs in motifset".format(len(global_motifs))
+    print("{} motifs in motifset".format(len(global_motifs)))
     fmap = FeatureMap.objects.filter(localfeature__experiment = experiment)
-    print "{} featuremap objects".format(len(fmap))
+    print("{} featuremap objects".format(len(fmap)))
 
     feature_map_dict = {}
     for feature in fmap:
@@ -88,7 +88,7 @@ if __name__=='__main__':
 
     originalmotifs = [m.originalmotif for m in global_motifs]
     fm2ms = Mass2MotifInstance.objects.filter(mass2motif__in = originalmotifs)
-    print "Found {} instances".format(len(fm2ms))
+    print("Found {} instances".format(len(fm2ms)))
     n_done = 0
     for fm2m in fm2ms:
       n_done += 1
@@ -98,7 +98,7 @@ if __name__=='__main__':
           betalist.append((mpos,fpos,fm2m.probability))
           # beta[mpos][fpos] = fm2m.probability
       if n_done % 100 == 0:
-          print n_done,len(fm2ms)
+          print(n_done,len(fm2ms))
 
     
     # normalise

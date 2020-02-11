@@ -12,7 +12,7 @@ if __name__ == '__main__':
 	try:
 		user = User.objects.get(username = username)
 	except:
-		print "No such user! {}".format(username)
+		print("No such user! {}".format(username))
 		sys.exit(0)
 
 	experiment_list = ['Beer6_POS_IPA_MS1_comparisons',
@@ -28,7 +28,7 @@ if __name__ == '__main__':
 			e = Experiment.objects.get(name = ename)
 			experiments.append(e)
 		except:
-			print "No such experiment: {}".format(ename)
+			print("No such experiment: {}".format(ename))
 
 	for e in experiments:
 		ue = UserExperiment.objects.filter(user = user,experiment = e)

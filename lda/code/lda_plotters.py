@@ -651,7 +651,7 @@ class VariationalLDAPlotter_dict(object):
     for topic in to_remove:
         del topics[topic]
 
-    print "Found {} topics".format(len(topics))
+    print("Found {} topics".format(len(topics)))
 
     # Add the topics to the graph
     G = nx.Graph()
@@ -699,7 +699,7 @@ class MultiFileVariationalLDAPlotter_dict(object):
         plotly.offline.init_notebook_mode()
         if m_lda == None:
             if m_lda_file == None:
-                print "You must specify a file or a dictionary"
+                print("You must specify a file or a dictionary")
             else:
                 with open(m_lda_file,'r') as f:
                     self.m_lda = pickle.load(f)
@@ -725,7 +725,7 @@ class MultiFileVariationalLDAPlotter_dict(object):
 
         data = []
         for file in self.file_index:
-            print file
+            print(file)
             data.append(
                 Bar(
                     x = range(self.K),

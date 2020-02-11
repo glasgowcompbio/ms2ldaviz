@@ -15,8 +15,8 @@ from basicviz.models import Experiment, Mass2Motif, Mass2MotifInstance, MultiFil
     AlphaCorrOptions, Document
 from massbank.views import get_massbank_form
 from options.views import get_option
-from views_index import index
-from views_lda_single import get_docm2m, get_docm2m_bydoc
+from .views_index import index
+from .views_lda_single import get_docm2m, get_docm2m_bydoc
 
 
 def get_individual_names(request, mf_id):
@@ -111,7 +111,7 @@ def get_degree_matrix(request, mf_id):
 
 
 def make_alpha_matrix(individuals, normalise=True):
-    print "Creating alpha matrix"
+    print("Creating alpha matrix")
     alp_vals = []
     for individual in individuals:
         motifs = individual.mass2motif_set.all().order_by('name')
@@ -200,7 +200,7 @@ def get_doc_table(request, mf_id, motif_name):
                 # Find the intensity instance
                 int_int = filter(lambda x: x.experiment == individual, intensity_instances)
                 peaksets[ps][individual] = int_int[0].intensity
-                print ps, individual, int_int[0].intensity
+                print(ps, individual, int_int[0].intensity)
 
     intensity_table = []
     unnormalised_intensity_table = []

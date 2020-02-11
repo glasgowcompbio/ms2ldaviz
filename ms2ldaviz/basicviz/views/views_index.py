@@ -52,7 +52,7 @@ def index(request):
     permissions = []
     for e in experiments:
         ue = UserExperiment.objects.get(user = request.user,experiment = e)
-        print e,ue.permission
+        print(e,ue.permission)
         permissions.append(ue.permission)
     experiments = zip(experiments,permissions)
 

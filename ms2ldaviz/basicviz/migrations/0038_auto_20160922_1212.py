@@ -16,8 +16,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('intensity', models.FloatField()),
-                ('document', models.ForeignKey(to='basicviz.Document', null=True)),
-                ('experiment', models.ForeignKey(to='basicviz.Experiment', null=True)),
+                ('document', models.ForeignKey(to='basicviz.Document', null=True, on_delete=models.CASCADE)),
+                ('experiment', models.ForeignKey(to='basicviz.Experiment', null=True, on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('mz', models.FloatField()),
                 ('rt', models.FloatField()),
-                ('multifileexperiment', models.ForeignKey(to='basicviz.MultiFileExperiment')),
+                ('multifileexperiment', models.ForeignKey(to='basicviz.MultiFileExperiment', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='intensityinstance',
             name='peakset',
-            field=models.ForeignKey(to='basicviz.PeakSet'),
-            preserve_default=True,
+            field=models.ForeignKey(to='basicviz.PeakSet', on_delete=models.CASCADE),
+            preserve_default=True
         ),
     ]

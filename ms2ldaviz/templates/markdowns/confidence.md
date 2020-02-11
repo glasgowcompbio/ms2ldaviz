@@ -1,4 +1,4 @@
-{% load staticfiles %}
+{% load static %}
 
 #### Structural Characterization Confidence Levels
  

@@ -63,9 +63,9 @@ def load_mzml_and_make_documents(experiment,motifset):
                         rt_tol=experiment.rt_tol,
                         peaklist=peaklist)
 
-    print "Loading peaks from {} using peaklist {}".format(experiment.ms2_file.path,peaklist)
+    print("Loading peaks from {} using peaklist {}".format(experiment.ms2_file.path,peaklist))
     ms1,ms2,metadata = loader.load_spectra([experiment.ms2_file.path])
-    print "Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1),len(ms2))
+    print("Loaded {} MS1 peaks and {} MS2 peaks".format(len(ms1),len(ms2)))
 
     # feature set and original experiment hardcoded for now
     fs = motifset.featureset
@@ -85,7 +85,7 @@ def load_mzml_and_make_documents(experiment,motifset):
 
     # Delete any already existing docs (mainly for debugging)
     # docs = Document.objects.filter(experiment = experiment)
-    # print "Found {} documents to delete".format(len(docs))
+    # print("Found {} documents to delete".format(len(docs)))
     # for doc in docs:
     #     doc.delete()
 
@@ -167,7 +167,7 @@ def load_mzml_and_make_documents(experiment,motifset):
                     
         n_done += 1
         if n_done % 100 == 0:
-            print "Done {} documents (required {} new features)".format(n_done,n_new_features)
+            print("Done {} documents (required {} new features)".format(n_done,n_new_features))
 
 
 
@@ -176,7 +176,7 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
     motifset = decomposition.motifset
     betaobject = Beta.objects.get(motifset = motifset)
     documents = Document.objects.filter(experiment = decomposition.experiment)
-    print "Loading and unpickling beta"
+    print("Loading and unpickling beta")
 
     alpha = jsonpickle.decode(betaobject.alpha_list)
     motif_id_list = jsonpickle.decode(betaobject.motif_id_list)
@@ -222,11 +222,11 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
     K = len(motif_list)
 
     g_term = np.zeros(K)
-    print "Performing e-steps"
+    print("Performing e-steps")
     total_docs = len(documents)
     for i in range(total_docs):
         document = documents[i]
-        print '%d/%d: %s' % (i, total_docs, document.name)
+        print('%d/%d: %s' % (i, total_docs, document.name))
         docfeatures = DocumentGlobalFeature.objects.filter(document = document)
 
         doc_dict = {}
@@ -247,7 +247,7 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
             phi_matrix[word] = None
         gamma = np.ones(K)
         for i in range(100): # do 100 iterations
-            # print "Iteration {}".format(i)
+            # print("Iteration {}".format(i))
             temp_gamma = np.zeros(K) + alpha_matrix
             for word,intensity in doc_dict.items():
                 # Find the word position in beta
@@ -666,7 +666,7 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,
         else:
             do_plage_flag = False
 
-    print "First"
+    print("First")
     # Add the topics to the graph
     G = nx.Graph()
     for topic in topics:
@@ -718,7 +718,7 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,
 
     doc_nodes = []
 
-    print "Second"
+    print("Second")
 
     ## do this change, because in LDA plot, it has fixed the edge_choice to be 'probability'
     # edge_choice = get_option('default_doc_m2m_score', experiment)
@@ -795,7 +795,7 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,
         else:
             weight = edge_scale_factor * docm2m.overlap_score
         G.add_edge(docm2m.mass2motif.name, docm2m.document.name, weight=weight)
-    print "Third"
+    print("Third")
 
     return G
         
@@ -838,7 +838,7 @@ def api_decomposition(doc_dict,motifset):
         motif_list.append(motif)
 
     K = len(motif_list)
-    print "Performing e-steps"
+    print("Performing e-steps")
     total_docs = len(doc_dict)
 
     results = {}
@@ -850,7 +850,7 @@ def api_decomposition(doc_dict,motifset):
         results['decompositions'][doc] = []
         results['terms'][doc] = []
         document = doc_dict[doc]
-        print '%d/%d: %s' % (i, total_docs, doc)
+        print('%d/%d: %s' % (i, total_docs, doc))
 
         maxi = 0.0
         for feature,intensity in doc_dict[doc].items():
@@ -868,7 +868,7 @@ def api_decomposition(doc_dict,motifset):
             phi_matrix[word] = None
         gamma = np.ones(K)
         for ei in range(100): # do 20 iterations
-            # print "Iteration {}".format(ei)
+            # print("Iteration {}".format(ei))
             temp_gamma = np.zeros(K) + alpha_matrix
             # temp_gamma = np.ones_like(alpha_matrix)
             for word,intensity in doc_dict[doc].items():
@@ -1027,8 +1027,8 @@ def alpha_nr(g_term,M,maxit=100,init_alpha=[]):
         alpha_new[pos] = SMALL_NUMBER
 
         diff = np.sum(np.abs(alpha-alpha_new))
-        # print "Alpha: {}, it: {}".format(diff,it)
-        # print grad.max(),grad.argmax(),alpha[grad.argmax()],alpha_new[grad.argmax()],alpha_change[grad.argmax()],h[grad.argmax()]
+        # print("Alpha: {}, it: {}".format(diff,it))
+        # print(grad.max(),grad.argmax(),alpha[grad.argmax()],alpha_new[grad.argmax()],alpha_change[grad.argmax()],h[grad.argmax()])
         alpha = alpha_new
         
         if diff < 1e-6 and it > 10:

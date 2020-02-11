@@ -27,7 +27,7 @@ if __name__ == '__main__':
         for d in data:
             # update the mol string of a document
             name = d['name']
-            print '%d/%d %s' % (i+1, len(data), name)
+            print('%d/%d %s' % (i+1, len(data), name))
             document = Document.objects.get(experiment=e, name=name)
             document.mol_string = d['mol']
             document.save()

@@ -28,7 +28,7 @@ def add_feature(name,experiment):
 	try:
 		f = Feature.objects.get_or_create(name = name,experiment = experiment)[0]
 	except:
-		print name,experiment
+		print(name,experiment)
 		sys.exit(0)
 	return f
 
@@ -36,7 +36,7 @@ def add_feature_instance(document,feature,intensity):
 	try:
 		fi = FeatureInstance.objects.get_or_create(document=document,feature=feature,intensity=intensity)[0]
 	except:
-		print document,feature,intensity
+		print(document,feature,intensity)
 		sys.exit(0)
 
 
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 		multi_lda_dict = pickle.load(f)
 
 	multi_lda_name = filename.split('/')[-1].split('.')[0]
-	print "Loading {}".format(multi_lda_name)
+	print("Loading {}".format(multi_lda_name))
 	mfe = MultiFileExperiment.objects.get_or_create(name = multi_lda_name,description = 'urine multifile',status = 'loading')[0]
 	n_done = 0
 
@@ -90,27 +90,27 @@ if __name__ == '__main__':
 	for lda_dict_name in multi_lda_dict['individual_lda']:
 		experiment_name = lda_dict_name
 		lda_dict = multi_lda_dict['individual_lda'][experiment_name]
-		print experiment_name
+		print(experiment_name)
 		experiment = Experiment.objects.get_or_create(name=experiment_name+postfix)[0]
 		experiment.status = 'loading'
 		experiment.save()
 		ml = MultiLink.objects.get_or_create(experiment = experiment, multifileexperiment = mfe)
 		if 'features' in lda_dict:
-			print "Explicit feature object: loading them all at once"
+			print("Explicit feature object: loading them all at once")
 			add_all_features(experiment,lda_dict['features'])
 
-		print "Loading corpus"
+		print("Loading corpus")
 		n_done = 0
 		to_do = len(lda_dict['corpus'])
 		for doc in lda_dict['corpus']:
 			n_done += 1
 			if n_done % 100 == 0:
-				print "Done {}/{}".format(n_done,to_do)
+				print("Done {}/{}".format(n_done,to_do))
 				experiment.status = "Done {}/{} docs".format(n_done,to_do)
 				experiment.save()
 			metdat = jsonpickle.encode(lda_dict['doc_metadata'][doc])
 			if verbose:
-				print doc,experiment,metdat
+				print(doc,experiment,metdat)
 			d = add_document(doc,experiment,metdat)
 			# d = Document.objects.get_or_create(name=doc,experiment=experiment,metadata=metdat)[0]
 			add_document_words(d,doc,experiment,lda_dict)
@@ -122,13 +122,13 @@ if __name__ == '__main__':
 			# 	# feature = Feature.objects.get_or_create(name=word,experiment=experiment)[0]
 			# 	# fi = FeatureInstance.objects.get_or_create(document = d,feature = feature, intensity = lda_dict['corpus'][doc][word])
 			# 	add_feature_instance(d,feature,lda_dict['corpus'][doc][word])
-		print "Loading topics"
+		print("Loading topics")
 		n_done = 0
 		to_do = len(lda_dict['beta'])
 		for topic in lda_dict['beta']:
 			n_done += 1
 			if n_done % 100 == 0:
-				print "Done {}/{}".format(n_done,to_do)
+				print("Done {}/{}".format(n_done,to_do))
 				experiment.status = "Done {}/{} topics".format(n_done,to_do)
 				experiment.save()
 			metadata = {}
@@ -143,13 +143,13 @@ if __name__ == '__main__':
 		
 
 
-		print "Loading theta"
+		print("Loading theta")
 		n_done = 0
 		to_do = len(lda_dict['theta'])
 		for doc in lda_dict['theta']:
 			n_done += 1
 			if n_done % 100 == 0:
-				print "Done {}/{}".format(n_done,to_do)	
+				print("Done {}/{}".format(n_done,to_do)	)
 				experiment.status = "Done {}/{} theta".format(n_done,to_do)		
 				experiment.save()
 			add_theta(doc,experiment,lda_dict)
@@ -160,13 +160,13 @@ if __name__ == '__main__':
 			# 	mass2motif = Mass2Motif.objects.get(name = topic,experiment = experiment)
 			# 	DocumentMass2Motif.objects.get_or_create(document = document,mass2motif = mass2motif,probability = lda_dict['theta'][doc][topic])
 
-		print "Loading phi"
+		print("Loading phi")
 		n_done = 0
 		to_do = len(lda_dict['phi'])
 		for doc in lda_dict['phi']:
 			n_done += 1
 			if n_done % 100 == 0:
-				print "Done {}/{}".format(n_done,to_do)
+				print("Done {}/{}".format(n_done,to_do))
 				experiment.status = "Done {}/{} phi".format(n_done,to_do)
 				experiment.save()
 			load_phi(doc,experiment,lda_dict)

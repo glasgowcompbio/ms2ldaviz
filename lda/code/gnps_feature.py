@@ -23,9 +23,9 @@ class FeatureExtractor(object):
         # load all the ms1 and ms2 files
         self.F = len(input_set)
         for ms1_df, ms2_df in input_set:
-            print "Loading MS1 dataframe %d X %d" % (ms1_df.shape)
+            print("Loading MS1 dataframe %d X %d" % (ms1_df.shape))
             self.all_ms1.append(ms1_df)
-            print "Loading MS2 dataframe %d X %d" % (ms2_df.shape)
+            print("Loading MS2 dataframe %d X %d" % (ms2_df.shape))
             self.all_ms2.append(ms2_df)
         for ms1_df in self.all_ms1:
             ms1_df['peakID'] = ms1_df['peakID'].astype(int)
@@ -49,7 +49,7 @@ class FeatureExtractor(object):
     def make_fragment_queue(self):
         q = PriorityQueue()
         for f in range(self.F):
-            print "Processing fragments for file %d" % f
+            print("Processing fragments for file %d" % f)
             ms2 = self.all_ms2[f]
             for _, row in ms2.iterrows():
                 fragment_mz = row['mz']
@@ -61,7 +61,7 @@ class FeatureExtractor(object):
     def make_loss_queue(self, mode='POS'):
         q = PriorityQueue()
         for f in range(self.F):
-            print "Processing losses for file %d" % f
+            print("Processing losses for file %d" % f)
             ms1 = self.all_ms1[f]
             ms2 = self.all_ms2[f]
             for _, row in ms2.iterrows():
@@ -126,7 +126,7 @@ class FeatureExtractor(object):
                     groups[k] = group
 
         K = len(groups)
-        print "Total groups=%d" % K
+        print("Total groups=%d" % K)
         return groups
 
     def create_counts(self, fragment_groups, loss_groups):
@@ -147,7 +147,7 @@ class FeatureExtractor(object):
             self.all_doc_labels.append(doc_label)
 
         # populate the dataframes
-        print "Populating the counts"
+        print("Populating the counts")
         self._populate_counts(fragment_groups, fragment_group_words)
         self._populate_counts(loss_groups, loss_group_words)
 
@@ -178,13 +178,13 @@ class FeatureExtractor(object):
         return doc_label
 
     def _print_group(self, group):
-        print "%d members in the group" % len(group)
+        print("%d members in the group" % len(group))
         for row, f, _ in group:
             this_parent_id = row['MSnParentPeakID']
             this_file_id = f
             this_peak_id = row['peakID']
             key = (this_file_id, this_parent_id, this_peak_id)
-            print "- %d %d %d" % key
+            print("- %d %d %d" % key)
 
     def _generate_words(self, groups, prefix):
         group_words = {}

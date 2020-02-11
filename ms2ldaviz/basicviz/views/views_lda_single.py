@@ -213,7 +213,7 @@ def compute_topic_scores(request, experiment_id):
                             score_list.append(down_score)
                             discrete_scores.append(("{}+{}".format(motif.name, motif2.name), score_list))
                 n_done += 1
-                print n_done
+                print(n_done)
 
             context_dict['total_above'] = total_above
             context_dict['total_below'] = total_below
@@ -238,7 +238,7 @@ def show_docs(request, experiment_id):
     if not check_user(request, experiment):
         return HttpResponse("You don't have permission to access this page")
     documents = Document.objects.filter(experiment=experiment)
-    print len(documents)
+    print(len(documents))
     context_dict = {}
     context_dict['experiment'] = experiment
     context_dict['documents'] = documents
@@ -261,14 +261,14 @@ def show_doc(request, doc_id):
 
     if not check_user(request, experiment):
         return HttpResponse("You don't have permission to access this page")
-    print document.experiment.experiment_type
+    print(document.experiment.experiment_type)
     if document.experiment.experiment_type == '0':
         context_dict = get_doc_context_dict(document)
     elif document.experiment.experiment_type == '1':
         context_dict = get_decomp_doc_context_dict(document)
     else:
         context_dict = {}
-    print context_dict
+    print(context_dict)
     context_dict['document'] = document
     context_dict['experiment'] = experiment
     context_dict['is_public'] = is_public(experiment)
@@ -378,14 +378,14 @@ def get_doc_context_dict(document):
 def view_parents(request, motif_id):
     # use the get_subclass method instead of standard get
     motif = Mass2Motif.objects.get_subclass(id=motif_id)
-    print type(motif)
+    print(type(motif))
     if type(motif) == MDBMotif:
         return redirect('/motifdb/motif/{}'.format(motif_id))
     experiment = motif.experiment
 
     if not check_user(request, experiment):
         return HttpResponse("You don't have permission to access this page")
-    print 'Motif metadata', motif.metadata
+    print('Motif metadata', motif.metadata)
     context_dict = {'mass2motif': motif}
     motif_feature_instances = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by('-probability')
     total_prob = sum([m.probability for m in motif_feature_instances])
@@ -397,7 +397,7 @@ def view_parents(request, motif_id):
     # get all substructures linked to features in documents
     motif_features_subs = []
     for motif_feature_instance in motif_feature_instances:
-        print 'Querying substructures of motif_feature_instance %s' % motif_feature_instance
+        print('Querying substructures of motif_feature_instance %s' % motif_feature_instance)
         feature = motif_feature_instance.feature
         document_feature_instance = FeatureInstance.objects.filter(feature=feature, document__in=documents)
         docs = set([x.document for x in document_feature_instance])
@@ -459,7 +459,7 @@ def view_parents(request, motif_id):
     for dm in dm2m:
         doc = dm.document
         sub_terms = doc.substituentinstance_set.all()
-        print doc.experiment
+        print(doc.experiment)
         for s in sub_terms:
             if not s.subterm in term_counts:
                 term_counts[s.subterm] = 0
@@ -472,7 +472,7 @@ def view_parents(request, motif_id):
         for t in term_counts:
             temp[t] = len(SubstituentInstance.objects.filter(document__experiment = experiment,subterm = t))
             if temp[t] < term_counts[t]:
-                print t
+                print(t)
             totals[t] = 100.0*len(SubstituentInstance.objects.filter(document__experiment = experiment,subterm = t))/n_docs
         terms = term_counts.keys()
         counts = term_counts.values()
@@ -853,7 +853,7 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
             # temp is a vector of length number frag features, including all the frags transformed by this diff
 
             diff_instances[d] = [(i,frag_masses.index(t)) for i,t in enumerate(temp) if t in frag_masses]
-        print diff_instances
+        print(diff_instances)
 
         diff_pos = 100
 
@@ -897,7 +897,7 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
                     for start,stop in diff_instances[diff_mass]:
                         start_mass = frag_masses[start]
                         stop_mass = frag_masses[stop]
-                        print start_mass,stop_mass
+                        print(start_mass,stop_mass)
                         intensity = min(frag_intensities[start],frag_intensities[stop])*100.0/max_intensity
                         plotted = False
                         for phi_value in phi_values:
@@ -1202,7 +1202,7 @@ def make_graph(experiment, min_degree=5, topic_scale_factor=5, edge_scale_factor
         else:
             do_plage_flag = False
 
-    print "First"
+    print("First")
     # Add the topics to the graph
     G = nx.Graph()
     for topic in topics:
@@ -1277,7 +1277,7 @@ def make_graph(experiment, min_degree=5, topic_scale_factor=5, edge_scale_factor
 
     doc_nodes = []
 
-    print "Second"
+    print("Second")
 
     # edge_choice = get_option('default_doc_m2m_score',experiment)
     edge_choice = 'probability'
@@ -1352,7 +1352,7 @@ def make_graph(experiment, min_degree=5, topic_scale_factor=5, edge_scale_factor
         else:
             weight = edge_scale_factor * docm2m.overlap_score
         G.add_edge(docm2m.mass2motif.name, docm2m.document.name, weight=weight)
-    print "Third"
+    print("Third")
     return G
 
 
@@ -1536,7 +1536,7 @@ def validation(request, experiment_id):
                                 val += 1
                     counts.append((tot, val))
                     all_dm2ms.append(dm2ms)
-                    print dm2ms
+                    print(dm2ms)
             annotated_mass2motifs = zip(annotated_mass2motifs, counts, all_dm2ms)
             context_dict['annotated_mass2motifs'] = annotated_mass2motifs
             context_dict['counts'] = counts
@@ -2079,7 +2079,7 @@ def feature_info(request,feature_id,experiment_id):
     context_dict['n_motif_instances'] = len(motif_instances)
     context_dict['motif_instances'] = motif_instances
     
-    print len(instances)
+    print(len(instances))
     return render(request,'basicviz/feature_info.html',context_dict)
 
 @csrf_exempt
@@ -2186,7 +2186,7 @@ def delete_experiment(request,experiment_id):
         experiment.delete()
 
     # different return page for staff
-    if request.user.is_staff and request.GET['admin'] == 'true':
+    if request.user.is_superuser:
         return list_all_experiments(request)
 
     # normally return to the basicviz index page

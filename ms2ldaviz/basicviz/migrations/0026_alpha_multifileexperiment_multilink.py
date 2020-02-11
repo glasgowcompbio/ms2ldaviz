@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('value', models.FloatField()),
-                ('mass2motif', models.ForeignKey(to='basicviz.Mass2Motif')),
+                ('mass2motif', models.ForeignKey(to='basicviz.Mass2Motif', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -38,8 +38,8 @@ class Migration(migrations.Migration):
             name='MultiLink',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('experiment', models.ForeignKey(to='basicviz.Experiment')),
-                ('multifileexperiment', models.ForeignKey(to='basicviz.MultiFileExperiment')),
+                ('experiment', models.ForeignKey(to='basicviz.Experiment', on_delete=models.CASCADE)),
+                ('multifileexperiment', models.ForeignKey(to='basicviz.MultiFileExperiment', on_delete=models.CASCADE)),
             ],
             options={
             },

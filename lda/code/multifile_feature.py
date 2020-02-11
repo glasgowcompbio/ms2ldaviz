@@ -27,19 +27,19 @@ class FeatureExtractor(object):
         if input_type == 'filename': # load from csv file
 
             for ms1_filename, ms2_filename in input_set:
-                print "Loading %s" % ms1_filename
+                print("Loading %s" % ms1_filename)
                 ms1 = pd.read_csv(ms1_filename, index_col=0)
                 self.all_ms1.append(ms1)
-                print "Loading %s" % ms2_filename
+                print("Loading %s" % ms2_filename)
                 ms2 = pd.read_csv(ms2_filename, index_col=0)
                 self.all_ms2.append(ms2)
 
         elif input_type == 'dataframe': # load from a dataframe
 
             for ms1_df, ms2_df in input_set:
-                print "Loading MS1 dataframe %d X %d" % (ms1_df.shape)
+                print("Loading MS1 dataframe %d X %d" % (ms1_df.shape))
                 self.all_ms1.append(ms1_df)
-                print "Loading MS2 dataframe %d X %d" % (ms2_df.shape)
+                print("Loading MS2 dataframe %d X %d" % (ms2_df.shape))
                 self.all_ms2.append(ms2_df)
 
         for ms1_df in self.all_ms1:
@@ -78,7 +78,7 @@ class FeatureExtractor(object):
     def make_fragment_queue(self):
         q = PriorityQueue()
         for f in range(self.F):
-            print "Processing fragments for file %d" % f
+            print("Processing fragments for file %d" % f)
             ms2 = self.all_ms2[f]
             for _, row in ms2.iterrows():
                 fragment_mz = row['mz']
@@ -90,7 +90,7 @@ class FeatureExtractor(object):
     def make_loss_queue(self, mode='POS'):
         q = PriorityQueue()
         for f in range(self.F):
-            print "Processing losses for file %d" % f
+            print("Processing losses for file %d" % f)
             ms1 = self.all_ms1[f]
             ms2 = self.all_ms2[f]
             for _, row in ms2.iterrows():
@@ -157,7 +157,7 @@ class FeatureExtractor(object):
                     groups[k] = group
 
         K = len(groups)
-        print "Total groups=%d" % K
+        print("Total groups=%d" % K)
         return groups
 
     def create_counts(self, fragment_groups, loss_groups, scaling_factor):
@@ -178,13 +178,13 @@ class FeatureExtractor(object):
             self.all_doc_labels.append(doc_label)
 
         # populate the dataframes
-        print "Populating the counts"
+        print("Populating the counts")
         self._populate_counts(fragment_groups, fragment_group_words)
         self._populate_counts(loss_groups, loss_group_words)
 
         for f in range(self.F):
 
-            print "Normalising dataframe %d" % f
+            print("Normalising dataframe %d" % f)
             self._normalise(f, scaling_factor)
 
             # ensure that the bin columns are string
@@ -221,13 +221,13 @@ class FeatureExtractor(object):
         return doc_label
 
     def _print_group(self, group):
-        print "%d members in the group" % len(group)
+        print("%d members in the group" % len(group))
         for row, f, _ in group:
             this_parent_id = row['MSnParentPeakID']
             this_file_id = f
             this_peak_id = row['peakID']
             key = (this_file_id, this_parent_id, this_peak_id)
-            print "- %d %d %d" % key
+            print("- %d %d %d" % key)
 
     def _generate_words(self, groups, prefix):
         group_words = {}
@@ -260,7 +260,7 @@ class FeatureExtractor(object):
         row_labels = vocab
 
         # create the df with row and col labels
-        print "Initialising dense dataframe %d" % f
+        print("Initialising dense dataframe %d" % f)
         df = pd.DataFrame(index=row_labels, columns=doc_labels)
         df = df.fillna(0) # fill with 0s rather than NaNs
         return df, doc_labels
@@ -277,7 +277,7 @@ class FeatureExtractor(object):
 
             assert word_type == 'fragment' or word_type == 'loss'
             if k % 100 == 0:
-                print "Populating counts for %s group %d/%d" % (word_type, k, len(groups))
+                print("Populating counts for %s group %d/%d" % (word_type, k, len(groups)))
 
             group = groups[k]
             for row, f, _ in group:
@@ -312,7 +312,7 @@ class FeatureExtractor(object):
         df = df.div(column_sums, axis=1) * scaling_factor
         df = df.transpose()
         df = df.apply(np.floor)
-        print "file %d data shape %s" % (f, df.shape)
+        print("file %d data shape %s" % (f, df.shape))
         self.all_counts[f] = df
 
         ms2 = self.all_ms2[f]
@@ -341,7 +341,7 @@ class SparseFeatureExtractor(FeatureExtractor):
         row_labels = vocab
 
         # create the df with row and col labels
-        print "Initialising sparse matrix %d" % f
+        print("Initialising sparse matrix %d" % f)
         n_row = len(row_labels)
         n_col = len(doc_labels)
         mat = ss.lil_matrix((n_row, n_col))
@@ -353,7 +353,7 @@ class SparseFeatureExtractor(FeatureExtractor):
 
     def _normalise(self, f, scaling_factor):
 
-        print "file %d normalising" % f
+        print("file %d normalising" % f)
         lil = self.all_counts[f]
         csc = lil.tocsr()
         s = csc.sum(axis=0)
@@ -361,14 +361,14 @@ class SparseFeatureExtractor(FeatureExtractor):
         _, ys = csc.nonzero()
         csc.data /= col_sum[ys]
         csc = csc.multiply(scaling_factor).floor().transpose()
-        print "file %d normalised csc shape %s" % (f, csc.shape)
+        print("file %d normalised csc shape %s" % (f, csc.shape))
 
 #         # too slow when actually creating the sparse df
 #         also convert the scipy sparse csc into pandas's sparse dataframe
 #         see http://stackoverflow.com/questions/17818783/populate-a-pandas-sparsedataframe-from-a-scipy-sparse-matrix
-#         print "file %d converting csc to sparse dataframe" % f
+#         print("file %d converting csc to sparse dataframe" % f)
 #         data = [ pd.SparseSeries(csc[i].toarray().ravel()) for i in np.arange(csc.shape[0])]
 #         df = pd.SparseDataFrame(data)
-#         print "file %d sparse dataframe -- DONE" % f
+#         print("file %d sparse dataframe -- DONE" % f)
 
         self.all_counts[f] = csc.tolil()

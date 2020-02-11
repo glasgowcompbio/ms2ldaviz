@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='document',
             name='experiment',
-            field=models.ForeignKey(to='basicviz.Experiment'),
+            field=models.ForeignKey(to='basicviz.Experiment', on_delete=models.CASCADE),
             preserve_default=True,
         ),
     ]

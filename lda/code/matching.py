@@ -47,15 +47,15 @@ class SimpleMatching:
         for item in unmatched_1 + unmatched_2:
             results.append(set([item]))
 
-        print '%d matched feature pairs' % len(matches)
-        print '%d unmatched features from feature_list_1' % len(unmatched_1)
-        print '%d unmatched features from feature_list_2' % len(unmatched_2)
+        print('%d matched feature pairs' % len(matches))
+        print('%d unmatched features from feature_list_1' % len(unmatched_1))
+        print('%d unmatched features from feature_list_2' % len(unmatched_2))
 
         return results
 
     def compute_scores(self, feature_list_1, feature_list_2, mz_tol, rt_tol):
 
-        print 'Computing scores'
+        print('Computing scores')
 
         n_row = len(feature_list_1)
         n_col = len(feature_list_2)
@@ -101,7 +101,7 @@ class SimpleMatching:
 
     def approximate_match(self, feature_list_1, feature_list_2, dist_mat):
 
-        print 'Matching'
+        print('Matching')
         dist_mat = dist_mat.tolil()
         matches = []
 
@@ -147,7 +147,7 @@ class MassOnlyMatching(SimpleMatching):
         # first file is the reference
         ref_filename = input_set[0]
         ref_features = self.to_features(ref_filename)
-        print 'Reference is %s (%d features)' % (ref_filename, len(ref_features))
+        print('Reference is %s (%d features)' % (ref_filename, len(ref_features)))
         print
 
         # match all to the reference
@@ -155,7 +155,7 @@ class MassOnlyMatching(SimpleMatching):
         for i in range(1, len(input_set)):
             filename = input_set[i]
             other_features = self.to_features(filename)
-            print 'Processing %s (%d features)' % (filename, len(other_features))
+            print('Processing %s (%d features)' % (filename, len(other_features)))
             res = self.run(ref_features, other_features, mz_tol, None)
             results.append(res)
             print

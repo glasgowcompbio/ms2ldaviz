@@ -14,7 +14,7 @@ if __name__ == '__main__':
 	es = Experiment.objects.all()
 	for e in es:
 		if e.featureset == None:
-			print e
+			print(e)
 			docs = Document.objects.filter(experiment = e)
 			if len(docs) > 0:
 				doc = docs[0]

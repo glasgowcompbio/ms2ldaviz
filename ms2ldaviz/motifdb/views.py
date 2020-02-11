@@ -184,11 +184,11 @@ def get_motifset_post(request):
     # https://stackoverflow.com/questions/45164551/removing-control-space-characters-from-cache-key-in-python
     encoded_key = json.dumps(key)
     encoded_key = hashlib.md5(encoded_key).hexdigest().strip()
-    print key, "*****", encoded_key
+    print(key, "*****", encoded_key)
 
     output = cache.get(encoded_key)
     if output is None:
-        print 'Not found', key, ' in cache'
+        print('Not found', key, ' in cache')
         output_motifs = {}
         output_metadata = {}
         for motifset_id in motifset_id_list:
@@ -213,7 +213,7 @@ def get_motifset_post(request):
         output = {'motifs':output_motifs,'metadata':output_metadata}
         cache.set(encoded_key, output)
     else:
-        print 'Found', key, ' in cache'
+        print('Found', key, ' in cache')
 
     return HttpResponse(json.dumps(output), content_type='application/json')
 
@@ -300,7 +300,7 @@ def choose_motifs(request,motif_set_id,experiment_id):
     if request.method == 'POST':
         motif_form = ChooseMotifs(motifs,request.POST)
         if motif_form.is_valid():
-            print motif_form.cleaned_data['motifs']
+            print(motif_form.cleaned_data['motifs'])
             motifs = Mass2Motif.objects.filter(id__in = motif_form.cleaned_data['motifs'])
             # make new motifdb motifs based upon these
             prefix = mm_metadata['Motif_Name_Prefix']
@@ -411,7 +411,7 @@ class MotifFilter(object):
                 spec_list = []
                 for spec,sim in merge_list:
                     spec_list.append(spec)
-                    print "Merging: {} and {} ({})".format(current_spec,spec,sim)
+                    print("Merging: {} and {} ({})".format(current_spec,spec,sim))
                     # chuck the merged motif into metadata so that we can find it later
                     merge_data.append((spec,self.input_spectra[spec],self.input_metadata[spec],sim))
                     pos = spec_names.index(spec)
@@ -424,7 +424,7 @@ class MotifFilter(object):
         for spec in final_spec_list:
             output_spectra[spec] = self.input_spectra[spec]
             output_metadata[spec] = self.input_metadata[spec]
-        print "After merging, {} motifs remain".format(len(output_spectra))
+        print("After merging, {} motifs remain".format(len(output_spectra)))
         return output_spectra,output_metadata
 
     def compute_similarity(self,k,k2):

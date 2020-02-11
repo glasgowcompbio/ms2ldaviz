@@ -21,7 +21,7 @@ class MultiFileExperiment(models.Model):
     alpha_matrix = models.TextField(null=True)
     degree_matrix = models.TextField(null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -42,8 +42,7 @@ class BVFeatureSet(models.Model):
             return "{} Da".format(bin_widths[self.name])
         except:
             return self.name
-    def __unicode__(self):
-        return str(self)
+
     def get_width(self):
         bin_widths = {'binned_005':0.005,
                   'binned_01': 0.01,
@@ -110,13 +109,13 @@ class Experiment(models.Model):
 
     n_its = models.IntegerField(null = True,default = 1000)
     K = models.IntegerField(null=True, default=300)
-    featureset = models.ForeignKey(BVFeatureSet,null = True)
+    featureset = models.ForeignKey(BVFeatureSet,null = True, on_delete=models.CASCADE)
 
     has_magma_annotation = models.BooleanField(null = False, default = False)
 
     include_motifset = models.TextField(null = True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -145,31 +144,31 @@ class Experiment(models.Model):
 
 class Feature(models.Model):
     name = models.CharField(max_length=64)
-    experiment = models.ForeignKey(Experiment,null=True)
+    experiment = models.ForeignKey(Experiment,null=True, on_delete=models.CASCADE)
     min_mz = models.FloatField(null = True)
     max_mz = models.FloatField(null = True)
-    featureset = models.ForeignKey(BVFeatureSet,null = True)
+    featureset = models.ForeignKey(BVFeatureSet,null = True, on_delete=models.CASCADE)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
 class PublicExperiments(models.Model):
-    experiment = models.ForeignKey(Experiment)
+    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
 
 
 class MultiLink(models.Model):
-    multifileexperiment = models.ForeignKey(MultiFileExperiment)
-    experiment = models.ForeignKey(Experiment)
+    multifileexperiment = models.ForeignKey(MultiFileExperiment, on_delete=models.CASCADE)
+    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
 
 
 class ExtraUsers(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 class UserExperiment(models.Model):
-    user = models.ForeignKey(User)
-    experiment = models.ForeignKey(Experiment)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
     permission = models.CharField(max_length=24,null=False)
 
 
@@ -179,7 +178,7 @@ class UserExperiment(models.Model):
 # mol = cs.convert(ik,'InChIKey','mol')
 class Document(models.Model):
     name = models.CharField(max_length=1024)
-    experiment = models.ForeignKey(Experiment)
+    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
     metadata = models.CharField(max_length=4096, null=True)
     mol_string = models.TextField(null=True)
 
@@ -292,33 +291,33 @@ class Document(models.Model):
     image_url = property(get_image_url)
     user_cols = property(get_user_cols)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 class JobLog(models.Model):
-    user = models.ForeignKey(User,null = True)
-    experiment = models.ForeignKey(Experiment, null = True)
+    user = models.ForeignKey(User,null = True, on_delete=models.CASCADE)
+    experiment = models.ForeignKey(Experiment, null = True, on_delete=models.CASCADE)
     timestamp = models.DateField(default= datetime.date.today, null = False)
     tasktype = models.CharField(max_length=1028, null = True)
 
 
 
 class FeatureInstance(models.Model):
-    document = models.ForeignKey(Document)
-    feature = models.ForeignKey(Feature)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE)
     intensity = models.FloatField()
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.intensity)
 
 
 class Mass2Motif(models.Model):
     objects = InheritanceManager()
     name = models.CharField(max_length=32)
-    experiment = models.ForeignKey(Experiment,null=True)
+    experiment = models.ForeignKey(Experiment,null=True, on_delete=models.CASCADE)
     metadata = models.CharField(max_length=1024 * 1024, null=True)
 
-    linkmotif = models.ForeignKey('Mass2Motif',null = True)
+    linkmotif = models.ForeignKey('Mass2Motif',null = True, on_delete=models.CASCADE)
 
     def get_annotation(self):
         md = jsonpickle.decode(self.metadata)
@@ -354,46 +353,46 @@ class Mass2Motif(models.Model):
     massbank_dict = property(get_massbank_dict)
     short_annotation = property(get_short_annotation)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
 class Alpha(models.Model):
-    mass2motif = models.ForeignKey(Mass2Motif)
+    mass2motif = models.ForeignKey(Mass2Motif, on_delete=models.CASCADE)
     value = models.FloatField()
 
 
 class Mass2MotifInstance(models.Model):
-    mass2motif = models.ForeignKey(Mass2Motif)
-    feature = models.ForeignKey(Feature)
+    mass2motif = models.ForeignKey(Mass2Motif, on_delete=models.CASCADE)
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE)
     probability = models.FloatField()
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.probability)
 
 
 class DocumentMass2Motif(models.Model):
-    document = models.ForeignKey(Document)
-    mass2motif = models.ForeignKey(Mass2Motif)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    mass2motif = models.ForeignKey(Mass2Motif, on_delete=models.CASCADE)
     probability = models.FloatField()
     validated = models.NullBooleanField()
     overlap_score = models.FloatField(null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.probability)
 
 
 class FeatureMass2MotifInstance(models.Model):
-    featureinstance = models.ForeignKey(FeatureInstance)
-    mass2motif = models.ForeignKey(Mass2Motif)
+    featureinstance = models.ForeignKey(FeatureInstance, on_delete=models.CASCADE)
+    mass2motif = models.ForeignKey(Mass2Motif, on_delete=models.CASCADE)
     probability = models.FloatField()
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.probability)
 
 
 class VizOptions(models.Model):
-    experiment = models.ForeignKey(Experiment)
+    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
     # edge_thresh = models.FloatField(null=False)
     min_degree = models.IntegerField(null=False)
     # just_annotated_docs = models.BooleanField(null=False)
@@ -408,7 +407,7 @@ class VizOptions(models.Model):
 
 
 class AlphaCorrOptions(models.Model):
-    multifileexperiment = models.ForeignKey(MultiFileExperiment)
+    multifileexperiment = models.ForeignKey(MultiFileExperiment, on_delete=models.CASCADE)
     edge_thresh = models.FloatField(null=False)
     distance_score = models.CharField(null=False, max_length=24)
     normalise_alphas = models.BooleanField(null=False)
@@ -417,7 +416,7 @@ class AlphaCorrOptions(models.Model):
 
 
 class PeakSet(models.Model):
-    multifileexperiment = models.ForeignKey(MultiFileExperiment)
+    multifileexperiment = models.ForeignKey(MultiFileExperiment, on_delete=models.CASCADE)
     original_file = models.CharField(max_length=124, null=True)
     original_id = models.IntegerField(null=True)
     mz = models.FloatField(null=False)
@@ -425,29 +424,29 @@ class PeakSet(models.Model):
 
 
 class IntensityInstance(models.Model):
-    peakset = models.ForeignKey(PeakSet)
+    peakset = models.ForeignKey(PeakSet, on_delete=models.CASCADE)
     intensity = models.FloatField(null=True)
-    experiment = models.ForeignKey(Experiment, null=True)
-    document = models.ForeignKey(Document, null=True)
+    experiment = models.ForeignKey(Experiment, null=True, on_delete=models.CASCADE)
+    document = models.ForeignKey(Document, null=True, on_delete=models.CASCADE)
 
 
 class SystemOptions(models.Model):
     key = models.CharField(null=False, max_length=124)
     value = models.CharField(null=False, max_length=124)
-    experiment = models.ForeignKey(Experiment, null=True)
+    experiment = models.ForeignKey(Experiment, null=True, on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('key', 'experiment',)
 
-    def __unicode__(self):
+    def __str__(self):
         return "{}  =  {}".format(self.key, self.value)
 
 class MotifMatch(models.Model):
-    frommotif = models.ForeignKey(Mass2Motif,related_name='frommotif')
-    tomotif = models.ForeignKey(Mass2Motif,related_name='tomotif')
+    frommotif = models.ForeignKey(Mass2Motif,related_name='frommotif', on_delete=models.CASCADE)
+    tomotif = models.ForeignKey(Mass2Motif,related_name='tomotif', on_delete=models.CASCADE)
     score = models.FloatField(null = True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "{} <-> {} ({})".format(self.frommotif.name,self.tomotif.name,self.score)
 
 class MagmaSub(models.Model):
@@ -455,8 +454,8 @@ class MagmaSub(models.Model):
     mol_string = models.TextField(null = True)
 
 class FeatureInstance2Sub(models.Model):
-    feature = models.ForeignKey(FeatureInstance, null=False)
-    sub = models.ForeignKey(MagmaSub, null=False)
+    feature = models.ForeignKey(FeatureInstance, null=False, on_delete=models.CASCADE)
+    sub = models.ForeignKey(MagmaSub, null=False, on_delete=models.CASCADE)
     fragatoms = models.CharField(max_length=1024, null=False)
     mz = models.FloatField(null=True)
     sub_type = models.CharField(max_length=128, null=True)

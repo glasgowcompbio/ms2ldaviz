@@ -14,7 +14,7 @@ from basicviz.models import *
 si = SubstituentInstance.objects.all()
 ti = TaxaInstance.objects.all()
 
-print "Found {} substituents and {} taxa".format(len(si),len(ti))
+print("Found {} substituents and {} taxa".format(len(si),len(ti)))
 
 
 si.delete()
@@ -29,16 +29,16 @@ corpus_file_names = ['/home/simon/Dropbox/BioResearch/Meta_clustering/MS2LDA/cla
 
 
 sub_terms = SubstituentTerm.objects.all()
-print "Found {} terms".format(len(sub_terms))
+print("Found {} terms".format(len(sub_terms)))
 term_dict = {t.name:t for t in sub_terms}
 
 # populate the db
 for ii,experiment_name in enumerate(experiment_names):
     try:
         mbe = Experiment.objects.get(name = experiment_name)
-        print mbe
+        print(mbe)
     except:
-        print "No such experiment"
+        print("No such experiment")
         continue
 
    
@@ -55,7 +55,7 @@ for ii,experiment_name in enumerate(experiment_names):
     term_list = mb_corpora['substituents_list']
     with transaction.atomic():
         for doc in docs:
-            print doc
+            print(doc)
             binary_vals = mb_corpora['substituents_corpus'][doc]
             this_term_list = [term_list[i] for i,v in enumerate(binary_vals) if v == 1]
             try:
@@ -64,5 +64,5 @@ for ii,experiment_name in enumerate(experiment_names):
                     term_obj = term_dict[term]
                     SubstituentInstance.objects.get_or_create(document = doc_obj,subterm = term_obj,source='Standard')
             except:
-                print "Problem with ",doc
+                print("Problem with ",doc)
 

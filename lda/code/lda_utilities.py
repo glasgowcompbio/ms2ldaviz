@@ -8,20 +8,20 @@ def match_topics_across_dictionaries(lda1 = None,lda2 = None,file1 = None,file2 
 	# finds the closest topic matches from lda2 to lda1
 	if lda1 == None:
 		if file1 == None:
-			print "Must specify either an lda dictionary object or a dictionary file for lda1"
+			print("Must specify either an lda dictionary object or a dictionary file for lda1")
 			return
 		else:
 			with open(file1,'r') as f:
 				lda1 = pickle.load(f)
-				print "Loaded lda1 from {}".format(file1)
+				print("Loaded lda1 from {}".format(file1))
 	if lda2 == None:
 		if file2 == None:
-			print "Must specify either an lda dictionary object or a dictionary file for lda1"
+			print("Must specify either an lda dictionary object or a dictionary file for lda1")
 			return
 		else:
 			with open(file2,'r') as f:
 				lda2 = pickle.load(f)
-				print "Loaded lda2 from {}".format(file2)
+				print("Loaded lda2 from {}".format(file2))
 
 
 	word_index = lda1['word_index']
@@ -137,7 +137,7 @@ def match_topics_across_dictionaries(lda1 = None,lda2 = None,file1 = None,file2 
 
 
 	if copy_annotations and 'topic_metadata' in lda1:
-		print "Copying annotations"
+		print("Copying annotations")
 		if not 'topic_metadata' in lda2:
 			lda2['topic_metadata'] = {}
 		for topic2 in best_match:
@@ -152,11 +152,11 @@ def match_topics_across_dictionaries(lda1 = None,lda2 = None,file1 = None,file2 
 		if new_file2 == None:
 			with open(file2,'w') as f:
 				pickle.dump(lda2,f)
-			print "Dictionary with copied annotations saved to {}".format(file2)
+			print("Dictionary with copied annotations saved to {}".format(file2))
 		else:
 			with open(new_file2,'w') as f:
 				pickle.dump(lda2,f)
-			print "Dictionary with copied annotations saved to {}".format(new_file2)
+			print("Dictionary with copied annotations saved to {}".format(new_file2))
 
 
 	return best_match,lda2
@@ -165,12 +165,12 @@ def match_topics_across_dictionaries(lda1 = None,lda2 = None,file1 = None,file2 
 def find_standards_in_dict(standards_file,lda_dict=None,lda_dict_file=None,mode='pos',mass_tol = 3,rt_tol = 12,new_lda_file = None):
 	if lda_dict == None:
 		if lda_dict_file == None:
-			print "Must provide either an lda dictionary or an lda dictionary file"
+			print("Must provide either an lda dictionary or an lda dictionary file")
 			return
 		else:
 			with open(lda_dict_file,'r') as f:
 				lda_dict = pickle.load(f)
-			print "Loaded lda dictionary from {}".format(lda_dict_file)
+			print("Loaded lda dictionary from {}".format(lda_dict_file))
 
 	# Load the standards
 	standard_molecules = []
@@ -198,7 +198,7 @@ def find_standards_in_dict(standards_file,lda_dict=None,lda_dict_file=None,mode=
 					formula = split_line[3]
 					standard_molecules.append((name,mz,rt,formula))
 					# mol = ()
-	print "Loaded {} molecules".format(len(standard_molecules))
+	print("Loaded {} molecules".format(len(standard_molecules)))
 	
 	doc_masses = np.array([float(d.split('_')[0]) for d in lda_dict['corpus']])
 	doc_names = [d for d in lda_dict['corpus']]
@@ -226,7 +226,7 @@ def find_standards_in_dict(standards_file,lda_dict=None,lda_dict_file=None,mode=
 				hits[mol] = doc_names[best_match]
 	
 
-	print "Found hits for {} standard molecules".format(len(hits))
+	print("Found hits for {} standard molecules".format(len(hits)))
 	# Add the hits to the lda_dict as document metadata
 	for mol in hits:
 		doc_name = hits[mol]
@@ -236,7 +236,7 @@ def find_standards_in_dict(standards_file,lda_dict=None,lda_dict_file=None,mode=
 	if new_lda_file:
 		with open(new_lda_file,'w') as f:
 			pickle.dump(lda_dict,f)
-		print "Wrote annotated dictionary to {}".format(new_lda_file)
+		print("Wrote annotated dictionary to {}".format(new_lda_file))
 
 	return lda_dict
 
@@ -253,10 +253,10 @@ def alpha_report(vlda,overlap_scores = None,overlap_thresh = 0.3):
 				if t in overlap_scores[doc]:
 					if overlap_scores[doc][t]>=overlap_thresh:
 						to.append((doc,overlap_scores[doc][t]))
-		print t,vlda.topic_metadata[t].get('SHORT_ANNOTATION',None),a
+		print(t,vlda.topic_metadata[t].get('SHORT_ANNOTATION',None),a)
 		to = sorted(to,key = lambda x: x[1],reverse = True)
 		for t,o in to:
-			print '\t',t,o
+			print('\t',t,o)
 
 
 def decompose(vlda,corpus):
@@ -281,9 +281,9 @@ def decompose(vlda,corpus):
 			else:
 				intensity_out += spectrum[word]
 		p_in[doc] = (1.0*intensity_in)/(intensity_in + intensity_out)
-		# print max_i
+		# print(max_i)
 
-		print "Decomposing document {} ({}/{})".format(doc,n_done,n_total)
+		print("Decomposing document {} ({}/{})".format(doc,n_done,n_total))
 		phi[doc] = {}
 		# gamma_mat[doc] = np.zeros(K) + vlda.alpha
 		gamma_mat[doc] = np.ones(K)

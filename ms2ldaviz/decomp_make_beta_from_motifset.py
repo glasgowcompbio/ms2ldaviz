@@ -14,18 +14,18 @@ from basicviz.models import Alpha,Mass2MotifInstance
 if __name__ == '__main__':
     motifset_name = sys.argv[1]
     ms = MotifSet.objects.get(name = motifset_name)
-    print "Loaded {}".format(ms)
+    print("Loaded {}".format(ms))
 
     fs = FeatureSet.objects.get(motifset = ms)
-    print "Extracted {}".format(fs)
+    print("Extracted {}".format(fs))
 
     motif_links = GlobalMotifsToSets.objects.filter(motifset = ms)
     global_motifs = [m.motif for m in motif_links]
 
     global_features = GlobalFeature.objects.filter(featureset = fs)
-    print "Extracted {} global features".format(len(global_features))
+    print("Extracted {} global features".format(len(global_features)))
     fmap = FeatureMap.objects.filter(globalfeature__in = global_features)
-    print "Extracted {} feature map objects".format(len(fmap))
+    print("Extracted {} feature map objects".format(len(fmap)))
 
 
     feature_map_dict = {}
@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     originalmotifs = [m.originalmotif for m in global_motifs]
     fm2ms = Mass2MotifInstance.objects.filter(mass2motif__in = originalmotifs)
-    print "Found {} instances".format(len(fm2ms))
+    print("Found {} instances".format(len(fm2ms)))
     n_done = 0
     for fm2m in fm2ms:
       n_done += 1
@@ -62,7 +62,7 @@ if __name__ == '__main__':
           betalist.append((mpos,fpos,fm2m.probability))
           # beta[mpos][fpos] = fm2m.probability
       if n_done % 100 == 0:
-          print n_done,len(fm2ms)
+          print(n_done,len(fm2ms))
 
     feature_id_list = [None for f in range(n_global_features)]
     motif_id_list = [None for m in range(n_motifs)]

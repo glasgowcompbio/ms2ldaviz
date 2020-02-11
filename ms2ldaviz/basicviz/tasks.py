@@ -58,7 +58,7 @@ def match_motifs_set(experiment_id,base_experiment_id,min_score_to_save = 0.5):
     fs = experiment.featureset
     base_fs = base_experiment.featureset
 
-    print fs,base_fs
+    print(fs,base_fs)
 
     # get the features used in each experiment
     features = get_experiment_features(experiment)
@@ -145,10 +145,10 @@ def match_motifs_set(experiment_id,base_experiment_id,min_score_to_save = 0.5):
 
     # mzd_features = filter(lambda x: x.name.startswith('mzdiff'),feature_map.keys())
     # for f in mzd_features:
-    #     print f,feature_map[f]
+    #     print(f,feature_map[f])
 
 
-    print "Found matches of {} out of {} features".format(len(feature_map),len(features))
+    print("Found matches of {} out of {} features".format(len(feature_map),len(features)))
 
     # get the motifs
     motifs = experiment.mass2motif_set.all()
@@ -225,7 +225,7 @@ def match_motifs_set(experiment_id,base_experiment_id,min_score_to_save = 0.5):
                 best_list = match_list
         if best_score >= min_score_to_save:
             matches.append((motif,best_base,best_score,best_list))
-            print motif,best_score,best_base
+            print(motif,best_score,best_base)
 
     for match in matches:
         frommotif = match[0]
@@ -254,8 +254,8 @@ def match_motifs(experiment_id,base_experiment_id,min_score_to_save = 0.5):
     features = sorted(features,key = lambda x: x.min_mz)
     base_features = sorted(base_features,key = lambda x: x.min_mz)
 
-    print len(features)
-    print len(base_features)
+    print(len(features))
+    print(len(base_features))
 
     feature_name_dict = {}
     base_feature_name_dict = {}
@@ -390,7 +390,7 @@ def match_motifs(experiment_id,base_experiment_id,min_score_to_save = 0.5):
                 best_list = match_list
         if best_score >= min_score_to_save:
             matches.append((motif,best_base,best_score,best_list))
-            print motif,best_score,best_base
+            print(motif,best_score,best_base)
 
     for match in matches:
         frommotif = match[0]

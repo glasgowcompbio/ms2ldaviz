@@ -2,7 +2,9 @@ from django.conf import settings
 from django.conf.urls import include, url  # For django versions before 2.0
 from django.contrib import admin
 
-import views
+from . import views
+
+app_name='ms2ldaviz'
 
 urlpatterns = [
     url(r'^$', views.home, name='home'),
@@ -12,7 +14,7 @@ urlpatterns = [
     url(r'^disclaimer/', views.disclaimer, name='disclaimer'),
     url(r'^confidence/', views.confidence, name='confidence'),
     url(r'^grappelli/', include('grappelli.urls')),  # grappelli URLS
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
     url(r'^basicviz/', include('basicviz.urls')),
     url(r'^annotation/', include('annotation.urls')),
     url(r'^massbank/', include('massbank.urls')),

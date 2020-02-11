@@ -9,7 +9,7 @@ from numpy import interp
 import massbank.constants as constants
 from basicviz.models import Mass2Motif, Mass2MotifInstance, MultiFileExperiment, MultiLink
 from massbank.forms import Mass2MotifMassbankForm
-from splash import Spectrum, SpectrumType, Splash
+from .splash import Spectrum, SpectrumType, Splash
 
 
 def get_description(motif):
@@ -38,8 +38,8 @@ def get_massbank_form(motif, motif_features, mf_id=None):
         mb_dict = get_massbank_dict(data, motif, motif_features, 0)
         is_new = True
 
-    print 'is_new', is_new
-    print 'mb_dict', mb_dict
+    print('is_new', is_new)
+    print('mb_dict', mb_dict)
 
     # set to another form used when generating the massbank record
     try:
@@ -173,19 +173,19 @@ def get_splash(peaks):
     peak_data = []
     for peak in peaks:
         row = (peak[0], peak[1]) # mz, intensity
-        print row
+        print(row)
         peak_data.append(row)
 
     spectrum = Spectrum(peak_data, SpectrumType.MS)
     hash = Splash().splash(spectrum)
-    print hash
+    print(hash)
     return hash
 
 
 def get_massbank_str(massbank_dict):
-    print 'keys'
+    print('keys')
     for key in massbank_dict.keys():
-        print '-', key
+        print('-', key)
 
     output = []
     output.append('ACCESSION: %s' % massbank_dict['accession'])

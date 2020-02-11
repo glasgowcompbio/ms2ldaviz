@@ -30,16 +30,16 @@ if __name__ == '__main__':
 	
 	mfe = MultiFileExperiment.objects.get(name = multifile_experiment_name)
 	links = mfe.multilink_set.all()
-	print "Found {} links".format(len(links))
+	print("Found {} links".format(len(links)))
 	experiments = [l.experiment for l in links]
 	
 	peaksets = mfe.peakset_set.all().order_by('mz')
-	print "Found {} peaksets".format(len(peaksets))
+	print("Found {} peaksets".format(len(peaksets)))
 
 	for experiment in experiments:
-		print "performing matching for experiment {}".format(experiment)
+		print("performing matching for experiment {}".format(experiment))
 		docs = experiment.document_set.all()
-		print "\t found {} documents".format(len(docs))
+		print("\t found {} documents".format(len(docs)))
 		experiment_mz_rt = []
 		for doc in docs:
 			md = jsonpickle.decode(doc.metadata)
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 			
 			n_done += 1
 			if n_done % 100 == 0:
-				print "\t\tDone {} documents".format(n_done)
+				print("\t\tDone {} documents".format(n_done))
 		
 		
 
@@ -131,13 +131,13 @@ if __name__ == '__main__':
  # 			rt_list.append(rt)
  # 			id_list.append(id)
 
-	# print "Loaded {} peaksets".format(len(raw_data))
-	# print "Diagnostics: intensities present:"
+	# print("Loaded {} peaksets".format(len(raw_data)))
+	# print("Diagnostics: intensities present:")
 	# ch = zip(count_hist.keys(),count_hist.values())
 	# ch = sorted(ch,key = lambda x: x[0])
 
 	# for c,h in ch:
-	# 	print c,h
+	# 	print(c,h)
 
 
 	# # Hack the names about to make them match - this should be provided to the script
@@ -153,7 +153,7 @@ if __name__ == '__main__':
 
 	
 
-	# print "Making the peakset objects"
+	# print("Making the peakset objects")
 	# for i,mz_value in enumerate(mz_list):
 	# 	rt_value = rt_list[i]
 	# 	new_peakset = PeakSet.objects.get_or_create(multifileexperiment = mfe,mz = mz_value,rt = rt_value,
@@ -165,5 +165,5 @@ if __name__ == '__main__':
 	# 			ii.intensity = intense
 	# 			ii.save()
 	# 	if i%100 == 0:
-	# 		print "Done: {}".format(i)
+	# 		print("Done: {}".format(i))
 
