@@ -161,6 +161,3 @@ INTERNAL_IPS = [
 ]
 
 
-SILENCED_SYSTEM_CHECKS = [
-    'admin.E408',
-]
