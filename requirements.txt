@@ -26,7 +26,7 @@ six==1.14.0
 typing==3.7.4.1
 vine==1.3.0
 gensim==3.8.1
-tensorflow==2.0.0
+tensorflow==2.0.1
 tqdm==4.42.1
 chemspipy==2.0.0
 requests==2.22.0
