@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.views.generic.edit import UpdateView
-from django.core.urlresolvers import reverse_lazy
+from django.urls import reverse_lazy
 from django.contrib.auth.models import User
 
 from registration.forms import UserForm
@@ -25,7 +25,7 @@ def register(request):
             registered = True
 
         else:
-            print user_form.errors
+            print(user_form.errors)
     else:
         user_form = UserForm()
 
@@ -51,7 +51,7 @@ def user_login(request):
                 login(request, guest_user)
                 return HttpResponseRedirect('/basicviz/')
             else:
-                print "Invalid login details: {0}, {1}".format(username, password)
+                print("Invalid login details: {0}, {1}".format(username, password))
                 return HttpResponse("Invalid login details supplied.")
                 return render(request, 'registration/login.html', {})
 

@@ -107,9 +107,9 @@ class MatchMotifForm(forms.Form):
         experiments = Experiment.objects.filter(Q(featureset__in = fs), 
             (Q(id__in = [i.experiment.id for i in ue]) | Q(id__in = [p.experiment.id for p in pe])))
 
-        # print len(experiments)
+        # print(len(experiments))
         # experiments = experiments.filter(userexperiment__user = user) | experiments.filter(publicexperiments )
-        # print len(experiments)
+        # print(len(experiments))
         # users_experiments += [p.experiment for p in PublicExperiments.objects.all()]
         # experiments = users_experiments
         # for e in users_experiments:

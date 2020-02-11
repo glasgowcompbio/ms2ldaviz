@@ -1,7 +1,7 @@
 # coding=utf8
 # python code to do some molecular networking
 
-from pprint import PrettyPrinter
+from pprint(import PrettyPrinter)
 import numpy as np
 
 
@@ -151,7 +151,7 @@ class Network(object):
 		components = []
 		while self.n_nodes() > 0:
 			components.append(self._extract_component(min_score = min_score))
-			print "Found {} components".format(len(components))
+			print("Found {} components".format(len(components)))
 		small_enough = []
 		needs_cropping = []
 		for component in components:
@@ -160,8 +160,8 @@ class Network(object):
 			else:
 				small_enough.append(component)
 		while len(needs_cropping) > 0:
-			print "Cropping components to have max size = {}".format(max_component_size)
-			print "\t{} components ok, {} need cropping".format(len(small_enough),len(needs_cropping))
+			print("Cropping components to have max size = {}".format(max_component_size))
+			print("\t{} components ok, {} need cropping".format(len(small_enough),len(needs_cropping)))
 			new_crop = []
 			for component in needs_cropping:
 				new_comp = component._cut(min_score = 0.5)

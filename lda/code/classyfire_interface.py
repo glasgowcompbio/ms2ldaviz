@@ -29,7 +29,7 @@ def get_taxa_path_and_substituents(inchikey):
         taxa_path.append(data['direct_parent']['name'])
         substituents = data.get('substituents',None)
     except:
-        print "Failed on {}".format(inchikey)
+        print("Failed on {}".format(inchikey))
     return taxa_path,substituents
 
 def make_corpora(documents):
@@ -42,7 +42,7 @@ def make_corpora(documents):
         inchikey = documents[document]
         taxa[document],substituents[document] = get_taxa_path_and_substituents(inchikey)
         if i % 10 == 0:
-            print "Done {} of {}".format(i,len(documents))
+            print("Done {} of {}".format(i,len(documents)))
 
     # corpora format is a dictionary of binary lists
     taxa_corpus = {}
@@ -92,12 +92,12 @@ def lda_projection(gamma,corpus,corpus_list,doc_index,n_its = 50,xi = None,hyp =
         xi = np.random.rand(n_terms,K)
 
     for it in range(n_its):
-        print "Iteration {}".format(it)
+        print("Iteration {}".format(it))
         temp_xi = np.zeros((n_terms,K),np.float)
         delta_sum = np.zeros((n_terms,K),np.float)
         for i,document in enumerate(corpus.keys()):
             if i%500 == 0:
-                print "\t{}".format(i)
+                print("\t{}".format(i))
             try:
                 doc_pos = doc_index[document]
                 elt = elogtheta[doc_pos,:][None,:]
@@ -121,7 +121,7 @@ def lda_projection(gamma,corpus,corpus_list,doc_index,n_its = 50,xi = None,hyp =
         # Update the xi
         new_xi = (temp_xi + hyp[0] - 1)/(delta_sum + hyp[0] + hyp[1] - 2)
         xi_change = (np.abs(new_xi - xi)).sum()
-        print "Total xi change: {}".format(xi_change)
+        print("Total xi change: {}".format(xi_change))
         xi = new_xi
 
     return xi

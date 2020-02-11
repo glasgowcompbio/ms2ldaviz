@@ -1,4 +1,4 @@
-{% load staticfiles %}
+{% load static %}
 
 #### During the use of Mass2Motifs for structural grouping, annotation, and/or classification, please keep the following in mind:
 

@@ -15,7 +15,7 @@ from basicviz.models import *
 
 if __name__ == '__main__':
 	e = Experiment.objects.get(id = 191)
-	print e
+	print(e)
 
 	# fs = BVFeatureSet.objects.get(name = 'binned_005')
 	# fs_features = Feature.objects.filter(featureset = fs)
@@ -51,14 +51,14 @@ if __name__ == '__main__':
 	# 				gnps_f.save()
 	# 		n_done += 1
 	# 		if n_done % 1000 == 0:
-	# 			print n_done,total
+	# 			print(n_done,total)
 
 	# fix the features in the mass2motifs
 	# motifs = Mass2Motif.objects.filter(experiment = e)
 	# gnps_fmi = Mass2MotifInstance.objects.filter(mass2motif__in = motifs)
 	# total = len(gnps_fmi)
 	# n_done = 0
-	# print "MOTIFS"
+	# print("MOTIFS")
 	# with transaction.atomic():
 	# 	for fmi in gnps_fmi:
 	# 		gnps_f = fmi.feature
@@ -71,10 +71,10 @@ if __name__ == '__main__':
 	# 				fmi.feature = global_feature
 	# 				fmi.save()
 	# 			else:
-	# 				print "feature in motif that wasnt in a document??"
+	# 				print("feature in motif that wasnt in a document??")
 	# 		n_done += 1
 	# 		if n_done % 100 == 0:
-	# 			print n_done,total
+	# 			print(n_done,total)
 
 
 
@@ -88,12 +88,12 @@ if __name__ == '__main__':
 	# n_done = 0
 	# for f in gnps_f:
 	# 	if len(f.featureinstance_set.all()) > 0:
-	# 		print f,"has fi"
+	# 		print(f,"has fi")
 	# 	if len(f.mass2motifinstance_set.all()) > 0:
-	# 		print f,"has m2m"
+	# 		print(f,"has m2m")
 	# 	n_done += 1
 	# 	if n_done % 100 == 0:
-	# 		print n_done,total
+	# 		print(n_done,total)
 
 
 	# delete the features

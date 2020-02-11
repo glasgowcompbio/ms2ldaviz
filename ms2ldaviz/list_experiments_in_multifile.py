@@ -23,4 +23,4 @@ if __name__ == '__main__':
 	mfe = MultiFileExperiment.objects.get(name = multifile_experiment_name)
 	links = mfe.multilink_set.all().order_by('experiment')
 	for link in links:
-		print link.experiment
+		print(link.experiment)

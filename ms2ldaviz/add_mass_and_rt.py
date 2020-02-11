@@ -21,11 +21,11 @@ if __name__ == '__main__':
 	multifile_experiment_name = sys.argv[1]
 	mfe = MultiFileExperiment.objects.get(name = multifile_experiment_name)
 	links = mfe.multilink_set.all()
-	print "Found {} links".format(len(links))
+	print("Found {} links".format(len(links)))
 	experiments = [l.experiment for l in links]
 	for experiment in experiments:
 		docs = experiment.document_set.all()
-		print "Experiment {}, found {} documents".format(experiment,len(docs))
+		print("Experiment {}, found {} documents".format(experiment,len(docs)))
 		for doc in docs:
 			if '_' in doc.name:
 				split_name = doc.name.split('_')

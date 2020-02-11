@@ -12,7 +12,7 @@ def par_e_step(parameters):
 	temp_beta = np.zeros((K, n_words))
 	new_gamma_matrix = np.zeros_like(gamma_matrix)
 	for doc in corpus:
-		# print doc
+		# print(doc)
 		d = doc_index[doc]
 		temp_gamma = np.zeros(K) + alpha
 		for word in corpus[doc]:

@@ -19,7 +19,7 @@ if __name__ == '__main__':
     experiment_name = filename.split('/')[-1].split('.')[0]
     current_e = Experiment.objects.filter(name = experiment_name)
     if len(current_e) > 0:
-        print "Experiment of this name already exists, exiting"
+        print("Experiment of this name already exists, exiting")
         sys.exit(0)
 
     experiment = Experiment(name = experiment_name)

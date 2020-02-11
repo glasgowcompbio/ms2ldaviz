@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='featuremass2motifinstance',
             name='featureinstance',
-            field=models.ForeignKey(default=1, to='basicviz.FeatureInstance'),
+            field=models.ForeignKey(default=1, to='basicviz.FeatureInstance', on_delete=models.CASCADE),
             preserve_default=False,
         ),
     ]

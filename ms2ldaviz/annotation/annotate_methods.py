@@ -16,7 +16,7 @@ def annotate(parentmass, spectrum, experiment_id):
         data = json.loads(response.text)
         return data
     except:
-        print response.text
+        print(response.text)
 
 
 def batch_annotate(spectra, db_name):
@@ -32,27 +32,27 @@ def batch_annotate(spectra, db_name):
         data = json.loads(response.text)
         return data
     except:
-        print response.text
+        print(response.text)
 
 
 def print_annotation(data, no_features=None, theta_threshold=0.01):
-    print 'Taxa terms'
+    print('Taxa terms')
     for taxa_term, prob in data['taxa_term_probs']:
         if prob > 0.1:
-            print taxa_term, prob
+            print(taxa_term, prob)
 
-    print '\nSubtituent terms'
+    print('\nSubtituent terms')
     for sub_term, prob in data['sub_term_probs']:
-        print sub_term, prob
+        print(sub_term, prob)
 
-    print '\nMotifs'
+    print('\nMotifs')
     for motif, annotation, theta, overlap in data['motif_theta_overlap']:
         if theta > theta_threshold:
-            print motif, annotation, theta, overlap
+            print(motif, annotation, theta, overlap)
 
     if no_features is not None:
-        print '\nNo. of fragments matched: %d/%d' % (data['fragment_match'], no_features)
-        print '\nNo. of losses matched: %d/%d' % (data['loss_match'], no_features)
+        print('\nNo. of fragments matched: %d/%d' % (data['fragment_match'], no_features))
+        print('\nNo. of losses matched: %d/%d' % (data['loss_match'], no_features))
     else:
-        print '\nNo. of fragments matched: %d' % data['fragment_match'], no_features
-        print '\nNo. of losses matched: %d' % data['loss_match'], no_features
+        print('\nNo. of fragments matched: %d' % data['fragment_match'], no_features)
+        print('\nNo. of losses matched: %d' % data['loss_match'], no_features)

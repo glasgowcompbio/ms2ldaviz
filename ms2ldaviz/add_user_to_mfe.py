@@ -18,7 +18,7 @@ if __name__ == '__main__':
 	mfe = MultiFileExperiment.objects.get(name = mfename)
 
 	links= MultiLink.objects.filter(multifileexperiment = mfe)
-	print "Found {} experiments".format(len(links))
+	print("Found {} experiments".format(len(links)))
 	experiments = [l.experiment for l in links]
 	for e in experiments:
 		ue,_ = UserExperiment.objects.get_or_create(user = user,experiment = e)

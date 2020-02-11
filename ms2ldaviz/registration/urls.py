@@ -7,5 +7,5 @@ urlpatterns = [
     url(r'^login/$', views.user_login, name='login'),
     url(r'^logout/$', views.user_logout, name='logout'),
     url(r'^profile/$', views.ProfileUpdate.as_view(), name='profile'),
-    url(r'^change_password/$', auth_views.password_change, {'post_change_redirect': 'profile'}, name='password_change'),
+    url(r'^change_password/$', auth_views.PasswordChangeView.as_view(), {'post_change_redirect': 'profile'}, name='password_change'),
 ]

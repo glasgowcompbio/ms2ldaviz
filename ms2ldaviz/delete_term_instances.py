@@ -19,7 +19,7 @@ if __name__ == '__main__':
 	try:
 		experiment = Experiment.objects.get(name = experiment_name)
 	except:
-		print "Experiment with name {} not found".format(experiment_name)
+		print("Experiment with name {} not found".format(experiment_name))
 		sys.exit(0)
 
 

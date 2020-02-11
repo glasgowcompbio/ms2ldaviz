@@ -14,21 +14,21 @@ if __name__ == '__main__':
 
 	fs,status = BVFeatureSet.objects.get_or_create(name = 'binned_005')
 	if status:
-		print "Created feature set"
+		print("Created feature set")
 	else:
-		print "Featureset already exists"
+		print("Featureset already exists")
 
 	mbe = Experiment.objects.get(name = 'massbank_binned_005')
-	print "Got " + str(mbe)
+	print("Got " + str(mbe))
 	if mbe.featureset == None:
 		mbe.featureset = fs
 		mbe.save()
 
 	mbe_features = Feature.objects.filter(experiment = mbe)
-	print "Got {} features".format(len(mbe_features))
+	print("Got {} features".format(len(mbe_features)))
 
 	mbe_features_sub = Feature.objects.filter(experiment = mbe,featureset = None)
-	print "{} have no featureset".format(len(mbe_features_sub))
+	print("{} have no featureset".format(len(mbe_features_sub)))
 	for f in mbe_features_sub:
 		f.featureset = fs
 		f.save()
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
 	# Now get the features as tied to the feature set
 	mbe_features = Feature.objects.filter(featureset = fs)
-	print "Got {} features".format(len(mbe_features))
+	print("Got {} features".format(len(mbe_features)))
 
 	fnames = set([f.name for f in mbe_features])
 
@@ -44,11 +44,11 @@ if __name__ == '__main__':
 	i93 = Experiment.objects.get(name = other_experiment_name)
 	i93.featureset = fs
 	i93.save()
-	print "Got " + str(i93)
+	print("Got " + str(i93))
 
 	i93_features = Feature.objects.filter(experiment = i93)
 
-	print "Got {} features".format(len(i93_features))
+	print("Got {} features".format(len(i93_features)))
 	for f in i93_features:
 		if f.name in fnames:
 			# Find all the instances
@@ -79,4 +79,4 @@ if __name__ == '__main__':
 		if len(f.featureinstance_set.all()) == 0 and len(f.mass2motifinstance_set.all()) == 0 and len(f.featuremap_set.all()) == 0:
 			f.delete()
 		else:
-			print f
+			print(f)

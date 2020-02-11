@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('edge_thresh', models.FloatField()),
                 ('distance_type', models.CharField(max_length=24)),
-                ('multifileexperiment', models.ForeignKey(to='basicviz.MultiFileExperiment')),
+                ('multifileexperiment', models.ForeignKey(to='basicviz.MultiFileExperiment', on_delete=models.CASCADE)),
             ],
             options={
             },

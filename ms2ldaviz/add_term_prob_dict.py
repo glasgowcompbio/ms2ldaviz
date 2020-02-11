@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
 	experiment = Experiment.objects.get(name = experiment_name)
 
-	print experiment
+	print(experiment)
 
 	term_list = export_dict['term_list']
 	term_probs = export_dict['term_probs']
@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
 
 	for motif_name,probs in term_probs.items():
-		print motif_name
+		print(motif_name)
 		motif = Mass2Motif.objects.get(name = motif_name,experiment = experiment)
 		for i,p in enumerate(probs):
 			term_name = term_list[i]

@@ -1,4 +1,4 @@
-  import os
+import os
 import sys
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ms2ldaviz.settings")
 
@@ -29,7 +29,7 @@ if __name__ == '__main__':
                                       globalfeature = gf)
       n_done += 1
       if n_done % 100 == 0:
-          print n_done,len(massbank_features)
+          print(n_done,len(massbank_features))
 
     # Create the motif links
     massbank_motifs = Mass2Motif.objects.filter(experiment = massbank_experiment)
@@ -63,7 +63,7 @@ if __name__ == '__main__':
 
     originalmotifs = [m.originalmotif for m in massbank_global_motifs]
     fm2ms = Mass2MotifInstance.objects.filter(mass2motif__in = originalmotifs)
-    print "Found {} instances".format(len(fm2ms))
+    print("Found {} instances".format(len(fm2ms)))
     n_done = 0
     for fm2m in fm2ms:
       n_done += 1
@@ -72,9 +72,9 @@ if __name__ == '__main__':
           mpos = motif_index[motif_map_dict[fm2m.mass2motif]]
           beta[mpos][fpos] = fm2m.probability
       if n_done % 100 == 0:
-          print n_done,len(fm2ms)
-    print "created beta"
-    print np.array(beta).sum()
+          print(n_done,len(fm2ms))
+    print("created beta")
+    print(np.array(beta).sum())
 
     b = Beta.objects.get_or_create(experiment = massbank_experiment)[0]
 

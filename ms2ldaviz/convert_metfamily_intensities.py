@@ -13,7 +13,7 @@ from ms1analysis.models import Sample,DocSampleIntensity
 if __name__ == '__main__':
 	metfamily = Experiment.objects.get(name = 'metfamily')
 	docs = metfamily.document_set.all()
-	print "Found {} documents".format(len(docs))
+	print("Found {} documents".format(len(docs)))
 	doc0 = docs[0]
 	md = jsonpickle.decode(doc0.metadata)
 	sample_dict = {}

@@ -1,4 +1,4 @@
-{% load staticfiles %}
+{% load static %}
 
 ## Table of Contents
 

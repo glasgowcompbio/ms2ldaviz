@@ -8,7 +8,7 @@ class SubstituentTerm(models.Model):
 
 	def __str__(self):
 		return self.name
-	def __unicode__(self):
+	def __str__(self):
 		return self.name
 
 class TaxaTerm(models.Model):
@@ -16,19 +16,19 @@ class TaxaTerm(models.Model):
 
 	def __str__(self):
 		return self.name
-	def __unicode__(self):
+	def __str__(self):
 		return self.name
 
 
 
 class SubstituentInstance(models.Model):
-	subterm = models.ForeignKey(SubstituentTerm,null = False)
-	document = models.ForeignKey(Document,null = True)
+	subterm = models.ForeignKey(SubstituentTerm,null = False, on_delete=models.CASCADE)
+	document = models.ForeignKey(Document,null = True, on_delete=models.CASCADE)
 	probability = models.FloatField(null = True)
 	source = models.CharField(max_length=128,null=True)
 
 class TaxaInstance(models.Model):
-	taxterm = models.ForeignKey(TaxaTerm,null = False)
-	document = models.ForeignKey(Document,null = True)
+	taxterm = models.ForeignKey(TaxaTerm,null = False, on_delete=models.CASCADE)
+	document = models.ForeignKey(Document,null = True, on_delete=models.CASCADE)
 	probability = models.FloatField(null = True)
 	source = models.CharField(max_length=128,null=True)

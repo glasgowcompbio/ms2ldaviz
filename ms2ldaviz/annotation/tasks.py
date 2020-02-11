@@ -48,7 +48,7 @@ def predict_substituent_terms(experiment_id):
     model = load_model('/home/classyfire/model.h5')
     predicted = model.predict(x_train_spectra)
 
-    print len(predicted),len(documents)
+    print(len(predicted),len(documents))
 
     # turn the probabilities into 0 and 1
     predicted_substituents = np.zeros(predicted.shape)
@@ -60,7 +60,7 @@ def predict_substituent_terms(experiment_id):
     sub_terms = SubstituentTerm.objects.all()
     sub_term_dict = {s.name: s for s in sub_terms}
 
-    print predicted
+    print(predicted)
     store_thresh = 0.7
     with transaction.atomic():
         for doc_idx,doc_preds in enumerate(predicted):
@@ -81,7 +81,7 @@ def predict_substituent_terms(experiment_id):
 
     # for index, value in enumerate(predicted_substituents):
     #     if value:
-    #         print value
+    #         print(value)
     #         doc_name = np_index[index]
     #         term = legends[index]
     #         probability = predicted[index]

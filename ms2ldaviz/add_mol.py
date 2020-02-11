@@ -18,19 +18,19 @@ if __name__ == '__main__':
 
     exp_name = sys.argv[1]
     e = Experiment.objects.get(name = exp_name)
-    print e
+    print(e)
     docs = Document.objects.filter(experiment = e).filter(mol_string__isnull=True)
     for doc in docs:
         md = jsonpickle.decode(doc.metadata)
         ik = md.get('InChIKey',md.get('inchikey',None))
         if not ik:
             next
-        print ik
+        print(ik)
         try:
             mol = cs.convert(ik,'InChIKey','mol')
             if mol:
                 doc.mol_string = mol
                 doc.save()
         except Exception as e:
-            print 'Failed mol fetch of ' + ik + ' : '
-            print e
+            print('Failed mol fetch of ' + ik + ' : ')
+            print(e)

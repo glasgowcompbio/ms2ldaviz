@@ -120,7 +120,7 @@ def query_annotation(request, basicviz_experiment_id):
             peaks = json.loads(spectrum_json)
 
             spectrum = (parentmass, peaks)
-            print spectrum
+            print(spectrum)
             document, motif_theta_overlap, plotdata, taxa_term_probs, sub_term_probs, matches_count = \
                 annotate(spectrum, basicviz_experiment_id)
 

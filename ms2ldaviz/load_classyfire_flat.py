@@ -26,7 +26,7 @@ if __name__=='__main__':
 	else:
 		current_terms = TaxaInstance.objects.filter(motif__in = motifs)
 
-	print "Deleting {} term instances".format(len(current_terms))
+	print("Deleting {} term instances".format(len(current_terms)))
 	for term in current_terms:
 		term.delete()
 

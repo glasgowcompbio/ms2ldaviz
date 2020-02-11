@@ -1,7 +1,7 @@
 import json
 from ms2ldaviz.celery_tasks import app
 
-from decomposition_functions import make_documents,api_decomposition
+from .decomposition_functions import make_documents,api_decomposition
 from decomposition.models import FeatureSet,MotifSet,APIBatchResult
 @app.task
 def api_batch_task(spectra,featureset_id,motifset_id,result_id):

@@ -25,7 +25,7 @@ if __name__ == '__main__':
 	experiment = Experiment.objects.get(name = experiment_name)
 	documents = Document.objects.filter(experiment = experiment)
 	document_mass2motifs = DocumentMass2Motif.objects.filter(document__in = documents)
-	print "Found {} documents, and {} document-mass2motif links".format(len(documents),len(document_mass2motifs))
+	print("Found {} documents, and {} document-mass2motif links".format(len(documents),len(document_mass2motifs)))
 	n_done = 0
 	for d_m2m in document_mass2motifs:
 		new_score = compute_overlap_score(d_m2m.mass2motif,d_m2m.document)
@@ -33,4 +33,4 @@ if __name__ == '__main__':
 		d_m2m.save()
 		n_done += 1
 		if n_done % 100 == 0:
-			print "Done {} of {}".format(n_done,len(document_mass2motifs))
+			print("Done {} of {}".format(n_done,len(document_mass2motifs)))

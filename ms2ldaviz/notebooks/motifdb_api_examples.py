@@ -27,12 +27,12 @@ data['motifset_id_list'] = [massbank_id, gnps_id]
 data['filter'] = "True"
 data['filter_threshold'] = 0.95 # Default value - not required
 output = client.post(url, data=data).json()
-print 'Retrieved', len(output['motifs']), 'motifs', len(output['metadata'])
+print('Retrieved', len(output['motifs']), 'motifs', len(output['metadata']))
 
 # example - get the massbank metadata only
 url = server_url + '/motifdb/get_motifset_metadata/{}/'.format(massbank_id)
 output = requests.get(url)
 motif_metadata = output.json()
 for k in motif_metadata.keys()[:5]:
-    print k
-    print motif_metadata[k]
+    print(k)
+    print(motif_metadata[k])

@@ -24,7 +24,7 @@ def delete_analysis_dir(exp):
 
     if exp.ms2_file:
         upload_folder = os.path.dirname(exp.ms2_file.path)
-        print 'Deleting %s' % upload_folder
+        print('Deleting %s' % upload_folder)
         shutil.rmtree(upload_folder)
 
 
@@ -77,7 +77,7 @@ def lda_task(exp_id, params):
         yes, _ = EXPERIMENT_DECOMPOSITION_SOURCE[1]
         if exp.decomposition_source == yes:
             # TODO: create a MotifSet here from the topics in lda_dict?
-            print 'Creating MotifSet'
+            print('Creating MotifSet')
 
         ready, _ = EXPERIMENT_STATUS_CODE[1]
         exp.status = ready
@@ -139,7 +139,7 @@ def just_decompose_task(decomposition_id):
     decomposition.status = pending
     decomposition.save()
 
-    print "Decomposing {} with {}".format(decomposition.experiment,decomposition.motifset)
+    print("Decomposing {} with {}".format(decomposition.experiment,decomposition.motifset))
     decompose(decomposition)
 
     ready, _ = EXPERIMENT_STATUS_CODE[1]

@@ -7,7 +7,7 @@ from options.forms import SystemOptionsForm
 
 def get_option(key, experiment=None):
     # Retrieves an option, looking for an experiment specific one if it exists
-    print "Looking for option ",key
+    print("Looking for option ",key)
     if experiment:
         options = SystemOptions.objects.filter(key=key, experiment=experiment)
         if len(options) == 0:

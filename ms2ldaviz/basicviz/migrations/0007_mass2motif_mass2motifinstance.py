@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(max_length=32)),
-                ('experiment', models.ForeignKey(to='basicviz.Experiment')),
+                ('experiment', models.ForeignKey(to='basicviz.Experiment', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -27,8 +27,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('probability', models.FloatField()),
-                ('feature', models.ForeignKey(to='basicviz.Feature')),
-                ('mass2motif', models.ForeignKey(to='basicviz.Mass2Motif')),
+                ('feature', models.ForeignKey(to='basicviz.Feature', on_delete=models.CASCADE)),
+                ('mass2motif', models.ForeignKey(to='basicviz.Mass2Motif', on_delete=models.CASCADE)),
             ],
             options={
             },

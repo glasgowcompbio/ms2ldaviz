@@ -8,17 +8,17 @@ from decomposition.models import Decomposition, GlobalMotif
 ## tables for LDA experiment
 class Sample(models.Model):
     name = models.CharField(max_length=128)
-    experiment = models.ForeignKey(Experiment)
+    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
 
 class DocSampleIntensity(models.Model):
-    sample = models.ForeignKey(Sample)
-    document = models.ForeignKey(Document)
+    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
     intensity = models.FloatField(null=True)
 
 class Analysis(models.Model):
     name = models.CharField(max_length=128)
     description = models.CharField(max_length=1024)
-    experiment = models.ForeignKey(Experiment)
+    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
     group1 = models.CharField(max_length=2048)
     group2 = models.CharField(max_length=2048)
     ready_code, _ = EXPERIMENT_STATUS_CODE[1]
@@ -28,14 +28,14 @@ class Analysis(models.Model):
                               null=True, default='N')
 
 class AnalysisResult(models.Model):
-    analysis = models.ForeignKey(Analysis)
-    document = models.ForeignKey(Document)
+    analysis = models.ForeignKey(Analysis, on_delete=models.CASCADE)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
     pValue = models.FloatField(null=True)
     foldChange = models.FloatField(null=True)
 
 class AnalysisResultPlage(models.Model):
-    analysis = models.ForeignKey(Analysis)
-    mass2motif = models.ForeignKey(Mass2Motif)
+    analysis = models.ForeignKey(Analysis, on_delete=models.CASCADE)
+    mass2motif = models.ForeignKey(Mass2Motif, on_delete=models.CASCADE)
     plage_t_value = models.FloatField(null=True)
     plage_p_value = models.FloatField(null=True)
 
@@ -53,7 +53,7 @@ class AnalysisResultPlage(models.Model):
 class DecompositionAnalysis(models.Model):
     name = models.CharField(max_length=128)
     description = models.CharField(max_length=1024)
-    decomposition = models.ForeignKey(Decomposition) ## diff
+    decomposition = models.ForeignKey(Decomposition, on_delete=models.CASCADE) ## diff
     group1 = models.CharField(max_length=2048)
     group2 = models.CharField(max_length=2048)
     ready_code, _ = EXPERIMENT_STATUS_CODE[1]
@@ -63,13 +63,13 @@ class DecompositionAnalysis(models.Model):
                               null=True, default='N')
 
 class DecompositionAnalysisResult(models.Model):
-    analysis = models.ForeignKey(DecompositionAnalysis) ## diff
-    document = models.ForeignKey(Document)
+    analysis = models.ForeignKey(DecompositionAnalysis, on_delete=models.CASCADE) ## diff
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
     pValue = models.FloatField(null=True)
     foldChange = models.FloatField(null=True)
 
 class DecompositionAnalysisResultPlage(models.Model):
-    analysis = models.ForeignKey(DecompositionAnalysis) ## diff
-    globalmotif = models.ForeignKey(GlobalMotif) ## diff
+    analysis = models.ForeignKey(DecompositionAnalysis, on_delete=models.CASCADE) ## diff
+    globalmotif = models.ForeignKey(GlobalMotif, on_delete=models.CASCADE) ## diff
     plage_t_value = models.FloatField(null=True)
     plage_p_value = models.FloatField(null=True)

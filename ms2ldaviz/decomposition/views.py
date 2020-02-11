@@ -13,7 +13,7 @@ from options.views import get_option
 
 from ms1analysis.models import DecompositionAnalysis
 
-from decomposition_functions import get_parents_decomposition,get_decomp_doc_context_dict,get_parent_for_plot_decomp,make_word_graph,make_intensity_graph,make_decomposition_graph,parse_spectrum_string,get_docglobalm2m
+from .decomposition_functions import get_parents_decomposition,get_decomp_doc_context_dict,get_parent_for_plot_decomp,make_word_graph,make_intensity_graph,make_decomposition_graph,parse_spectrum_string,get_docglobalm2m
 from decomposition.tasks import api_batch_task
 from basicviz.views import views_lda_single
 
@@ -289,7 +289,7 @@ def decompose_spectrum(request):
             result_url = 'http://ms2lda.org/decomposition/api/batch_results/{}/'.format(batch_result.id)
             context_dict['result_url'] = result_url
             context_dict['result_id'] = batch_result.id
-            print peaks
+            print(peaks)
             # context_dict['document'] = peaks
             return render(request,'decomposition/decompose_spectrum.html',context_dict)
     else:

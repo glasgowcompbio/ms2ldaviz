@@ -311,7 +311,7 @@ class Loader(object):
             new_metadata[new_ms1.name]['user_cols'] = zip(self.user_cols_names, user_cols)
 
             if self.separator in peak[3]:
-                # print "process sample", str(peak[0]), str(peak[1])
+                # print("process sample", str(peak[0]), str(peak[1]))
                 tokens = []
                 for token in peak[3].split(self.separator):
                     try:
@@ -652,7 +652,7 @@ class LoadMZML(Loader):
                                     pos += 1
                                     if pos > len(current_ms1_scan_mz)-1:
                                         break
-                                # print current_ms1_scan_mz[max_intensity_pos],current_ms1_scan_rt
+                                # print(current_ms1_scan_mz[max_intensity_pos],current_ms1_scan_rt)
                             # Make the new MS1 object
                             if (max_intensity > self.min_ms1_intensity) and (not max_intensity_pos == None):
                             # mz,rt,intensity,file_name,scan_number = None):
@@ -1737,7 +1737,7 @@ class MakeNominalFeatures(MakeFeatures):
     def __str__(self):
         return "Nominal feature extractor, bin_width = {}".format(self.bin_width)
 
-    def __unicode__(self):
+    def __str__(self):
         return "Nominal feature extractor, bin_width = {}".format(self.bin_width)
 
     def make_features(self,ms2):

@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
 	multi_lda_name = filename.split('/')[-1].split('.')[0]
 
-	print "Loading {}".format(multi_lda_name)
+	print("Loading {}".format(multi_lda_name))
 	mfe = MultiFileExperiment.objects.get_or_create(name = multi_lda_name,description = 'none',status = 'loading')[0]
 	n_done = 0
 	n_loaded = 0
@@ -38,10 +38,10 @@ if __name__ == '__main__':
 		individual_filename = directory_path + experiment_name + '.dict'
 		with open(individual_filename,'r') as f:
 			lda_dict = pickle.load(f)
-		print experiment_name
+		print(experiment_name)
 		current_e = Experiment.objects.filter(name = experiment_name)
 		if len(current_e) > 0:
-			print "Experiment of this name already exists, exiting"
+			print("Experiment of this name already exists, exiting")
 			sys.exit(0)
 		experiment = Experiment(name=experiment_name)
 		experiment.status = 'loading'

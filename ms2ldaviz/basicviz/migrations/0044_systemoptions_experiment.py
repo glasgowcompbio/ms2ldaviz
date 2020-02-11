@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='systemoptions',
             name='experiment',
-            field=models.ForeignKey(to='basicviz.Experiment', null=True),
+            field=models.ForeignKey(to='basicviz.Experiment', null=True, on_delete=models.CASCADE),
             preserve_default=True,
         ),
     ]

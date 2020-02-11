@@ -37,7 +37,7 @@ if __name__ == '__main__':
                                       globalfeature = gf)
       n_done += 1
       if n_done % 100 == 0:
-          print n_done,len(original_features)
+          print(n_done,len(original_features))
 
     # Create the motif links
     global_motifs = []

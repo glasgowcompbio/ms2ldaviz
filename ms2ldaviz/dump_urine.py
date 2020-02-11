@@ -27,7 +27,7 @@ if __name__ == '__main__':
     	if document.annotation:
     		annotated_documents.append(document)
 
-    print "Found {} m2ms and {} documents".format(len(annotated_mass2motifs),len(annotated_documents))
+    print("Found {} m2ms and {} documents".format(len(annotated_mass2motifs),len(annotated_documents)))
 
     with open(out_file,'w') as f:
 	    for document in annotated_documents:
