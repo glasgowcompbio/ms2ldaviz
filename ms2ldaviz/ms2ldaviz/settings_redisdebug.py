@@ -8,16 +8,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'django',
-        'USER': 'django',
-        'PASSWORD': 'j7z3rL40w9',
-        'HOST': 'localhost',
-        'PORT': '',
-    }
-}
+from database_info import DATABASES
 
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 
