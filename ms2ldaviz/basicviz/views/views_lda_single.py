@@ -281,14 +281,17 @@ def show_doc(request, doc_id):
         context_dict['image_url'] = document.image_url
 
     if not document.mol_string:
-        from chemspipy import ChemSpider
-        cs = ChemSpider(settings.CHEMSPIDER_APIKEY)
-        md = jsonpickle.decode(document.metadata)
-        if 'InChIKey' in md or 'inchikey' in md:
-            mol = cs.convert(md.get('InChIKey', md['inchikey']),'InChIKey','mol')
-            if mol:
-                document.mol_string = mol
-                document.save()
+        try:
+            from chemspipy import ChemSpider
+            cs = ChemSpider(settings.CHEMSPIDER_APIKEY)
+            md = jsonpickle.decode(document.metadata)
+            if 'InChIKey' in md or 'inchikey' in md:
+                mol = cs.convert(md.get('InChIKey', md['inchikey']),'InChIKey','mol')
+                if mol:
+                    document.mol_string = mol
+                    document.save()
+        except:
+            pass
 
     if document.mol_string:
         context_dict['mol_string'] = document.mol_string
