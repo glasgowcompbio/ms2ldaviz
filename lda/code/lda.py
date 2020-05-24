@@ -485,9 +485,9 @@ class VariationalLDA(object):
         if verbose:
             print("Starting iterations")
         for it in range(n_its):
-            start_time = time.clock()
+            start_time = time.perf_counter()
             diff = self.vb_step()
-            end_time = time.clock()
+            end_time = time.perf_counter()
             self.its_performed += 1
             estimated_finish = ((end_time - start_time)*(n_its - it)/60.0)
             if verbose:
