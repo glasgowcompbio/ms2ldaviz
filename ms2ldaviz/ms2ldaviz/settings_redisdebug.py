@@ -1,4 +1,4 @@
-from settings import *
+from .settings import *
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '^(2&40trp_*ei%$_*p-k598#hu3-w(@9%&&dr&#0##dpag=c%+'
@@ -7,8 +7,6 @@ SECRET_KEY = '^(2&40trp_*ei%$_*p-k598#hu3-w(@9%&&dr&#0##dpag=c%+'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
-from database_info import DATABASES
 
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 

@@ -1,4 +1,4 @@
-from ms2ldaviz.settings import *
+from .settings import *
 
 DEBUG = True
 
