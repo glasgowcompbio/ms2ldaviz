@@ -592,15 +592,16 @@ class LoadMZML(Loader):
             for nc,spectrum in enumerate(run):
                 if spectrum['ms level'] == 1:
                     current_ms1_scan_number = nc
-                    current_ms1_scan_rt,units = spectrum['scan start time']
+                    # current_ms1_scan_rt, units = spectrum['scan start time'] # this no longer works
+                    current_ms1_scan_rt, units = spectrum.scan_time
                     if units == 'minute':
                         current_ms1_scan_rt *= 60.0
                     if current_ms1_scan_rt < self.min_ms1_rt or current_ms1_scan_rt > self.max_ms1_rt:
                         current_ms1_scan_mz = None
                         current_ms1_scan_intensity = None
                     # Note can sometimes get empty scans at the start. If this happens we should ignore.
-                    elif len(spectrum.peaks) > 0:
-                        current_ms1_scan_mz,current_ms1_scan_intensity = zip(*spectrum.peaks)
+                    elif len(spectrum.peaks('raw')) > 0:
+                        current_ms1_scan_mz,current_ms1_scan_intensity = zip(*spectrum.peaks('raw'))
                     else:
                         current_ms1_scan_mz = None
                         current_ms1_scan_intensity = None
@@ -614,7 +615,7 @@ class LoadMZML(Loader):
                     if not current_ms1_scan_mz:
                         continue
                     else:
-                        precursor_mz = spectrum['precursors'][0]['mz']
+                        precursor_mz = spectrum.selected_precursors[0]['mz']
                         if abs(precursor_mz-previous_precursor_mz) < self.repeated_precursor_match:
                             # Another collision energy perhaps??
                             # if this is the case, we don't bother looking for a parent, but add to the previous one
@@ -657,7 +658,7 @@ class LoadMZML(Loader):
                             if (max_intensity > self.min_ms1_intensity) and (not max_intensity_pos == None):
                             # mz,rt,intensity,file_name,scan_number = None):
                                 # fix the charge for better loss computation
-                                str_charge = spectrum['precursors'][0].get('charge',"+1")
+                                str_charge = spectrum.selected_precursors[0].get('charge',"+1")
                                 int_charge = self._interpret_charge(str_charge)
 
                                 # precursormass = current_ms1_scan_mz[max_intensity_pos]
@@ -775,29 +776,31 @@ class LoadEmma(Loader):
             for spectrum in run:
                 if 'collision-induced dissociation' in spectrum:
                     if self.spectrum_choice == 'cid':
-                        parentmass = spectrum['precursors'][0]['mz']
-                        parentrt,units = spectrum['scan start time']
-                        if unite == 'minute':
-                            parentrt *= 60.0
-                        nc += 1
-                        newms1 = MS1(nc,parentmass,parentrt,None,file_name,scan_number = parent_scan_number)
-                        ms1.append(newms1)
-                        metadata[newms1.name] = {'parentmass':parentmass,'parentrt':parentrt}
-                        for mz,intensity in spectrum.peaks:
-                            if intensity > self.min_intensity:
-                                ms2.append((mz,parentrt,intensity,ms1[-1],file_name,float(ms2_id)))
-                                ms2_id += 1
-                elif 'beam-type collision-induced dissociation' in spectrum:
-                    if self.spectrum_choice == 'hcid':
-                        parentmass = spectrum['precursors'][0]['mz']
-                        parentrt,units = spectrum['scan start time']
+                        parentmass = spectrum.selected_precursors[0]['mz']
+                        # parentrt,units = spectrum['scan start time'] # this no longer works
+                        parentrt, units = spectrum.scan_time
                         if units == 'minute':
                             parentrt *= 60.0
                         nc += 1
                         newms1 = MS1(nc,parentmass,parentrt,None,file_name,scan_number = parent_scan_number)
                         ms1.append(newms1)
                         metadata[newms1.name] = {'parentmass':parentmass,'parentrt':parentrt}
-                        for mz,intensity in spectrum.peaks:
+                        for mz,intensity in spectrum.peaks('raw'):
+                            if intensity > self.min_intensity:
+                                ms2.append((mz,parentrt,intensity,ms1[-1],file_name,float(ms2_id)))
+                                ms2_id += 1
+                elif 'beam-type collision-induced dissociation' in spectrum:
+                    if self.spectrum_choice == 'hcid':
+                        parentmass = spectrum.selected_precursors[0]['mz']
+                        # parentrt,units = spectrum['scan start time'] # this no longer works
+                        parentrt, units = spectrum.scan_time
+                        if units == 'minute':
+                            parentrt *= 60.0
+                        nc += 1
+                        newms1 = MS1(nc,parentmass,parentrt,None,file_name,scan_number = parent_scan_number)
+                        ms1.append(newms1)
+                        metadata[newms1.name] = {'parentmass':parentmass,'parentrt':parentrt}
+                        for mz,intensity in spectrum.peaks('raw'):
                             if intensity > self.min_intensity:
                                 ms2.append((mz,parentrt,intensity,ms1[-1],file_name,float(ms2_id)))
                                 ms2_id += 1
