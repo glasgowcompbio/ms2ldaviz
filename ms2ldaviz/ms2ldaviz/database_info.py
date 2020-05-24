@@ -1,7 +1,4 @@
-from settings import *
-
-DEBUG = True
-
+# connects to a local postgres server with username and password 'postgres' for development only
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
