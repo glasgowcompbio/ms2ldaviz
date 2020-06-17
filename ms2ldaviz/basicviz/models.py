@@ -313,7 +313,7 @@ class FeatureInstance(models.Model):
 
 class Mass2Motif(models.Model):
     objects = InheritanceManager()
-    name = models.CharField(max_length=32)
+    name = models.CharField(max_length=256)
     experiment = models.ForeignKey(Experiment,null=True, on_delete=models.CASCADE)
     metadata = models.CharField(max_length=1024 * 1024, null=True)
 
