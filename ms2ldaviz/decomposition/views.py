@@ -1,5 +1,5 @@
 from django.shortcuts import render,HttpResponse
-from ipware.ip import get_ip
+from ipware.ip import get_client_ip
 import json
 
 from django.views.decorators.csrf import csrf_exempt
