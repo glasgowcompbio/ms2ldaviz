@@ -29,6 +29,7 @@ ChemSpiPy = "*"
 python-memcached = "*"
 django-debug-toolbar = "*"
 django-debug-toolbar-force = "*"
+gunicorn = "*"
 
 [dev-packages]
 
