@@ -1,27 +1,25 @@
 from __future__ import absolute_import, unicode_literals
 
+import json
 import logging
 import os
+import pickle
 import shutil
 import sys
 import traceback
-import pickle
-import json
-
-from celery.utils.log import get_task_logger
-
 from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_DECOMPOSITION_SOURCE
 from basicviz.models import Experiment
+from celery.utils.log import get_task_logger
 from decomposition.decomposition_functions import decompose, load_mzml_and_make_documents
 from decomposition.models import MotifSet, Decomposition
 from load_dict_functions import load_dict, load_corpus_gensim, prepare_gensim_archive
 from ms2ldaviz.celery_tasks import app
+
 from .lda_functions import load_mzml_and_make_documents as lda_load_mzml_and_make_documents
 from .lda_functions import run_lda
 
 
 def delete_analysis_dir(exp):
-
     if exp.ms2_file:
         upload_folder = os.path.dirname(exp.ms2_file.path)
         print('Deleting %s' % upload_folder)
@@ -31,7 +29,6 @@ def delete_analysis_dir(exp):
 # see http://stackoverflow.com/questions/29712938/python-celery-how-to-separate-log-files
 # see http://oriolrius.cat/blog/2013/09/06/celery-logs-through-syslog/
 def custom_logger(exp):
-
     experiment_id = 'experiment_%d' % exp.id
     logger = get_task_logger(__name__)
     logger.setLevel(logging.DEBUG)
@@ -52,7 +49,6 @@ def custom_logger(exp):
 
 @app.task
 def lda_task(exp_id, params):
-
     exp = Experiment.objects.get(id=exp_id)
     K = int(params['K'])
     n_its = int(params['n_its'])
@@ -70,9 +66,10 @@ def lda_task(exp_id, params):
     try:
         app.log.redirect_stdouts_to_logger(logger, rlevel)
         corpus, metadata, word_mz_range = lda_load_mzml_and_make_documents(exp)
-        lda_dict = run_lda(corpus, metadata, word_mz_range, K, exp.id, bin_width = exp.featureset.get_width(),n_its=n_its,include_motifset = exp.include_motifset)
+        lda_dict = run_lda(corpus, metadata, word_mz_range, K, exp.id, bin_width=exp.featureset.get_width(),
+                           n_its=n_its, include_motifset=exp.include_motifset)
         feature_set_name = exp.featureset.name
-        load_dict(lda_dict, exp, feature_set_name = feature_set_name)
+        load_dict(lda_dict, exp, feature_set_name=feature_set_name)
 
         yes, _ = EXPERIMENT_DECOMPOSITION_SOURCE[1]
         if exp.decomposition_source == yes:
@@ -90,13 +87,15 @@ def lda_task(exp_id, params):
     finally:
         sys.stdout, sys.stderr = old_outs
 
+
 @app.task
 def decomposition_task(exp_id, params):
     experiment = Experiment.objects.get(pk=exp_id)
     decompose_from = params['decompose_from']
 
     logger = custom_logger(experiment)
-    logger.info('Running decomposition on experiment_%d (%s), decompose_from %s' % (exp_id, experiment.description, decompose_from))
+    logger.info('Running decomposition on experiment_%d (%s), decompose_from %s' % (
+        exp_id, experiment.description, decompose_from))
     logger.info('CSV file = %s' % experiment.csv_file)
     logger.info('mzML file = %s' % experiment.ms2_file)
 
@@ -105,11 +104,11 @@ def decomposition_task(exp_id, params):
     try:
         app.log.redirect_stdouts_to_logger(logger, rlevel)
 
-        motifset = MotifSet.objects.get(name = decompose_from)
+        motifset = MotifSet.objects.get(name=decompose_from)
         name = experiment.name + ' decomposition'
 
-        load_mzml_and_make_documents(experiment,motifset)
-        decomposition = Decomposition.objects.create(name = name,experiment = experiment,motifset = motifset)
+        load_mzml_and_make_documents(experiment, motifset)
+        decomposition = Decomposition.objects.create(name=name, experiment=experiment, motifset=motifset)
         pending, _ = EXPERIMENT_STATUS_CODE[0]
         decomposition.status = pending
         decomposition.save()
@@ -132,14 +131,13 @@ def decomposition_task(exp_id, params):
 
 @app.task
 def just_decompose_task(decomposition_id):
-
-    decomposition = Decomposition.objects.get(id = decomposition_id)
+    decomposition = Decomposition.objects.get(id=decomposition_id)
 
     pending, _ = EXPERIMENT_STATUS_CODE[0]
     decomposition.status = pending
     decomposition.save()
 
-    print("Decomposing {} with {}".format(decomposition.experiment,decomposition.motifset))
+    print("Decomposing {} with {}".format(decomposition.experiment, decomposition.motifset))
     decompose(decomposition)
 
     ready, _ = EXPERIMENT_STATUS_CODE[1]
@@ -163,10 +161,11 @@ def upload_task(exp_id, params):
         filename = params['filename']
         lda_dict = None
         try:
-            with open(filename, 'r') as f:
-                lda_dict = pickle.load(f)
+            with open(filename, 'rb') as f:
+                # https://stackoverflow.com/questions/11305790/pickle-incompatibility-of-numpy-arrays-between-python-2-and-3
+                lda_dict = pickle.load(f, encoding='latin1')
         except KeyError:
-            with open(filename, 'r') as f:
+            with open(filename, 'rb') as f:
                 lda_dict = json.load(f)
 
         if lda_dict is not None:
