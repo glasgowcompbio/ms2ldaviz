@@ -183,7 +183,7 @@ def get_motifset_post(request):
 
     # https://stackoverflow.com/questions/45164551/removing-control-space-characters-from-cache-key-in-python
     encoded_key = json.dumps(key)
-    encoded_key = hashlib.md5(encoded_key).hexdigest().strip()
+    encoded_key = hashlib.md5(encoded_key.encode('utf-8')).hexdigest().strip()
     print(key, "*****", encoded_key)
 
     output = cache.get(encoded_key)
