@@ -316,9 +316,9 @@ class Loader(object):
                 for token in peak[3].split(self.separator):
                     try:
                         token = float(token)
+                        if token <= 0:
+                            token = None
                     except:
-                        token = None
-                    if token <= 0:
                         token = None
                     tokens.append(token)
                 # tokens = [float(token) for token in peak[2].split(self.separator)]
