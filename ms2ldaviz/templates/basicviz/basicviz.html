@@ -71,9 +71,10 @@
                         {% if experiment.0.id in show_ms1_set %}
                             <a href="/ms1analysis/show_ms1analysis/{{experiment.0.id}}" class="btn btn-block btn-info" style="color:white;"><span class="glyphicon glyphicon-list"></span>&nbsp;Show MS1 Analysis</a>
                         {% endif %}
-                        {% if experiment.0.id != 190 and experiment.0.id != 191 %}
-                            <!-- cannot let the user delete the massbank and gnps experiment!! -->
-                            <a href="/basicviz/delete/{{experiment.0.id}}" class="btn btn-block btn-danger" style="color:white;"><span class="glyphicon glyphicon-remove"></span>&nbsp;Delete experiment</a>
+                        {% if experiment.0.id != 190 and experiment.0.id != 191 %} <!-- cannot let the user delete the massbank and gnps experiment!! -->
+                            {% if experiment.2 != True %} <!-- cannot let the user delete any public experiment (with True flag) -->
+                                <a href="/basicviz/delete/{{experiment.0.id}}" class="btn btn-block btn-danger" style="color:white;"><span class="glyphicon glyphicon-remove"></span>&nbsp;Delete experiment</a>
+                            {% endif %}
                         {% endif %}
                         <hr/>
                         <p><em>Motif Matching and Classyfire Term Predictions</em></p>

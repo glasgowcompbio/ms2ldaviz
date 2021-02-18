@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from basicviz.models import UserExperiment, ExtraUsers, \
-    MultiFileExperiment, MultiLink
+    MultiFileExperiment, MultiLink, PublicExperiments
 from basicviz.constants import EXPERIMENT_STATUS_CODE, EXPERIMENT_TYPE
 from ms1analysis.models import Analysis
 
@@ -50,11 +50,15 @@ def index(request):
     # retrieve the permission of experiments too
     experiments = list(set(experiments))
     permissions = []
+    public_status = []
     for e in experiments:
         ue = UserExperiment.objects.get(user = request.user,experiment = e)
         print(e,ue.permission)
         permissions.append(ue.permission)
-    experiments = zip(experiments,permissions)
+        pe = PublicExperiments.objects.filter(experiment=e)
+        is_public = True if len(pe) > 0 else False
+        public_status.append(is_public)
+    experiments = zip(experiments,permissions,public_status)
 
     # hide the create experiment button for guest user
     show_create_experiment = True
