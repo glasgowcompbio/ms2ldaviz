@@ -3,19 +3,51 @@
 {% block title %}User Registration{% endblock %}
 
 {% block body_block %}
-    <h1>User Registration</h1>
-    {% if registered %}
-    <strong>Thank you for registering! Your account is now active, and you can run analyses by logging into the site.</strong><br/><br/>
-    {% else %}
-    <strong>Before you can run analyses at MS2LDA.org, you need to create an account with us.</strong><br/><br/>
-    <form id="user_form" method="post" action="/registration/register/"
-            enctype="multipart/form-data">
-        {% csrf_token %}
-        <table>
-        {{ user_form.as_table }}
-        </table>
-        <br/>
-        <input type="submit" name="submit" value="Register" class="btn btn-success"/>
-    </form>
-    {% endif %}
+    <div class="container">
+
+        <h3>User Registration</h3>
+        {% if registered %}
+            <strong>
+                Thank you for registering! Your account is now active, and you can run analyses by
+                <a href='/registration/login'>
+                    logging in.
+                </a>
+            </strong><br/><br/>
+        {% else %}
+            <p>
+                <strong>Register at MS2LDA.org to run LDA analysis or create your own motifset.</strong>
+            </p>
+            <div id="loginbox" style=""
+                 class="mainbox col-md-6">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <div class="panel-title">Registration</div>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div style="padding-top:30px" class="panel-body">
+
+                        <form id="user_form" method="post" action="/registration/register/"
+                              enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <table>
+                                {{ user_form.as_table }}
+                            </table>
+                            <input type="text" name="foo" style="display: none;">
+                            <br/>
+                            <input type="submit" name="submit" value="Register" class="btn btn-success"/>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}

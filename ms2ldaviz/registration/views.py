@@ -1,12 +1,19 @@
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
-from django.views.generic.edit import UpdateView
-from django.urls import reverse_lazy
-from django.contrib.auth.models import User
+import logging
 
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.urls import reverse_lazy
+from django.views.generic.edit import UpdateView
+
+from basicviz.models import Experiment, UserExperiment
 from registration.forms import UserForm
+
+User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 def user_logout(request):
@@ -19,11 +26,13 @@ def register(request):
     if request.method == 'POST':
         user_form = UserForm(data=request.POST)
         if user_form.is_valid():
-            user = user_form.save()
-            user.set_password(user.password)
-            user.save()
-            registered = True
-
+            # https://www.sitepoint.com/easy-spam-prevention-using-hidden-form-fields/
+            if len(request.POST['foo']) == 0:
+                user = user_form.save()
+                user.set_password(user.password)
+                user.save()
+                add_example_experiments(user)
+                registered = True
         else:
             print(user_form.errors)
     else:
@@ -32,6 +41,31 @@ def register(request):
     context_dict = {'user_form': user_form, 'registered': registered}
     return render(request,
                   'registration/register.html', context_dict)
+
+
+def add_example_experiments(user):
+    experiment_list = ['Beer6_POS_IPA_MS1_comparisons',
+                       'Urine37_POS_StandardLDA_300Mass2Motifs_MS1peaklist_MS1duplicatefilter',
+                       'Beer3_POS_Decomposition_MassBankGNPScombinedset_MS1peaklist_MS1duplicatefilter',
+                       'massbank_binned_005',
+                       'gnps_binned_005',
+                       'Beer3_POS_StandardLDA_300Mass2Motifs_MS1peaklist_MS1duplicatefilter']
+
+    experiments = []
+    for ename in experiment_list:
+        try:
+            e = Experiment.objects.get(name=ename)
+            experiments.append(e)
+        except:
+            print("No such experiment: {}".format(ename))
+
+    for e in experiments:
+        ue = UserExperiment.objects.filter(user=user, experiment=e)
+        if len(ue) == 0:
+            if e.name.startswith('Beer6'):
+                UserExperiment.objects.create(user=user, experiment=e, permission='edit')
+            else:
+                UserExperiment.objects.create(user=user, experiment=e, permission='view')
 
 
 def user_login(request):
@@ -44,18 +78,20 @@ def user_login(request):
                 login(request, user)
                 return HttpResponseRedirect('/basicviz/')
             else:
-                return HttpResponse("Your account is disabled.")
+                error_message = 'Account {0} has been disabled'.format(username)
+                messages.warning(request, error_message)
+                return render(request, 'registration/login.html', {})
         else:
-            if username == 'guest': # auto-create if not there
+            if username == 'guest':  # auto-create if not there
                 guest_user = User.objects.create_user(username='guest', password='guest')
                 login(request, guest_user)
                 return HttpResponseRedirect('/basicviz/')
             else:
-                print("Invalid login details: {0}, {1}".format(username, password))
-                return HttpResponse("Invalid login details supplied.")
+                error_message = 'Invalid login details provided for {0}'.format(username)
+                messages.warning(request, error_message)
                 return render(request, 'registration/login.html', {})
 
-    else: # GET
+    else:  # GET
         return render(request, 'registration/login.html', {})
 
 
