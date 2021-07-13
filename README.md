@@ -2,7 +2,7 @@
 
 A web application developed in Django+D3 to visualise how topics inferred from Latent Dirichlet Allocation can be used to assist in the unsupervised characterisation of fragmented (LC-MS-MS) metabolomics data.
 
-Demo available at www.ms2lda.org (please email us to gain access)
+Demo available at http://ms2lda.org
 
 # Run it for development
 
@@ -62,15 +62,6 @@ This will exclude the lda info from the json file and write/import a gensim form
 The last command inserts the gensim lda results into the database. 
 This can also be done by using the web interface by going to `/uploads/upload_gensim_experiment/` url on the ms2lda server.
 The gensim result must be tarballed with for example `tar -zcf myexp.lda.gensim.tar.gz myexp.lda.gensim*` and then uploaded in the form.
-
-# Update lda subtree
-
-The lda directory is a checkout of the https://github.com/sdrogers/lda repo, it can be synced using
-
-```bash
-git remote add lda https://github.com/sdrogers/lda.git
-git subtree pull --prefix=lda lda master
-```
 
 # Docker
 
