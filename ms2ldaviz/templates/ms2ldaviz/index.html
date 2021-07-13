@@ -3,169 +3,106 @@
 {% load static %}
 
 {% block body_block %}
-<div>
-    <img class="img-responsive" style="margin-top: 30px; margin-bottom: 30px" src="{% static 'images/banner.png' %}"
-         alt="Banner" width="100%"/>
-</div>
-<div class="text-center" style="margin-top: 30px; margin-bottom: 30px">
-    <a href="/basicviz" class="btn btn-primary">Go to Experiments</a>
-    <a href="/motifdb" class="btn btn-info">Go to MotifDB</a>
-</div>
-<div class="panel-group">
-    <div class="panel panel-default">
-        <div class="panel-body">
-            <div class="row">
-                <div class="col-md-8">
-                    <h4>News</h4>
-                    <p>
-                        <b>15th January 2021:</b>
-                        Ms2lda.org is finally migrated to Python 3, and job submission is now working again! If you
-                        encounter any further problem submitting job, please let us know. Additionally, if you have any
-                        old, unused experiments, please delete them to help us save space on the database.
-                    </p>
-                    <p>
-                        <b>25th November 2018:</b>
-                        We have introduced many new features to make interpreting Mass2Motifs in MS2LDA.org easier:
-                    </p>
-                    <ul>
-                        <li>
-                            A new upload function is added in the Create Experiment page to allow for the uploading of
-                            large locally-run LDA experiments<a
-                                href="https://github.com/iomega/ms2ldaviz/blob/pipenv-sqlite-redis/ms2ldaviz/run_gensim.py"
-                                target="_blank">(script under development)</a>.
-                        </li>
-                        <li>
-                            MotifDB (a database of curated and annotated Mass2Motifs) have been incorporated into the
-                            system, as well as a functionality to predict<a
-                                href="https://jcheminf.biomedcentral.com/articles/10.1186/s13321-016-0174-y"
-                                target="_blank">Classyfire</a>substituent terms for the spectra in your dataset using a
-                            neural network.
-                        </li>
-                        <li>
-                            Automatic <a href="https://github.com/NLeSC/MAGMa">MAGMa</a> annotations of fragment and
-                            neutral loss features have also been incorporated into the system.
-                        </li>
-                    </ul>
-                    <p>
-                        <b>4th August 2017:</b>
-                        Our new paper on the use of MS2LDA to investigate the variability in substructure prevalence
-                        across large experiments is now published in Analytical Chemistry:<a
-                            href="http://pubs.acs.org/doi/abs/10.1021/acs.analchem.7b01391">Unsupervised Discovery and
-                        Comparison of Structural Families Across Multiple Samples in Untargeted Metabolomics</a>.
-                        Additionally, we have changed the way the system handles thresholds for links between spectra
-                        and motifs. All experiments can now set a threshold on both probability and overlap_score. If
-                        you do not wish to threshold on one or the other, set the respective threshold to zero. All
-                        experiments have been migrated such that the new settings give identical output to the old ones.
-                        We think that this improved flexibility will make the system more user friendly.
-                    </p>
-                    <p>
-                        <b>26th September 2017:</b> Our application note describing this Web application is now
-                        published in Bioinformatics: <a
-                            href="https://academic.oup.com/bioinformatics/article/doi/10.1093/bioinformatics/btx582/4158166/Ms2lda-org-web-based-topic-modelling-for">Ms2lda.org:
-                        web-based topic modelling for substructure discovery in mass spectrometry</a>.
-                    </p>
-                </div>
-                <div class="col-md-4">
-                    <a class="twitter-timeline" data-height="600" href="https://twitter.com/ms2lda?ref_src=twsrc%5Etfw">Tweets
-                        by
-                        ms2lda</a>
-                    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    <div>
+        <img class="img-responsive" src="{% static 'images/banner.png' %}"
+             alt="Banner" width="100%"/>
+    </div>
+    <div style="display: block; margin-left: auto; margin-right: auto; width: 50%;">
+        <a href="https://www.polyomics.gla.ac.uk/" target="_blank">
+            <img style="margin-right: 30px" src="{% static 'images/gp.png' %}" alt="gp" height="100px"/>
+        </a>
+        <a href="https://www.gla.ac.uk/" target="_blank">
+            <img style="margin-right: 30px" src="{% static 'images/uog.png' %}" alt="uog" height="50px"/>
+        </a>
+        <a href="https://www.wur.nl/en/wageningen-university.htm" target="_blank">
+            <img style="margin-right: 30px" src="{% static 'images/wu.svg' %}" alt="wu" height="50px"/>
+        </a>
+    </div>
+    <div class="text-center" style="margin-top: 30px; margin-bottom: 30px">
+        <a href="/basicviz" class="btn btn-primary">Go to Experiments</a>
+        <a href="/motifdb" class="btn btn-info">Go to MotifDB</a>
+    </div>
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h4>News</h4>
+                        <p>
+                            <b>13th July 2021:</b>
+                            Ms2lda.org has now been running for nearly 4 years! 🎉 <br/>We would like to thank our
+                            users and the metabolomics community in general for your continuing support in running this
+                            resource. To run substructural analysis of large dataset, note that that MS2LDA is also <a
+                                href="https://ccms-ucsd.github.io/GNPSDocumentation/ms2lda/" target="_blank">integrated
+                            with GNPS</a> allowing you to map Mass2Motif occurrences in their Molecular Families.
+                            Alternatively LDA analysis can also be <a href="/uploads/create_experiment">run on this
+                            website directly</a> (subject to our computational limitation), and we're investigating ways
+                            to let
+                            you run your own LDA inference locally on your own data.
+                        </p>
+                        <p>
+                            <b>15th January 2021:</b>
+                            Ms2lda.org is finally migrated to Python 3, and job submission is now working again! If you
+                            encounter any further problem submitting job, please let us know. Additionally, if you have
+                            any old, unused experiments, please delete them to help us save space on the database.
+                        </p>
+                        <p>
+                            <b>25th November 2018:</b>
+                            We have introduced many new features to make interpreting Mass2Motifs in MS2LDA.org easier:
+                        </p>
+                        <ul>
+                            <li>
+                                A new upload function is added in the Create Experiment page to allow for the uploading
+                                of
+                                large locally-run LDA experiments <a
+                                    href="https://github.com/glasgowcompbio/ms2ldaviz/blob/master/ms2ldaviz/run_gensim.py"
+                                    target="_blank">(script under development)</a>.
+                            </li>
+                            <li>
+                                MotifDB (a database of curated and annotated Mass2Motifs) have been incorporated into
+                                the
+                                system, as well as a functionality to predict <a
+                                    href="https://jcheminf.biomedcentral.com/articles/10.1186/s13321-016-0174-y"
+                                    target="_blank">Classyfire</a> substituent terms for the spectra in your dataset
+                                using a
+                                neural network.
+                            </li>
+                            <li>
+                                Automatic <a href="https://github.com/NLeSC/MAGMa">MAGMa</a> annotations of fragment and
+                                neutral loss features have also been incorporated into the system.
+                            </li>
+                        </ul>
+                        <p>
+                            <b>4th August 2017:</b>
+                            Our new paper on the use of MS2LDA to investigate the variability in substructure prevalence
+                            across large experiments is now published in <a
+                                href="http://pubs.acs.org/doi/abs/10.1021/acs.analchem.7b01391">Analytical Chemistry</a>.
+                            Additionally, we have changed the way the system handles thresholds for links between
+                            spectra and motifs. All experiments can now set a threshold on both probability and
+                            overlap_score. If you do not wish to threshold on one or the other, set the respective
+                            threshold to zero. All experiments have been migrated such that the new settings give
+                            identical output to the old ones. We think that this improved flexibility will make the
+                            system more user friendly.
+                        </p>
+                        <p>
+                            <b>26th September 2017:</b>
+                            Our application note describing this Web application is now published in <a
+                                href="https://academic.oup.com/bioinformatics/article/doi/10.1093/bioinformatics/btx582/4158166/Ms2lda-org-web-based-topic-modelling-for">Bioinformatics</a>.
+                            The initial idea of applying topic model to fragmentation spectra data can be found in <a
+                                href="https://www.pnas.org/content/113/48/13738.short">PNAS</a>, and also in <a
+                                href="http://theses.gla.ac.uk/7928/">Joe Wandy's PhD thesis</a>.
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <a class="twitter-timeline" data-height="1000"
+                           href="https://twitter.com/ms2lda?ref_src=twsrc%5Etfw">Tweets
+                            by
+                            ms2lda</a>
+                        <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="panel panel-default">
-        <div class="panel-body">
-            <h4>Unsupervised Substructure Discovery in Metabolomics</h4>
-            <p>
-                <a href="https://en.wikipedia.org/wiki/Metabolomics">Metabolomics</a> is the large-scale, untargeted
-                studies of the small molecules involved in essential life-sustaining chemical processes (metabolites).
-                Untargeted metabolomics has provided insights into a wide array of fields, such as medical diagnostics,
-                drug discovery, personalised medicine and many others.
-                Measurements in metabolomics studies are routinely performed using <a
-                    href="https://en.wikipedia.org/wiki/Liquid_chromatography%E2%80%93mass_spectrometry">liquid
-                chromatography mass spectrometry</a> (LC-MS) instruments.
-                Using <a href="https://en.wikipedia.org/wiki/Tandem_mass_spectrometry">tandem mass spectrometry</a>,
-                fragmentation peaks characteristic to a compound can be obtained and used to help establish the identity
-                of the compound.
-            </p>
-            <p>
-                <a href="https://en.wikipedia.org/wiki/Fragmentation_(mass_spectrometry)">Fragmentation spectra</a>,
-                which provide the characteristic fingerprints of compounds, also contain structural information where a
-                subset of fragment peaks may correspond to a shared chemical substructure in a class of compounds.
-                The aim of this site is to provide an online platform that allows users to perform unsupervised
-                substructure discovery in fragmentation experiments,
-                decompose fragmentation experiments into characterized substructures (Mass2Motifs) found in MS/MS
-                spectra of reference compounds,
-                and integrate fragmentation analysis with comparative metabolomics experiments.
-            </p>
-            <p>
-                <b>How does it work?</b> In our proposed method (<a
-                    href='http://www.pnas.org/content/113/48/13738.abstract'>MS2LDA</a>), discrete fragment and neutral
-                loss features are extracted from fragmentation spectra. Related features that tend to co-occur are
-                detected using the <a href="https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation">Latent Dirichlet
-                Allocation</a> model.
-                The figure below shows the analogy between LDA for text and MS2LDA for fragment and neutral loss
-                features. LDA finds topics interpreted as ‘football related’, ‘business-related’ and ‘environment
-                related’. MS2LDA finds sets of concurring mass fragments or losses (Mass2Motifs) that can be interpreted
-                as ‘Asparagine-related’, ‘Hexose-related’ and ‘Adenine-related’.
-            </p>
-            <p>
-                <img src="{% static 'images/text2frags.png' %}" alt="Text2Frags" width="50%"/>
-            </p>
-            <p>
-                The tool currently accepts the fragmentation experiments in various formats (mzML, MSP, MGF) and
-                optionally an MS1 peak list can be added to which the MS1 peaks found in the fragmentation experiment
-                are then matched prior to running LDA or Decomposition.
-            </p>
-        </div>
-    </div>
-    <!-- div class="panel panel-default">
-      <div class="panel-body">
-          <h4>Features</h4>
-          <p>
-              Ms2lda.org provides access to the LDA and Decomposition models and includes the following visualisation features:
-          </p>
-          <ul>
-              <li>Network display of discovered substructures (Mass2Motifs) and fragmented molecules</li>
-              <li>Mass2Motif pages with spectra of fragmented molecules and characteristic fragment/loss features</li>
-              <li>Parent pages displaying all Mass2Motifs found in fragmentation spectra</li>
-          </ul>
-          <p>
-              In addition, the following features are provided to facilitate integration with metabolomics experiments by:
-          </p>
-          <ul>
-              <li>Mapping fold changes onto fragmented molecules</li>
-              <li>Computing differentially expressed Mass2Motifs</li>
-              <li>Highlighting changing molecules and differential Mass2Motifs in the network display</li>
-          </ul>
-      </div>
-    </div -->
-    <div class="panel panel-default">
-        <div class="panel-body">
-            <h4>References</h4>
-            <p>The following are relevant literatures for MS2LDA</p>
-            <ul>
-                <li>
-                    <strong>The initial idea of applying topic model to fragmentation spectra data: </strong><a
-                        href="https://www.pnas.org/content/113/48/13738.short">Topic modeling for untargeted
-                    substructure exploration in metabolomics</a>
-                </li>
-                <li>
-                    <strong>The development of this website: </strong><a
-                        href="https://academic.oup.com/bioinformatics/article-abstract/34/2/317/4158166">Ms2lda.org:
-                    web-based topic modelling for substructure discovery in mass spectrometry</a>
-                </li>
-                <li>
-                    <strong>MotifDB: </strong><a href="https://pubs.rsc.org/en/content/articlehtml/2019/fd/c8fd00235e">Deciphering
-                    complex metabolite mixtures by unsupervised and supervised substructure discovery and semi-automated
-                    annotation from MS/MS spectra</a>
-                </li>
-            </ul>
-            <p>To run your own instance of ms2lda.org, please refer to the codes available at <a
-                    href="http://github.com/sdrogers/ms2ldaviz">http://github.com/sdrogers/ms2ldaviz</a></p>
-        </div>
-    </div>
-</div>
 
 {% endblock %}

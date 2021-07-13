@@ -14,37 +14,69 @@
     <div class="panel-group">
         <div class="panel panel-default">
             <div class="panel-body">
-                <h5>The following motif sets are available</h5>
-                <ul>
-                    {% for motif_set,count in motif_sets %}
-                    <li><a href="/motifdb/motif_set/{{motif_set.id}}">{{motif_set.name}}</a> ({{motif_set.featureset}}), {{motif_set.description}}, [{{count}} motifs]</li>
-                    {% endfor %}
-                </ul>
                 <h5>Create a new motifset</h5>
-                <p>Click <a href="/motifdb/create_motifset">here</a> to create your own motifset on MotifDB from one of your own MS2LDA experiments (you need to be logged in).</p>
+                <p>
+                    Once MS2LDA experiments have been created and annotated, you could use them to create your own
+                    motifset
+                    on MotifDB. The patterns of fragments and neutral losses from these motifsets could be selected for
+                    unsupervised
+                    substructural discovery on new data when running LDA experiments on this website and on
+                    <a href="https://ccms-ucsd.github.io/GNPSDocumentation/ms2lda/" target="_blank">GNPS-MS2LDA
+                        workflow</a>.
+                </p>
+                <p><a class="btn btn-primary" href="/motifdb/create_motifset">Create your own motifset on MotifDB from
+                    one of your own MS2LDA experiments</a></p>
             </div>
         </div>
         <div class="panel panel-default">
-            <div class = "panel-body">
+            <div class="panel-body">
+                <h5>The following motif sets have been contributed by the community</h5>
+                <table class="table">
+                    <tr>
+                        <th>Motifset Name</th>
+                        <th width="20%">Feature Set</th>
+                        <th>Description</th>
+                        <th width="10%">No. motifs</th>
+                    </tr>
+                    {% for motif_set, count in motif_sets %}
+                        <tr>
+                            <td><a href="/motifdb/motif_set/{{ motif_set.id }}">{{ motif_set.name }}</a></td>
+                            <td>{{ motif_set.featureset }}</td>
+                            <td>{{ motif_set.description }}</td>
+                            <td>{{ count }} motifs</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
                 <h5>API access</h5>
                 <p>MotifDB is accessible via an API.</p>
                 <p>The following instructions demonstrate how to interact with the API</p>
-                <p>http://m2slda.org/motifdb/list_motifsets will return a json dictionary that gives the names of available motif sets and their IDs.</p>
+                <p>http://m2slda.org/motifdb/list_motifsets will return a json dictionary that gives the names of
+                    available motif sets and their IDs.</p>
                 <p>
-                    To access a particular motifset, there are two options. Send a get request to http://ms2lda.org/motifdb/get_motifset/ID, where ID is the ID obtained from the motifset list
-                    will return a json object including all of the motifs in that motifset. Replacing get_motifset with get_metadata will return the metadata for those motifs.
+                    To access a particular motifset, there are two options. Send a get request to
+                    http://ms2lda.org/motifdb/get_motifset/ID, where ID is the ID obtained from the motifset list
+                    will return a json object including all of the motifs in that motifset. Replacing get_motifset with
+                    get_metadata will return the metadata for those motifs.
                 </p>
                 <p>
-                    Alternatively, if you want to get the motifs and metadata together for multiple motifsets, you can send a POST request to http://ms2lda.org/motifdb/get_motifset.
-                    Within the payload dictionary you should include a field motifset_id_list which holds a list of the IDs of the motifsets you'd like.
+                    Alternatively, if you want to get the motifs and metadata together for multiple motifsets, you can
+                    send a POST request to http://ms2lda.org/motifdb/get_motifset.
+                    Within the payload dictionary you should include a field motifset_id_list which holds a list of the
+                    IDs of the motifsets you'd like.
                 </p>
                 <p>
                     In addition, you will need to include a field called csrfmiddlewaretoken which holds a valid token.
                     You can get one by sending a GET request to http://ms2lda.org/motifdb/initialise_api.
                 </p>
                 <p>
-                    This way of getting motifs also allows you to filter duplicates. Simply add the field filter with the value "True" to your payload.
-                    The default filter threshold (cosine score) is 0.95. To change this, add a field "filter_threshold" to your payload.
+                    This way of getting motifs also allows you to filter duplicates. Simply add the field filter with
+                    the value "True" to your payload.
+                    The default filter threshold (cosine score) is 0.95. To change this, add a field "filter_threshold"
+                    to your payload.
                 </p>
                 <p><b>Example</b></p>
                 <pre>
@@ -93,31 +125,31 @@ for k in motif_metadata.keys()[:5]:
 
 {% block js_block %}
 
-<script>
-    $( function() {
-        $( "#accordion" ).accordion({
-            collapsible: true,
-            heightStyle: "content",
-            active: false
+    <script>
+        $(function () {
+            $("#accordion").accordion({
+                collapsible: true,
+                heightStyle: "content",
+                active: false
+            });
         });
-    } );
-    $( function() {
-        $( "#accordion2" ).accordion({
-            collapsible: true,
-            heightStyle: "content",
-            active: false
+        $(function () {
+            $("#accordion2").accordion({
+                collapsible: true,
+                heightStyle: "content",
+                active: false
+            });
         });
-    } );
-    $( function() {
-        $( "#accordion3" ).accordion({
-            collapsible: true,
-            heightStyle: "content",
-            active: false
+        $(function () {
+            $("#accordion3").accordion({
+                collapsible: true,
+                heightStyle: "content",
+                active: false
+            });
         });
-    } );
-    $( function() {
-        $( "#tabs" ).tabs();
-    } );
-</script>
+        $(function () {
+            $("#tabs").tabs();
+        });
+    </script>
 
 {% endblock %}

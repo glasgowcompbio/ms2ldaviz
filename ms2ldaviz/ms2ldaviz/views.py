@@ -12,9 +12,9 @@ def people(request):
     return render(request,'ms2ldaviz/people.html',context_dict)
 
 
-def api(request):
+def about(request):
     context_dict = {}
-    return render(request,'ms2ldaviz/api.html',context_dict)
+    return render(request,'ms2ldaviz/about.html',context_dict)
 
 
 def user_guide(request):
