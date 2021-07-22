@@ -39,3 +39,6 @@ django-countries = "*"
 
 [requires]
 python_version = "3.8"
+
+[scripts]
+runcelery = "/bin/bash -c 'cd ms2ldaviz && exec ./start_celery_prod.sh'"
