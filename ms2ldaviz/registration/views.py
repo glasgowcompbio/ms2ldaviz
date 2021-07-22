@@ -1,8 +1,9 @@
 import logging
 
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login
 from django.contrib.auth import get_user_model
+from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -10,6 +11,7 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import UpdateView
 
 from basicviz.models import Experiment, UserExperiment
+from registration.forms import ProfileForm
 from registration.forms import UserForm
 
 User = get_user_model()
@@ -25,22 +27,30 @@ def register(request):
     registered = False
     if request.method == 'POST':
         user_form = UserForm(data=request.POST)
-        if user_form.is_valid():
+        profile_form = ProfileForm(data=request.POST)
+        if user_form.is_valid() and profile_form.is_valid():
             # https://www.sitepoint.com/easy-spam-prevention-using-hidden-form-fields/
             if len(request.POST['foo']) == 0:
                 user = user_form.save()
-                user.set_password(user.password)
-                user.save()
+                # assign user to Profile first before saving it
+                profile = profile_form.save(commit=False)
+                profile.user = user
+                profile.save()
                 add_example_experiments(user)
                 registered = True
+                messages.success(request, 'Your account has been successfully created')
         else:
-            print(user_form.errors)
+            messages.error(request, 'Invalid form entries')
     else:
         user_form = UserForm()
+        profile_form = ProfileForm()
 
-    context_dict = {'user_form': user_form, 'registered': registered}
-    return render(request,
-                  'registration/register.html', context_dict)
+    context_dict = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'registered': registered
+    }
+    return render(request, 'registration/register.html', context_dict)
 
 
 def add_example_experiments(user):

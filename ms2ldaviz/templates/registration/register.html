@@ -7,6 +7,15 @@
 
         <h3>User Registration</h3>
         {% if registered %}
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
             <strong>
                 Thank you for registering! Your account is now active, and you can run analyses by
                 <a href='/registration/login'>
@@ -34,15 +43,69 @@
 
                     <div style="padding-top:30px" class="panel-body">
 
-                        <form id="user_form" method="post" action="/registration/register/"
-                              enctype="multipart/form-data">
+                        <form id="user_form" method="post" action="/registration/register/" class="form-horizontal"
+                              role="form">
+
                             {% csrf_token %}
-                            <table>
-                                {{ user_form.as_table }}
-                            </table>
+                            {{ form.non_field_errors }}
+
+                            <div style="margin-bottom: 25px" class="input-group">
+                                {{ user_form.username.errors }}
+                                {{ user_form.username.label_tag }}<br/>
+                                {{ user_form.username }}
+                            </div>
+                            <div style="margin-bottom: 25px" class="input-group">
+                                {{ user_form.password1.errors }}
+                                {{ user_form.password1.label_tag }}<br/>
+                                {{ user_form.password1 }}
+                            </div>
+                            <div style="margin-bottom: 25px" class="input-group">
+                                {{ user_form.password2.errors }}
+                                {{ user_form.password2.label_tag }}<br/>
+                                {{ user_form.password2 }}
+                            </div>
+
+                            <hr/>
+
+                            <div style="margin-bottom: 25px" class="input-group">
+                                {{ user_form.first_name.errors }}
+                                {{ user_form.first_name.label_tag }}<br/>
+                                {{ user_form.first_name }}
+                            </div>
+                            <div style="margin-bottom: 25px" class="input-group">
+                                {{ user_form.last_name.errors }}
+                                {{ user_form.last_name.label_tag }}<br/>
+                                {{ user_form.last_name }}
+                            </div>
+                            <div style="margin-bottom: 25px" class="input-group">
+                                {{ user_form.email.errors }}
+                                {{ user_form.email.label_tag }}<br/>
+                                {{ user_form.email }}
+                            </div>
+                            <div style="margin-bottom: 25px" class="input-group">
+                                {{ profile_form.affiliation.errors }}
+                                {{ profile_form.affiliation.label_tag }}<br/>
+                                {{ profile_form.affiliation }}
+                            </div>
+                            <div style="margin-bottom: 25px" class="input-group">
+                                {{ profile_form.country.errors }}
+                                {{ profile_form.country.label_tag }}<br/>
+                                {{ profile_form.country }}
+                            </div>
                             <input type="text" name="foo" style="display: none;">
-                            <br/>
                             <input type="submit" name="submit" value="Register" class="btn btn-success"/>
+
+                            <div class="form-group" style="padding-top:30px">
+                                <div class="col-md-12 control">
+                                    <div style="border-top: 1px solid#888; padding-top:15px; font-size:85%">
+                                        Already have an account?
+                                        <a class="btn btn-primary" href="{% url 'login' %}">
+                                            Login
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
                         </form>
 
                     </div>

@@ -375,7 +375,7 @@ class DocumentMass2Motif(models.Model):
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
     mass2motif = models.ForeignKey(Mass2Motif, on_delete=models.CASCADE)
     probability = models.FloatField()
-    validated = models.NullBooleanField()
+    validated = models.BooleanField(null=True)
     overlap_score = models.FloatField(null=True)
 
     def __str__(self):

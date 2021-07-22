@@ -160,4 +160,5 @@ INTERNAL_IPS = [
     '127.0.0.1',
 ]
 
-
+# https://dev.to/weplayinternet/upgrading-to-django-3-2-and-fixing-defaultautofield-warnings-518n
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
