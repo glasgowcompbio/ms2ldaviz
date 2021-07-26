@@ -13,7 +13,7 @@ gensim = "*"
 keras = "*"
 tensorflow = "==2.4.1"
 
-psycopg2-binary = "*"
+psycopg2-binary = "==2.8.6" # https://stackoverflow.com/questions/38807296/django-1-9-2-assertionerror-database-connection-isnt-set-to-utc
 redis = "*"
 celery = "*"
 gunicorn = "*"
@@ -25,7 +25,7 @@ jsonpickle = "*"
 tqdm = "*"
 requests = "*"
 
-django = "*"
+django = "==3.0.6" # https://github.com/glasgowcompbio/ms2ldaviz/issues/169
 django-extensions = "*"
 django-grappelli = "*"
 django-markdown2 = "*"
