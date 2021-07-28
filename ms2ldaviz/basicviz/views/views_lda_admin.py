@@ -10,7 +10,10 @@ from basicviz.models import JobLog, Experiment, UserExperiment
 
 @user_passes_test(lambda u: u.is_staff)
 def list_log(request):
-    logs = JobLog.objects.all()
+    logs = JobLog.objects.all().select_related(
+        'experiment',
+        'user'
+    )
     context_dict = {}
     context_dict['logs'] = logs
     return render(request,'basicviz/log_list.html',context_dict)
@@ -32,7 +35,10 @@ def show_log_file(request, experiment_id):
 
 @user_passes_test(lambda u: u.is_staff)
 def list_all_experiments(request):
-    experiments = Experiment.objects.all().prefetch_related()
+    experiments = Experiment.objects.all().prefetch_related(
+        'userexperiment_set',
+        'joblog_set'
+    )
     results = []
     for experiment in experiments:
         user_experiments = UserExperiment.objects.filter(experiment=experiment)

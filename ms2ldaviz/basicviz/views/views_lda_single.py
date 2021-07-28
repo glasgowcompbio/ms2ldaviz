@@ -1,43 +1,40 @@
 import csv
 import json
-
 from collections import Counter, defaultdict
+
 import jsonpickle
 import networkx as nx
 import numpy as np
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
-from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
-from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 from networkx.readwrite import json_graph
 from sklearn.decomposition import PCA
 
 from annotation.models import TaxaInstance, SubstituentInstance
+from basicviz.constants import EXPERIMENT_STATUS_CODE
 from basicviz.forms import DocFilterForm, ValidationForm, VizForm, \
     TopicScoringForm, MatchMotifForm
-from massbank.forms import Mass2MotifMetadataForm
 from basicviz.models import Feature, Experiment, Document, FeatureInstance, DocumentMass2Motif, \
     FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment, MotifMatch, \
     PublicExperiments, FeatureInstance2Sub
-from basicviz.tasks import match_motifs,match_motifs_set
-from massbank.views import get_massbank_form
-from options.views import get_option
-from decomposition.models import DocumentGlobalMass2Motif, GlobalMotif, DocumentGlobalFeature, FeatureMap
-from decomposition.decomposition_functions import get_parents_decomposition, get_parent_for_plot_decomp, \
-    get_decomp_doc_context_dict
+from basicviz.tasks import match_motifs_set
 from basicviz.views import index as basicviz_index
 from basicviz.views.views_lda_admin import list_all_experiments
-from ms1analysis.models import Analysis, AnalysisResult, AnalysisResultPlage
-from basicviz.constants import EXPERIMENT_STATUS_CODE
-
-from motifdb.views import motif as db_view_motif
+from decomposition.decomposition_functions import get_parents_decomposition, get_decomp_doc_context_dict
+from massbank.forms import Mass2MotifMetadataForm
+from massbank.views import get_massbank_form
 from motifdb.models import MDBMotif
+from ms1analysis.models import Analysis, AnalysisResult, AnalysisResultPlage
+from options.views import get_option
+
 
 def check_user(request, experiment):
     user = request.user
-    if user.is_staff: # staff can view all experiments
+    if user.is_staff:  # staff can view all experiments
         return 'edit'
 
     try:
@@ -45,13 +42,12 @@ def check_user(request, experiment):
         return ue.permission
     except:
         # try the public experiments
-        e = PublicExperiments.objects.filter(experiment = experiment)
+        e = PublicExperiments.objects.filter(experiment=experiment)
         if len(e) > 0:
             return "view"
         else:
             # User can't see this one
             return None
-
 
 
 def topic_table(request, experiment_id):
@@ -231,7 +227,6 @@ def compute_topic_scores(request, experiment_id):
     return render(request, 'basicviz/compute_topic_scores.html', context_dict)
 
 
-
 # @login_required(login_url='/registration/login/')
 def show_docs(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
@@ -248,11 +243,12 @@ def show_docs(request, experiment_id):
 
 
 def is_public(experiment):
-    test = PublicExperiments.objects.filter(experiment = experiment)
+    test = PublicExperiments.objects.filter(experiment=experiment)
     if len(test) > 0:
         return True
     else:
         return False
+
 
 # @login_required(login_url='/registration/login/')
 def show_doc(request, doc_id):
@@ -286,7 +282,7 @@ def show_doc(request, doc_id):
             cs = ChemSpider(settings.CHEMSPIDER_APIKEY)
             md = jsonpickle.decode(document.metadata)
             if 'InChIKey' in md or 'inchikey' in md:
-                mol = cs.convert(md.get('InChIKey', md['inchikey']),'InChIKey','mol')
+                mol = cs.convert(md.get('InChIKey', md['inchikey']), 'InChIKey', 'mol')
                 if mol:
                     document.mol_string = mol
                     document.save()
@@ -305,7 +301,14 @@ def show_doc(request, doc_id):
 
 
 def get_doc_context_dict(document):
-    features = FeatureInstance.objects.filter(document=document)
+    features = FeatureInstance.objects.filter(document=document).select_related(
+        'feature'
+    ).prefetch_related(
+        'featuremass2motifinstance_set',
+        'featureinstance2sub_set',
+        'feature__experiment',
+        'feature__experiment__document_set'
+    )
     context_dict = {}
     context_dict['features'] = features
     experiment = document.experiment
@@ -316,7 +319,7 @@ def get_doc_context_dict(document):
     original_experiment = None
     for feature_instance in features:
         if feature_instance.intensity > 0:
-            m2m = FeatureMass2MotifInstance.objects.filter(featureinstance=feature_instance)
+            m2m = feature_instance.featuremass2motifinstance_set.all()
             smiles_to_docs = defaultdict(set)
             docs_to_subs = {}
 
@@ -324,7 +327,7 @@ def get_doc_context_dict(document):
             # of the feature instances in this document. Otherwise we use the global feature to find
             # the magma annotation from the original experiment that has the magma annotation
             if experiment.has_magma_annotation:
-                subs = FeatureInstance2Sub.objects.filter(feature=feature_instance)
+                subs = feature_instance.featureinstance2sub_set.all()
                 for sub in subs:
                     smiles = sub.sub.smiles
                     smiles_to_docs[smiles].add(document)
@@ -332,18 +335,21 @@ def get_doc_context_dict(document):
             else:
                 # get shared global feature
                 shared_feature = feature_instance.feature
-                # if shared_feature.experiment.has_magma_annotation:
 
                 # get original docs having shared feature
                 original_experiment = shared_feature.experiment
-                original_docs = Document.objects.filter(experiment=original_experiment)
+                original_docs = shared_feature.experiment.document_set.all()
 
                 # get the feature instances in the original docs having shared feature
                 original_feature_instances = FeatureInstance.objects.filter(feature=shared_feature,
                                                                             document__in=original_docs)
 
                 # get magma subs from the original feature instances
-                subs = FeatureInstance2Sub.objects.filter(feature__in=original_feature_instances)
+                subs = FeatureInstance2Sub.objects.filter(feature__in=original_feature_instances).select_related(
+                    'sub',
+                    'feature',
+                    'feature__document'
+                )
                 for sub in subs:
                     smiles = sub.sub.smiles
                     doc = sub.feature.document
@@ -364,8 +370,8 @@ def get_doc_context_dict(document):
                 docs = smiles_to_docs[smiles]
                 subs = [docs_to_subs[d] for d in docs]
                 together = zip(docs, subs)
-                most_common_subs.append((smiles, count, together, ))
-            item = (feature_instance, m2m, most_common_subs, len(most_common_subs), )
+                most_common_subs.append((smiles, count, together,))
+            item = (feature_instance, m2m, most_common_subs, len(most_common_subs),)
             feature_mass2motif_instances.append(item)
 
     if original_experiment:
@@ -373,7 +379,7 @@ def get_doc_context_dict(document):
     context_dict['experiment'] = experiment
     feature_mass2motif_instances = sorted(feature_mass2motif_instances, key=lambda x: x[0].intensity, reverse=True)
     context_dict['fm2m'] = feature_mass2motif_instances
-    context_dict['top_n'] = 5 # show the top-5 magma annotations per feature initially
+    context_dict['top_n'] = 5  # show the top-5 magma annotations per feature initially
     return context_dict
 
 
@@ -405,11 +411,11 @@ def view_parents(request, motif_id):
         document_feature_instance = FeatureInstance.objects.filter(feature=feature, document__in=documents)
         docs = set([x.document for x in document_feature_instance])
         subs = FeatureInstance2Sub.objects.filter(feature__in=document_feature_instance)
-        most_common = most_common_subs(subs, docs) # sort subs by most-common
-        motif_features_subs.append((motif_feature_instance, most_common, len(most_common), ))
+        most_common = most_common_subs(subs, docs)  # sort subs by most-common
+        motif_features_subs.append((motif_feature_instance, most_common, len(most_common),))
 
     context_dict['motif_features_subs'] = motif_features_subs
-    context_dict['top_n'] = 5 # show the top-5 magma annotations per feature initially
+    context_dict['top_n'] = 5  # show the top-5 magma annotations per feature initially
     context_dict['total_prob'] = total_prob
     context_dict['experiment'] = experiment
 
@@ -449,13 +455,12 @@ def view_parents(request, motif_id):
         metadata_form = Mass2MotifMetadataForm(
             initial={'metadata': motif.annotation, 'short_annotation': motif.short_annotation})
         context_dict['metadata_form'] = metadata_form
-    else: # read only permission
+    else:  # read only permission
         context_dict['motif_annotation'] = motif.annotation
         context_dict['short_annotation'] = motif.short_annotation
 
     massbank_form = get_massbank_form(motif, motif_feature_instances)
     context_dict['massbank_form'] = massbank_form
-
 
     # New classyfire code
     term_counts = {}
@@ -470,19 +475,21 @@ def view_parents(request, motif_id):
     if len(term_counts) > 0:
         # compute overall percentages for this experiment
         totals = {}
-        n_docs = len(Document.objects.filter(experiment = experiment))
+        n_docs = len(Document.objects.filter(experiment=experiment))
         temp = {}
         for t in term_counts:
-            temp[t] = len(SubstituentInstance.objects.filter(document__experiment = experiment,subterm = t))
+            temp[t] = len(SubstituentInstance.objects.filter(document__experiment=experiment, subterm=t))
             if temp[t] < term_counts[t]:
                 print(t)
-            totals[t] = 100.0*len(SubstituentInstance.objects.filter(document__experiment = experiment,subterm = t))/n_docs
+            totals[t] = 100.0 * len(
+                SubstituentInstance.objects.filter(document__experiment=experiment, subterm=t)) / n_docs
         terms = term_counts.keys()
         counts = term_counts.values()
-        perc = [(100.0*v)/len(dm2m) for v in term_counts.values()]
+        perc = [(100.0 * v) / len(dm2m) for v in term_counts.values()]
         background = [totals[t] for t in term_counts.keys()]
-        diff = [abs(p-b) for (p,b) in zip(perc,background)]
-        context_dict['term_counts'] = sorted(zip(terms,counts,perc,background,diff),key = lambda x : x[1], reverse=True)
+        diff = [abs(p - b) for (p, b) in zip(perc, background)]
+        context_dict['term_counts'] = sorted(zip(terms, counts, perc, background, diff), key=lambda x: x[1],
+                                             reverse=True)
     return render(request, 'basicviz/view_parents.html', context_dict)
 
 
@@ -502,7 +509,7 @@ def most_common_subs(subs, docs):
     most_common = []
     for smile, count in subs_counter.most_common():
         feature_sub_instances = subs_dict[smile]
-        most_common.append((smile, count, feature_sub_instances, ))
+        most_common.append((smile, count, feature_sub_instances,))
     # add the count for documents which are not annotated with magma substructures
     num_unseen_docs = len(docs - seen_docs)
     most_common.append(('None', num_unseen_docs, set()))
@@ -597,8 +604,8 @@ def get_all_parents_metadata(request, experiment_id):
     documents = Document.objects.filter(experiment=experiment)
     parent_data = []
     for document in documents:
-        parent_data.append((document.name,jsonpickle.decode(document.metadata)))
-    return HttpResponse(json.dumps(parent_data), content_type =  'application/json')
+        parent_data.append((document.name, jsonpickle.decode(document.metadata)))
+    return HttpResponse(json.dumps(parent_data), content_type='application/json')
 
 
 def get_parents_metadata(request, motif_id):
@@ -845,17 +852,15 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
         frag_feature_names = [f.feature.name for f in features if f.feature.name.startswith('fragment')]
         frag_intensities = [f.intensity for f in features if f.feature.name.startswith('fragment')]
         diff_masses = [f.split('_')[1] for f in diff_feature_names]
-        frag_masses=  [f.split('_')[1] for f in frag_feature_names]
+        frag_masses = [f.split('_')[1] for f in frag_feature_names]
         diff_instances = {}
-
-
 
         for d in diff_masses:
             diff_instances[d] = []
             temp = ["{:.4f}".format(float(d) + float(f)) for f in frag_masses]
             # temp is a vector of length number frag features, including all the frags transformed by this diff
 
-            diff_instances[d] = [(i,frag_masses.index(t)) for i,t in enumerate(temp) if t in frag_masses]
+            diff_instances[d] = [(i, frag_masses.index(t)) for i, t in enumerate(temp) if t in frag_masses]
         print(diff_instances)
 
         diff_pos = 100
@@ -892,28 +897,32 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
                         proportion = mass * phi_value.probability
                         other_topics += proportion
                 child_data.append(
-                    (precursor_mass - other_topics, precursor_mass, this_intensity, this_intensity, 0, 'gray', feature_name))
+                    (precursor_mass - other_topics, precursor_mass, this_intensity, this_intensity, 0, 'gray',
+                     feature_name))
             elif feature_name.startswith('mzdiff'):
                 # note we only plot them in the correct colour if they have phi > 0.5
                 diff_mass = feature_name.split('_')[1]
                 if len(diff_instances[diff_mass]) > 0:
-                    for start,stop in diff_instances[diff_mass]:
+                    for start, stop in diff_instances[diff_mass]:
                         start_mass = frag_masses[start]
                         stop_mass = frag_masses[stop]
-                        print(start_mass,stop_mass)
-                        intensity = min(frag_intensities[start],frag_intensities[stop])*100.0/max_intensity
+                        print(start_mass, stop_mass)
+                        intensity = min(frag_intensities[start], frag_intensities[stop]) * 100.0 / max_intensity
                         plotted = False
                         for phi_value in phi_values:
                             if phi_value.mass2motif in topics_to_plot and phi_value.probability >= 0.5:
                                 colour = topic_colours[phi_value.mass2motif]
-                                child_data.append((float(start_mass),float(stop_mass),0.9*intensity,0.9*intensity,2,colour,feature_name)
-                                    )
+                                child_data.append((
+                                                  float(start_mass), float(stop_mass), 0.9 * intensity, 0.9 * intensity,
+                                                  2, colour, feature_name)
+                                                  )
                                 diff_pos -= 5
                                 plotted = True
                         if not plotted:
                             # doesn't belong to any of the dominant topics
-                            child_data.append((float(start_mass),float(stop_mass),0.9*intensity,0.9*intensity,2,'gray',feature_name)
-                                )
+                            child_data.append((float(start_mass), float(stop_mass), 0.9 * intensity, 0.9 * intensity, 2,
+                                               'gray', feature_name)
+                                              )
 
     plot_fragments.append(child_data)
 
@@ -1136,7 +1145,7 @@ def make_graph(experiment, min_degree=5, topic_scale_factor=5, edge_scale_factor
     doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
     docm2ms_q = DocumentMass2Motif.objects.filter(mass2motif__experiment=experiment,
                                                   probability__gte=doc_m2m_prob_threshold,
-                                                  overlap_score__gte=doc_m2m_overlap_threshold)\
+                                                  overlap_score__gte=doc_m2m_overlap_threshold) \
         .select_related('document').select_related('mass2motif')
     docm2ms = {}
     for r in docm2ms_q:
@@ -1175,9 +1184,6 @@ def make_graph(experiment, min_degree=5, topic_scale_factor=5, edge_scale_factor
     # else:
     #     docm2mset = DocumentMass2Motif.objects.filter(document__in=documents, mass2motif__in=topics,
     #                                                   overlap_score__gte=edge_thresh)
-
-
-
 
     ## remove dependence on "colour nodes by logfc" and "discrete colouring"
     ## document colouring and size setting only depends on users' choice of ms1 analysis setting
@@ -1465,8 +1471,6 @@ def get_pca_data(request, experiment_id):
     # else:
     #     doc_m2m_threshold = 0.00 # Default value
 
-
-
     for document in documents:
         new_theta = [0 for i in range(n_mass2motifs)]
         # dm2ms = DocumentMass2Motif.objects.filter(document = document,probability__gte = doc_m2m_threshold)
@@ -1671,7 +1675,8 @@ def get_docm2m_all(experiment, doc_m2m_prob_threshold=None, doc_m2m_overlap_thre
     mass2motifs = Mass2Motif.objects.filter(experiment=experiment)
 
     dm2m = DocumentMass2Motif.objects.filter(mass2motif__in=mass2motifs, probability__gte=doc_m2m_prob_threshold,
-                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability').select_related('mass2motif').prefetch_related('document')
+                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by(
+        '-probability').select_related('mass2motif').prefetch_related('document')
 
     return dm2m
 
@@ -1814,26 +1819,27 @@ def get_features(request, experiment_id):
     output_features = [(f.name, f.min_mz, f.max_mz) for f in features]
     return HttpResponse(json.dumps(output_features), content_type='application/json')
 
+
 def get_document(request):
     return_val = {}
     # try:
     # todo: add check for public experiment
     experiment_id = request.GET['experiment_id']
     document_id = request.GET['document_id']
-    try: 
-        experiment = Experiment.objects.get(id = int(experiment_id))
+    try:
+        experiment = Experiment.objects.get(id=int(experiment_id))
         if is_public(experiment):
-    
+
             return_val['experiment_name'] = experiment.name
-            try: 
-                document = Document.objects.get(id = int(document_id))
-                fi = FeatureInstance.objects.filter(document = document)
+            try:
+                document = Document.objects.get(id=int(document_id))
+                fi = FeatureInstance.objects.filter(document=document)
                 peaks = []
                 for f in fi:
                     if f.feature.name.startswith('fragment'):
                         mz = float(f.feature.name.split('_')[1])
                         intensity = f.intensity
-                        peaks.append((mz,intensity))
+                        peaks.append((mz, intensity))
                 return_val['peaks'] = peaks
                 return_val['precursor_mz'] = document.get_mass()
             except:
@@ -1842,10 +1848,11 @@ def get_document(request):
             return_val['error'] = "This feature only works for public experiments"
     except:
         return_val['error'] = "Experiment {} does not exist".format(experiment_id)
-    
+
     # except:
     #     return_val['status'] = 'failed'
-    return HttpResponse(json.dumps(return_val),content_type='application/json')
+    return HttpResponse(json.dumps(return_val), content_type='application/json')
+
 
 def get_annotated_topics(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
@@ -1869,7 +1876,8 @@ def get_annotated_topics(request, experiment_id):
 
     return HttpResponse(json.dumps(output), content_type='application/json')
 
-def get_all_topics(request,experiment_id):
+
+def get_all_topics(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     motifs = Mass2Motif.objects.filter(experiment=experiment)
     output_motifs = motifs
@@ -1887,6 +1895,7 @@ def get_all_topics(request,experiment_id):
     output = (output_metadata, output_beta)
 
     return HttpResponse(json.dumps(output), content_type='application/json')
+
 
 # Gets the document <-> m2m links for a particular experiment as a json object
 def get_doc_m2m(request, experiment_id):
@@ -1953,6 +1962,7 @@ def get_motifs_with_degree(experiment):
             motif_tuples.append((motif, 0))
     return motif_tuples
 
+
 # Renders a page summarising a particular experiment
 def summary(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
@@ -1962,7 +1972,9 @@ def summary(request, experiment_id):
         return HttpResponse("You don't have permission to access this page")
     motif_tuples = get_motifs_with_degree(experiment)
 
-    motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment=experiment, probability__gte=0.05).select_related('mass2motif').prefetch_related('feature')
+    motif_features = Mass2MotifInstance.objects.filter(mass2motif__experiment=experiment,
+                                                       probability__gte=0.05).select_related(
+        'mass2motif').prefetch_related('feature')
 
     documents = Document.objects.filter(experiment=experiment)
 
@@ -1976,12 +1988,12 @@ def summary(request, experiment_id):
     context_dict['documents'] = documents
     context_dict['n_docs'] = len(documents)
     context_dict['all_docs_motifs'] = all_docs_motifs
-    if this_permission == 'edit':   
+    if this_permission == 'edit':
         context_dict['edit_user'] = True
     else:
         context_dict['edit_user'] = False
 
-    pe = PublicExperiments.objects.filter(experiment = experiment)
+    pe = PublicExperiments.objects.filter(experiment=experiment)
     if len(pe) > 0:
         context_dict['is_public'] = True
     else:
@@ -1989,7 +2001,8 @@ def summary(request, experiment_id):
 
     return render(request, 'basicviz/summary.html', context_dict)
 
-def short_summary(request,experiment_id):
+
+def short_summary(request, experiment_id):
     experiment = Experiment.objects.get(id=experiment_id)
     user_experiments = UserExperiment.objects.filter(experiment=experiment)
 
@@ -2013,9 +2026,8 @@ def short_summary(request,experiment_id):
     context_dict['documents'] = documents
     context_dict['n_docs'] = len(documents)
     # context_dict['all_docs_motifs'] = all_docs_motifs
-    
-    return render(request, 'basicviz/short_summary.html', context_dict)
 
+    return render(request, 'basicviz/short_summary.html', context_dict)
 
 
 # Matches motifs in one experiment with those in another
@@ -2031,7 +2043,7 @@ def start_match_motifs(request, experiment_id):
             base_experiment_id = base_experiment.id
             minimum_score_to_save = float(match_motif_form.cleaned_data['min_score_to_save'])
             # match_motifs.delay(experiment.id, base_experiment_id, min_score_to_save=minimum_score_to_save)
-            match_motifs_set.delay(experiment.id,base_experiment.id, min_score_to_save = minimum_score_to_save)
+            match_motifs_set.delay(experiment.id, base_experiment.id, min_score_to_save=minimum_score_to_save)
             return manage_motif_matches(request, experiment_id)
     else:
         match_motif_form = MatchMotifForm(request.user)
@@ -2065,25 +2077,27 @@ def remove_link(request, from_motif_id):
     experiment_id = from_motif.experiment.id
     return manage_motif_matches(request, experiment_id)
 
-def feature_info(request,feature_id,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    feature = Feature.objects.get(id = feature_id)
+
+def feature_info(request, feature_id, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    feature = Feature.objects.get(id=feature_id)
     context_dict = {}
     context_dict['experiment'] = experiment
     context_dict['feature'] = feature
-    documents = Document.objects.filter(experiment = experiment)
-    instances = FeatureInstance.objects.filter(feature = feature,document__in = documents)
+    documents = Document.objects.filter(experiment=experiment)
+    instances = FeatureInstance.objects.filter(feature=feature, document__in=documents)
     context_dict['n_instances'] = len(instances)
     context_dict['instances'] = instances
 
-    motifs = Mass2Motif.objects.filter(experiment = experiment)
-    motif_instances = Mass2MotifInstance.objects.filter(feature = feature,mass2motif__in = motifs)
+    motifs = Mass2Motif.objects.filter(experiment=experiment)
+    motif_instances = Mass2MotifInstance.objects.filter(feature=feature, mass2motif__in=motifs)
 
     context_dict['n_motif_instances'] = len(motif_instances)
     context_dict['motif_instances'] = motif_instances
-    
+
     print(len(instances))
-    return render(request,'basicviz/feature_info.html',context_dict)
+    return render(request, 'basicviz/feature_info.html', context_dict)
+
 
 @csrf_exempt
 def get_doc_annotation(request):
@@ -2091,17 +2105,17 @@ def get_doc_annotation(request):
     if request.method == 'POST':
         experiment_name = request.POST['experiment_name']
         try:
-            experiment = Experiment.objects.get(name = experiment_name)
+            experiment = Experiment.objects.get(name=experiment_name)
         except:
             response['status'] = 'invalid experiment name'
             return HttpResponse(json.dumps(response), content_type='application/json')
         document_name = request.POST['document_name']
         try:
-            document = Document.objects.get(name = document_name,experiment = experiment)
+            document = Document.objects.get(name=document_name, experiment=experiment)
         except:
             response['status'] = 'invalid document name'
             return HttpResponse(json.dumps(response), content_type='application/json')
-        annotation = jsonpickle.decode(document.metadata).get('annotation',None)
+        annotation = jsonpickle.decode(document.metadata).get('annotation', None)
         response['status'] = 'ok'
         response['annotation'] = annotation
     else:
@@ -2111,23 +2125,23 @@ def get_doc_annotation(request):
 
 @csrf_exempt
 def set_doc_annotation(request):
-    response = {}  
+    response = {}
     if request.method == 'POST':
         experiment_name = request.POST['experiment_name']
         try:
-            experiment = Experiment.objects.get(name = experiment_name)
+            experiment = Experiment.objects.get(name=experiment_name)
         except:
             response['status'] = 'invalid experiment name'
             return HttpResponse(json.dumps(response), content_type='application/json')
         document_name = request.POST['document_name']
         try:
-            document = Document.objects.get(name = document_name,experiment = experiment)
+            document = Document.objects.get(name=document_name, experiment=experiment)
         except:
             response['status'] = 'invalid document name'
             return HttpResponse(json.dumps(response), content_type='application/json')
         # document = Document.objects.get(experiment = experiment,name = document_name)
-        
-        annotation = request.POST.get('annotation',None)
+
+        annotation = request.POST.get('annotation', None)
 
         metadata = jsonpickle.decode(document.metadata)
         metadata['annotation'] = annotation
@@ -2139,50 +2153,47 @@ def set_doc_annotation(request):
     return HttpResponse(json.dumps(response), content_type='application/json')
 
 
-
-def get_gnps_summary(request,experiment_id,metadata_columns = ['scans','precursormass','parentrt']):
-    experiment = Experiment.objects.get(id = experiment_id)
-    documents = Document.objects.filter(experiment = experiment)
-    dm2m = DocumentMass2Motif.objects.filter(document__in = documents).order_by('document')
+def get_gnps_summary(request, experiment_id, metadata_columns=['scans', 'precursormass', 'parentrt']):
+    experiment = Experiment.objects.get(id=experiment_id)
+    documents = Document.objects.filter(experiment=experiment)
+    dm2m = DocumentMass2Motif.objects.filter(document__in=documents).order_by('document')
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="gnps_output_{}.csv"'.format(experiment_id)
     writer = csv.writer(response)
 
-
-
-    writer.writerow(metadata_columns+['document','motif','probability','overlap'])
+    writer.writerow(metadata_columns + ['document', 'motif', 'probability', 'overlap'])
     for d in dm2m:
         md = []
         for m in metadata_columns:
             temp = jsonpickle.decode(d.document.metadata)
-            val = temp.get(m,'NA')
+            val = temp.get(m, 'NA')
             if val == 'NA' and m == 'precursormass':
-                val = temp.get('parentmass','NA')
+                val = temp.get('parentmass', 'NA')
             md.append(val)
-        writer.writerow(md+[d.document,d.mass2motif,d.probability,d.overlap_score])
+        writer.writerow(md + [d.document, d.mass2motif, d.probability, d.overlap_score])
     return response
 
 
-def toggle_public(request,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    permission = check_user(request,experiment)
+def toggle_public(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    permission = check_user(request, experiment)
     if not permission == 'edit':
         return HttpResponse("You don't have the permission to do this!")
     else:
-        pe = PublicExperiments.objects.filter(experiment = experiment)
+        pe = PublicExperiments.objects.filter(experiment=experiment)
         if len(pe) == 0:
             # add one
-            PublicExperiments.objects.create(experiment = experiment)
+            PublicExperiments.objects.create(experiment=experiment)
         else:
             for p in pe:
                 p.delete()
-        return summary(request,experiment_id)
+        return summary(request, experiment_id)
 
 
-def delete_experiment(request,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    permission = check_user(request,experiment)
+def delete_experiment(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    permission = check_user(request, experiment)
     if not permission == 'edit':
         return HttpResponse("You don't have the permission to do this!")
     else:
