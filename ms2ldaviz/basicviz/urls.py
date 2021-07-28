@@ -98,6 +98,7 @@ lda_admin_patterns = [
 ]
 
 urlpatterns = [
+    url(r'^index_mfe$', views.index_mfe, name='index_mfe'),
     url(r'^$', views.index, name='index'),
     url(r'^', include(lda_single_patterns)),
     url(r'^', include(lda_multi_patterns)),

@@ -10,10 +10,9 @@
 
 {% block body_block %}
 
-<div id="tabs">
+    <div id="tabs">
     <ul>
         <li><a href="#tabs-1">LDA</a></li>
-        <li><a href="#tabs-2">MS2LDA+</a></li>
     </ul>
     <div id="tabs-1">
         <h4>Create LDA Experiments</h4>
@@ -32,9 +31,15 @@
                 <a href="/uploads/create_experiment" class="btn btn-default btn-primary" style="color: white">Create
                     Experiment</a>
             </p>
+            {% if extra_user %}
+                <p>
+                    <a href="/basicviz/index_mfe" class="btn btn-warning">Go to MS2LDA+ Experiments</a>
+                </p>
+            {% endif %}
         {% else %}
-            <p>To create an experiment so, please log in using a normal account.</p>
+            <p>To create an experiment, please log in using a normal account.</p>
         {% endif %}
+
         {% if show_pending %}
             <h5>Pending Experiments</h5>
             <p>The following experiments have been created but are still being processed.
@@ -49,249 +54,113 @@
         {% endif %}
 
         {% if show_lda %}
-        <h5>LDA Experiments</h5>
-        <p>
-            The following are LDA experiments where motifs have been discovered in a completely
-            unsupervised manner. Experiments in <strong>bold</strong> are editable, while the rest
-            can only be viewed in read-only mode.
-        </p>
-        <div id="accordion">
-            {% for experiment in experiments|sort_experiment_by_id %}
-            {% ifequal experiment.0.experiment_type '0' %}
-            {% ifequal experiment.1 'view' %}
-            <h3>{{ experiment.0.name }} ({{ experiment.0.id }})</h3>
-            {% else %}
-            <h3><strong>{{ experiment.0.name }}</strong> ({{ experiment.0.id }})</h3>
-            {% endifequal %}
-            <div>
-                <a href="/basicviz/summary/{{ experiment.0.id }}" class="btn btn-block btn-info"
-                   style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Summary Page</a>
-                <a href="/basicviz/show_docs/{{ experiment.0.id }}" class="btn btn-block btn-info" style="color:white;"><span
-                        class="glyphicon glyphicon-export"></span>&nbsp;Show Fragmentation Spectra</a>
-                <a href="/basicviz/view_mass2motifs/{{ experiment.0.id }}" class="btn btn-block btn-info"
-                   style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show Mass2Motifs</a>
-                <a href="/basicviz/start_viz/{{ experiment.0.id }}" class="btn btn-block btn-info" style="color:white;"><span
-                        class="glyphicon glyphicon-stats"></span>&nbsp;Start Visualisation</a>
-                {% if experiment.1 == 'edit' %}
-                    <a href="/options/view_experiment_options/{{ experiment.0.id }}" class="btn btn-block btn-info"
-                       style="color:white;"><span class="glyphicon glyphicon-option-horizontal"></span>&nbsp;View
-                        Experiment Options</a>
-                    <a href="/ms1analysis/create_ms1analysis/{{ experiment.0.id }}" class="btn btn-block btn-info"
-                       style="color:white;"><span class="glyphicon glyphicon-tasks"></span>&nbsp;Create MS1 Analysis</a>
-                    {% if experiment.0.id in show_ms1_set %}
-                        <a href="/ms1analysis/show_ms1analysis/{{ experiment.0.id }}" class="btn btn-block btn-info"
-                           style="color:white;"><span class="glyphicon glyphicon-list"></span>&nbsp;Show MS1
-                            Analysis</a>
-                    {% endif %}
-                    {% if experiment.0.id != 190 and experiment.0.id != 191 %}
-                        <!-- cannot let the user delete the massbank and gnps experiment!! -->
-                        {% if experiment.2 != True %}
-                            <!-- cannot let the user delete any public experiment (with True flag) -->
-                            <a href="/basicviz/delete/{{ experiment.0.id }}" class="btn btn-block btn-danger"
-                               style="color:white;"><span class="glyphicon glyphicon-remove"></span>&nbsp;Delete
-                                experiment</a>
+            <h5>Finished Experiments</h5>
+            <p>
+                The following are LDA experiments where motifs have been discovered in a completely
+                unsupervised manner. Experiments in <strong>bold</strong> are editable, while the rest
+                can only be viewed in read-only mode.
+            </p>
+            <div id="accordion">
+                {% for experiment in experiments|sort_experiment_by_id %}
+                    {% if experiment.0.experiment_type == '0' %}
+                        {% if experiment.1 == 'view' %}
+                            <h3>{{ experiment.0.name }} ({{ experiment.0.id }})</h3>
+                        {% else %}
+                            <h3><strong>{{ experiment.0.name }}</strong> ({{ experiment.0.id }})</h3>
                         {% endif %}
-                    {% endif %}
-                    <hr/>
-                    <p><em>Motif Matching and Classyfire Term Predictions</em></p>
-                    <a href="/basicviz/start_match_motifs/{{ experiment.0.id }}" class="btn btn-block btn-info"
-                       style="color:white;"><span class="glyphicon glyphicon-random"></span>&nbsp;Match with Other
-                        Experiments</a>
-                    <a href="/motifdb/start_motif_matching/{{ experiment.0.id }}" class="btn btn-block btn-info"
-                       style="color:white;"><span class="glyphicon glyphicon-link"></span>&nbsp;Match with MotifDB</a>
-                    <a href="/basicviz/manage_motif_matches/{{ experiment.0.id }}" class="btn btn-block btn-info"
-                       style="color:white;"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;Manage Motif Matches</a>
-                    <a href="/annotation/start_term_prediction/{{ experiment.0.id }}" class="btn btn-block btn-info"
-                       style="color:white;"><span class="glyphicon glyphicon-zoom-in"></span>&nbsp;Predict Classyfire
-                        Terms</a>
-                    <a href="/annotation/explore_terms/{{ experiment.0.id }}" class="btn btn-block btn-info"
-                       style="color:white;"><span class="glyphicon glyphicon-dashboard"></span>&nbsp;Explore Classyfire
-                        Terms</a>
-                {% endif %}
-                {% if extra_user %}
-                    <!-- hr/ -->
-                    <!-- p><em>Experimental Functions</em></p -->
-                    <!-- a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span>&nbsp;Validate Motifs</a -->
-                    <!-- a href="/basicviz/document_pca/{{experiment.0.id}}" class="btn btn-block btn-success">Document PCA</a -->
-                    <!-- a href="/basicviz/topic_pca/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-eye-open"></span>&nbsp;Topic PCA</a -->
-                    <!-- a href="/basicviz/topic_table/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;Topic Table</a -->
-                    <!-- a href="/basicviz/extract_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-folder-close"></span>&nbsp;Extract Documents</a -->
-                    <!-- a href="/basicviz/compute_topic_scores/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-sort-by-order"></span>&nbsp;Compute Topic Scores</a -->
-                    <!-- a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-indent-right"></span>&nbsp;Rate by Conserved Motifs</a -->
-                    <!-- a href="/basicviz/high_classyfire/{{experiment.0.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span>&nbsp;High Classyfire scores</a -->
-                {% endif %}
-            </div>
-            {% endifequal %}
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if show_decomposition %}
-        <h5>Decomposition Experiments</h5>
-        <p>
-            The following are decomposition experiments where motifs in the data have been inferred using
-            a previously defined set of Mass2Motifs (allowing for rapid decomposition of molecular
-            spectra based on the presence of Mass2Motifs from our database).
-            Experiments in <strong>bold</strong> are editable, while the rest
-            can only be viewed in read-only mode.
-        </p>
-        <div id="accordion2">
-            {% for experiment in experiments|sort_experiment_by_id %}
-            {% ifequal experiment.0.experiment_type '1' %}
-            {% ifequal experiment.1 'view' %}
-            <h3>{{ experiment.0.name }} ({{ experiment.0.id }})</h3>
-            {% else %}
-            <h3><strong>{{ experiment.0.name }}</strong> ({{ experiment.0.id }})</h3>
-            {% endifequal %}
-            <div> <!-- div for each accordion section -->
-                <div>
-                    {% if experiment.1 == 'edit' %}
-                        <a href="/options/view_experiment_options/{{ experiment.0.id }}"
-                           class="btn btn-block btn-primary" style="color:white;"><span
-                                class="glyphicon glyphicon-option-horizontal"></span>&nbsp;View Experiment Options</a>
-                        <a href="/decomposition/new_decomposition/{{ experiment.0.id }}"
-                           class="btn btn-block btn-primary" style="color:white;"><span
-                                class="glyphicon glyphicon-new-window"></span>&nbsp;Create New Decomposition</a>
-                    {% endif %}
-                </div>
-                {% for decomposition in experiment.0.decomposition_set.all %}
-                    <br/>
-                    {% if experiment.1 == 'edit' %}
-                        <p><em>{{ decomposition.name }}</em></p>
-                    {% else %}
-                        <p>{{ decomposition.name }}</p>
-                    {% endif %}
-                    <p><em>{{ decomposition.name }}</em></p>
-                    {% if decomposition.status == '0' %}
-                        <div>Decomposition Pending, check back later...</div>
-                    {% else %}
                         <div>
-                            <a href="/decomposition/show_parents/{{ decomposition.id }}" class="btn btn-block btn-info"
-                               style="color:white;"><span class="glyphicon glyphicon-export"></span>&nbsp;Show
-                                Fragmentation Spectra</a>
-                            <a href="/decomposition/show_motifs/{{ decomposition.id }}" class="btn btn-block btn-info"
+                            <a href="/basicviz/summary/{{ experiment.0.id }}" class="btn btn-block btn-info"
+                               style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Summary
+                                Page</a>
+                            <a href="/basicviz/show_docs/{{ experiment.0.id }}" class="btn btn-block btn-info"
+                               style="color:white;"><span
+                                    class="glyphicon glyphicon-export"></span>&nbsp;Show Fragmentation Spectra</a>
+                            <a href="/basicviz/view_mass2motifs/{{ experiment.0.id }}" class="btn btn-block btn-info"
                                style="color:white;"><span class="glyphicon glyphicon-barcode"></span>&nbsp;Show
                                 Mass2Motifs</a>
+                            <a href="/basicviz/start_viz/{{ experiment.0.id }}" class="btn btn-block btn-info"
+                               style="color:white;"><span
+                                    class="glyphicon glyphicon-stats"></span>&nbsp;Start Visualisation</a>
                             {% if experiment.1 == 'edit' %}
-                                <a href="/ms1analysis/create_ms1analysis_decomposition/{{ decomposition.id }}"
-                                   class="btn btn-block btn-info" style="color:white;"><span
-                                        class="glyphicon glyphicon-tasks"></span>&nbsp;Create MS1 Analysis</a>
-                            {% endif %}
-                            <a href="/decomposition/start_viz/{{ decomposition.id }}" class="btn btn-block btn-info"
-                               style="color:white;"><span class="glyphicon glyphicon-stats"></span>&nbsp;Start
-                                Visualisation</a>
-                            {% if extra_user %}
-                                <!-- <a href="/basicviz/validation/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> Validate</a> -->
-                                <!-- a href="/basicviz/document_pca/{{experiment.0.id}}" class="btn btn-block btn-success">Document PCA</a -->
-                                <!-- <a href="/basicviz/topic_pca/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-eye-open"></span> Topic PCA</a> -->
-                                <!-- <a href="/basicviz/topic_table/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-list-alt"></span> Topic Table</a> -->
-                                <!-- <a href="/basicviz/extract_docs/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-folder-close"></span> Extract Documents</a> -->
-                                <!-- <a href="/basicviz/compute_topic_scores/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-sort-by-order"></span> Compute Topic Scores</a> -->
-                                <!-- <a href="/basicviz/rate_by_conserved_motif_rating/{{experiment.0.id}}" class="btn btn-block btn-default"><span class="glyphicon glyphicon-indent-right"></span> Rate by Conserved Motifs</a> -->
-                                <!-- <a href="/basicviz/high_classyfire/{{experiment.0.id}}" class = "btn btn-block btn-default"><span class="glyphicon glyphicon-thumbs-up"></span> High classyfire scores</a> -->
+                                <a href="/options/view_experiment_options/{{ experiment.0.id }}"
+                                   class="btn btn-block btn-info"
+                                   style="color:white;"><span class="glyphicon glyphicon-option-horizontal"></span>&nbsp;View
+                                    Experiment Options</a>
+                                <a href="/ms1analysis/create_ms1analysis/{{ experiment.0.id }}"
+                                   class="btn btn-block btn-info"
+                                   style="color:white;"><span class="glyphicon glyphicon-tasks"></span>&nbsp;Create MS1
+                                    Analysis</a>
+                                {% if experiment.0.id in show_ms1_set %}
+                                    <a href="/ms1analysis/show_ms1analysis/{{ experiment.0.id }}"
+                                       class="btn btn-block btn-info"
+                                       style="color:white;"><span class="glyphicon glyphicon-list"></span>&nbsp;Show MS1
+                                        Analysis</a>
+                                {% endif %}
+                                {% if experiment.0.id != 190 and experiment.0.id != 191 %}
+                                    <!-- cannot let the user delete the massbank and gnps experiment!! -->
+                                    {% if experiment.2 != True %}
+                                        <!-- cannot let the user delete any public experiment (with True flag) -->
+                                        <a href="/basicviz/delete/{{ experiment.0.id }}"
+                                           class="btn btn-block btn-danger"
+                                           style="color:white;"><span class="glyphicon glyphicon-remove"></span>&nbsp;Delete
+                                            experiment</a>
+                                    {% endif %}
+                                {% endif %}
+                                <hr/>
+                                <p><em>Motif Matching and Classyfire Term Predictions</em></p>
+                                <a href="/basicviz/start_match_motifs/{{ experiment.0.id }}"
+                                   class="btn btn-block btn-info"
+                                   style="color:white;"><span class="glyphicon glyphicon-random"></span>&nbsp;Match with
+                                    Other
+                                    Experiments</a>
+                                <a href="/motifdb/start_motif_matching/{{ experiment.0.id }}"
+                                   class="btn btn-block btn-info"
+                                   style="color:white;"><span class="glyphicon glyphicon-link"></span>&nbsp;Match with
+                                    MotifDB</a>
+                                <a href="/basicviz/manage_motif_matches/{{ experiment.0.id }}"
+                                   class="btn btn-block btn-info"
+                                   style="color:white;"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;Manage
+                                    Motif Matches</a>
+                                <a href="/annotation/start_term_prediction/{{ experiment.0.id }}"
+                                   class="btn btn-block btn-info"
+                                   style="color:white;"><span class="glyphicon glyphicon-zoom-in"></span>&nbsp;Predict
+                                    Classyfire
+                                    Terms</a>
+                                <a href="/annotation/explore_terms/{{ experiment.0.id }}" class="btn btn-block btn-info"
+                                   style="color:white;"><span class="glyphicon glyphicon-dashboard"></span>&nbsp;Explore
+                                    Classyfire
+                                    Terms</a>
                             {% endif %}
                         </div>
                     {% endif %}
                 {% endfor %}
             </div>
-            {% endifequal %}
-            {% endfor %}
-        </div>
-
         {% endif %}
 
     </div> <!-- end first tab for single LDA -->
-    <div id="tabs-2">
-        <h4>Create MS2LDA+ Experiments</h4>
-        <p>
-            MS2LDA+ experiments share Mass2Motifs across multiple samples, allowing us to
-            infer the prevalence of that motif in a particular sample.
 
-        </p>
-        {% if extra_user %}
-            <p>
-                The following are MS2LDA+ experiments where motifs across samples have been discovered
-                in a completely unsupervised manner. Experiments in <strong>bold</strong> are editable, while the rest
-                can only be viewed in read-only mode.
-            </p>
-            <div id="accordion3">
-                {% for mf in mfe|sort_by:'name' %}
-                    <h3><b>{{ mf.name }}</b> ({{ mf.description }})</h3>
-                    <div>
-                        <p>
-                            <A href="/basicviz/multi_alphas/{{ mf.id }}" class="btn btn-block btn-default"><span
-                                    class="glyphicon glyphicon-signal"></span> Explore alphas</A>
-                            <A href="/basicviz/alpha_correlation/{{ mf.id }}" class="btn btn-block btn-default"><span
-                                    class="glyphicon glyphicon-tasks"></span> Alpha correlation</A>
-                            <A href="/basicviz/alpha_de/{{ mf.id }}" class="btn btn-block btn-default"><span
-                                    class="glyphicon glyphicon-object-align-bottom"></span> Alpha Differential
-                                Expression</A>
-                            <A href="/options/view_mf_experiment_options/{{ mf.id }}" class="btn btn-block btn-default"><span
-                                    class="glyphicon glyphicon-option-horizontal"></span> View options</A>
-                            <A href="/basicviz/wipe_cache/{{ mf.id }}" class="btn btn-block btn-default"
-                               title="(force recomputation of alpha tables when, e.g. annotations have been added)"><span
-                                    class="glyphicon glyphicon-exclamation-sign"></span> Wipe Cache</A>
-                        </p>
-                        <table class="table">
-                            {% for exp in mf.multilink_set.all|sort_by:'experiment__name' %}
-                                <tr>
-                                    <td>{{ exp.experiment }}</td>
-                                    <td><a href="/basicviz/show_docs/{{ exp.experiment.id }}"
-                                           class="btn btn-xs btn-default"><span
-                                            class="glyphicon glyphicon-export"></span>Show Parents</a></td>
-                                    <td><a href="/basicviz/view_mass2motifs/{{ exp.experiment.id }}"
-                                           class="btn btn-xs btn-default"><span
-                                            class="glyphicon glyphicon-barcode"></span> Show Motifs</a></td>
-                                    <td><a href="/basicviz/start_viz/{{ exp.experiment.id }}"
-                                           class="btn btn-xs btn-default"><span
-                                            class="glyphicon glyphicon-stats"></span> Start Visualisation</a></td>
-                                    <td><a href="/basicviz/topic_table/{{ exp.experiment.id }}"
-                                           class="btn btn-xs btn-default"><span
-                                            class="glyphicon glyphicon-list-alt"></span> Topic Table</a></td>
-                                    <td><a href="/basicviz/rate_by_conserved_motif_rating/{{ exp.experiment.id }}"
-                                           class="btn btn-xs btn-default"><span
-                                            class="glyphicon glyphicon-indent-right"></span> Rate by Conserved
-                                        Motifs</a></td>
-                                </tr>
-                            {% endfor %}
-                        </table>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p>You do not have access to this functionality yet.</p>
-        {% endif %}
-    </div>
+{% endblock %}
 
-    {% endblock %}
+{% block js_block %}
 
-    {% block js_block %}
-
-        <script>
-            $(function () {
-                $("#accordion").accordion({
-                    collapsible: true,
-                    heightStyle: "content",
-                    active: false
-                });
+    <script>
+        $(function () {
+            $("#accordion").accordion({
+                collapsible: true,
+                heightStyle: "content",
+                active: false
             });
-            $(function () {
-                $("#accordion2").accordion({
-                    collapsible: true,
-                    heightStyle: "content",
-                    active: false
-                });
+        });
+        $(function () {
+            $("#accordion2").accordion({
+                collapsible: true,
+                heightStyle: "content",
+                active: false
             });
-            $(function () {
-                $("#accordion3").accordion({
-                    collapsible: true,
-                    heightStyle: "content",
-                    active: false
-                });
-            });
-            $(function () {
-                $("#tabs").tabs();
-            });
-        </script>
+        });
+        $(function () {
+            $("#tabs").tabs();
+        });
+    </script>
 
-    {% endblock %}
+{% endblock %}

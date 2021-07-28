@@ -92,14 +92,9 @@ def user_login(request):
                 messages.warning(request, error_message)
                 return render(request, 'registration/login.html', {})
         else:
-            if username == 'guest':  # auto-create if not there
-                guest_user = User.objects.create_user(username='guest', password='guest')
-                login(request, guest_user)
-                return HttpResponseRedirect('/basicviz/')
-            else:
-                error_message = 'Invalid login details provided for {0}'.format(username)
-                messages.warning(request, error_message)
-                return render(request, 'registration/login.html', {})
+            error_message = 'Invalid login details provided for {0}'.format(username)
+            messages.warning(request, error_message)
+            return render(request, 'registration/login.html', {})
 
     else:  # GET
         return render(request, 'registration/login.html', {})

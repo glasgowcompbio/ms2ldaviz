@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block title %}Select an experiment{% endblock %}
+
+{% block head_block %}
+    <style>
+    </style>
+{% endblock %}
+
+{% block body_block %}
+
+    <div id="tabs">
+    <ul>
+        <li><a href="#tabs-1">MS2LDA+</a></li>
+    </ul>
+    <div id="tabs-1">
+        <h4>MS2LDA+ Experiments</h4>
+        <p>
+            MS2LDA+ experiments share Mass2Motifs across multiple samples, allowing us to
+            infer the prevalence of that motif in a particular sample.
+        </p>
+        <p>
+            The following are MS2LDA+ experiments where motifs across samples have been discovered
+            in a completely unsupervised manner. Experiments in <strong>bold</strong> are editable, while the rest
+            can only be viewed in read-only mode.
+        </p>
+        <p>
+            <a href="/basicviz" class="btn btn-warning">Return to LDA Experiments</a>
+        </p>
+        <div id="accordion3">
+            {% for mf in mfe|sort_by:'name' %}
+                <h3><b>{{ mf.name }}</b> ({{ mf.description }})</h3>
+                <div>
+                    <p>
+                        <A href="/basicviz/multi_alphas/{{ mf.id }}" class="btn btn-block btn-default"><span
+                                class="glyphicon glyphicon-signal"></span> Explore alphas</A>
+                        <A href="/basicviz/alpha_correlation/{{ mf.id }}" class="btn btn-block btn-default"><span
+                                class="glyphicon glyphicon-tasks"></span> Alpha correlation</A>
+                        <A href="/basicviz/alpha_de/{{ mf.id }}" class="btn btn-block btn-default"><span
+                                class="glyphicon glyphicon-object-align-bottom"></span> Alpha Differential
+                            Expression</A>
+                        <A href="/options/view_mf_experiment_options/{{ mf.id }}"
+                           class="btn btn-block btn-default"><span
+                                class="glyphicon glyphicon-option-horizontal"></span> View options</A>
+                        <A href="/basicviz/wipe_cache/{{ mf.id }}" class="btn btn-block btn-default"
+                           title="(force recomputation of alpha tables when, e.g. annotations have been added)"><span
+                                class="glyphicon glyphicon-exclamation-sign"></span> Wipe Cache</A>
+                    </p>
+                    <table class="table">
+                        {% for exp in mf.multilink_set.all|sort_by:'experiment__name' %}
+                            <tr>
+                                <td>{{ exp.experiment }}</td>
+                                <td><a href="/basicviz/show_docs/{{ exp.experiment.id }}"
+                                       class="btn btn-xs btn-default"><span
+                                        class="glyphicon glyphicon-export"></span>Show Parents</a></td>
+                                <td><a href="/basicviz/view_mass2motifs/{{ exp.experiment.id }}"
+                                       class="btn btn-xs btn-default"><span
+                                        class="glyphicon glyphicon-barcode"></span> Show Motifs</a></td>
+                                <td><a href="/basicviz/start_viz/{{ exp.experiment.id }}"
+                                       class="btn btn-xs btn-default"><span
+                                        class="glyphicon glyphicon-stats"></span> Start Visualisation</a></td>
+                                <td><a href="/basicviz/topic_table/{{ exp.experiment.id }}"
+                                       class="btn btn-xs btn-default"><span
+                                        class="glyphicon glyphicon-list-alt"></span> Topic Table</a></td>
+                                <td><a href="/basicviz/rate_by_conserved_motif_rating/{{ exp.experiment.id }}"
+                                       class="btn btn-xs btn-default"><span
+                                        class="glyphicon glyphicon-indent-right"></span> Rate by Conserved
+                                    Motifs</a></td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block js_block %}
+
+    <script>
+        $(function () {
+            $("#accordion3").accordion({
+                collapsible: true,
+                heightStyle: "content",
+                active: false
+            });
+        });
+        $(function () {
+            $("#tabs").tabs();
+        });
+    </script>
+
+{% endblock %}

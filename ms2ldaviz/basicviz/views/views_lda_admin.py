@@ -32,7 +32,7 @@ def show_log_file(request, experiment_id):
 
 @user_passes_test(lambda u: u.is_staff)
 def list_all_experiments(request):
-    experiments = Experiment.objects.all()
+    experiments = Experiment.objects.all().prefetch_related()
     results = []
     for experiment in experiments:
         user_experiments = UserExperiment.objects.filter(experiment=experiment)
