@@ -13,5 +13,3 @@ DATABASES['default']['HOST'] = 'db'
 CELERY_BROKER_URL = "redis://redis:6379/0"
 
 CHEMSPIDER_APIKEY='fLazuvY8CEiRgF8QfhgrGCr7v1xqD8f9'
-
-CACHES['default']['LOCATION'] = 'cache:11211'
