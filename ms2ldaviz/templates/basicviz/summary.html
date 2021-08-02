@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load cache %}
 
 {% block head_block %}
 {% endblock %}
@@ -25,9 +26,7 @@
                 </ul>
             </div>
         </div>
-        <div>
 
-        </div>
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>Experiment options (if run on Ms2lda.org)</h4>
@@ -49,51 +48,58 @@
                 </ul>
             </div>
         </div>
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <h4>Fragmentation Spectra Details</h4>
-                <p>
-                    The following table lists the fragmentation spectra of molecules
-                    in this dataset. Click the links in the <strong>Name</strong> column
-                    for more information on that molecule, including associated Mass2Motifs
-                    that explain the features of the spectra.
-                </p>
-                <table class="table" style="display:none" id="parenttable">
-                    <thead>
-                    <tr>
-                        {% if documents.0.user_cols %}
-                            {% for user_col_name, user_col_value in documents.0.user_cols %}
-                                <th>{{ user_col_name }}</th>
-                            {% endfor %}
-                        {% endif %}
-                        <th>Name</th>
-                        <th>Precursor Mass</th>
-                        <th>link</th>
-                        <th>Display Name</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for doc in documents %}
+
+        {% cache None summary_documents experiment.id %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>Fragmentation Spectra Details</h4>
+                    <p>
+                        The following table lists the fragmentation spectra of molecules
+                        in this dataset. Click the links in the <strong>Name</strong> column
+                        for more information on that molecule, including associated Mass2Motifs
+                        that explain the features of the spectra.
+                    </p>
+                    <table class="table" style="display:none" id="parenttable">
+                        <thead>
                         <tr>
                             {% if documents.0.user_cols %}
-                                {% for user_col_name, user_col_value in doc.user_cols %}
-                                    <td>{{ user_col_value }}</td>
+                                {% for user_col_name, user_col_value in documents.0.user_cols %}
+                                    <th>{{ user_col_name }}</th>
                                 {% endfor %}
                             {% endif %}
-                            <td><a href="/basicviz/show_doc/{{ doc.id }}">{{ doc.name }}</a></td>
-                            <td>{{ doc.mass }}</td>
-                            <td>{% if doc.csid %}
-                                <a href="http://www.chemspider.com/Chemical-Structure.{{ doc.csid }}.html" target=new>View
-                                    on ChemSpider</a>
-                            {% endif %}
-                            </td>
-                            <td>{{ doc.display_name }}</td>
+                            <th>Name</th>
+                            <th>Precursor Mass</th>
+                            <th>link</th>
+                            <th>Display Name</th>
                         </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        {% for doc in documents %}
+                            <tr>
+                                {% if documents.0.user_cols %}
+                                    {% for user_col_name, user_col_value in doc.user_cols %}
+                                        <td>{{ user_col_value }}</td>
+                                    {% endfor %}
+                                {% endif %}
+                                <td><a href="/basicviz/show_doc/{{ doc.id }}">{{ doc.name }}</a></td>
+                                <td>{{ doc.mass }}</td>
+                                <td>{% if doc.csid %}
+                                    <a href="http://www.chemspider.com/Chemical-Structure.{{ doc.csid }}.html"
+                                       target=new>View
+                                        on ChemSpider</a>
+                                {% endif %}
+                                </td>
+                                <td>{{ doc.display_name }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        {% endcache %}
+
+        {#  remember to invalidate the cache when the annotations are changed #}
+        {#  {% cache None summary_motif_tuples experiment.id %} #}
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>Mass2Motif Details</h4>
@@ -125,44 +131,52 @@
                 </table>
             </div>
         </div>
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <h4>Extracted Fragment and Loss Features</h4>
-                <p>
-                    The following table lists all features extracted from the dataset,
-                    that can be explained by any inferred Mass2Motif with probability > 0.05.
-                </p>
-                <table class='table' style="display:none" id='featuretable'>
-                    <thead>
-                    <tr>
-                        <th>Motif</th>
-                        <th>Feature</th>
-                        <th>Min m/z</th>
-                        <th>Max m/z</th>
-                        <th>Probability</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for motif_feature in motif_features %}
+        {#  {% endcache %} #}
+
+        {% cache None summary_motif_features experiment.id %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h4>Extracted Fragment and Loss Features</h4>
+                    <p>
+                        The following table lists all features extracted from the dataset,
+                        that can be explained by any inferred Mass2Motif with probability > 0.05.
+                    </p>
+                    <table class='table' style="display:none" id='featuretable'>
+                        <thead>
                         <tr>
-                            <td>
-                                <a href="/basicviz/view_parents/{{ motif_feature.mass2motif.id }}">{{ motif_feature.mass2motif.name }}</a>
-                            </td>
-                            <td>{{ motif_feature.feature.name }}</td>
-                            <td>{{ motif_feature.feature.min_mz }}</td>
-                            <td>{{ motif_feature.feature.max_mz }}</td>
-                            <td>{{ motif_feature.probability|floatformat:"3"}}</td>
+                            <th>Motif</th>
+                            <th>Feature</th>
+                            <th>Min m/z</th>
+                            <th>Max m/z</th>
+                            <th>Probability</th>
                         </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        {% for motif_feature in motif_features %}
+                            <tr>
+                                <td>
+                                    <a href="/basicviz/view_parents/{{ motif_feature.mass2motif.id }}">{{ motif_feature.mass2motif.name }}</a>
+                                </td>
+                                <td>{{ motif_feature.feature.name }}</td>
+                                <td>{{ motif_feature.feature.min_mz }}</td>
+                                <td>{{ motif_feature.feature.max_mz }}</td>
+                                <td>{{ motif_feature.probability|floatformat:"3"}}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        {% endcache %}
+
+        {#  remember to invalidate the cache when the threshold is changed from the settings page #}
+        {#  {% cache None summary_all_docs_motifs experiment.id %} #}
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>All Fragmentation Spectra and Mass2Motifs matching details</h4>
                 <p>
-                    The following table lists all matchings of Fragmentation Spectra and Mass2Motifs extracted from the
+                    The following table lists all matchings of Fragmentation Spectra and Mass2Motifs extracted from
+                    the
                     dataset.
                 </p>
                 <table class='table' style="display:none" id='docmotiftable'>
@@ -207,6 +221,7 @@
                 </table>
             </div>
         </div>
+        {#  {% endcache %}#}
 
     </div>
 
@@ -222,8 +237,6 @@
 
     <link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
     <link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
-
-
 
     <script type="text/javascript">
 

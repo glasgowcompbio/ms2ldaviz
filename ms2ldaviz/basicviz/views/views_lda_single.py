@@ -26,7 +26,6 @@ from basicviz.views import index as basicviz_index
 from basicviz.views.views_lda_admin import list_all_experiments
 from decomposition.decomposition_functions import get_parents_decomposition, get_decomp_doc_context_dict
 from massbank.forms import Mass2MotifMetadataForm
-from massbank.views import get_massbank_form
 from motifdb.models import MDBMotif
 from ms1analysis.models import Analysis, AnalysisResult, AnalysisResultPlage
 from options.views import get_option
@@ -396,7 +395,8 @@ def view_parents(request, motif_id):
         return HttpResponse("You don't have permission to access this page")
     print('Motif metadata', motif.metadata)
     context_dict = {'mass2motif': motif}
-    motif_feature_instances = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by('-probability')
+    motif_feature_instances = Mass2MotifInstance.objects.filter(mass2motif=motif).order_by(
+        '-probability').select_related('feature')
     total_prob = sum([m.probability for m in motif_feature_instances])
 
     # get all the documents linked above threshold to this motif in this experiment
@@ -408,9 +408,12 @@ def view_parents(request, motif_id):
     for motif_feature_instance in motif_feature_instances:
         print('Querying substructures of motif_feature_instance %s' % motif_feature_instance)
         feature = motif_feature_instance.feature
-        document_feature_instance = FeatureInstance.objects.filter(feature=feature, document__in=documents)
+        document_feature_instance = FeatureInstance.objects.filter(feature=feature,
+                                                                   document__in=documents).select_related(
+            'document')
         docs = set([x.document for x in document_feature_instance])
-        subs = FeatureInstance2Sub.objects.filter(feature__in=document_feature_instance)
+        subs = FeatureInstance2Sub.objects.filter(feature__in=document_feature_instance).select_related(
+            'feature', 'feature__document', 'sub')
         most_common = most_common_subs(subs, docs)  # sort subs by most-common
         motif_features_subs.append((motif_feature_instance, most_common, len(most_common),))
 
@@ -428,7 +431,7 @@ def view_parents(request, motif_id):
     # if len(substituent_terms) > 0:
     #     context_dict['substituent_terms'] = substituent_terms
 
-    dm2m = get_docm2m(motif)
+    dm2m = get_docm2m(motif, with_subterm=True)
     context_dict['dm2ms'] = dm2m
 
     context_dict['status'] = None
@@ -459,15 +462,11 @@ def view_parents(request, motif_id):
         context_dict['motif_annotation'] = motif.annotation
         context_dict['short_annotation'] = motif.short_annotation
 
-    massbank_form = get_massbank_form(motif, motif_feature_instances)
-    context_dict['massbank_form'] = massbank_form
-
     # New classyfire code
     term_counts = {}
     for dm in dm2m:
         doc = dm.document
         sub_terms = doc.substituentinstance_set.all()
-        print(doc.experiment)
         for s in sub_terms:
             if not s.subterm in term_counts:
                 term_counts[s.subterm] = 0
@@ -549,23 +548,17 @@ def mass2motif_feature(request, fm2m_id):
 def get_parents(request, motif_id, vo_id):
     viz_options = VizOptions.objects.get(id=vo_id)
     experiment = viz_options.experiment
+    # previously passed to get_doc_for_plot, but was actually unused there
     edge_choice = get_option('default_doc_m2m_score', experiment)
     if experiment.experiment_type == '0':  # ms2lda
         motif = Mass2Motif.objects.get(id=motif_id)
-
-        docm2m = get_docm2m(motif)
-        # if edge_choice == 'probability':
-        #     docm2m = DocumentMass2Motif.objects.filter(mass2motif=motif, probability__gte=viz_options.edge_thresh).order_by(
-        #         '-probability')
-        # else:
-        #     docm2m = DocumentMass2Motif.objects.filter(mass2motif=motif,
-        #                                                overlap_score__gte=viz_options.edge_thresh).order_by(
-        #         '-overlap_score')
-        documents = [d.document for d in docm2m]
+        docm2m = get_docm2m(motif, with_plot_data=True)
+        docs = [dm.document for dm in docm2m]
+        docs_prob_overlap = get_docs_prob_overlap(docs, motif)
         parent_data = []
         for dm in docm2m:
             document = dm.document
-            parent_data.append(get_doc_for_plot(document.id, motif_id, score_type=edge_choice))
+            parent_data.append(get_doc_for_plot(document, motif=motif, docs_prob_overlap=docs_prob_overlap))
     else:  # decomposition
         parent_data = get_parents_decomposition(motif_id, vo_id=vo_id, experiment=experiment)
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
@@ -573,27 +566,13 @@ def get_parents(request, motif_id, vo_id):
 
 def get_parents_no_vo(request, motif_id):
     motif = Mass2Motif.objects.get(id=motif_id)
-
-    # doc_m2m_threshold = get_option('doc_m2m_threshold',experiment = motif.experiment)
-    # if doc_m2m_threshold:
-    #     doc_m2m_threshold = float(doc_m2m_threshold)
-    # else:
-    #     doc_m2m_threshold = 0.00 # Default value
-
-    # default_score = get_option('default_doc_m2m_score',experiment = motif.experiment)
-    # if not default_score:
-    #     default_score = 'probability'
-
-    # if default_score == 'probability':
-    #     docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = doc_m2m_threshold).order_by('-probability')
-    # else:
-    #     docm2m = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = doc_m2m_threshold).order_by('-overlap_score')
-    docm2m = get_docm2m(motif)
-    documents = [d.document for d in docm2m]
+    docm2m = get_docm2m(motif, with_plot_data=True)
+    docs = [dm.document for dm in docm2m]
+    docs_prob_overlap = get_docs_prob_overlap(docs, motif)
     parent_data = []
     for dm in docm2m:
         document = dm.document
-        parent_data.append(get_doc_for_plot(document.id, motif_id))
+        parent_data.append(get_doc_for_plot(document, motif=motif, docs_prob_overlap=docs_prob_overlap))
     return HttpResponse(json.dumps(parent_data), content_type='application/json')
 
 
@@ -641,22 +620,18 @@ def get_word_graph(request, motif_id, vo_id, experiment=None):
 
     if experiment.experiment_type == "0":  # standard LDA
         motif = Mass2Motif.objects.get(id=motif_id)
-        m2mIns = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01)
+        m2mIns = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01).select_related('feature')
         docm2ms = get_docm2m(motif)
-        # if edge_choice == 'probability':
-        #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
-        # else:
-        #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh)
         data_for_json = []
         data_for_json.append(len(docm2ms))
         feat_counts = {}
         for feature in m2mIns:
             feat_counts[feature.feature] = 0
-        for dm2m in docm2ms:
-            fi = FeatureInstance.objects.filter(document=dm2m.document)
-            for ft in fi:
-                if ft.feature in feat_counts:
-                    feat_counts[ft.feature] += 1
+        all_docs = [dm2m.document for dm2m in docm2ms]
+        fi = FeatureInstance.objects.filter(document__in=all_docs).select_related('feature')
+        for ft in fi:
+            if ft.feature in feat_counts:
+                feat_counts[ft.feature] += 1
         colours = '#404080'
         feat_list = []
         for feature in feat_counts:
@@ -697,26 +672,19 @@ def get_intensity(request, motif_id, vo_id, experiment=None):
 
     if experiment.experiment_type == "0":  # standard LDA
         motif = Mass2Motif.objects.get(id=motif_id)
-        m2mIns = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01)
+        m2mIns = Mass2MotifInstance.objects.filter(mass2motif=motif, probability__gte=0.01).select_related('feature')
         docm2ms = get_docm2m(motif)
-        # if edge_choice == 'probability':
-        #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh)
-        # else:
-        #     docm2ms = DocumentMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh)
         documents = [d.document for d in docm2ms]
         data_for_json = []
-        feat_total_intensity = {}
-        feat_motif_intensity = {}
+
+        feat_total_intensity = defaultdict(float)
+        feat_motif_intensity = defaultdict(float)
         features = [m.feature for m in m2mIns]
-        for feature in features:
-            feat_total_intensity[feature] = 0.0
-            feat_motif_intensity[feature] = 0.0
-        for feature in features:
-            fi = FeatureInstance.objects.filter(feature=feature)
-            for ft in fi:
-                feat_total_intensity[feature] += ft.intensity
-                if ft.document in documents:
-                    feat_motif_intensity[feature] += ft.intensity
+        fi = FeatureInstance.objects.filter(feature__in=features).select_related('document', 'feature')
+        for ft in fi:
+            feat_total_intensity[ft.feature] += ft.intensity
+            if ft.document in documents:
+                feat_motif_intensity[ft.feature] += ft.intensity
 
         feat_list = []
         feat_tot_intensity = zip(feat_total_intensity.keys(), feat_total_intensity.values())
@@ -771,64 +739,45 @@ def view_mass2motifs(request, experiment_id):
         return render(request, 'decomposition/view_mass2motifs.html', context_dict)
 
 
-def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
+def get_docs_prob_overlap(documents, motif):
+    dm2ms = DocumentMass2Motif.objects.filter(mass2motif=motif, document__in=documents).select_related('document')
+    res = {dm2m.document: (dm2m.probability, dm2m.overlap_score) for dm2m in dm2ms}
+    return res
+
+
+def get_doc_for_plot(document, motif=None, get_key=False, docs_prob_overlap=None):
     colours = ['red', 'green', 'black', 'orange']
-    document = Document.objects.get(id=doc_id)
-    features = FeatureInstance.objects.filter(document=document)
+    features = document.featureinstance_set.all()
     plot_fragments = []
 
     # Get the parent info
-    metadata = jsonpickle.decode(document.metadata)
+    # metadata = jsonpickle.decode(document.metadata)
     precursor_mass = document.mass
-    # if 'parentmass' in metadata:
-    #     parent_mass = float(metadata['parentmass'])
-    # elif 'mz' in metadata:
-    #     parent_mass = float(metadata['mz'])
-    # elif '_' in document.name:
-    #     try:
-    #         parent_mass = float(document.name.split('_')[0])
-    #     except:
-    #         # in case the name isnt that format
-    #         parent_mass = 0.0
-    # else:
-    #     parent_mass = 0.0
     probability = "na"
-
-    # default_score = get_option('default_doc_m2m_score', experiment=document.experiment)
-    # if not default_score:
-    #     default_score = 'probability'
-
-    # following is only used now when we're getting the multi-colour plot
-    default_score = 'probability'
-
-    if not motif_id == None:
-        m2m = Mass2Motif.objects.get(id=motif_id)
-        dm2m = DocumentMass2Motif.objects.get(mass2motif=m2m, document=document)
-        probability = "Probability: {}, overlap: {}".format(dm2m.probability, dm2m.overlap_score)
-        # if not score_type:
-        #     if default_score == 'probability':
-        #         probability = dm2m.probability
-        #     else:
-        #         probability = dm2m.overlap_score
-        # else:
-        #     if score_type == 'probability':
-        #         probability = dm2m.probability
-        #     else:
-        #         probability = dm2m.overlap_score
+    if motif is not None:
+        if docs_prob_overlap is not None and document in docs_prob_overlap:
+            prob, overl = docs_prob_overlap[document]
+        else:
+            dm2m = DocumentMass2Motif.objects.get(mass2motif=motif, document=document)
+            prob = dm2m.probability
+            overl = dm2m.overlap_score
+        probability = "Probability: {}, overlap: {}".format(prob, overl)
 
     parent_data = (precursor_mass, 100.0, document.display_name, document.annotation, probability)
     plot_fragments.append(parent_data)
     child_data = []
 
+    # following is only used now when we're getting the multi-colour plot
+    default_score = 'probability'
+
     # Only colours the first five
-    if motif_id == None:
+    if motif is not None:
         topic_colours = {}
+        dm2ms = document.documentmass2motif_set.all()
         if default_score == 'probability':
-            topics = sorted(DocumentMass2Motif.objects.filter(document=document), key=lambda x: x.probability,
-                            reverse=True)
+            topics = sorted(dm2ms, key=lambda x: x.probability, reverse=True)
         else:
-            topics = sorted(DocumentMass2Motif.objects.filter(document=document), key=lambda x: x.overlap_score,
-                            reverse=True)
+            topics = sorted(dm2ms, key=lambda x: x.overlap_score, reverse=True)
         topics_to_plot = []
         for i in range(4):
             if i == len(topics):
@@ -836,7 +785,7 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
             topics_to_plot.append(topics[i].mass2motif)
             topic_colours[topics[i].mass2motif] = colours[i]
     else:
-        topic = Mass2Motif.objects.get(id=motif_id)
+        topic = motif
         topics_to_plot = [topic]
         topic_colours = {topic: 'red'}
 
@@ -861,12 +810,11 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
             # temp is a vector of length number frag features, including all the frags transformed by this diff
 
             diff_instances[d] = [(i, frag_masses.index(t)) for i, t in enumerate(temp) if t in frag_masses]
-        print(diff_instances)
 
         diff_pos = 100
 
         for feature_instance in features:
-            phi_values = FeatureMass2MotifInstance.objects.filter(featureinstance=feature_instance)
+            phi_values = feature_instance.featuremass2motifinstance_set.all()
             mass = float(feature_instance.feature.name.split('_')[1])
             this_intensity = feature_instance.intensity * 100.0 / max_intensity
             feature_name = feature_instance.feature.name
@@ -913,9 +861,9 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
                             if phi_value.mass2motif in topics_to_plot and phi_value.probability >= 0.5:
                                 colour = topic_colours[phi_value.mass2motif]
                                 child_data.append((
-                                                  float(start_mass), float(stop_mass), 0.9 * intensity, 0.9 * intensity,
-                                                  2, colour, feature_name)
-                                                  )
+                                    float(start_mass), float(stop_mass), 0.9 * intensity, 0.9 * intensity,
+                                    2, colour, feature_name)
+                                )
                                 diff_pos -= 5
                                 plotted = True
                         if not plotted:
@@ -938,7 +886,7 @@ def get_doc_for_plot(doc_id, motif_id=None, get_key=False, score_type=None):
 def get_doc_topics(request, doc_id):
     document = Document.objects.get(id=doc_id)
     if document.experiment.experiment_type == '0':
-        plot_fragments = [get_doc_for_plot(doc_id, get_key=True)]
+        plot_fragments = [get_doc_for_plot(document, get_key=True)]
     elif document.experiment.experiment_type == '1':  # decomposition
         raise Http404('Page not found')
         # score_type = get_option('default_doc_m2m_score',experiment = document.experiment)
@@ -1657,13 +1605,27 @@ def get_prob_overlap_thresholds(experiment, doc_m2m_prob_threshold=None, doc_m2m
 
 ## updated get_docm2m function, use threshold for probability and overlap respectively
 ## function is used to get MocumentMassMass2Motif by motif only
-def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
+def get_docm2m(mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None, with_subterm=False,
+               with_plot_data=False):
     if doc_m2m_prob_threshold is None or doc_m2m_overlap_threshold is None:
         experiment = mass2motif.experiment
         doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
 
     dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=doc_m2m_prob_threshold,
-                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
+                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by(
+        '-probability').select_related('document', 'mass2motif')
+
+    if with_subterm:
+        dm2m = dm2m.prefetch_related('document__substituentinstance_set__subterm')
+    elif with_plot_data:
+        dm2m = dm2m.prefetch_related(
+            'document__featureinstance_set',
+            'document__featureinstance_set__feature',
+            'document__featureinstance_set__featuremass2motifinstance_set',
+            'document__featureinstance_set__featuremass2motifinstance_set__mass2motif',
+            'document__documentmass2motif_set',
+            'document__documentmass2motif_set__mass2motif'
+        )
 
     return dm2m
 
@@ -1685,7 +1647,8 @@ def get_docm2m_all(experiment, doc_m2m_prob_threshold=None, doc_m2m_overlap_thre
 def get_docm2m_by_motif(experiment, mass2motif, doc_m2m_prob_threshold=None, doc_m2m_overlap_threshold=None):
     doc_m2m_prob_threshold, doc_m2m_overlap_threshold = get_prob_overlap_thresholds(experiment)
     dm2m = DocumentMass2Motif.objects.filter(mass2motif=mass2motif, probability__gte=doc_m2m_prob_threshold,
-                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by('-probability')
+                                             overlap_score__gte=doc_m2m_overlap_threshold).order_by(
+        '-probability').select_related('document')
 
     return dm2m
 
