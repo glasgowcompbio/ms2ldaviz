@@ -304,6 +304,7 @@ def get_doc_context_dict(document):
         'feature'
     ).prefetch_related(
         'featuremass2motifinstance_set',
+        'featuremass2motifinstance_set__mass2motif',
         'featureinstance2sub_set',
         'feature__experiment',
         'feature__experiment__document_set'
@@ -525,17 +526,23 @@ def mass2motif_feature(request, fm2m_id):
     total_intensity = 0.0
     topic_intensity = 0.0
     n_docs = 0
+
     feature_instances = FeatureInstance.objects.filter(feature=mass2motif_feature.feature)
-    docs = []
     for instance in feature_instances:
         total_intensity += instance.intensity
-        fi_m2m = FeatureMass2MotifInstance.objects.filter(featureinstance=instance,
-                                                          mass2motif=mass2motif_feature.mass2motif)
-        if len(fi_m2m) > 0:
-            topic_intensity += fi_m2m[0].probability * instance.intensity
-            if fi_m2m[0].probability >= 0.75:
-                n_docs += 1
-                docs.append(instance.document)
+
+    fi_m2ms = FeatureMass2MotifInstance.objects.filter(featureinstance__in=feature_instances,
+                                                      mass2motif=mass2motif_feature.mass2motif).select_related(
+        'featureinstance',
+        'featureinstance__document'
+    )
+    docs = []
+    for fi_m2m in fi_m2ms:
+        instance = fi_m2m.featureinstance
+        topic_intensity += fi_m2m.probability * instance.intensity
+        if fi_m2m.probability >= 0.75:
+            n_docs += 1
+            docs.append(instance.document)
 
     context_dict['total_intensity'] = total_intensity
     context_dict['topic_intensity'] = topic_intensity

@@ -185,7 +185,7 @@
                             <td>
                                 <ul>
                                     {% for smile, count, feature_sub_instances in subs %}
-                                        {% if forloop.counter0 < top_n %}
+                                        {% if forloop.counter0 < top_n and smile != 'None' %}
                                             <li>
                                                 <div class="floatbar">
                                                     <a href="#" onclick="return false;">
@@ -213,7 +213,7 @@
                                     <div id="collapse-{{ motif_feature.feature.id }}" class="collapse">
                                         <ul>
                                             {% for smile, count, feature_sub_instances in subs %}
-                                                {% if forloop.counter0 >= top_n %}
+                                                {% if forloop.counter0 >= top_n and smile != 'None' %}
                                                     <li>
                                                         <div class="floatbar">
                                                             <a href="#" onclick="return false;">
