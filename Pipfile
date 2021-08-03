@@ -17,7 +17,6 @@ psycopg2-binary = "==2.8.6" # https://stackoverflow.com/questions/38807296/djang
 redis = "*"
 celery = "*"
 gunicorn = "*"
-python-memcached = "*"
 
 pymzml = "*"
 ChemSpiPy = "*"

@@ -36,8 +36,6 @@ services:
       - "${PORT:-8001}:80"
     depends_on:
       - web
-  cache:
-    image: memcached
 volumes:
   jobs:
   datadir:

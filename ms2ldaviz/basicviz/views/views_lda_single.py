@@ -1676,7 +1676,7 @@ def get_docm2m_all(experiment, doc_m2m_prob_threshold=None, doc_m2m_overlap_thre
 
     dm2m = DocumentMass2Motif.objects.filter(mass2motif__in=mass2motifs, probability__gte=doc_m2m_prob_threshold,
                                              overlap_score__gte=doc_m2m_overlap_threshold).order_by(
-        '-probability').select_related('mass2motif').prefetch_related('document')
+        '-probability').select_related('mass2motif', 'document')
 
     return dm2m
 

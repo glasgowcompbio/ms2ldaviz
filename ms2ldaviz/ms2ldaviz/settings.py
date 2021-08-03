@@ -144,13 +144,13 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10000000
 # Replace it with own token (https://developer.rsc.org/) for your own server.
 CHEMSPIDER_APIKEY='b2VqZPJug1yDvbPgawGdGO59pdBw4eaf'
 
-DEFAULT_CACHE_TIMEOUT = 60 * 60 * 24
+DEFAULT_CACHE_TIMEOUT = 60 * 60 * 24 * 7
 
 # Page cache
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.join(BASE_DIR, 'django_cache'),
         'TIMEOUT': DEFAULT_CACHE_TIMEOUT
     }
 }
