@@ -3,21 +3,24 @@
 {% load static %}
 
 {% block head_block %}
-	<style>
-		.axis path,
-		.axis line {
-		    fill: none;
-		    stroke: black;
-		    shape-rendering: crispEdges;
-		}
-		.axis text {
-		    font-family: sans-serif;
-		    font-size: 11px;
-		}
-		.axis-label {
-		  font-family: sans-serif;
-		  font-size: 14px;
-		}
+    <style>
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: black;
+            shape-rendering: crispEdges;
+        }
+
+        .axis text {
+            font-family: sans-serif;
+            font-size: 11px;
+        }
+
+        .axis-label {
+            font-family: sans-serif;
+            font-size: 14px;
+        }
+
         .box {
             display: none;
             padding: 10px;
@@ -28,17 +31,7 @@
             display: block;
         }
 
-        /* for massbank dialog */
-        .required:after {
-            content:" *";
-            color:#FF0000;
-        }
-        .massbank-form { padding:20px; }
-        .massbank-form .field { padding: 4px; margin:1px; background: #eee; }
-        .massbank-form .field label { display:inline-block; width:200px; margin-left:5px; }
-        .massbank-form .field input { display:inline-block; }
-
-	</style>
+    </style>
     <link rel="stylesheet" href="{% static 'css/ChemDoodleWeb.css' %}" type="text/css">
     <script type="text/javascript" src="{% static 'js/ChemDoodleWeb.js' %}"></script>
     <script type="text/javascript">
@@ -77,6 +70,7 @@
                 }
             });
         }
+
         function showMol(id, molblock, fragatoms = "", type = "loss") {
             var viewer = new ChemDoodle.ViewerCanvas(id, 200, 150);
             viewer.specs.bonds_width_2D = .6;
@@ -102,9 +96,9 @@
 {% endblock %}
 
 {% block body_block %}
-	<h3>Mass2Motif: {{mass2motif.name}}</h3>
+    <h3>Mass2Motif: {{ mass2motif.name }}</h3>
     <h6>
-        <a href="/basicviz/summary/{{experiment.id}}">
+        <a href="/basicviz/summary/{{ experiment.id }}">
             Return to experiment {{ experiment.name }}
         </a>
     </h6>
@@ -123,17 +117,18 @@
                     {% if status %}
                         <p><strong>{{ status }}</strong></p>
                     {% endif %}
-                    <form id="mass2motifmetadata_form" method="post" action="/basicviz/view_parents/{{mass2motif.id}}/">
+                    <form id="mass2motifmetadata_form" method="post"
+                          action="/basicviz/view_parents/{{ mass2motif.id }}/">
                         {% csrf_token %}
-                    {% for hidden in metadata_form.hidden_fields %}
-                        {{ hidden }}
-                    {% endfor %}
+                        {% for hidden in metadata_form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
 
-                    {% for field in metadata_form.visible_fields %}
-                        <p>{{ field.errors }}</p>
-                        <p>  {{field.label}} {% if field.field.required %} * {% endif %} {{ field }}</p>
-                    {% endfor %}
-                    <input type="submit" name="submit" value="Save" class="btn btn-primary" />
+                        {% for field in metadata_form.visible_fields %}
+                            <p>{{ field.errors }}</p>
+                            <p>  {{ field.label }} {% if field.field.required %} * {% endif %} {{ field }}</p>
+                        {% endfor %}
+                        <input type="submit" name="submit" value="Save" class="btn btn-primary"/>
                     </form>
                 </div>
             </div>
@@ -164,92 +159,93 @@
                     The following table shows the fragment and loss features that are explained by this
                     Mass2Motifs and their corresponding probabilities.
                     After thresholding to save the model, the total probability left in this motif is
-                    {{total_prob}}.
+                    {{ total_prob }}.
                     The column <strong>MAGMa Substructure Annotation</strong> shows substructures and the counts
                     of <a href="https://github.com/NLeSC/MAGMa">MAGMa</a> annotations for documents linked above
                     threshold to this motif in this experiment.
                     Hovering over each MAGMa substructure shows a plot of the substructure.
                 </p>
-                    <table class='table' id='featuretable'>
-                        <thead>
+                <table class='table' id='featuretable'>
+                    <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Probability</th>
+                        <th>MAGMA Substructure Annotation</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for motif_feature, subs, subs_count in motif_features_subs %}
                         <tr>
-                            <th>Feature</th>
-                            <th>Probability</th>
-                            <th>MAGMA Substructure Annotation</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for motif_feature, subs, subs_count in motif_features_subs %}
-                            <tr>
-                                <td>
-                                    <a href="/basicviz/mass2motif_feature/{{ motif_feature.id }}">
-                                        {{ motif_feature.feature.name }}
-                                    </a>
-                                </td>
-                                <td>{{ motif_feature.probability|floatformat:"3" }}</td>
-                                <td>
-                                    <ul>
-                                        {% for smile, count, feature_sub_instances in subs %}
-                                            {% if forloop.counter0 < top_n %}
-                                                <li>
-                                                    <div class="floatbar">
-                                                        <a href="#" onclick="return false;">
-                                                            {{ smile }} ({{ count }})
-                                                        </a>
-                                                        <div class="box">
-                                                            {% for feature2sub in feature_sub_instances|slice:":10"  %}
-                                                                <script type="text/javascript">
-                                                                    var canvasId = Date.now(); // random id
-                                                                    var molblock = '{{ feature2sub.feature.document.mol_string | escapejs }}';
-                                                                    var fragAtoms = '{{ feature2sub.fragatoms | escapejs }}';
-                                                                    var subType = '{{ feature2sub.sub_type | escapejs }}';
-                                                                    showMol(canvasId, molblock, fragAtoms, subType);
-                                                                </script>
-                                                            {% endfor %}
-                                                        </div>
+                            <td>
+                                <a href="/basicviz/mass2motif_feature/{{ motif_feature.id }}">
+                                    {{ motif_feature.feature.name }}
+                                </a>
+                            </td>
+                            <td>{{ motif_feature.probability|floatformat:"3" }}</td>
+                            <td>
+                                <ul>
+                                    {% for smile, count, feature_sub_instances in subs %}
+                                        {% if forloop.counter0 < top_n %}
+                                            <li>
+                                                <div class="floatbar">
+                                                    <a href="#" onclick="return false;">
+                                                        {{ smile }} ({{ count }})
+                                                    </a>
+                                                    <div class="box">
+                                                        {% for feature2sub in feature_sub_instances|slice:":10" %}
+                                                            <script type="text/javascript">
+                                                                var canvasId = Date.now(); // random id
+                                                                var molblock = '{{ feature2sub.feature.document.mol_string | escapejs }}';
+                                                                var fragAtoms = '{{ feature2sub.fragatoms | escapejs }}';
+                                                                var subType = '{{ feature2sub.sub_type | escapejs }}';
+                                                                showMol(canvasId, molblock, fragAtoms, subType);
+                                                            </script>
+                                                        {% endfor %}
                                                     </div>
-                                                </li>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </ul>
-                                    {% if subs_count >= top_n %}
-                                        <a data-toggle="collapse" href="#collapse-{{ motif_feature.feature.id }}">Show More</a>
-                                        <div id="collapse-{{ motif_feature.feature.id }}" class="collapse">
-                                            <ul>
-                                                {% for smile, count, feature_sub_instances in subs %}
-                                                    {% if forloop.counter0 >= top_n %}
-                                                        <li>
-                                                            <div class="floatbar">
-                                                                <a href="#" onclick="return false;">
-                                                                    {{ smile }} ({{ count }})
-                                                                </a>
-                                                                <div class="box">
-                                                                    {% for feature2sub in feature_sub_instances|slice:":10"  %}
-                                                                        <script type="text/javascript">
-                                                                            var canvasId = Date.now(); // random id
-                                                                            var molblock = '{{ feature2sub.feature.document.mol_string | escapejs }}';
-                                                                            var fragAtoms = '{{ feature2sub.fragatoms | escapejs }}';
-                                                                            var subType = '{{ feature2sub.sub_type | escapejs }}';
-                                                                            showMol(canvasId, molblock, fragAtoms, subType);
-                                                                        </script>
-                                                                    {% endfor %}
-                                                                </div>
+                                                </div>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                                {% if subs_count >= top_n %}
+                                    <a data-toggle="collapse" href="#collapse-{{ motif_feature.feature.id }}">Show
+                                        More</a>
+                                    <div id="collapse-{{ motif_feature.feature.id }}" class="collapse">
+                                        <ul>
+                                            {% for smile, count, feature_sub_instances in subs %}
+                                                {% if forloop.counter0 >= top_n %}
+                                                    <li>
+                                                        <div class="floatbar">
+                                                            <a href="#" onclick="return false;">
+                                                                {{ smile }} ({{ count }})
+                                                            </a>
+                                                            <div class="box">
+                                                                {% for feature2sub in feature_sub_instances|slice:":10" %}
+                                                                    <script type="text/javascript">
+                                                                        var canvasId = Date.now(); // random id
+                                                                        var molblock = '{{ feature2sub.feature.document.mol_string | escapejs }}';
+                                                                        var fragAtoms = '{{ feature2sub.fragatoms | escapejs }}';
+                                                                        var subType = '{{ feature2sub.sub_type | escapejs }}';
+                                                                        showMol(canvasId, molblock, fragAtoms, subType);
+                                                                    </script>
+                                                                {% endfor %}
                                                             </div>
-                                                        </li>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </ul>
-                                        </div>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                                        </div>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-        {% if term_counts %}
+    </div>
+    {% if term_counts %}
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>Counts of Classyfire Substituent terms</h4>
@@ -264,267 +260,176 @@
                     </tr>
                     </thead>
                     <tbody>
-                        {% for subterm,count,perc,background,diff in term_counts %}
+                    {% for subterm,count,perc,background,diff in term_counts %}
                         <tr>
-                            <td>{{subterm.name}}</td>
-                            <td>{{count}}</td>
-                            <td>{{perc|floatformat}}</td>
-                            <td>{{background|floatformat}}</td>
-                            <td>{{diff|floatformat}}</td>
+                            <td>{{ subterm.name }}</td>
+                            <td>{{ count }}</td>
+                            <td>{{ perc|floatformat }}</td>
+                            <td>{{ background|floatformat }}</td>
+                            <td>{{ diff|floatformat }}</td>
                         </tr>
-                        {% endfor %}
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
-        {% endif %}
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <h4>Counts of Mass2Motif Features</h4>
-                <p>
-                    Two bar plots will appear below this message.
-                    The first shows the proportion of the total intensity of these features explained by
-                    this Mass2Motif. Red bars show the total intensity (across the whole dataset),
-                    blue bars show the proportion explained by the selected Mass2Motif. The second shows
-                    the number of times each feature in this Mass2Motif appears in the documents associated
-                    with this Mass2Motif.
-                </p>
-                <div id="graphs">
-                </div>
+    {% endif %}
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <h4>Counts of Mass2Motif Features</h4>
+            <p>
+                Two bar plots will appear below this message.
+                The first shows the proportion of the total intensity of these features explained by
+                this Mass2Motif. Red bars show the total intensity (across the whole dataset),
+                blue bars show the proportion explained by the selected Mass2Motif. The second shows
+                the number of times each feature in this Mass2Motif appears in the documents associated
+                with this Mass2Motif.
+            </p>
+            <div id="graphs">
             </div>
         </div>
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <h4>Fragmentation Spectra Explained by Mass2Motif</h4>
-                <p>
-                    The following table lists all fragmentation spectra that are explained by this Mass2Motif
-                    at the threshold specified in the <a href="/options/view_experiment_options/{{experiment.id}}">experiment option</a>.
-                </p>
-                <table class='table' id='doctable'>
-                    <thead>
-        			    <tr><th>Fragmentation spectra</th><th>Precursor Mass</th><th>Parent mass</th><th>Annotation</th><th>Probability</th><th>Overlap Score</th></tr>
-                    </thead>
-                    <tbody>
-                        {% for dm2m in dm2ms %}
-                            <tr>
-                                <td><a href="/basicviz/show_doc/{{dm2m.document.id}}">{{dm2m.document.name}}</a></td>
-                                <td>{{dm2m.document.mass|floatformat:4}}</td>
-                				<td>{{dm2m.document.parentmass|floatformat:4}}</td>
-                                <td>{{dm2m.document.annotation}}</td>
-                                <td>{{dm2m.probability|floatformat:"3"}}</td>
-                                <td>{{dm2m.overlap_score|floatformat:"3"}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <h4>Fragmentation Spectra Explained by Mass2Motif</h4>
+            <p>
+                The following table lists all fragmentation spectra that are explained by this Mass2Motif
+                at the threshold specified in the <a href="/options/view_experiment_options/{{ experiment.id }}">experiment
+                option</a>.
+            </p>
+            <table class='table' id='doctable'>
+                <thead>
+                <tr>
+                    <th>Fragmentation spectra</th>
+                    <th>Precursor Mass</th>
+                    <th>Parent mass</th>
+                    <th>Annotation</th>
+                    <th>Probability</th>
+                    <th>Overlap Score</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for dm2m in dm2ms %}
+                    <tr>
+                        <td><a href="/basicviz/show_doc/{{ dm2m.document.id }}">{{ dm2m.document.name }}</a></td>
+                        <td>{{ dm2m.document.mass|floatformat:4}}</td>
+                        <td>{{ dm2m.document.parentmass|floatformat:4}}</td>
+                        <td>{{ dm2m.document.annotation }}</td>
+                        <td>{{ dm2m.probability|floatformat:"3"}}</td>
+                        <td>{{ dm2m.overlap_score|floatformat:"3"}}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <h4>Fragmentation Spectra Plot</h4>
-                <p>
-                    The fragmentation spectra of molecules explained by this Mass2Motif are plotted below.
-                    Features (fragments and losses) explained by this Mass2Motif will be coloured red,
-                    while parent ion is coloured in blue.
-                    Click <strong>Next</strong> and <strong>Previous</strong> to cycle through
-                    the fragmentation spectra.
-                </p>
-            	<div id="spectra" border="20" padding="20"></div>
-            </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <h4>Fragmentation Spectra Plot</h4>
+            <p>
+                The fragmentation spectra of molecules explained by this Mass2Motif are plotted below.
+                Features (fragments and losses) explained by this Mass2Motif will be coloured red,
+                while parent ion is coloured in blue.
+                Click <strong>Next</strong> and <strong>Previous</strong> to cycle through
+                the fragmentation spectra.
+            </p>
+            <div id="spectra" border="20" padding="20"></div>
         </div>
-
     </div>
 
-    <div id="dialog-massbank" title="Generate Massbank Record">
-        <form class="massbank-form" id="mass2motifmassbank_form" method="post" action="/massbank/generate_massbank/">
-            {% for hidden in massbank_form.hidden_fields %}
-                {{ hidden }}
-            {% endfor %}
-            {% for field in massbank_form.visible_fields %}
-                {% if field.field.required %}
-                    <div class="field required">
-                        {{ field.errors }}
-                        {{ field.label_tag }} {{ field }}
-                    </div>
-                {% else %}
-                    <div class="field">
-                        {{ field.errors }}
-                        {{ field.label_tag }} {{ field }}
-                    </div>
-                {% endif %}
-
-            {% endfor %}
-        </form>
-        <div style="margin: 20px">
-            <div id="status">Result goes here: </div><textarea name="massbank_str" id="massbank_str" rows="10" cols="100"></textarea>
-            <button id="copy_button" onclick="copyToClipboard('#massbank_str')">Copy</button>
-            <button id="download_button" onclick="saveTextAsFile('massbank_str')">Download</button>
-        </div>
     </div>
 
 {% endblock %}
 
 {% block js_block %}
-	<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
-	<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
-	<script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
-	<script type='text/javascript' src="{% static "js/word-graph.js" %}"></script>
+    <script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
+    <script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"></script>
+    <script type='text/javascript' src="{% static "js/basicviz-spectra.js" %}"></script>
+    <script type='text/javascript' src="{% static "js/word-graph.js" %}"></script>
 
-	<script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
-	<script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/dataTables.bootstrap.min.js' %}"></script>
 
-	<script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
-	<script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/dataTables.buttons.min.js' %}"></script>
+    <script src="{% static 'js/dataTables/buttons.html5.min.js' %}"></script>
 
-	<link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
-	<link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'js/dataTables/dataTables.bootstrap.min.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'js/dataTables/buttons.dataTables.min.css' %}" type="text/css">
 
 
-	<script type="text/javascript">
+    <script type="text/javascript">
 
-		var current_pos = 0;
-		var motif_name = '{{mass2motif.name}}';
-		var motif_id = '{{mass2motif.id}}';
-		load_parents(motif_id, motif_name,-1);
-		var url = '/basicviz/get_word_graph/{{mass2motif.id}}/nan/';
-		plot_word_graph(url,motif_id,motif_name);
-		url = '/basicviz/get_intensity/{{mass2motif.id}}/nan/';
-		plot_word_graph(url,motif_id,motif_name);
+        var current_pos = 0;
+        var motif_name = '{{mass2motif.name}}';
+        var motif_id = '{{mass2motif.id}}';
+        load_parents(motif_id, motif_name, -1);
+        var url = '/basicviz/get_word_graph/{{mass2motif.id}}/nan/';
+        plot_word_graph(url, motif_id, motif_name);
+        url = '/basicviz/get_intensity/{{mass2motif.id}}/nan/';
+        plot_word_graph(url, motif_id, motif_name);
 
-		$(document).ready(function() {
-			$('#featuretable').DataTable({
-				dom: 'Bfrtip',
-				buttons: [
-			        'csv',
-                    {
-                        text: 'MassBank Record',
-                        action: function ( e, dt, node, config ) {
-                            $( "#dialog-massbank" ).dialog({
-                                resizable: false,
-                                height: "auto",
-                                width: 800,
-                                buttons: {
-                                    'Generate': function () {
-                                        $('#mass2motifmassbank_form').submit()
-                                        // $(this).dialog('close');
-                                    },
-                                    'Close': function () {
-                                        $(this).dialog('close');
-                                    }
-                                }
-                                }).css({height:"600px", overflow:"auto"})
-
-                        }
-                    }
-		        ],
-		        "order": [[ 1, "desc" ]],
-		    });
-			$('#doctable').DataTable({
-				dom: 'Bfrtip',
-				buttons: [
-			        'csv',
-		        ],
-		        "order": [[ 2, "desc" ]],
-		    });
+        $(document).ready(function () {
+            $('#featuretable').DataTable({
+                dom: 'Bfrtip',
+                buttons: [
+                    'csv',
+                ],
+                "order": [[1, "desc"]],
+            });
+            $('#doctable').DataTable({
+                dom: 'Bfrtip',
+                buttons: [
+                    'csv',
+                ],
+                "order": [[2, "desc"]],
+            });
             $('#termtable').DataTable({
-				dom: 'Bfrtip',
-				buttons: [
-			        'csv',
-		        ],
-		        "order": [[ 4, "desc" ]],
-		    });
+                dom: 'Bfrtip',
+                buttons: [
+                    'csv',
+                ],
+                "order": [[4, "desc"]],
+            });
 
-		});
-
-    $('#mass2motifmassbank_form').on('submit', function(event){
-
-        $form = $(this);
-        var action = $form.attr('action');
-        event.preventDefault();
-
-        $('#status').text('Processing ... please wait.');
-        $.ajax({
-            url : action,
-            type : "POST",
-            data : {
-                'csrfmiddlewaretoken': '{{csrf_token}}',
-                'motif_id' : $('#motif_id').val(),
-                'accession' : $('#accession').val(),
-                'authors' : $('#authors').val(),
-                'comments' : $('#comments').val(),
-                'ch_name' : $('#ch_name').val(),
-                'ch_compound_class' : $('#ch_compound_class').val(),
-                'ch_formula' : $('#ch_formula').val(),
-                'ch_exact_mass' : $('#ch_exact_mass').val(),
-                'ch_smiles' : $('#ch_smiles').val(),
-                'ch_iupac' : $('#ch_iupac').val(),
-                'ch_link' : $('#ch_link').val(),
-                'ac_instrument' : $('#ac_instrument').val(),
-                'ac_instrument_type' : $('#ac_instrument_type').val(),
-                'ac_mass_spectrometry_ion_mode' : $('#ac_mass_spectrometry_ion_mode').val(),
-                'min_rel_int' : $('#min_rel_int').val(),
-
-            },
-
-            success : function(json) {
-
-                var massbank_str = json['massbank_str'];
-                var status = json['status'];
-                $('#status').text(status);
-                $('#massbank_str').text(massbank_str);
-                console.log(status);
-                console.log(massbank_str);
-                $("#copy_button").show();
-                $("#download_button").show();
-
-            },
-
-            error : function(xhr,errmsg, err) {
-                console.log(xhr.status + ": " + xhr.responseText);
-            }
         });
 
-    });
+        // hidden by default when the page loads
+        $("#copy_button").hide();
+        $("#download_button").hide();
 
-    // hidden by default when the page loads
-    $('#dialog-massbank').hide()
-    // $('#massbank_str').hide()
-    $("#copy_button").hide();
-    $("#download_button").hide();
+        function copyToClipboard(element) {
+            var $temp = $("<textarea>");
+            $("body").append($temp);
+            $temp.val($(element).text()).select();
+            document.execCommand("copy");
+            $temp.remove();
+        }
 
-    function copyToClipboard(element) {
-        var $temp = $("<textarea>");
-        $("body").append($temp);
-        $temp.val($(element).text()).select();
-        document.execCommand("copy");
-        $temp.remove();
-    }
+        // see http://stackoverflow.com/questions/35148578/download-a-text-file-from-textarea-on-button-click
+        function saveTextAsFile(element_id) {
 
-    // see http://stackoverflow.com/questions/35148578/download-a-text-file-from-textarea-on-button-click
-   function saveTextAsFile(element_id) {
+            var textToWrite = document.getElementById(element_id).value;
+            var accession = document.getElementById('accession').value;
+            var textFileAsBlob = new Blob([textToWrite], {type: 'text/plain'});
+            var fileNameToSaveAs = accession + '.txt';
 
-        var textToWrite = document.getElementById(element_id).value;
-        var accession = document.getElementById('accession').value;
-        var textFileAsBlob = new Blob([textToWrite], { type: 'text/plain' });
-        var fileNameToSaveAs = accession + '.txt';
+            var downloadLink = document.createElement("a");
+            downloadLink.download = fileNameToSaveAs;
+            downloadLink.innerHTML = "My Hidden Link";
+            window.URL = window.URL || window.webkitURL;
+            downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+            downloadLink.onclick = destroyClickedElement;
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
 
-        var downloadLink = document.createElement("a");
-        downloadLink.download = fileNameToSaveAs;
-        downloadLink.innerHTML = "My Hidden Link";
-        window.URL = window.URL || window.webkitURL;
-        downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
-        downloadLink.onclick = destroyClickedElement;
-        downloadLink.style.display = "none";
-        document.body.appendChild(downloadLink);
+            downloadLink.click();
 
-        downloadLink.click();
+        }
 
-    }
+        function destroyClickedElement(event) {
+            document.body.removeChild(event.target);
+        }
 
-    function destroyClickedElement(event) {
-        document.body.removeChild(event.target);
-    }
-
-	</script>
+    </script>
 
 {% endblock %}
