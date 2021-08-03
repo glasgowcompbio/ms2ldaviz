@@ -337,23 +337,24 @@ def get_doc_context_dict(document):
 
                 # get original docs having shared feature
                 original_experiment = shared_feature.experiment
-                original_docs = shared_feature.experiment.document_set.all()
+                if original_experiment is not None:
+                    original_docs = original_experiment.document_set.all()
 
-                # get the feature instances in the original docs having shared feature
-                original_feature_instances = FeatureInstance.objects.filter(feature=shared_feature,
-                                                                            document__in=original_docs)
+                    # get the feature instances in the original docs having shared feature
+                    original_feature_instances = FeatureInstance.objects.filter(feature=shared_feature,
+                                                                                document__in=original_docs)
 
-                # get magma subs from the original feature instances
-                subs = FeatureInstance2Sub.objects.filter(feature__in=original_feature_instances).select_related(
-                    'sub',
-                    'feature',
-                    'feature__document'
-                )
-                for sub in subs:
-                    smiles = sub.sub.smiles
-                    doc = sub.feature.document
-                    smiles_to_docs[smiles].add(sub.feature.document)
-                    docs_to_subs[doc] = sub
+                    # get magma subs from the original feature instances
+                    subs = FeatureInstance2Sub.objects.filter(feature__in=original_feature_instances).select_related(
+                        'sub',
+                        'feature',
+                        'feature__document'
+                    )
+                    for sub in subs:
+                        smiles = sub.sub.smiles
+                        doc = sub.feature.document
+                        smiles_to_docs[smiles].add(sub.feature.document)
+                        docs_to_subs[doc] = sub
 
             # count how many docs are found containing each magma substructure linked to this feature instance
             # if the experiment has_magma_annotation, this should always be one
