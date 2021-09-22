@@ -24,7 +24,7 @@ jsonpickle = "*"
 tqdm = "*"
 requests = "*"
 
-django = "==3.0.6" # https://github.com/glasgowcompbio/ms2ldaviz/issues/169
+django = "==3.1.13" # https://github.com/glasgowcompbio/ms2ldaviz/issues/169
 django-extensions = "*"
 django-grappelli = "*"
 django-markdown2 = "*"
