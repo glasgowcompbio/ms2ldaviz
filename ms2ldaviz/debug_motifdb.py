@@ -1,7 +1,7 @@
 import requests
 
 server_url = 'http://ms2lda.org/motifdb/'
-# server_url = 'http://localhost:8000/motifdb/'
+# server_url = 'http://localhost/motifdb/'
 
 """Grabbing the latest Motifs from MS2LDA"""
 motifset_dict = requests.get(server_url + 'list_motifsets/', verify=False).json()
@@ -25,7 +25,9 @@ data['filter'] = 'True'
 
 response = client.post(server_url + 'get_motifset/', data=data, verify=False)
 json_output = response.json()
+print(json_output)
+
 assert response.status_code == 200
 assert len(json_output['motifs']) > 0
-assert len(json_output['metadata'] > 0)
+assert len(json_output['metadata']) > 0
 print('Success!')
