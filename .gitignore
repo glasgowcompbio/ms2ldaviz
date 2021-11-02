@@ -101,3 +101,5 @@ db.sqlite3-journal
 ms2ldaviz/nohup.out
 ms2ldaviz/ms2ldaviz/database_info.py
 ms2ldaviz/ms2ldaviz/key.py
+ms2ldaviz/django_cache
+
