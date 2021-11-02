@@ -175,6 +175,7 @@ def initialise_api(request):
     output = {'token':token}
     return HttpResponse(json.dumps(output),content_type = 'application/json')
 
+@csrf_exempt
 def get_motifset_post(request):
     motifset_id_list = request.POST.getlist('motifset_id_list')
     do_filter = request.POST.get('filter', "False") == "True"
