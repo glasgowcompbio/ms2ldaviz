@@ -291,8 +291,8 @@ def choose_motifs(request,motif_set_id,experiment_id):
     motifset = MDBMotifSet.objects.get(id = motif_set_id)
     experiment_motifs = Mass2Motif.objects.filter(experiment = experiment)
     experiment_motifs = list(experiment_motifs)
-    not_annotated = filter(lambda x: x.annotation == None,experiment_motifs)
-    annotated = filter(lambda x: not x.annotation == None,experiment_motifs)
+    not_annotated = list(filter(lambda x: x.annotation == None,experiment_motifs))
+    annotated = list(filter(lambda x: not x.annotation == None,experiment_motifs))
     experiment_motifs = annotated + not_annotated
     motifs = [(m.id,"{}: {}".format(m.name,m.short_annotation)) for m in experiment_motifs]
 
