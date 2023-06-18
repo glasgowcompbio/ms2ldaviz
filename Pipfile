@@ -11,7 +11,7 @@ scikit-learn = "*"
 scipy = "*"
 gensim = "*"
 keras = "*"
-tensorflow = "==2.4.1"
+tensorflow = "==2.5.3"
 
 psycopg2-binary = "==2.8.6" # https://stackoverflow.com/questions/38807296/django-1-9-2-assertionerror-database-connection-isnt-set-to-utc
 redis = "*"
