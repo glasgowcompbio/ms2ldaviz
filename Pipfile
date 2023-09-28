@@ -11,20 +11,21 @@ scikit-learn = "*"
 scipy = "*"
 gensim = "*"
 keras = "*"
-tensorflow = "==2.4.1"
-
-psycopg2-binary = "==2.8.6" # https://stackoverflow.com/questions/38807296/django-1-9-2-assertionerror-database-connection-isnt-set-to-utc
+# TensorFlow is installed from a custom wheel because the VM architecture doesn't support AVX instructions.
+tensorflow = {file = "https://tf.novaal.de/core2/tensorflow-2.8.0-cp38-cp38-linux_x86_64.whl"}
+# Protobuf is fixed to version 3.20.3 due to compatibility with the custom TensorFlow wheel.
+protobuf = "==3.20.3"
+# Fix for database connection isn't set to UTC issue.
+psycopg2-binary = "==2.8.6" 
 redis = "*"
 celery = "*"
 gunicorn = "*"
-
 pymzml = "*"
 ChemSpiPy = "*"
 jsonpickle = "*"
 tqdm = "*"
 requests = "*"
-
-django = "==3.0.6" # https://github.com/glasgowcompbio/ms2ldaviz/issues/169
+django = "<4"
 django-extensions = "*"
 django-grappelli = "*"
 django-markdown2 = "*"
