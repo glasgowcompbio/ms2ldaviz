@@ -6,14 +6,14 @@ import jsonpickle
 
 def get_taxa_path_and_substituents(inchikey):
 
-    
+
     # store the taxonomy path for this inchikey here
     taxa_path = []
     substituents = []
     try:
         url = 'http://classyfire.wishartlab.com/entities/%s.json' % inchikey
         response = urllib2.urlopen(url)
-        data = json.load(response)       
+        data = json.load(response)
 
         # add the top-4 taxa
         keys = ['kingdom', 'superclass', 'class', 'subclass']
@@ -33,7 +33,7 @@ def get_taxa_path_and_substituents(inchikey):
     return taxa_path,substituents
 
 def make_corpora(documents):
-    # Gets the substituent and taxa corpora for documents 
+    # Gets the substituent and taxa corpora for documents
     # documents is a dictionary with key doc name and value InChIKey
     taxa = {}
     substituents = {}
@@ -65,7 +65,7 @@ def make_corpora(documents):
             taxa_corpus[document] = [0 for i in range(n_taxa)]
             for taxa_term in taxa[document]:
                 taxa_corpus[document][taxa_list.index(taxa_term)] = 1
-        if len(substituents[document]) > 0:        
+        if len(substituents[document]) > 0:
             substituents_corpus[document] = [0 for i in range(n_substituents)]
             for substituents_term in substituents[document]:
                 substituents_corpus[document][substituents_list.index(substituents_term)] = 1
@@ -85,7 +85,7 @@ def lda_projection(gamma,corpus,corpus_list,doc_index,n_its = 50,xi = None,hyp =
     exp_elogtheta = np.exp(elogtheta)
     # delta = {}
     # for document in corpus:
-    #     delta[document] = np.zeros((n_terms,K),np.float)
+    #     delta[document] = np.zeros((n_terms,K),float)
 
     # Initialise xi
     if xi == None:
@@ -93,8 +93,8 @@ def lda_projection(gamma,corpus,corpus_list,doc_index,n_its = 50,xi = None,hyp =
 
     for it in range(n_its):
         print("Iteration {}".format(it))
-        temp_xi = np.zeros((n_terms,K),np.float)
-        delta_sum = np.zeros((n_terms,K),np.float)
+        temp_xi = np.zeros((n_terms,K),float)
+        delta_sum = np.zeros((n_terms,K),float)
         for i,document in enumerate(corpus.keys()):
             if i%500 == 0:
                 print("\t{}".format(i))
@@ -109,7 +109,7 @@ def lda_projection(gamma,corpus,corpus_list,doc_index,n_its = 50,xi = None,hyp =
                 temp = np.exp(temp - mtemp[:,None])
                 delt = temp / np.sum(temp,axis=1)[:,None]
                 # delta[document] = temp / np.sum(temp,axis=1)[:,None]
-                
+
                 # temp_xi += nsc*delta[document]
                 temp_xi += nsc*delt
 
@@ -130,4 +130,4 @@ def lda_projection(gamma,corpus,corpus_list,doc_index,n_its = 50,xi = None,hyp =
 
 
 
-    
+

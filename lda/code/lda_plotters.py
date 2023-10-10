@@ -47,7 +47,7 @@ class VariationalLDAPlotter(object):
     pos = self.v_lda.doc_index[doc]
 
     topic_colour = ('rgb(255,0,0)')
-    background_colour = ('rgba(50,50,50,0.3)') 
+    background_colour = ('rgba(50,50,50,0.3)')
     precursor_colour = ('rgb(0,0,255)')
 
     data = []
@@ -157,7 +157,7 @@ class VariationalLDAPlotter(object):
     for i in range(topn):
         topics_to_plot.append(tp[i][0])
 
-    
+
     colours = [[255,0,0],[0,255,0],[0,0,255],[0,255,255]]
     data = []
     loss_opacity = 1.0
@@ -168,9 +168,9 @@ class VariationalLDAPlotter(object):
         g = colours[i][1]
         b = colours[i][2]
         top_colours[t] = ('rgb({},{},{})'.format(r,g,b))
-        loss_colours[t] = ('rgba({},{},{},{})'.format(r,g,b,loss_opacity))    
-    
-    
+        loss_colours[t] = ('rgba({},{},{},{})'.format(r,g,b,loss_opacity))
+
+
     topics_plotted = [] # This will be appended to as we plot the first thing from each topic, for the legend
     max_intensity = 0.0
     for word in self.v_lda.corpus[doc]:
@@ -268,7 +268,7 @@ class VariationalLDAPlotter(object):
                     showlegend = False
                 )
                 data.append(s)
-            
+
     if not precursor_mass == None:
       s = Scatter(
           x = [precursor_mass,precursor_mass],
@@ -367,7 +367,7 @@ class VariationalLDAPlotter_dict(object):
   def plot_document_colour_one_topic(self,doc,topic,precursor_mass = None,intensity_thresh = 0,show_losses = False,title = None,xlim = None):
 
     topic_colour = ('rgb(255,0,0)')
-    background_colour = ('rgba(50,50,50,0.3)') 
+    background_colour = ('rgba(50,50,50,0.3)')
     precursor_colour = ('rgb(0,0,255)')
 
     data = []
@@ -473,13 +473,13 @@ class VariationalLDAPlotter_dict(object):
     # Find the highest probability topics
     for t in self.lda_dict['theta'][doc]:
         tp.append((t,self.lda_dict['theta'][doc][t]))
-    
+
     tp = sorted(tp,key=lambda x:x[1],reverse=True)
     topics_to_plot = []
     for i in range(min(topn,len(self.lda_dict['theta'][doc]))):
         topics_to_plot.append(tp[i][0])
 
-    
+
     colours = [[255,0,0],[0,255,0],[0,0,255],[0,255,255]]
     data = []
     loss_opacity = 1.0
@@ -490,9 +490,9 @@ class VariationalLDAPlotter_dict(object):
         g = colours[i][1]
         b = colours[i][2]
         top_colours[t] = ('rgb({},{},{})'.format(r,g,b))
-        loss_colours[t] = ('rgba({},{},{},{})'.format(r,g,b,loss_opacity))    
-    
-    
+        loss_colours[t] = ('rgba({},{},{},{})'.format(r,g,b,loss_opacity))
+
+
     topics_plotted = [] # This will be appended to as we plot the first thing from each topic, for the legend
     max_intensity = 0.0
     for word in self.lda_dict['corpus'][doc]:
@@ -590,7 +590,7 @@ class VariationalLDAPlotter_dict(object):
                     showlegend = False
                 )
                 data.append(s)
-            
+
     if not precursor_mass == None:
       s = Scatter(
           x = [precursor_mass,precursor_mass],
@@ -634,7 +634,7 @@ class VariationalLDAPlotter_dict(object):
     plotly.offline.iplot({'data':data,'layout':layout})
 
   def make_graph_object(self,edge_thresh = 0.05,min_degree = 10,topic_scale_factor = 5,edge_scale_factor=5,filename = None):
-    
+
     # Loop over the docs to find the degree of the topics
     topics = {}
     for doc in self.lda_dict['corpus']:
@@ -672,7 +672,7 @@ class VariationalLDAPlotter_dict(object):
             G.add_edge(topic,doc,weight = edge_scale_factor*self.lda_dict['theta'][doc][topic])
 
     if not filename == None:
-        d = json_graph.node_link_data(G) 
+        d = json_graph.node_link_data(G)
         json.dump(d, open(filename,'w'),indent=2)
     return G
 
@@ -709,7 +709,7 @@ class MultiFileVariationalLDAPlotter_dict(object):
         self.n_files = len(self.m_lda['individual_lda'])
 
     def make_alpha_matrix(self,normalise = False):
-        all_alpha = np.zeros((self.n_files,self.K),np.float)
+        all_alpha = np.zeros((self.n_files,self.K),float)
         self.file_index = {}
         file_pos = 0
         for file in self.m_lda['individual_lda']:
@@ -757,7 +757,7 @@ class MultiFileVariationalLDAPlotter_dict(object):
                     marker = dict(
                         size = 20,
                         ),
-                    text = reverse, 
+                    text = reverse,
                     showlegend = False,
                     )
                 )

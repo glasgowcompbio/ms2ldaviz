@@ -65,8 +65,8 @@ class LDA(object):
 
         # Output things
         self.post_sample_count = 0.0
-        self.post_mean_theta = np.zeros((self.K,self.ndocs),np.float)
-        self.post_mean_topics = np.zeros((self.K,self.nwords),np.float)
+        self.post_mean_theta = np.zeros((self.K,self.ndocs),float)
+        self.post_mean_topics = np.zeros((self.K,self.nwords),float)
 
     def gibbs_iteration(self,n_samples = 1,verbose = True,burn = True):
         # Does one gibbs step
@@ -104,7 +104,7 @@ class LDA(object):
             for topic in range(self.K):
                 wcounts = self.topic_word_counts[topic,:]
                 self.post_mean_topics[topic,:] += np.random.dirichlet(wcounts)
-            
+
     def get_post_mean_theta(self):
         return self.post_mean_theta / self.post_sample_count
     def get_post_mean_topics(self):
@@ -125,7 +125,7 @@ class LDA(object):
 
     def plot_topic(self,topic_id,nrows = 10,ncols = 10):
 
-        image_array = np.zeros((nrows,ncols),np.float)
+        image_array = np.zeros((nrows,ncols),float)
         for doc in self.corpus:
             di = self.doc_index[doc]
             if self.post_sample_count == 0:
@@ -155,7 +155,7 @@ class LDA(object):
             if pmth[topic_id,pos] >= thresh:
                 top[doc] = pmth[topic_id,pos]
         return top
-        
+
     def get_topic_as_tuples(self,topic_id,thresh = 0.001):
         pmth = self.get_post_mean_topics()
         top = []
@@ -195,7 +195,7 @@ class VariationalLDA(object):
                 if top_verbose:
                     print("Normalising intensities")
                 self.normalise_intensities()
-        
+
         self.K = K
 
         if fixed_topics:
@@ -212,7 +212,7 @@ class VariationalLDA(object):
         self.eta = eta # Smoothing parameter for beta
         self.update_alpha = update_alpha
         self.doc_metadata = None
-        
+
 
         # self.topic_index = topic_index
         # self.topic_metadata = topic_metadata
@@ -227,7 +227,7 @@ class VariationalLDA(object):
                     self.topic_metadata[topic_name] = fixed_topics_metadata[topic_name]
                     self.topic_metadata[topic_name]['type'] = 'fixed'
                     topic_pos += 1
-        
+
             for topic_pos in range(self.n_fixed_topics,self.K):
                 topic_name = 'motif_{}'.format(topic_pos)
                 self.topic_index[topic_name] = topic_pos
@@ -248,7 +248,7 @@ class VariationalLDA(object):
         self.n_words = len(self.word_index)
 
         # Now make the fixed rows of beta
-        self.beta_matrix = np.zeros((self.K,self.n_words),np.float) + SMALL_NUMBER
+        self.beta_matrix = np.zeros((self.K,self.n_words),float) + SMALL_NUMBER
         for topic,spectrum in fixed_topics.items():
             topic_pos = self.topic_index[topic]
             for word,intensity in spectrum.items():
@@ -265,7 +265,7 @@ class VariationalLDA(object):
         ti = [(topic,self.topic_index[topic]) for topic in self.topic_index]
         ti = sorted(ti,key = lambda x:x[1])
         topic_reverse,_ = zip(*ti)
-        self.beta_matrix = np.zeros((self.K,len(self.word_index)),np.float)
+        self.beta_matrix = np.zeros((self.K,len(self.word_index)),float)
         self.n_fixed_topics = 0
 
         frag_formulas = {}
@@ -318,7 +318,7 @@ class VariationalLDA(object):
         ti = [(topic,self.topic_index[topic]) for topic in self.topic_index]
         ti = sorted(ti,key = lambda x:x[1])
         topic_reverse,_ = zip(*ti)
-        self.beta_matrix = np.zeros((self.K,len(self.word_index)),np.float)
+        self.beta_matrix = np.zeros((self.K,len(self.word_index)),float)
         self.n_fixed_topics = 0
         fragment_masses = np.array([float(f.split('_')[1]) for f in self.word_index if f.startswith('fragment')])
         fragment_names = [f for f in self.word_index if f.startswith('fragment')]
@@ -329,12 +329,12 @@ class VariationalLDA(object):
         for topic in topics:
             print("Mass2Motif: {}".format(topic))
             topic_name_here = topic_reverse[self.n_fixed_topics]
-            
+
             # self.n_fixed_topics = len(topics)
 
-            temp_beta = np.zeros(len(self.word_index),np.float)
+            temp_beta = np.zeros(len(self.word_index),float)
             probability_matched = 0.0
-            
+
             for word in topics[topic]:
                 word_mass = float(word.split('_')[1])
                 if word.startswith('fragment'):
@@ -439,22 +439,22 @@ class VariationalLDA(object):
                     if not loss_id in features:
                         features.append(loss_id)
                     loss_idx = features.index(loss_id)
-                
+
                 intensity = float(split_line[6])
-                
+
                 parent_id = split_line[2]
                 # Find the parent
                 parent = self.ms1peaks[parent_id_list.index(parent_id)]
-                
+
                 if parent == '156.076766819657_621.074':
                     print(loss_id)
                     print(frag_id)
                     print(line)
-                
+
                 # If we've not seen this parent before, create it as an empty dict
                 if not parent in self.corpus:
                     self.corpus[parent] = {}
-                
+
                 # Store the ms2 features in the parent dictionary
                 if not frag_id == "fragment_NA":
                     self.corpus[parent][frag_id] = intensity * scale_factor
@@ -537,7 +537,7 @@ class VariationalLDA(object):
                     alpha_change/=2.0
                     n_bad = (alpha_change > alpha).sum()
 
-                
+
                 alpha_new = alpha - alpha_change
 
                 pos = np.where(alpha_new <= SMALL_NUMBER)[0]
@@ -603,7 +603,7 @@ class VariationalLDA(object):
     # Initialise the VB algorithm
     # TODO: tidy this up
     def init_vb(self):
-        # self.gamma_matrix = np.zeros((self.n_docs,self.K),np.float) + 1.0
+        # self.gamma_matrix = np.zeros((self.n_docs,self.K),float) + 1.0
         # self.phi_matrix = np.zeros((self.n_docs,self.n_words,self.K))
         self.its_performed = 0
         self.phi_matrix = {}
@@ -625,7 +625,7 @@ class VariationalLDA(object):
             # self.beta_matrix = np.random.rand(self.K,self.n_words)
             self.beta_matrix = np.zeros((self.K,self.n_words),np.double)
             for k in range(self.K):
-                self.beta_matrix[k,:] = np.random.dirichlet(self.eta*np.ones(self.n_words)) 
+                self.beta_matrix[k,:] = np.random.dirichlet(self.eta*np.ones(self.n_words))
         else:
             for k in range(self.n_fixed_topics,self.K):
                 self.beta_matrix[k,:] = np.random.dirichlet(self.eta*np.ones(self.n_words))
@@ -652,7 +652,7 @@ class VariationalLDA(object):
             top[word] = self.beta_matrix[topic_id,self.word_index[word]]
         return top
 
-    # Return the topic probabilities for all documents 
+    # Return the topic probabilities for all documents
     # Note that self.doc_index maps the document names to their
     # position in this matrix
     def get_expect_theta(self):
@@ -685,7 +685,7 @@ class VariationalLDA(object):
         lda_dict['doc_metadata'] = metadata
         lda_dict['topic_index'] = self.topic_index
         lda_dict['topic_metadata'] = self.topic_metadata
-        
+
         pure_gamma = []
         for gamma in self.gamma_matrix:
             pure_gamma.append(list(gamma))
@@ -783,7 +783,7 @@ class MultiFileVariationalLDA(object):
             self.alpha = self.alpha*np.ones(self.K)
         self.eta = eta # Smoothing parameter for beta
         self.individual_lda = {}
-        self.update_alpha = update_alpha        
+        self.update_alpha = update_alpha
 
         self.topic_index = topic_index
         if topic_index == None:
@@ -817,17 +817,17 @@ class MultiFileVariationalLDA(object):
             pool = multiprocessing.Pool(num_cores)
         else:
             print('serial processing')
-        
+
         for it in range(n_its):
 
             print("Iteration: {}".format(it))
-            temp_beta = np.zeros((self.K,self.n_words),np.float)
+            temp_beta = np.zeros((self.K,self.n_words),float)
             total_difference = []
-            
-            if parallel:            
+
+            if parallel:
 
                 # map each param_set for an individual lda to a worker that performs par_e_step()
-                ldas = [self.individual_lda[lda_name] for lda_name in self.individual_lda]  
+                ldas = [self.individual_lda[lda_name] for lda_name in self.individual_lda]
                 params = []
                 for l in ldas:
                     param_set = (l.corpus, l.K, l.n_words, l.doc_index, l.alpha, l.word_index, l.phi_matrix, l.beta_matrix, l.gamma_matrix)
@@ -837,14 +837,14 @@ class MultiFileVariationalLDA(object):
                 # process the results
                 assert len(par_results) == len(ldas)
                 for i in range(len(par_results)):
-                    
+
                     beta_res, phi_res, gamma_res = par_results[i]
                     temp_beta += beta_res
                     ldas[i].phi_matrix = phi_res
                     ldas[i].gamma_matrix = gamma_res
-                    
+
             else: # serial
-                
+
                 for lda_name in self.individual_lda:
                     temp_beta += self.individual_lda[lda_name].e_step()
 
@@ -856,7 +856,7 @@ class MultiFileVariationalLDA(object):
 
             temp_beta += self.eta
             temp_beta /= temp_beta.sum(axis=1)[:,None]
-            first_lda = self.individual_lda[self.individual_lda.keys()[0]]          
+            first_lda = self.individual_lda[self.individual_lda.keys()[0]]
             total_difference = (np.abs(temp_beta - first_lda.beta_matrix)).sum()
             for lda_name in self.individual_lda:
                 self.individual_lda[lda_name].beta_matrix = temp_beta
@@ -909,7 +909,7 @@ class SpectraSampler(object):
         for doc in self.vlda.corpus:
             mass = float(doc.split('_')[0])
             self.ms1_masses.append(mass)
-        
+
         self.ms1_mass_mean  = np.array(self.ms1_masses).mean()
         self.ms1_mass_var = np.array(self.ms1_masses).var()
 
@@ -959,8 +959,8 @@ class SpectraSampler(object):
 
 def compute_overlap_scores(lda_dictionary):
     # Compute the overlap scores for the lda model in dictionary format
-    
-   
+
+
     overlap_scores = {}
     for doc,phi in lda_dictionary['phi'].items():
         motifs = lda_dictionary['theta'][doc].keys()
@@ -973,7 +973,7 @@ def compute_overlap_scores(lda_dictionary):
         for m in doc_overlaps:
             overlap_scores[doc][m] = doc_overlaps[m]
     return overlap_scores
-                 
+
 def write_summary_file(lda_dictionary,filename):
     import csv
     with open(filename,'w') as f:
@@ -984,7 +984,7 @@ def write_summary_file(lda_dictionary,filename):
             for motif,probability in motifs.items():
                 row = [doc,motif,probability,lda_dictionary['overlap_scores'][doc].get(motif,0.0)]
                 writer.writerow(row)
-            
+
 def write_topic_report(lda_dictionary,filename,backend = 'agg'):
     # import pylab as plt
     import matplotlib
@@ -1042,5 +1042,5 @@ def write_topic_report(lda_dictionary,filename,backend = 'agg'):
             pdf.savefig()
             plt.close()
 
-            
-            
+
+

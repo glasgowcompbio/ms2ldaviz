@@ -30,7 +30,7 @@ def match_topics_across_dictionaries(lda1 = None,lda2 = None,file1 = None,file2 
 	n_topics2 = lda2['K']
 
 	# Put lda1's topics into a nice matrix
-	beta = np.zeros((n_topics1,n_words),np.float)
+	beta = np.zeros((n_topics1,n_words),float)
 	topic_pos = 0
 	topic_index1 = {}
 	for topic in lda1['beta']:
@@ -94,8 +94,8 @@ def match_topics_across_dictionaries(lda1 = None,lda2 = None,file1 = None,file2 
 			temp_beta /= total_probability
 
 
-		
-		
+
+
 		match_scores = np.dot(beta,temp_beta.T)
 		best_score = match_scores.max()
 		best_pos = match_scores.argmax()
@@ -131,7 +131,7 @@ def match_topics_across_dictionaries(lda1 = None,lda2 = None,file1 = None,file2 
 				topic1 = best_match[topic2][0]
 				line = "{},{},{}".format(topic2,topic1,best_match[topic2][1])
 				line += ",{},{}".format(best_match[topic2][2],best_match[topic2][3])
-				line += ",{},{}".format(best_match[topic2][4],best_match[topic2][5])		
+				line += ",{},{}".format(best_match[topic2][4],best_match[topic2][5])
 				line += ",{}".format(best_match[topic2][6])
 				f.write(line+'\n')
 
@@ -199,7 +199,7 @@ def find_standards_in_dict(standards_file,lda_dict=None,lda_dict_file=None,mode=
 					standard_molecules.append((name,mz,rt,formula))
 					# mol = ()
 	print("Loaded {} molecules".format(len(standard_molecules)))
-	
+
 	doc_masses = np.array([float(d.split('_')[0]) for d in lda_dict['corpus']])
 	doc_names = [d for d in lda_dict['corpus']]
 	doc_rt = np.array([float(d.split('_')[1]) for d in lda_dict['corpus']])
@@ -209,7 +209,7 @@ def find_standards_in_dict(standards_file,lda_dict=None,lda_dict_file=None,mode=
 		mass_hit = (doc_masses < mol[1] + mass_delta) & (doc_masses > mol[1] - mass_delta)
 		rt_hit = (doc_rt < mol[2] + rt_tol) & (doc_rt > mol[2] - rt_tol)
 		match = np.where(mass_hit & rt_hit)[0]
-		
+
 		if len(match) > 0:
 			if len(match) == 1:
 				hits[mol] = doc_names[match[0]]
@@ -224,7 +224,7 @@ def find_standards_in_dict(standards_file,lda_dict=None,lda_dict_file=None,mode=
 					if dist < min_dist:
 						best_match = individual_match
 				hits[mol] = doc_names[best_match]
-	
+
 
 	print("Found hits for {} standard molecules".format(len(hits)))
 	# Add the hits to the lda_dict as document metadata
@@ -292,7 +292,7 @@ def decompose(vlda,corpus):
 			temp_gamma = np.ones(K)
 			for word in spectrum:
 				if word in vlda.word_index:
-					w = vlda.word_index[word] 
+					w = vlda.word_index[word]
 					log_phi_matrix = np.log(vlda.beta_matrix[:,w]) + psi(gamma_mat[doc])
 					log_phi_matrix = np.exp(log_phi_matrix - log_phi_matrix.max())
 					phi[doc][word] = log_phi_matrix/log_phi_matrix.sum()

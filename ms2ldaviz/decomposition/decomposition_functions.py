@@ -135,7 +135,7 @@ def load_mzml_and_make_documents(experiment,motifset):
                 else:
                     df.intensity += intensity
                 df.save()
-                
+
             loss_mz = molecule.mz - fragment_mz
             if loss_mz >= min_loss_mz[0] and loss_mz <= max_loss_mz[-1]:
                 loss_pos = bisect.bisect_right(min_loss_mz,loss_mz)-1
@@ -164,7 +164,7 @@ def load_mzml_and_make_documents(experiment,motifset):
                     else:
                         df.intensity += intensity
                     df.save()
-                    
+
         n_done += 1
         if n_done % 100 == 0:
             print("Done {} documents (required {} new features)".format(n_done,n_new_features))
@@ -189,7 +189,7 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
     # if decomposition.motifset.name.startswith('gnps'):
         # assuming sparse beta
         # Naive construction
-        # beta_matrix = np.zeros((n_motif,n_feature),np.float)
+        # beta_matrix = np.zeros((n_motif,n_feature),float)
         # for r,c,v in beta:
         #     beta_matrix[r,c] = v
         # or using sparse...
@@ -198,14 +198,14 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
     s = beta_matrix.sum(axis=1)[:,None]
     s[s==0] = 1.0
     beta_matrix /= s # makes beta a full matrix. Note that can keep it sparse by beta_matrix.data /= s[beta_matrix.row]
-    
+
         # beta_matrix = coo.todense()
     # else:
         # beta_matrix = np.array(beta)
 
 
     alpha_matrix = np.array(alpha)
-    
+
 
     word_index = {}
     for i,word_id in enumerate(feature_id_list):
@@ -264,8 +264,8 @@ def decompose(decomposition,normalise = 1000.0,store_threshold = 0.01):
 
             gamma = temp_gamma.copy()
         g_term += psi(gamma) - psi(gamma.sum())
-        
-        
+
+
         # normalise the gamma to get probabilities
         theta = gamma/gamma.sum()
         theta = list(theta.flatten())
@@ -453,7 +453,7 @@ def get_parent_for_plot_decomp(decomposition,document,motif = None,get_key = Fal
                 topic_info = topic.originalmotif.name
             key.append((topic_info ,colours[i]))
         return [plot_data],key
-    
+
     return plot_data
 
 
@@ -492,7 +492,7 @@ def make_word_graph(request, motif_id, vo_id, decomposition_id):
     # else:
     #     edge_choice = 'probability'
     #     edge_thresh = 0.05
- 
+
     data_for_json = []
     motif = GlobalMotif.objects.get(id = motif_id)
     originalmotif = motif.originalmotif
@@ -507,7 +507,7 @@ def make_word_graph(request, motif_id, vo_id, decomposition_id):
     #     docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,overlap_score__gte = edge_thresh,probability__gte = edge_thresh,decomposition = decomposition)
     # else:
     #     docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
-    
+
     docm2ms = get_docglobalm2m(globalm2m = motif, decomposition = decomposition)
     data_for_json.append(len(docm2ms))
     feat_counts = {}
@@ -566,7 +566,7 @@ def make_intensity_graph(request, motif_id, vo_id, decomposition_id):
     #     docm2ms = DocumentGlobalMass2Motif.objects.filter(mass2motif = motif,probability__gte = edge_thresh,decomposition = decomposition)
     docm2ms = get_docglobalm2m(motif, decomposition)
     documents = [d.document for d in docm2ms]
-    
+
     feat_total_intensity = {}
     feat_motif_intensity = {}
     for feature in globalfeatures:
@@ -578,7 +578,7 @@ def make_intensity_graph(request, motif_id, vo_id, decomposition_id):
             feat_total_intensity[feature] += ft.intensity
             if ft.document in documents:
                 feat_motif_intensity[feature] += ft.intensity
-    
+
 
     feat_list = []
     feat_tot_intensity = zip(feat_total_intensity.keys(),feat_total_intensity.values())
@@ -798,7 +798,7 @@ def make_decomposition_graph(decomposition,experiment,min_degree = 5,
     print("Third")
 
     return G
-        
+
 
 
 def api_decomposition(doc_dict,motifset):
@@ -823,7 +823,7 @@ def api_decomposition(doc_dict,motifset):
 
 
     alpha_matrix = np.array(alpha)
-    
+
 
     word_index = {}
     for i,word_id in enumerate(feature_id_list):
@@ -882,8 +882,8 @@ def api_decomposition(doc_dict,motifset):
                         temp_gamma += phi_matrix[word]*intensity
 
             gamma = temp_gamma.copy()
-        g_term += psi(gamma) - psi(gamma.sum())        
-        
+        g_term += psi(gamma) - psi(gamma.sum())
+
         # normalise the gamma to get probabilities
         theta = gamma/gamma.sum()
         theta = list(theta.flatten())
@@ -1000,8 +1000,8 @@ def alpha_nr(g_term,M,maxit=100,init_alpha=[]):
     if len(init_alpha) == 0:
         init_alpha = np.ones_like(g_term)/K
     old_alpha = init_alpha.copy()
-    
-    
+
+
     # try:
     alpha = init_alpha.copy()
     # g_term = (psi(self.gamma_matrix) - psi(self.gamma_matrix.sum(axis=1))[:,None]).sum(axis=0)
@@ -1030,7 +1030,7 @@ def alpha_nr(g_term,M,maxit=100,init_alpha=[]):
         # print("Alpha: {}, it: {}".format(diff,it))
         # print(grad.max(),grad.argmax(),alpha[grad.argmax()],alpha_new[grad.argmax()],alpha_change[grad.argmax()],h[grad.argmax()])
         alpha = alpha_new
-        
+
         if diff < 1e-6 and it > 10:
             return alpha
     # except:
