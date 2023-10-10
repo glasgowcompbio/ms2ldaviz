@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='experiment',
             name='decomposition_source',
-            field=models.CharField(choices=[(b'N', b'No'), (b'Y', b'Yes')], default=b'N', max_length=1),
+            field=models.CharField(choices=[(b'N', b'No'), (b'Y', b'Yes')], default=b'N', max_length=100),
         ),
         migrations.AlterField(
             model_name='experiment',
