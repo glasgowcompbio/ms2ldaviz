@@ -19,6 +19,7 @@
                         <th>User</th>
                         <th>Status</th>
                         <th>Timestamp</th>
+                        <th>Public?</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -50,6 +51,7 @@
                             </a>
                         </td>
                         <td>{{ row.2.timestamp }}</td>
+                        <td>{{ row.3 }}</td>
                         <td>
                             {% if row.0.status == '0' and row.0.experiment_type == '0' %}
                                 <a href="/uploads/rerun/{{ row.0.id}}" class="btn btn-sm btn-primary" style="margin-bottom: 10px">Re-run</a>
@@ -68,7 +70,7 @@
 {% endblock %}
 
 {% block js_block %}
-	
+
 	<script type='text/javascript' src="{% static "js/d3.v3.min.js" %}"></script>
 	<script type='text/javascript' src="{% static "js/d3.tip.v0.6.3.js" %}"> </script>
 
