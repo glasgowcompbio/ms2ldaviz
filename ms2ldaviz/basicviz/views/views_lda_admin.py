@@ -43,7 +43,7 @@ def list_all_experiments(request):
     for experiment in experiments:
         user_experiments = UserExperiment.objects.filter(experiment=experiment)
         joblog = JobLog.objects.filter(experiment=experiment).first()
-        pe = user_experiments.experiment.publicexperiments_set
+        pe = experiment.publicexperiments_set
         is_public = True if pe.count() > 0 else False
         row = [experiment, user_experiments, joblog, is_public]
         results.append(row)
