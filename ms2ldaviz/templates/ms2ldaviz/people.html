@@ -3,128 +3,140 @@
 {% load static %}
 
 {% block body_block %}
-    <h3>Meet the people behind Ms2lda.org!</h3>
-    <div class="panel-group">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <h4>Simon Rogers</h4>
-                <p>
-                    <img src="https://avatars2.githubusercontent.com/u/611683?v=3&s=400" alt="srogers" width="20%"
-                         class="pull-left img-responsive" style="padding:15px;"/>
-                    Simon is an AI data scientist at NHS National Services Scotland, and also
-                    a honorary lecturer in Computer Science, <a href="http://www.dcs.gla.ac.uk/~srogers/">University of
-                    Glasgow</a>.
-                    His research interest involves the development of Machine Learning and Statistical techniques to
-                    help with the analysis of complex datasets, particularly within the field of Metabolomics but also
-                    other -omics fields, Human-Computer Interaction and Information Retrieval.
-                    <br/><br/>
-                </p>
-            </div>
-        </div>
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <h4>Justin van der Hooft</h4>
-                <p>
-                    <img src="{% static 'images/justinjjvanderhooft.jpeg' %}" alt="jjvdh" width="20%"
-                         class="pull-left img-responsive"
-                         style="padding:15px;"/>
+    <!-- ==========================================================
+         Header banner
+    =========================================================== -->
+    <div>
+        <img class="img-responsive"
+             src="{% static 'images/banner.png' %}"
+             alt="Banner" width="100%"/>
+    </div>
 
-                    After his studies and PhD in Wageningen, the Netherlands, <a
-                        href="http://www.wur.nl/en/Persons/JJJ-Justin-van-der-Hooft-MSc.htm">Justin</a> moved to Glasgow
-                    Polyomics to work with Dr. Karl Burgess and Prof. Mike Barrett and different partners from Glasgow
-                    Polyomics. In 2015, Justin obtained an ISSF Fellowship from the Wellcome Trust to work on method
-                    development and implementation of fragmentation approaches to enhance the metabolite annotation
-                    capacities of the high-resolution LC-MS systems. He then focused on small polar metabolites in
-                    urine, beer, and bacterial extracts thereby exploiting the information-rich fragmentation data that
-                    modern mass spectrometers generate to alleviate the bottleneck of metabolite annotation and
-                    identification in untargeted metabolomics approaches. He teamed up with Dr Simon Rogers and Dr Joe
-                    Wandy to start the MS2LDA project in which he provides valuable biological data interpretations and
-                    insights that is crucial to the development of the system. After taking up a shared Postdoc position
-                    between the group of Dr Marnix Medema at WUR and the group of Prof. Pieter Dorrestein at the UCSD,
-                    USA, in 2017, a year later, Justin obtained an eScience grant to develop tools that combine
-                    workflows developed for genome and metabolome mining to aid in functional annotations of genes and
-                    structural annotations of metabolites. Since January 2020, Justin obtained a position as an
-                    Assistant Professor in Computational Metabolomics in the Bioinformatics Group in Wageningen. His
-                    research vision is to close the gap between what we can see in metabolomics and what we can actually
-                    learn from it. He will continue to implement and apply natural language processing algorithms to
-                    perform metabolome mining and to seek the connection with genomics and genome mining. He will use
-                    the plant root microbiome and human food metabolome as prime applications since they represent
-                    complex metabolite mixtures full of yet unknown metabolic matter that once elucidated will boost our
-                    insights in molecular mechanisms underpinning the regulation of growth, development, and health.
-                    You can find his publications <a
-                        href="https://scholar.google.nl/citations?user=zv9seLwAAAAJ&hl=en&oi=ao" target="_blank">
-                    here</a>.
-                    <br/><br/>
-                </p>
-            </div>
+    <!-- ==========================================================
+         Partner logos
+    =========================================================== -->
+    <div class="row" style="margin-top:20px; text-align:center;">
+        <div class="col-xs-4 col-sm-3">
+            <a href="https://www.polyomics.gla.ac.uk/" target="_blank">
+                <img src="{% static 'images/gp.png' %}" alt="gp"
+                     class="img-responsive center-block" style="max-height:90px;">
+            </a>
         </div>
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <h4>Joe Wandy</h4>
-                <p>
-                    <img src="https://avatars2.githubusercontent.com/u/2523391?v=3&u=1084b6ef759d4f6e611da126eab7c5df791703d4&s=400"
-                         alt="joe" width="15%" class="pull-left img-responsive" style="padding:15px;"/>
-                    Joe is a <a href="https://github.com/joewandy">data scientist</a>
-                    at <a href="http://www.polyomics.gla.ac.uk/">Glasgow Polyomics</a>, University of Glasgow. Before
-                    working at Glasgow Polyomics, Joe was a PhD student at the <a
-                        href="http://www.gla.ac.uk/schools/computing/">School of Computing Science</a>, supervised by
-                    Simon.
-                    His research interest is in natural language processing and the application of machine learning
-                    methods to the analysis of complex biological data.
-                    In particular, this also involves the necessary large-scale processing of data required prior to
-                    modelling and also the effective visualisations of analysis results.
-                    <br/><br/>
-                </p>
-            </div>
+        <div class="col-xs-4 col-sm-3">
+            <a href="https://www.gla.ac.uk/" target="_blank">
+                <img src="{% static 'images/uog.png' %}" alt="uog"
+                     class="img-responsive center-block" style="max-height:45px;">
+            </a>
         </div>
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <h4>Other contributors</h4>
-                <p>
-                    The following people have contributed codes, patches and new features to this project, and we would
-                    like to
-                    acknowledge their massive contributions. Without their help, this project would not be where it is
-                    now.
-                </p>
-                <ul>
-                    <li>
-                        <a href="https://scholar.google.com/citations?user=JWTsNqgAAAAJ&hl=en&oi=ao" target="_blank">
-                            Rónán Daly
-                        </a> and
-                        <a href="https://www.polyomics.gla.ac.uk/" target="_blank">
-                            Glasgow Polyomics
-                        </a>
-                        for website hosting.
-                    </li>
-                    <li>
-                        <a href="https://github.com/n-elie" target="_blank">
-                            Nicolas Elie
-                        </a>
-                        : porting the codebase from Python 2 to 3.
-                    </li>
-                    <li>
-                        <a href="https://www.esciencecenter.nl/team/dr-lars-ridder" target="_blank">
-                            Lars Ridder
-                        </a>: integration of MAGMa substructure annotations.
-                    </li>
-                    <li>
-                        <a href="https://www.esciencecenter.nl/team/stefan-verhoeven-bsc" target="_blank">
-                            Stefan Verhoeven
-                        </a>: integration of Gensim for running LDA inference.
-                    </li>
-                    <li>
-                        <a href="https://github.com/ymcdull" target="_blank">
-                            Yunfeng (Frank) Zhu
-                        </a>: development of MS1 analysis module.
-                    </li>
-                    <li>
-                        <a href="https://www.researchgate.net/profile/Cher-Ong" target="_blank">
-                            Ong Cher Wei
-                        </a>: development of the Classifyre substituent prediction module.
-                    </li>
-                </ul>
-            </div>
+        <div class="col-xs-4 col-sm-3">
+            <a href="https://www.wur.nl/en/wageningen-university.htm" target="_blank">
+                <img src="{% static 'images/wu.svg' %}" alt="wu"
+                     class="img-responsive center-block" style="max-height:45px;">
+            </a>
         </div>
     </div>
 
+    <!-- ==========================================================
+         Navigation buttons
+    =========================================================== -->
+    <div class="text-center" style="margin-top:45px; margin-bottom:40px;">
+        <a href="/basicviz"
+           class="btn btn-default"
+           style="opacity:0.8;"
+           title="Legacy interface – planned deprecation">
+           Go&nbsp;to&nbsp;Experiments&nbsp;(legacy)
+        </a>
+        <a href="/motifdb" class="btn btn-info">
+            Go&nbsp;to&nbsp;MotifDB
+        </a>
+        <a href="/viz/" class="btn btn-success">
+            Try&nbsp;the&nbsp;new&nbsp;Dashboard&nbsp;↗
+        </a>
+        <a href="https://twitter.com/vdHooft_CompMet" target="_blank"
+           class="btn btn-default" style="margin-left:4px;">
+           Follow&nbsp;us&nbsp;on&nbsp;X&nbsp;↗
+        </a>
+    </div>
+
+    <!-- ==========================================================
+         People panels
+    =========================================================== -->
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+
+            <!-- Simon Rogers ------------------------------------ -->
+            <div class="panel panel-default" style="margin-bottom:15px;">
+                <div class="panel-heading"><h4 class="panel-title">Simon Rogers</h4></div>
+                <div class="panel-body">
+                    <img src="https://avatars2.githubusercontent.com/u/611683?v=3&s=400"
+                         alt="srogers"
+                         class="img-responsive img-thumbnail"
+                         style="width:180px; margin:15px 15px 15px 0; float:left;">
+                    Simon is an AI data scientist at NHS National Services Scotland, and an honorary lecturer in
+                    Computer Science at the
+                    <a href="http://www.dcs.gla.ac.uk/~srogers/" target="_blank">University&nbsp;of&nbsp;Glasgow</a>.
+                    His research focuses on machine-learning and statistical techniques for complex data,
+                    particularly in metabolomics, HCI, and information retrieval.
+                </div>
+            </div>
+
+            <!-- Justin van der Hooft ----------------------------- -->
+            <div class="panel panel-default" style="margin-bottom:15px;">
+                <div class="panel-heading"><h4 class="panel-title">Justin van der Hooft</h4></div>
+                <div class="panel-body">
+                    <img src="{% static 'images/justinjjvanderhooft.jpeg' %}"
+                         alt="jjvdh"
+                         class="img-responsive img-thumbnail"
+                         style="width:180px; margin:15px 15px 15px 0; float:left;">
+                    After a PhD in Wageningen, Justin moved to Glasgow Polyomics and later became Assistant Professor
+                    in Computational Metabolomics at Wageningen University. He co-founded the MS2LDA project and
+                    continues to develop natural-language techniques for metabolome mining.
+                    Publications are listed
+                    <a href="https://scholar.google.nl/citations?user=zv9seLwAAAAJ&hl=en&oi=ao" target="_blank">here</a>.
+                </div>
+            </div>
+
+            <!-- Joe Wandy ---------------------------------------- -->
+            <div class="panel panel-default" style="margin-bottom:15px;">
+                <div class="panel-heading"><h4 class="panel-title">Joe Wandy</h4></div>
+                <div class="panel-body">
+                    <img src="https://avatars2.githubusercontent.com/u/2523391?v=3&u=1084b6ef759d4f6e611da126eab7c5df791703d4&s=400"
+                         alt="joe"
+                         class="img-responsive img-thumbnail"
+                         style="width:180px; margin:15px 15px 15px 0; float:left;">
+                    Joe is a
+                    <a href="https://github.com/joewandy" target="_blank">data scientist</a>
+                    at <a href="http://www.polyomics.gla.ac.uk/" target="_blank">Glasgow&nbsp;Polyomics</a>. His PhD in
+                    Computing Science explored natural-language processing and large-scale ML for biological data.
+                </div>
+            </div>
+
+            <!-- Other contributors ------------------------------- -->
+            <div class="panel panel-default" style="margin-bottom:15px;">
+                <div class="panel-heading"><h4 class="panel-title">Other contributors</h4></div>
+                <div class="panel-body">
+                    <p>
+                        The following people have contributed code, patches and new features&mdash;MS2LDA would not be
+                        where it is today without their help:
+                    </p>
+                    <ul>
+                        <li>
+                            <a href="https://scholar.google.com/citations?user=JWTsNqgAAAAJ&hl=en&oi=ao"
+                               target="_blank">Rónán&nbsp;Daly</a> and
+                            <a href="https://www.polyomics.gla.ac.uk/" target="_blank">Glasgow&nbsp;Polyomics</a> &mdash;
+                            website hosting.
+                        </li>
+                        <li><a href="https://github.com/n-elie" target="_blank">Nicolas&nbsp;Elie</a> &mdash; porting to Python&nbsp;3.</li>
+                        <li><a href="https://www.esciencecenter.nl/team/dr-lars-ridder" target="_blank">Lars&nbsp;Ridder</a> &mdash; MAGMa integration.</li>
+                        <li><a href="https://www.esciencecenter.nl/team/stefan-verhoeven-bsc" target="_blank">Stefan&nbsp;Verhoeven</a> &mdash; Gensim integration.</li>
+                        <li><a href="https://github.com/ymcdull" target="_blank">Yunfeng&nbsp;(Frank)&nbsp;Zhu</a> &mdash; MS1 analysis module.</li>
+                        <li><a href="https://www.researchgate.net/profile/Cher-Ong" target="_blank">Ong&nbsp;Cher&nbsp;Wei</a> &mdash; ClassyFire module.</li>
+                        <li><a href="https://github.com/j-a-dietrich" target="_blank">Jonas&nbsp;Dietrich</a> &mdash; core developer of the MS2LDA&nbsp;2.0 modernisation&nbsp;effort (<a href="https://github.com/vdhooftcompmet/MS2LDA" target="_blank">preprint soon</a>).</li>
+                        <li><a href="https://github.com/rtlortega" target="_blank">Rosina&nbsp;Torres&nbsp;Ortega</a> &mdash; core developer of the MS2LDA&nbsp;2.0 modernisation&nbsp;effort.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
 {% endblock %}

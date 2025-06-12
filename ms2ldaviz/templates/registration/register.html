@@ -3,114 +3,121 @@
 {% block title %}User Registration{% endblock %}
 
 {% block body_block %}
-    <div class="container">
+    <div class="row" style="margin-top:60px;">
+        <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
 
-        <h3>User Registration</h3>
-        {% if registered %}
+            <h3 class="text-center">User&nbsp;Registration</h3>
 
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}" role="alert">
-                        {{ message }}
+            {% if registered %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="alert alert-success" style="margin-top:25px;">
+                    <strong>Thank you for registering!</strong><br/>
+                    Your account is now active &mdash; you can run analyses by
+                    <a href="/registration/login">logging&nbsp;in</a>.
+                </div>
+
+            {% else %}
+
+                <p class="text-center" style="margin-bottom:25px;">
+                    Register at&nbsp;MS2LDA.org to run LDA analyses or create your own motif-sets.
+                </p>
+
+                <div class="panel panel-default"
+                     style="border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,.2);">
+                    <div class="panel-heading"
+                         style="background:#2c3e50; color:#fff; border-top-left-radius:6px; border-top-right-radius:6px;">
+                        <h4 class="panel-title" style="margin:0;">Create&nbsp;an&nbsp;Account</h4>
                     </div>
-                {% endfor %}
-            {% endif %}
 
-            <strong>
-                Thank you for registering! Your account is now active, and you can run analyses by
-                <a href='/registration/login'>
-                    logging in.
-                </a>
-            </strong><br/><br/>
-        {% else %}
-            <p>
-                <strong>Register at MS2LDA.org to run LDA analysis or create your own motifset.</strong>
-            </p>
-            <div id="loginbox" style=""
-                 class="mainbox col-md-6">
-                <div class="panel panel-info">
-                    <div class="panel-heading">
-                        <div class="panel-title">Registration</div>
-                    </div>
+                    <div class="panel-body" style="padding:30px;">
 
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}" role="alert">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
 
-                    <div style="padding-top:30px" class="panel-body">
-
-                        <form id="user_form" method="post" action="/registration/register/" class="form-horizontal"
-                              role="form">
-
+                        <form method="post" action="/registration/register/">
                             {% csrf_token %}
                             {{ form.non_field_errors }}
 
-                            <div style="margin-bottom: 25px" class="input-group">
-                                {{ user_form.username.errors }}
-                                {{ user_form.username.label_tag }}<br/>
+                            <!-- username / password -->
+                            <div class="form-group{% if user_form.username.errors %} has-error{% endif %}">
+                                {{ user_form.username.label_tag }}
                                 {{ user_form.username }}
+                                {{ user_form.username.errors }}
                             </div>
-                            <div style="margin-bottom: 25px" class="input-group">
-                                {{ user_form.password1.errors }}
-                                {{ user_form.password1.label_tag }}<br/>
+
+                            <div class="form-group{% if user_form.password1.errors %} has-error{% endif %}">
+                                {{ user_form.password1.label_tag }}
                                 {{ user_form.password1 }}
+                                {{ user_form.password1.errors }}
                             </div>
-                            <div style="margin-bottom: 25px" class="input-group">
-                                {{ user_form.password2.errors }}
-                                {{ user_form.password2.label_tag }}<br/>
+
+                            <div class="form-group{% if user_form.password2.errors %} has-error{% endif %}">
+                                {{ user_form.password2.label_tag }}
                                 {{ user_form.password2 }}
+                                {{ user_form.password2.errors }}
                             </div>
 
                             <hr/>
 
-                            <div style="margin-bottom: 25px" class="input-group">
-                                {{ user_form.first_name.errors }}
-                                {{ user_form.first_name.label_tag }}<br/>
+                            <!-- personal data -->
+                            <div class="form-group{% if user_form.first_name.errors %} has-error{% endif %}">
+                                {{ user_form.first_name.label_tag }}
                                 {{ user_form.first_name }}
+                                {{ user_form.first_name.errors }}
                             </div>
-                            <div style="margin-bottom: 25px" class="input-group">
-                                {{ user_form.last_name.errors }}
-                                {{ user_form.last_name.label_tag }}<br/>
+
+                            <div class="form-group{% if user_form.last_name.errors %} has-error{% endif %}">
+                                {{ user_form.last_name.label_tag }}
                                 {{ user_form.last_name }}
+                                {{ user_form.last_name.errors }}
                             </div>
-                            <div style="margin-bottom: 25px" class="input-group">
-                                {{ user_form.email.errors }}
-                                {{ user_form.email.label_tag }}<br/>
+
+                            <div class="form-group{% if user_form.email.errors %} has-error{% endif %}">
+                                {{ user_form.email.label_tag }}
                                 {{ user_form.email }}
+                                {{ user_form.email.errors }}
                             </div>
-                            <div style="margin-bottom: 25px" class="input-group">
-                                {{ profile_form.affiliation.errors }}
-                                {{ profile_form.affiliation.label_tag }}<br/>
+
+                            <div class="form-group{% if profile_form.affiliation.errors %} has-error{% endif %}">
+                                {{ profile_form.affiliation.label_tag }}
                                 {{ profile_form.affiliation }}
+                                {{ profile_form.affiliation.errors }}
                             </div>
-                            <div style="margin-bottom: 25px" class="input-group">
-                                {{ profile_form.country.errors }}
-                                {{ profile_form.country.label_tag }}<br/>
+
+                            <div class="form-group{% if profile_form.country.errors %} has-error{% endif %}">
+                                {{ profile_form.country.label_tag }}
                                 {{ profile_form.country }}
-                            </div>
-                            <input type="text" name="foo" style="display: none;">
-                            <input type="submit" name="submit" value="Register" class="btn btn-success"/>
-
-                            <div class="form-group" style="padding-top:30px">
-                                <div class="col-md-12 control">
-                                    <div style="border-top: 1px solid#888; padding-top:15px; font-size:85%">
-                                        Already have an account?
-                                        <a class="btn btn-primary" href="{% url 'login' %}">
-                                            Login
-                                        </a>
-                                    </div>
-                                </div>
+                                {{ profile_form.country.errors }}
                             </div>
 
+                            <!-- honeypot -->
+                            <input type="text" name="foo" style="display:none;">
+
+                            <!-- submit -->
+                            <button type="submit" class="btn btn-success btn-block">
+                                Register
+                            </button>
+
+                            <hr style="margin:30px 0 20px;">
+
+                            <p class="text-center">
+                                Already have an account?
+                                <a href="{% url 'login' %}" class="btn btn-primary">
+                                    Log&nbsp;In
+                                </a>
+                            </p>
                         </form>
-
                     </div>
                 </div>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
 {% endblock %}

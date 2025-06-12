@@ -3,129 +3,184 @@
 {% load static %}
 
 {% block body_block %}
+    <!-- ==========================================================
+         Banner
+    =========================================================== -->
     <div>
-        <img class="img-responsive" src="{% static 'images/banner.png' %}"
+        <img class="img-responsive"
+             src="{% static 'images/banner.png' %}"
              alt="Banner" width="100%"/>
     </div>
-    <div style="width: 100%; text-align: center;">
-        <a href="https://www.polyomics.gla.ac.uk/" target="_blank">
-            <img style="margin-right: 30px" src="{% static 'images/gp.png' %}" alt="gp" height="100px"/>
+
+    <!-- ==========================================================
+         Partner logos (fluid row, centres automatically)
+    =========================================================== -->
+    <div class="row" style="margin-top:20px; text-align:center;">
+        <div class="col-xs-4 col-sm-3">
+            <a href="https://www.polyomics.gla.ac.uk/" target="_blank">
+                <img class="img-responsive center-block"
+                     src="{% static 'images/gp.png' %}" alt="gp" style="max-height:90px;">
+            </a>
+        </div>
+        <div class="col-xs-4 col-sm-3">
+            <a href="https://www.gla.ac.uk/" target="_blank">
+                <img class="img-responsive center-block"
+                     src="{% static 'images/uog.png' %}" alt="uog" style="max-height:45px;">
+            </a>
+        </div>
+        <div class="col-xs-4 col-sm-3">
+            <a href="https://www.wur.nl/en/wageningen-university.htm" target="_blank">
+                <img class="img-responsive center-block"
+                     src="{% static 'images/wu.svg' %}" alt="wu" style="max-height:45px;">
+            </a>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         Primary action buttons
+    =========================================================== -->
+    <div class="text-center" style="margin-top:45px; margin-bottom:40px;">
+        <!-- legacy experiments: slightly greyed but clickable -->
+        <a href="/basicviz"
+           class="btn btn-default"
+           style="opacity:0.8;"
+           title="Legacy interface – planned deprecation">
+           Go&nbsp;to&nbsp;Experiments&nbsp;(legacy)
         </a>
-        <a href="https://www.gla.ac.uk/" target="_blank">
-            <img style="margin-right: 30px" src="{% static 'images/uog.png' %}" alt="uog" height="50px"/>
+
+        <!-- motif db -->
+        <a href="/motifdb" class="btn btn-info">
+            Go&nbsp;to&nbsp;MotifDB
         </a>
-        <a href="https://www.wur.nl/en/wageningen-university.htm" target="_blank">
-            <img style="margin-right: 30px" src="{% static 'images/wu.svg' %}" alt="wu" height="50px"/>
+
+        <!-- dash dashboard -->
+        <a href="/viz/" class="btn btn-success">
+            Try&nbsp;the&nbsp;new&nbsp;Dashboard&nbsp;↗
+        </a>
+
+        <!-- social / X link (solid black) -->
+        <a href="https://twitter.com/vdHooft_CompMet" target="_blank"
+           class="btn"
+           style="background:#000; color:#fff; border-color:#000; margin-left:4px;">
+           Follow&nbsp;us&nbsp;on&nbsp;X&nbsp;↗
         </a>
     </div>
-    <div class="text-center" style="margin-top: 30px; margin-bottom: 30px">
-        <a href="/basicviz" class="btn btn-primary">Go to Experiments</a>
-        <a href="/motifdb" class="btn btn-info">Go to MotifDB</a>
-    </div>
-    <div class="panel-group">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <div class="row">
-                    <div class="col-md-8">
-                        <h4>News</h4>
-                        <p>
-                            <b>11th October 2023:</b>
-                            Thanks to the continuous support from Glasgow Polyomics, we've recently migrated
-                            MS2LDA to a better virtual machine. This should hopefully allow for a more robust service in
-                            the future. <i>Unfortunately during the migration process,
-                            all jobs submitted on the system from 25 September to now (11th October) were not working</i>.
-                            If you tried to submit a job during that time period, your job will silently fail and/or
-                            it will show as 'Pending' status forever. In that case, please delete that submitted analysis
-                            and try again as it should work fine now. If you still encounter a problem, please contact our team.
-                        </p>
-                        <p>
-                            Also we're running on a limited disk space and database storage capacity,
-                            so if you have any unused analyses <strong>please delete them</strong>. Doing this will
-                            help to help us sustain this free service for the metabolomics community and make it better
-                            for everyone.
-                        </p>
-                        <p>
-                            <b>15th June 2023:</b>
-                            We've recently increased the disk storage of our server to address the Internal
-                            Error 500 that were caused by insufficient storage. However we would like to request
-                            our users to please delete old analyses that you no longer need. This will help
-                            make the server run smooth for every one.
-                        </p>
-                        <p>
-                            <b>13th July 2021:</b>
-                            Ms2lda.org has now been running for nearly 4 years! 🎉 <br/>We would like to thank our
-                            users and the metabolomics community in general for your continuing support in running this
-                            resource. To run substructural analysis of large dataset, note that MS2LDA is also <a
-                                href="https://ccms-ucsd.github.io/GNPSDocumentation/ms2lda/" target="_blank">integrated
-                            with GNPS</a> allowing you to map Mass2Motif occurrences in their Molecular Families using
-                            GNPS infrastructure
-                            (the results can be visualised back on this site).
-                            Alternatively LDA analysis can also be <a href="/uploads/create_experiment">run on this
-                            website directly</a> (subject to our computational limitation), and we're investigating ways
-                            to let
-                            you run your own LDA inference locally on your own data.
-                        </p>
-                        <p>
-                            <b>15th January 2021:</b>
-                            Ms2lda.org is finally migrated to Python 3, and job submission is now working again! If you
-                            encounter any further problem submitting job, please let us know. Additionally, if you have
-                            any old, unused experiments, please delete them to help us save space on the database.
-                        </p>
-                        <p>
-                            <b>25th November 2018:</b>
-                            We have introduced many new features to make interpreting Mass2Motifs in MS2LDA.org easier:
-                        </p>
-                        <ul>
-                            <li>
-                                A new upload function is added in the Create Experiment page to allow for the uploading
-                                of
-                                large locally-run LDA experiments <a
-                                    href="https://github.com/glasgowcompbio/ms2ldaviz/blob/master/ms2ldaviz/run_gensim.py"
-                                    target="_blank">(script under development)</a>.
-                            </li>
-                            <li>
-                                MotifDB (a database of curated and annotated Mass2Motifs) have been incorporated into
-                                the
-                                system, as well as a functionality to predict <a
-                                    href="https://jcheminf.biomedcentral.com/articles/10.1186/s13321-016-0174-y"
-                                    target="_blank">Classyfire</a> substituent terms for the spectra in your dataset
-                                using a
-                                neural network.
-                            </li>
-                            <li>
-                                Automatic <a href="https://github.com/NLeSC/MAGMa">MAGMa</a> annotations of fragment and
-                                neutral loss features have also been incorporated into the system.
-                            </li>
-                        </ul>
-                        <p>
-                            <b>4th August 2017:</b>
-                            Our new paper on the use of MS2LDA to investigate the variability in substructure prevalence
-                            across large experiments is now published in <a
-                                href="http://pubs.acs.org/doi/abs/10.1021/acs.analchem.7b01391">Analytical Chemistry</a>.
-                            Additionally, we have changed the way the system handles thresholds for links between
-                            spectra and motifs. All experiments can now set a threshold on both probability and
-                            overlap_score. If you do not wish to threshold on one or the other, set the respective
-                            threshold to zero. All experiments have been migrated such that the new settings give
-                            identical output to the old ones. We think that this improved flexibility will make the
-                            system more user friendly.
-                        </p>
-                        <p>
-                            <b>26th September 2017:</b>
-                            Our application note describing this Web application is now published in <a
-                                href="https://academic.oup.com/bioinformatics/article/doi/10.1093/bioinformatics/btx582/4158166/Ms2lda-org-web-based-topic-modelling-for">Bioinformatics</a>.
-                            The initial idea of applying topic model to fragmentation spectra data can be found in <a
-                                href="https://www.pnas.org/content/113/48/13738.short">PNAS</a>, and also in <a
-                                href="http://theses.gla.ac.uk/7928/">Joe Wandy's PhD thesis</a>.
-                        </p>
-                    </div>
-                    <div class="col-md-4">
-                        <a class="twitter-timeline" data-height="1000"
-                           href="https://twitter.com/ms2lda?ref_src=twsrc%5Etfw">Tweets by ms2lda</a>
-                        <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-                    </div>
+
+    <!-- ==========================================================
+         News section
+    =========================================================== -->
+    <div class="row">
+        <div class="col-sm-10 col-sm-offset-1">
+            <div class="panel panel-default">
+                <div class="panel-heading text-center">
+                    <h4 style="margin:0;">News</h4>
+                </div>
+                <div class="panel-body">
+
+                    <!-- 12 Jun 2025 -->
+                    <p>
+                        <b>12&nbsp;June&nbsp;2025:</b>
+                        We are delighted to unveil a brand-new, Dash-powered interactive interface for exploring Mass2Motifs.
+                        Access it at
+                        <a href="https://ms2lda.org/viz/" target="_blank">https://ms2lda.org/viz/</a>.
+                        The dashboard offers faster navigation, richer plots and a modern code base.
+                        We intend to retire the legacy MS2LDAviz application soon,
+                        so please update your workflows and bookmarks.
+                        Thank you to the community for your continued enthusiasm and
+                        to Glasgow&nbsp;Polyomics for their generous support.
+                    </p>
+
+                    <!-- Oct 2023 -->
+                    <p>
+                        <b>11th October 2023:</b>
+                        Thanks to the continuous support from Glasgow Polyomics, we've recently migrated
+                        MS2LDA to a better virtual machine. This should hopefully allow for a more robust service in
+                        the future. <i>Unfortunately during the migration process,
+                        all jobs submitted on the system from 25 September to now (11th October) were not working.</i>
+                        If you tried to submit a job during that time period, your job will silently fail and/or
+                        it will show as “Pending” status forever. In that case, please delete that submitted analysis
+                        and try again as it should work fine now. If you still encounter a problem, please contact our team.
+                    </p>
+                    <p>
+                        We also run on limited disk space and database capacity,
+                        so if you have any unused analyses <strong>please delete them</strong>.
+                        Doing this helps us sustain this free service for the metabolomics community.
+                    </p>
+
+                    <!-- Jun 2023 -->
+                    <p>
+                        <b>15th June 2023:</b>
+                        We've recently increased the disk storage of our server to address Internal Error 500 incidents
+                        that were caused by insufficient storage. However we would like to request our users
+                        to please delete old analyses that you no longer need. This will help
+                        make the server run smoothly for everyone.
+                    </p>
+
+                    <!-- Jul 2021 -->
+                    <p>
+                        <b>13th July 2021:</b>
+                        Ms2lda.org has now been running for nearly 4 years! 🎉
+                        Thank you for your continuing support.
+                        MS2LDA is also
+                        <a href="https://ccms-ucsd.github.io/GNPSDocumentation/ms2lda/" target="_blank">
+                            integrated with GNPS</a>,
+                        allowing you to map Mass2Motif occurrences in Molecular Families.
+                        Alternatively LDA analysis can be
+                        <a href="/uploads/create_experiment">run on this website directly</a>
+                        (subject to computational limits).
+                    </p>
+
+                    <!-- Jan 2021 -->
+                    <p>
+                        <b>15th January 2021:</b>
+                        Ms2lda.org is finally migrated to Python 3, and job submission is now working again!
+                        If you have any old, unused experiments, please delete them to help us save space.
+                    </p>
+
+                    <!-- Nov 2018 -->
+                    <p>
+                        <b>25th November 2018:</b>
+                        We have introduced many new features to make interpreting Mass2Motifs in MS2LDA.org easier:
+                    </p>
+                    <ul>
+                        <li>
+                            A new upload function in <em>Create Experiment</em> lets you upload
+                            large locally-run LDA experiments —
+                            <a href="https://github.com/glasgowcompbio/ms2ldaviz/blob/master/ms2ldaviz/run_gensim.py"
+                               target="_blank">script under development</a>.
+                        </li>
+                        <li>
+                            MotifDB (a database of curated Mass2Motifs) has been incorporated,
+                            plus automated ClassyFire predictions using a neural network.
+                        </li>
+                        <li>
+                            Automatic <a href="https://github.com/NLeSC/MAGMa">MAGMa</a> annotations
+                            of fragment and neutral-loss features are now integrated.
+                        </li>
+                    </ul>
+
+                    <!-- Aug 2017 -->
+                    <p>
+                        <b>4th August 2017:</b>
+                        Our paper on MS2LDA variability across large experiments is published in
+                        <a href="http://pubs.acs.org/doi/abs/10.1021/acs.analchem.7b01391" target="_blank">
+                            Analytical Chemistry</a>.
+                        We also introduced dual thresholds on
+                        <code>probability</code> and <code>overlap_score</code> for spectrum–motif links.
+                    </p>
+
+                    <!-- Sep 2017 -->
+                    <p>
+                        <b>26th September 2017:</b>
+                        Our application note is published in
+                        <a href="https://academic.oup.com/bioinformatics/article/doi/10.1093/bioinformatics/btx582/4158166/Ms2lda-org-web-based-topic-modelling-for"
+                           target="_blank">Bioinformatics</a>.
+                        The original idea is detailed in
+                        <a href="https://www.pnas.org/content/113/48/13738.short">PNAS 2016</a>
+                        and in <a href="http://theses.gla.ac.uk/7928/">Joe Wandy’s PhD thesis</a>.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
-
 {% endblock %}

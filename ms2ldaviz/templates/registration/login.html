@@ -3,59 +3,72 @@
 {% block title %}Login{% endblock %}
 
 {% block body_block %}
+    <!-- ==========================================================
+         Modern-style login card (Bootstrap 3 compatible)
+    =========================================================== -->
+    <div class="row" style="margin-top:70px;">
+        <div class="col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4">
 
-    <div class="container">
-        <div id="loginbox" style="margin-top:50px;" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <div class="panel-title">Log In</div>
+            <div class="panel panel-default box-shadow"
+                 style="border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,.2);">
+                <div class="panel-heading text-center"
+                     style="background-color:#2c3e50; color:#fff; border-top-left-radius:6px; border-top-right-radius:6px;">
+                    <h3 style="margin:0; font-weight:400;">Log&nbsp;in to&nbsp;MS2LDA</h3>
                 </div>
 
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}" role="alert">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
+                <div class="panel-body" style="padding:30px;">
 
-                <div style="padding-top:30px" class="panel-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
 
-                    <div style="display:none" id="login-alert" class="alert alert-danger col-sm-12"></div>
-
-                    <form id="loginform" method="post" action="/registration/login/" class="form-horizontal"
-                          role="form">
-
+                    <form method="post" action="/registration/login/">
                         {% csrf_token %}
 
-                        <div style="margin-bottom: 25px" class="input-group">
-                            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                            <input id="login-username" type="text" class="form-control" name="username" value=""
-                                   placeholder="username">
+                        <div class="form-group has-feedback">
+                            <label class="sr-only" for="login-username">Username</label>
+                            <input id="login-username"
+                                   name="username"
+                                   type="text"
+                                   class="form-control input-lg"
+                                   placeholder="Username"
+                                   autofocus>
+                            <span class="glyphicon glyphicon-user form-control-feedback"></span>
                         </div>
 
-                        <div style="margin-bottom: 25px" class="input-group">
-                            <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-                            <input id="login-password" type="password" class="form-control" name="password"
-                                   placeholder="password">
+                        <div class="form-group has-feedback" style="margin-top:20px;">
+                            <label class="sr-only" for="login-password">Password</label>
+                            <input id="login-password"
+                                   name="password"
+                                   type="password"
+                                   class="form-control input-lg"
+                                   placeholder="Password">
+                            <span class="glyphicon glyphicon-lock form-control-feedback"></span>
                         </div>
 
-                        <div style="margin-top:10px" class="form-group">
-                            <!-- Button -->
-                            <div class="col-sm-12 controls">
-                                <input type="submit" value="Login" id="btn-login" href="#" class="btn btn-success"/>
-                                <a class="btn btn-primary" href="/registration/register">
-                                    Register
-                                </a>
-                            </div>
+                        <div class="clearfix" style="margin-top:30px;">
+                            <button type="submit" class="btn btn-success btn-lg btn-block">
+                                Log&nbsp;In
+                            </button>
                         </div>
 
+                        <hr style="margin:30px 0 20px;">
+
+                        <a class="btn btn-info btn-block" href="/registration/register">
+                            Create&nbsp;an&nbsp;Account
+                        </a>
                     </form>
-
                 </div>
             </div>
+
+            <!-- small note underneath -->
+            <p class="text-center" style="margin-top:10px; color:#777;">
+                Trouble logging in? Contact&nbsp;<a href="mailto:ms2lda-support@glasgow.ac.uk">ms2lda&nbsp;support</a>.
+            </p>
         </div>
-
     </div>
-
 {% endblock %}

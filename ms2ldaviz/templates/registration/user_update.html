@@ -1,19 +1,57 @@
 {% extends 'base.html' %}
 
-{% block title %}Update User Profile{% endblock %}
+{% block title %}Update Profile{% endblock %}
 
 {% block body_block %}
-    <h1>Update User Profile</h1>
-    <strong>Please enter an email address in your user profile so we can contact you.</strong>
-    <br/><br/>
-    <form method="post" action=".">
-        {% csrf_token %}
-        <table>
-            {{ form.as_table }}
-        </table>
-        <br/>
-        <input type="submit" value="submit" class="btn btn-success"/>
-    </form>
-    <br/><br/>
-    <a href="/registration/change_password">Change Password</a>
+    <div class="row" style="margin-top:60px;">
+        <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
+
+            <div class="panel panel-default"
+                 style="border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,.2);">
+                <div class="panel-heading"
+                     style="background:#2c3e50; color:#fff; border-top-left-radius:6px; border-top-right-radius:6px;">
+                    <h4 class="panel-title" style="margin:0;">Update&nbsp;Profile</h4>
+                </div>
+
+                <div class="panel-body" style="padding:30px;">
+
+                    <p class="text-info">
+                        Please ensure your email address is kept up to date so we can contact you about submitted jobs.
+                    </p>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% for field in form %}
+                            <div class="form-group{% if field.errors %} has-error{% endif %}">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {{ field.errors }}
+                            </div>
+                        {% endfor %}
+
+                        <button type="submit" class="btn btn-success btn-block">
+                            Save&nbsp;Changes
+                        </button>
+                    </form>
+
+                    <hr style="margin:30px 0 15px;">
+
+                    <p class="text-center">
+                        Want to change your password?
+                        <a href="/registration/change_password" class="btn btn-primary">
+                            Change&nbsp;Password
+                        </a>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
 {% endblock %}

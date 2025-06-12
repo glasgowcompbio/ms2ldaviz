@@ -4,115 +4,112 @@
 
 {% block body_block %}
     <div class="panel-group">
+
+        <!-- ======================================================
+             Intro panel
+        ======================================================= -->
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>Unsupervised Substructure Discovery in Metabolomics</h4>
+
+                <!-- New paragraph about v2 dashboard -->
+                <p class="bg-success" style="padding:10px; border-radius:4px;">
+                    <strong>New&nbsp;June&nbsp;2025&nbsp;&mdash;</strong>
+                    We have released a modern&nbsp;<a href="/viz/" target="_blank">Dash&nbsp;interface</a>&nbsp;for MS2LDA
+                    (<em>MS2LDA&nbsp;2.0</em>).
+                    The codebase is actively developed at&nbsp;
+                    <a href="https://github.com/vdhooftcompmet/MS2LDA" target="_blank">
+                        vdHooftCompMet/MS2LDA</a>, with an accompanying pre-print coming soon.
+                    We encourage users to migrate to the new dashboard; the legacy MS2LDAviz interface will remain
+                    available during this transition period.
+                </p>
+
                 <p>
                     <a href="https://en.wikipedia.org/wiki/Metabolomics">Metabolomics</a> is the large-scale, untargeted
-                    studies of the small molecules involved in essential life-sustaining chemical processes
-                    (metabolites).
-                    Untargeted metabolomics has provided insights into a wide array of fields, such as medical
-                    diagnostics,
-                    drug discovery, personalised medicine and many others.
-                    Measurements in metabolomics studies are routinely performed using <a
-                        href="https://en.wikipedia.org/wiki/Liquid_chromatography%E2%80%93mass_spectrometry">liquid
-                    chromatography mass spectrometry</a> (LC-MS) instruments.
-                    Using <a href="https://en.wikipedia.org/wiki/Tandem_mass_spectrometry">tandem mass spectrometry</a>,
-                    fragmentation peaks characteristic to a compound can be obtained and used to help establish the
-                    identity
-                    of the compound.
+                    study of small molecules (<em>metabolites</em>) involved in life-sustaining chemical processes.
+                    Untargeted metabolomics has illuminated medical diagnostics, drug discovery, personalised medicine
+                    and many other fields.
+                    Measurements are routinely performed using
+                    <a href="https://en.wikipedia.org/wiki/Liquid_chromatography_mass_spectrometry"
+                       target="_blank">LC-MS</a> instruments.
+                    With <a href="https://en.wikipedia.org/wiki/Tandem_mass_spectrometry" target="_blank">tandem MS</a>,
+                    fragmentation peaks characteristic of a compound can be used to help establish its identity.
                 </p>
+
                 <p>
-                    <a href="https://en.wikipedia.org/wiki/Fragmentation_(mass_spectrometry)">Fragmentation spectra</a>,
-                    which provide the characteristic fingerprints of compounds, also contain structural information
-                    where a
-                    subset of fragment peaks may correspond to a shared chemical substructure in a class of compounds.
-                    The aim of this site is to provide an online platform that allows users to perform unsupervised
-                    substructure discovery in fragmentation experiments,
-                    decompose fragmentation experiments into characterized substructures (Mass2Motifs) found in MS/MS
-                    spectra of reference compounds,
-                    and integrate fragmentation analysis with comparative metabolomics experiments.
+                    <a href="https://en.wikipedia.org/wiki/Fragmentation_(mass_spectrometry)" target="_blank">
+                        Fragmentation spectra</a> provide characteristic fingerprints of compounds and contain structural
+                    information: a subset of fragment peaks may correspond to a shared chemical substructure.
+                    This site lets users perform unsupervised substructure discovery, decompose experiments into
+                    Mass2Motifs (recurring sets of fragments/losses) and integrate these motifs with comparative
+                    metabolomics data.
                 </p>
+
                 <p>
-                    <b>How does it work?</b> In our proposed method (<a
-                        href='http://www.pnas.org/content/113/48/13738.abstract'>MS2LDA</a>), discrete fragment and
-                    neutral
-                    loss features are extracted from fragmentation spectra. Related features that tend to co-occur are
-                    detected using the <a href="https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation">Latent
-                    Dirichlet
-                    Allocation</a> model.
-                    The figure below shows the analogy between LDA for text and MS2LDA for fragment and neutral loss
-                    features. LDA finds topics interpreted as ‘football related’, ‘business-related’ and ‘environment
-                    related’. MS2LDA finds sets of concurring mass fragments or losses (Mass2Motifs) that can be
-                    interpreted
-                    as ‘Asparagine-related’, ‘Hexose-related’ and ‘Adenine-related’.
+                    <strong>How does it work?</strong>  In
+                    <a href="http://www.pnas.org/content/113/48/13738.abstract" target="_blank">MS2LDA</a>,
+                    discrete fragment and neutral-loss features are extracted from spectra; co-occurring features are
+                    detected with
+                    <a href="https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation" target="_blank">Latent Dirichlet
+                    Allocation</a>.  The analogy to text-topic modelling is illustrated below.
                 </p>
-                <p>
-                    <img src="{% static 'images/text2frags.png' %}" alt="Text2Frags" width="50%"/>
+
+                <p class="text-center">
+                    <img src="{% static 'images/text2frags.png' %}" alt="Text2Frags" class="img-responsive center-block"
+                         style="max-width:50%;"/>
                 </p>
+
                 <p>
-                    The tool currently accepts the fragmentation experiments in various formats (mzML, MSP, MGF) and
-                    optionally an MS1 peak list can be added to which the MS1 peaks found in the fragmentation
-                    experiment
-                    are then matched prior to running LDA or Decomposition.
+                    The tool accepts mzML, MSP and MGF files; an MS1 peak list can optionally be matched before running
+                    LDA or Decomposition.
                 </p>
             </div>
         </div>
-        <!-- div class="panel panel-default">
-          <div class="panel-body">
-              <h4>Features</h4>
-              <p>
-                  Ms2lda.org provides access to the LDA and Decomposition models and includes the following visualisation features:
-              </p>
-              <ul>
-                  <li>Network display of discovered substructures (Mass2Motifs) and fragmented molecules</li>
-                  <li>Mass2Motif pages with spectra of fragmented molecules and characteristic fragment/loss features</li>
-                  <li>Parent pages displaying all Mass2Motifs found in fragmentation spectra</li>
-              </ul>
-              <p>
-                  In addition, the following features are provided to facilitate integration with metabolomics experiments by:
-              </p>
-              <ul>
-                  <li>Mapping fold changes onto fragmented molecules</li>
-                  <li>Computing differentially expressed Mass2Motifs</li>
-                  <li>Highlighting changing molecules and differential Mass2Motifs in the network display</li>
-              </ul>
-          </div>
-        </div -->
+
+        <!-- ======================================================
+             References panel
+        ======================================================= -->
         <div class="panel panel-default">
             <div class="panel-body">
                 <h4>References</h4>
-                <p>The following are relevant literatures for MS2LDA</p>
+                <p>Key literature related to MS2LDA:</p>
                 <ul>
                     <li>
-                        The initial idea of applying topic model to fragmentation spectra data: <a
-                            href="https://www.pnas.org/content/113/48/13738.short">Topic modeling for untargeted
-                        substructure exploration in metabolomics</a>, and also in <a
-                            href="http://theses.gla.ac.uk/7928/">Joe Wandy's PhD thesis</a>.
+                        Topic modelling for untargeted substructure exploration:
+                        <a href="https://www.pnas.org/content/113/48/13738.short" target="_blank">
+                            Rogers&nbsp;<em>et&nbsp;al.</em>, PNAS 2016</a>
+                        and <a href="http://theses.gla.ac.uk/7928/" target="_blank">Joe&nbsp;Wandy&nbsp;PhD thesis</a>.
                     </li>
                     <li>
-                        The development of this website: <a
-                            href="https://academic.oup.com/bioinformatics/article-abstract/34/2/317/4158166">Ms2lda.org:
-                        web-based topic modelling for substructure discovery in mass spectrometry</a>
+                        Original web application:
+                        <a href="https://academic.oup.com/bioinformatics/article-abstract/34/2/317/4158166"
+                           target="_blank">
+                            Wandy&nbsp;<em>et&nbsp;al.</em>, Bioinformatics 2018</a>
                     </li>
                     <li>
-                        MotifDB: <a href="https://pubs.rsc.org/en/content/articlehtml/2019/fd/c8fd00235e">Deciphering
-                        complex metabolite mixtures by unsupervised and supervised substructure discovery and
-                        semi-automated
-                        annotation from MS/MS spectra</a>
+                        MotifDB:
+                        <a href="https://pubs.rsc.org/en/content/articlehtml/2019/fd/c8fd00235e" target="_blank">
+                            van der Hooft&nbsp;<em>et&nbsp;al.</em>, Faraday Discuss. 2019</a>
+                    </li>
+                    <li>
+                        <strong>MS2LDA 2.0 pre-print (coming&nbsp;2025)</strong> — code at
+                        <a href="https://github.com/vdhooftcompmet/MS2LDA" target="_blank">
+                            vdHooftCompMet/MS2LDA</a>.
                     </li>
                 </ul>
+
                 <p>
-                    Other papers that cite MS2LDA can be <a
-                        href="https://scholar.google.com/scholar?oi=bibs&hl=en&cites=1717762026433522541"
-                        target="_blank">
-                    found here</a>.
+                    Other papers citing MS2LDA can be
+                    <a href="https://scholar.google.com/scholar?oi=bibs&hl=en&cites=1717762026433522541"
+                       target="_blank">found here</a>.
                 </p>
-                <p>To run your own instance of ms2lda.org, please refer to the codes available at <a
-                        href="http://github.com/glasgowcompbio/ms2ldaviz">http://github.com/glasgowcompbio/ms2ldaviz</a>
+
+                <p>
+                    To host your own instance of the legacy site, see
+                    <a href="https://github.com/glasgowcompbio/ms2ldaviz" target="_blank">
+                        github.com/glasgowcompbio/ms2ldaviz</a>.
                 </p>
             </div>
         </div>
     </div>
-
 {% endblock %}
