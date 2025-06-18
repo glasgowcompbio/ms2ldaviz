@@ -22,7 +22,7 @@ from basicviz.models import Feature, Experiment, Document, FeatureInstance, Docu
     FeatureMass2MotifInstance, Mass2Motif, Mass2MotifInstance, VizOptions, UserExperiment, MotifMatch, \
     PublicExperiments, FeatureInstance2Sub
 from basicviz.tasks import match_motifs_set
-from basicviz.views import index as basicviz_index
+from basicviz.views.views_index import index as basicviz_index
 from basicviz.views.views_lda_admin import list_all_experiments
 from decomposition.decomposition_functions import get_parents_decomposition, get_decomp_doc_context_dict
 from massbank.forms import Mass2MotifMetadataForm
