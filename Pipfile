@@ -25,7 +25,7 @@ ChemSpiPy = "*"
 jsonpickle = "*"
 tqdm = "*"
 requests = "*"
-django = "<4"
+django = "==3.0.6" # https://github.com/glasgowcompbio/ms2ldaviz/issues/169
 django-extensions = "*"
 django-grappelli = "*"
 django-markdown2 = "*"
