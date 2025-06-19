@@ -1,2 +1,2 @@
-# an example secret key for development only, don't use this in production!
-SECRET_KEY = '^(2&40trp_*ei%$_*p-k598#hu3-w(@9%&&dr&#0##dpag=c%+'
+# SECRET_KEY is now set in settings.py from the DJANGO_SECRET_KEY environment variable
+# This file is kept for backward compatibility but no longer contains sensitive information

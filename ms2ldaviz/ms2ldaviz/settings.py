@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-from ms2ldaviz.key import SECRET_KEY
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'change_me_in_production')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
@@ -88,8 +88,17 @@ WSGI_APPLICATION = 'ms2ldaviz.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
-# for the digital ocean server
-from ms2ldaviz.database_info import DATABASES
+# Database configuration using environment variables
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'postgres',
+        'USER': os.environ.get('DJANGO_DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD', 'change_me_in_production'),
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
