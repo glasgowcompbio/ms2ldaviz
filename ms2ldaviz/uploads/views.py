@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse
 from django.http import HttpResponseRedirect
@@ -12,6 +13,11 @@ from .tasks import lda_task, decomposition_task, upload_task, upload_gensim_task
 
 @login_required(login_url='/registration/login/')
 def create_experiment(request):
+    # Check if job submission is disabled by environment variable
+    enable_job_submission = os.environ.get('ENABLE_ORIGINAL_JOB_SUBMISSION', '1')
+    if enable_job_submission == '0':
+        # If job submission is disabled, redirect to index page
+        return HttpResponseRedirect(reverse('index'))
 
     context_dict = {}
     if request.method == 'POST':
@@ -51,6 +57,11 @@ def create_experiment(request):
 
 @login_required(login_url='/registration/login/')
 def upload_experiment(request):
+    # Check if job submission is disabled by environment variable
+    enable_job_submission = os.environ.get('ENABLE_ORIGINAL_JOB_SUBMISSION', '1')
+    if enable_job_submission == '0':
+        # If job submission is disabled, redirect to index page
+        return HttpResponseRedirect(reverse('index'))
 
     context_dict = {}
     if request.method == 'POST':
@@ -87,6 +98,11 @@ def upload_experiment(request):
 
 @login_required(login_url='/registration/login/')
 def upload_gensim_experiment(request):
+    # Check if job submission is disabled by environment variable
+    enable_job_submission = os.environ.get('ENABLE_ORIGINAL_JOB_SUBMISSION', '1')
+    if enable_job_submission == '0':
+        # If job submission is disabled, redirect to index page
+        return HttpResponseRedirect(reverse('index'))
 
     context_dict = {}
     if request.method == 'POST':

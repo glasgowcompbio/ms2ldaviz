@@ -84,3 +84,27 @@ To clean up run
 ```bash
 docker-compose down
 ```
+
+# Environment Variables
+
+The application uses the following environment variables for configuration:
+
+- `DJANGO_SECRET_KEY`: The secret key used for cryptographic signing. If not set, a placeholder value is used (not secure for production).
+- `DJANGO_DB_USER`: The database username. Defaults to 'postgres' if not set.
+- `DJANGO_DB_PASSWORD`: The database password. If not set, a placeholder value is used (not secure for production).
+- `ENABLE_ORIGINAL_JOB_SUBMISSION`: Controls whether users can create new experiments. Set to '0' to disable the Create Experiment button and redirect users away from experiment creation pages. Defaults to '1' (enabled) if not set.
+
+For production deployments, it's essential to set these environment variables with secure values. You can set them in your environment before starting the application:
+
+```bash
+export DJANGO_SECRET_KEY="your_secure_secret_key"
+export DJANGO_DB_USER="your_database_username"
+export DJANGO_DB_PASSWORD="your_database_password"
+export ENABLE_ORIGINAL_JOB_SUBMISSION="0"  # Set to 0 to disable new experiment creation
+```
+
+Or when using Docker, you can pass them in the docker-compose.yml file or as environment variables to the docker-compose command:
+
+```bash
+docker-compose run -e DJANGO_SECRET_KEY=your_secure_secret_key -e DJANGO_DB_USER=your_database_username -e DJANGO_DB_PASSWORD=your_database_password -e ENABLE_ORIGINAL_JOB_SUBMISSION=0 web python manage.py runserver
+```

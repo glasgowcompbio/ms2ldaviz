@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
@@ -66,9 +67,14 @@ def index(request):
         public_status.append(is_public)
     experiments = zip(exps, permissions, public_status)
 
-    # hide the create experiment button for guest user
+    # hide the create experiment button for guest user or if disabled by environment variable
     show_create_experiment = True
     if request.user.username.lower() == 'guest':
+        show_create_experiment = False
+
+    # Check if job submission is disabled by environment variable
+    enable_job_submission = os.environ.get('ENABLE_ORIGINAL_JOB_SUBMISSION', '1')
+    if enable_job_submission == '0':
         show_create_experiment = False
 
     # to display additional links on the basicviz index page
@@ -143,9 +149,14 @@ def index_mfe(request):
         public_status.append(is_public)
     experiments = zip(experiments, permissions, public_status)
 
-    # hide the create experiment button for guest user
+    # hide the create experiment button for guest user or if disabled by environment variable
     show_create_experiment = True
     if request.user.username.lower() == 'guest':
+        show_create_experiment = False
+
+    # Check if job submission is disabled by environment variable
+    enable_job_submission = os.environ.get('ENABLE_ORIGINAL_JOB_SUBMISSION', '1')
+    if enable_job_submission == '0':
         show_create_experiment = False
 
     context_dict = {'experiments': experiments}
