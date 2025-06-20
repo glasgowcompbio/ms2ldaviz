@@ -9,10 +9,6 @@ numpy = "*"
 pandas = "*"
 scikit-learn = "*"
 scipy = "*"
-gensim = "*"
-keras = "*"
-# TensorFlow is installed from a custom wheel because the VM architecture doesn't support AVX instructions.
-tensorflow = {file = "https://tf.novaal.de/core2/tensorflow-2.8.0-cp38-cp38-linux_x86_64.whl"}
 # Protobuf is fixed to version 3.20.3 due to compatibility with the custom TensorFlow wheel.
 protobuf = "==3.20.3"
 # Fix for database connection isn't set to UTC issue.
