@@ -51,72 +51,106 @@
         </div>
         <div class="panel panel-default">
             <div class="panel-body">
-                <h5>API access</h5>
-                <p>MotifDB is accessible via an API.</p>
-                <p>The following instructions demonstrate how to interact with the API</p>
-                <p>http://m2slda.org/motifdb/list_motifsets will return a json dictionary that gives the names of
-                    available motif sets and their IDs.</p>
+                <h5>API Access</h5>
+                <p>MotifDB provides a RESTful API that allows programmatic access to motif sets and their metadata. This enables integration with other tools and workflows for mass spectrometry data analysis.</p>
+
+                <h6>Available Endpoints</h6>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Method</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>http://ms2lda.org/motifdb/list_motifsets</code></td>
+                            <td>GET</td>
+                            <td>Returns a JSON dictionary of available motif sets and their IDs</td>
+                        </tr>
+                        <tr>
+                            <td><code>http://ms2lda.org/motifdb/get_motifset/{ID}</code></td>
+                            <td>GET</td>
+                            <td>Returns a JSON object with all motifs in the specified motifset</td>
+                        </tr>
+                        <tr>
+                            <td><code>http://ms2lda.org/motifdb/get_motifset_metadata/{ID}</code></td>
+                            <td>GET</td>
+                            <td>Returns metadata for motifs in the specified motifset</td>
+                        </tr>
+                        <tr>
+                            <td><code>http://ms2lda.org/motifdb/get_motifset</code></td>
+                            <td>POST</td>
+                            <td>Returns motifs and metadata for multiple motifsets</td>
+                        </tr>
+                        <tr>
+                            <td><code>http://ms2lda.org/motifdb/initialise_api</code></td>
+                            <td>GET</td>
+                            <td>Returns a CSRF token required for POST requests</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h6>Usage Instructions</h6>
                 <p>
-                    To access a particular motifset, there are two options. Send a get request to
-                    http://ms2lda.org/motifdb/get_motifset/ID, where ID is the ID obtained from the motifset list
-                    will return a json object including all of the motifs in that motifset. Replacing get_motifset with
-                    get_metadata will return the metadata for those motifs.
+                    <strong>Single Motifset Access:</strong> To access a single motifset, send a GET request to 
+                    <code>http://ms2lda.org/motifdb/get_motifset/{ID}</code>, where <code>{ID}</code> is the ID obtained 
+                    from the motifset list. This returns all motifs in that motifset.
                 </p>
                 <p>
-                    Alternatively, if you want to get the motifs and metadata together for multiple motifsets, you can
-                    send a POST request to http://ms2lda.org/motifdb/get_motifset.
-                    Within the payload dictionary you should include a field motifset_id_list which holds a list of the
-                    IDs of the motifsets you'd like.
+                    <strong>Multiple Motifsets:</strong> To retrieve motifs and metadata for multiple motifsets, send a POST request to 
+                    <code>http://ms2lda.org/motifdb/get_motifset</code> with a payload containing:
                 </p>
-                <p>
-                    In addition, you will need to include a field called csrfmiddlewaretoken which holds a valid token.
-                    You can get one by sending a GET request to http://ms2lda.org/motifdb/initialise_api.
-                </p>
-                <p>
-                    This way of getting motifs also allows you to filter duplicates. Simply add the field filter with
-                    the value "True" to your payload.
-                    The default filter threshold (cosine score) is 0.95. To change this, add a field "filter_threshold"
-                    to your payload.
-                </p>
-                <p><b>Example</b></p>
+                <ul>
+                    <li><code>motifset_id_list</code>: A list of motifset IDs you want to retrieve</li>
+                    <li><code>csrfmiddlewaretoken</code>: A valid CSRF token (obtained from <code>/motifdb/initialise_api</code>)</li>
+                    <li><code>filter</code>: Set to "True" to filter duplicate motifs (optional)</li>
+                    <li><code>filter_threshold</code>: Cosine score threshold for filtering (default: 0.95, optional)</li>
+                </ul>
+
+                <h6>Python Example</h6>
                 <pre>
 import requests
 
 server_url = "http://ms2lda.org"
 
-# Get the list of motif sets
+# Get the list of available motif sets
 output = requests.get(server_url + '/motifdb/list_motifsets')
 motifset_list = output.json()
 
-# Get a token
+# Get a CSRF token for POST requests
 url = server_url + '/motifdb/initialise_api'
 client = requests.session()
 token = client.get(url).json()['token']
 
+# Prepare data for POST request
 url = server_url + '/motifdb/get_motifset/'
 data = {'csrfmiddlewaretoken': token}
 
-# specify the name of motifsets of interest in motifset_list
+# Specify motifsets of interest
 massbank_motifset = 'Massbank library derived Mass2Motifs'
 gnps_motifset = 'GNPS library derived Mass2Motifs'
 
 massbank_id = motifset_list[massbank_motifset]
 gnps_id = motifset_list[gnps_motifset]
 
-# example - get the massbank and gnps motifsets
+# Example 1: Get multiple motifsets with filtering
 data['motifset_id_list'] = [massbank_id, gnps_id]
 data['filter'] = "True"
-data['filter_threshold'] = 0.95 # Default value - not required
+data['filter_threshold'] = 0.95  # Default value - not required
 output = client.post(url, data=data).json()
-print 'Retrieved', len(output['motifs']), 'motifs', len(output['metadata'])
+print('Retrieved {} motifs and {} metadata entries'.format(
+    len(output['motifs']), len(output['metadata'])))
 
-# example - get the massbank metadata only
+# Example 2: Get metadata for a single motifset
 url = server_url + '/motifdb/get_motifset_metadata/{}/'.format(massbank_id)
 output = requests.get(url)
 motif_metadata = output.json()
-for k in motif_metadata.keys()[:5]:
-    print k
-    print motif_metadata[k]
+print('First 5 metadata entries:')
+for k in list(motif_metadata.keys())[:5]:
+    print(k)
+    print(motif_metadata[k])
                 </pre>
             </div>
         </div>
