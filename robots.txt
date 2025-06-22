@@ -1,9 +1,22 @@
 User-agent: *
-Disallow: /
+Disallow: /basicviz
 
 User-agent: Googlebot
+Disallow: /basicviz
 Allow: /
 
 User-agent: Bingbot
+Disallow: /basicviz
 Allow: /
 
+User-agent: GPTBot
+Disallow: /basicviz
+Allow: /
+
+User-agent: ChatGPT-User
+Disallow: /basicviz
+Allow: /
+
+User-agent: OAI-SearchBot
+Disallow: /basicviz
+Allow: /
