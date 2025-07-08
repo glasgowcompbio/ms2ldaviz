@@ -72,44 +72,62 @@
         <div class="col-sm-10 col-sm-offset-1">
             <div class="panel panel-default">
                 <div class="panel-heading text-center">
-                    <h4 style="margin:0;">News</h4>
+                    <h4 style="margin:0;">IMPORTANT NEWS</h4>
                 </div>
                 <div class="panel-body">
 
                     <!-- 19 Jun 2025 -->
                     <p>
-                        <b>21&nbsp;June&nbsp;2025:</b>
-                        We are excited to announce the publication of our new preprint for MS2LDA 2.0: 
-                        "<a href="https://doi.org/10.1101/2025.06.19.659491" target="_blank">Large-scale discovery and annotation of hidden substructure patterns in mass spectrometry profiles</a>".
-                        This paper introduces the new MS2LDA 2.0 and the accompanying visualization app that you can access at 
-                        <a href="https://ms2lda.org/viz/" target="_blank">https://ms2lda.org/viz/</a> or through the button above.
-                        The project site is now available at <a href="https://github.com/vdhooftcompmet/MS2LDA" target="_blank">https://github.com/vdhooftcompmet/MS2LDA</a>.
+                        We're thrilled to share the release of our new preprint introducing MS2LDA 2.0: 
+                        "<a href="https://doi.org/10.1101/2025.06.19.659491" target="_blank">Large-scale discovery and annotation of hidden substructure patterns in mass spectrometry profiles</a>". 
+                        The new MS2LDA 2.0 is available at: <a href="https://github.com/vdhooftcompmet/MS2LDA" target="_blank">https://github.com/vdhooftcompmet/MS2LDA</a>. 
+                        The results can be visualized at: <a href="https://ms2lda.org/viz/" target="_blank">https://ms2lda.org/viz/</a> or via the button above.
                     </p>
 
                     <p>
-                        MS2LDA 2.0 brings significant improvements including up to 14x speed improvement for unsupervised Mass2Motif discovery, 
-                        allowing it to process larger datasets. The new automated Mass2Motif Annotation Guidance (MAG) aids in structurally 
-                        identifying Mass2Motifs with high accuracy (median substructure overlap scores of 0.75-0.95 in benchmarking). 
-                        Our brand-new, Dash-powered interactive interface for exploring Mass2Motifs offers faster navigation, richer plots and a modern code base.
-                        Together with the new visualization app and MassQL-searchable MotifDB, MS2LDA 2.0 enhances the identification 
-                        of novel chemistry and hidden patterns in mass spectrometry.
+                        <strong>What's new in MS2LDA 2.0?</strong>
                     </p>
+                    <ul>
+                        <li>⚡ Up to 14x faster unsupervised Mass2Motif discovery—scalable to large datasets</li>
+                        <li>🧠 Mass2Motif Annotation Guidance (MAG) for high-accuracy structural annotation</li>
+                        <li>📊 A modern, Dash-based interface for exploring Mass2Motifs: richer plots and smoother navigation</li>
+                        <li>🔍 Seamless integration with MassQL-searchable MotifDB</li>
+                    </ul>
                     <p>
-                        We intend to retire the legacy MS2LDAviz application soon,
-                        so please update your workflows and bookmarks.
-                        Thank you to the community for your continued enthusiasm and
-                        to the University of Glasgow MLVS Shared Research Facility (formerly Glasgow&nbsp;Polyomics) for their generous support.
+                        Together, these enhancements empower deeper exploration of hidden chemical patterns in MS data.
                     </p>
 
-    <div style="background-color: #ffeeee; border: 2px solid #ff0000; padding: 10px; margin-bottom: 15px; border-radius: 5px;">
-        <p style="color: #ff0000; font-weight: bold; margin: 0;">
-            We have now disabled any new job submission in preparation for migration to the new MS2LDA 2.0.
-            For this please run your job locally following the instruction in
-            <a href="https://github.com/vdhooftcompmet/MS2LDA" target="_blank">https://github.com/vdhooftcompmet/MS2LDA</a>.
-            Once you have run the task, you can use the generated result file (ms2lda_viz.json.gz) on the new viz app at
-            <a href="https://ms2lda.org/viz/" target="_blank">https://ms2lda.org/viz/</a>
-        </p>
-    </div>
+                    <p>
+                        <strong>Example datasets and how to run the tool:</strong>
+                    </p>
+                    <p>
+                        We applied MS2LDA 2.0 to:
+                    </p>
+                    <ul>
+                        <li>A tomato-spiked metabolomics dataset</li>
+                        <li>A medicinal fungal dataset</li>
+                    </ul>
+                    <p>
+                        Both are available at: 📁 <a href="https://zenodo.org/records/15688609" target="_blank">https://zenodo.org/records/15688609</a>
+                    </p>
+                    <p>
+                        To reproduce our analyses and explore further, see our example notebooks: 
+                        📓 <a href="https://github.com/vdhooftcompmet/MS2LDA/tree/main/notebooks" target="_blank">https://github.com/vdhooftcompmet/MS2LDA/tree/main/notebooks</a>
+                    </p>
+                    <p>
+                        For MAG, we retrained Spec2Vec (positive mode) using updated data available at: 
+                        📁 <a href="https://zenodo.org/records/12543129" target="_blank">https://zenodo.org/records/12543129</a>
+                    </p>
+
+                    <p>
+                        ⚠️ <strong>Notice:</strong> The legacy MS2LDAviz application will be retired soon. 
+                        Please update your workflows and bookmarks to the new system.
+                    </p>
+
+                    <p>
+                        Thank you to our amazing community for your ongoing support, and to the University of Glasgow MLVS Shared Research Facility 
+                        (formerly Glasgow Polyomics) for their generous contributions to this project.
+                    </p>
 
                     <!-- Oct 2023 -->
                     <p>
