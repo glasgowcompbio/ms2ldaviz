@@ -1,6 +1,6 @@
 from ms2ldaviz.celery_tasks import app
 
-import numpy as np
+import math
 
 from basicviz.models import Experiment,Mass2Motif,Mass2MotifInstance,MotifMatch
 from motifdb.models import MDBMotifSet
@@ -65,9 +65,9 @@ def start_motif_matching_task(experiment_id,motif_set_id,min_score_to_save):
 
 
     for motif in motif_norms:
-        motif_norms[motif] = np.sqrt(motif_norms[motif])
+        motif_norms[motif] = math.sqrt(motif_norms[motif])
     for motif in base_motif_norms:
-        base_motif_norms[motif] = np.sqrt(base_motif_norms[motif])
+        base_motif_norms[motif] = math.sqrt(base_motif_norms[motif])
 
 
     # compute the cosine scores

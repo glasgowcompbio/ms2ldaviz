@@ -15,30 +15,18 @@ from django.core.cache import cache
 
 
 import json
-import numpy as np
+import math
 
 from motifdb.models import *
-from basicviz.models import *   
+from motifdb.cache_service import get_cache_service
+# Note: basicviz.models imports removed - not needed with cache mode   
 
 
 
 from motifdb.forms import MatchMotifDBForm,NewMotifSetForm,ChooseMotifs,MetadataForm
 from motifdb.tasks import start_motif_matching_task
 
-
-def check_user(request, experiment):
-    user = request.user
-    try:
-        ue = UserExperiment.objects.get(experiment=experiment, user=user)
-        return ue.permission
-    except:
-        # try the public experiments
-        e = PublicExperiments.objects.filter(experiment = experiment)
-        if len(e) > 0:
-            return "view"
-        else:
-            # User can't see this one
-            return None
+# Note: check_user function removed - only used by disabled functions in cache mode
 
 
 # Create your views here.
@@ -122,9 +110,8 @@ def motif(request,motif_id):
     return render(request,'motifdb/motif.html',context_dict)
 
 def start_motif_matching(request, experiment_id):
-    context_dict = {}
-    experiment = Experiment.objects.get(id=experiment_id)
-    context_dict['experiment'] = experiment
+    # Matching is disabled when using cached data
+    return HttpResponse("Motif matching is disabled (using cached data)", status=503)
     if request.method == 'POST':
         match_motif_form = MatchMotifDBForm(request.POST)
         if match_motif_form.is_valid():
@@ -142,32 +129,21 @@ def start_motif_matching(request, experiment_id):
 
 @cache_page(settings.DEFAULT_CACHE_TIMEOUT)
 def list_motifsets(request):
-    motif_sets = MDBMotifSet.objects.all()
-    output = {m.name:m.id for m in motif_sets}
+    cache_service = get_cache_service()
+    output = cache_service.get_all_motifsets()
     return HttpResponse(json.dumps(output), content_type='application/json') 
 
 @cache_page(settings.DEFAULT_CACHE_TIMEOUT)
 def get_motifset(request,motifset_id):
-    motifset = MDBMotifSet.objects.get(id = motifset_id)
-    motifs = MDBMotif.objects.filter(motif_set = motifset)
-    output_motifs = {}
-    for motif in motifs:
-        fis = Mass2MotifInstance.objects.filter(mass2motif = motif)
-        output_motifs[motif.name] = {}
-        for fi in fis:
-            output_motifs[motif.name][fi.feature.name] = fi.probability
+    cache_service = get_cache_service()
+    output_motifs = cache_service.get_motifset_by_id(motifset_id)
     return HttpResponse(json.dumps(output_motifs), content_type='application/json')
 
 
 @cache_page(settings.DEFAULT_CACHE_TIMEOUT)
 def get_motif(request,motif_id):
-    motif = MDBMotif.objects.get(id = motif_id)
-    fis = Mass2MotifInstance.objects.filter(mass2motif = motif)
-    output_list = []
-    for fi in fis:
-        if fi.feature.name.startswith('fragment'):
-            mz = float(fi.feature.name.split('_')[1])
-            output_list.append((mz,fi.probability))
+    cache_service = get_cache_service()
+    output_list = cache_service.get_motif_by_id(int(motif_id))
     return HttpResponse(json.dumps(output_list),content_type = 'application/json')
 
 def initialise_api(request):
@@ -180,57 +156,25 @@ def get_motifset_post(request):
     motifset_id_list = request.POST.getlist('motifset_id_list')
     do_filter = request.POST.get('filter', "False") == "True"
     filter_threshold = float(request.POST.get('filter_threshold', 0.95))
-    key = (motifset_id_list, do_filter, filter_threshold, )
-
-    # https://stackoverflow.com/questions/45164551/removing-control-space-characters-from-cache-key-in-python
-    encoded_key = json.dumps(key)
-    encoded_key = hashlib.md5(encoded_key.encode('utf-8')).hexdigest().strip()
-    print(key, "*****", encoded_key)
-
-    output = cache.get(encoded_key)
-    if output is None:
-        print('Not found', key, ' in cache')
-        output_motifs = {}
-        output_metadata = {}
-        for motifset_id in motifset_id_list:
-            motifset_id = int(motifset_id)
-            motifset = MDBMotifSet.objects.get(id = motifset_id)
-            motifs = MDBMotif.objects.filter(motif_set = motifset)
-
-            for motif in motifs:
-                fis = Mass2MotifInstance.objects.filter(mass2motif = motif)
-                output_motifs[motif.name] = {}
-                for fi in fis:
-                    output_motifs[motif.name][fi.feature.name] = fi.probability
-                md = jsonpickle.decode(motif.metadata)
-                md['motifdb_id'] = motif.id
-                md['motifdb_url'] = 'http://ms2lda.org/motifdb/motif/{}'.format(motif.id)
-                output_metadata[motif.name] = md
-
-        if do_filter:
-            m = MotifFilter(output_motifs,output_metadata,threshold = filter_threshold)
-            output_motifs,output_metadata = m.filter()
-
-        output = {'motifs':output_motifs,'metadata':output_metadata}
-        cache.set(encoded_key, output)
+    
+    cache_service = get_cache_service()
+    if do_filter:
+        output = cache_service.get_filtered_motifsets(motifset_id_list, filter_threshold)
     else:
-        print('Found', key, ' in cache')
-
+        # Get unfiltered data
+        output = cache_service.get_filtered_motifsets(motifset_id_list, 1.0)
+    
     return HttpResponse(json.dumps(output), content_type='application/json')
 
 def get_motifset_metadata(request,motifset_id):
-    motifset = MDBMotifSet.objects.get(id = motifset_id)
-    motifs = MDBMotif.objects.filter(motif_set = motifset)
-    output_motifs = {}
-    for motif in motifs:
-        md = jsonpickle.decode(motif.metadata)
-        md['motifdb_id'] = motif.id
-        md['motifdb_url'] = 'http://ms2lda.org/motifdb/motif/{}'.format(motif.id)
-        output_motifs[motif.name] = md
+    cache_service = get_cache_service()
+    output_motifs = cache_service.get_motifset_metadata(motifset_id)
     return HttpResponse(json.dumps(output_motifs), content_type='application/json')
 
 @login_required(login_url='/registration/login/')
 def create_motifset(request):
+    # Creation is disabled when using cached data
+    return HttpResponse("Motif creation is disabled (using cached data)", status=503)
     if request.method == 'POST':
         new_form = NewMotifSetForm(request.user,request.POST)
         if new_form.is_valid():
@@ -282,9 +226,8 @@ def create_motifset(request):
     return render(request,'motifdb/create_motifset.html',context_dict)
 
 def choose_motifs(request,motif_set_id,experiment_id):
-    experiment = Experiment.objects.get(id = experiment_id)
-    if not check_user(request, experiment):
-        return HttpResponse("You don't have permission to access this page")
+    # This function is disabled when using cached data
+    return HttpResponse("Motif selection is disabled (using cached data)", status=503)
 
 
     context_dict = {}
@@ -330,7 +273,8 @@ def choose_motifs(request,motif_set_id,experiment_id):
         return render(request,'motifdb/choose_motifs.html',context_dict)
 
 def edit_motifset_metadata(request,motif_set_id):
-    motif_set = MDBMotifSet.objects.get(id = motif_set_id)
+    # Editing is disabled when using cached data
+    return HttpResponse("Motif editing is disabled (using cached data)", status=503)
     # check if the creator is the current user
     context_dict = {'motifset':motif_set}
     if not motif_set.owner == request.user:
@@ -375,7 +319,8 @@ def edit_motifset_metadata(request,motif_set_id):
     return render(request,'motifdb/edit_motif_set_metadata.html',context_dict)
 
 def update_annotation(request,motif_id):
-    motif = MDBMotif.objects.get(id = motif_id)
+    # Updates are disabled when using cached data
+    return HttpResponse("Annotation updates are disabled (using cached data)", status=503)
     link_annotation = motif.linkmotif.annotation
     md = jsonpickle.decode(motif.metadata)
     md['annotation'] = link_annotation
@@ -438,6 +383,6 @@ class MotifFilter(object):
                 if mz == mz2:
                     prod += intensity * intensity2
         i2 = sum([i**2 for i in self.input_spectra[k2].values()])
-        return prod/(np.sqrt(i1)*np.sqrt(i2))
+        return prod/(math.sqrt(i1)*math.sqrt(i2))
 
 
