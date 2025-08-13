@@ -17,20 +17,23 @@ from django.core.cache import cache
 import json
 import math
 
-from motifdb.models import *
+# Note: Model imports removed - not needed with cache mode
+# from motifdb.models import *
 from motifdb.cache_service import get_cache_service
 # Note: basicviz.models imports removed - not needed with cache mode   
 
 
 
-from motifdb.forms import MatchMotifDBForm,NewMotifSetForm,ChooseMotifs,MetadataForm
-from motifdb.tasks import start_motif_matching_task
+# from motifdb.forms import MatchMotifDBForm,NewMotifSetForm,ChooseMotifs,MetadataForm
+# from motifdb.tasks import start_motif_matching_task
 
 # Note: check_user function removed - only used by disabled functions in cache mode
 
 
 # Create your views here.
 def index(request):
+    # This view is disabled when using cached data
+    return HttpResponse("MotifDB web interface is disabled (using cached data)", status=503)
     context_dict = {}
 
     motif_sets = MDBMotifSet.objects.all()
@@ -42,6 +45,8 @@ def index(request):
     return render(request, 'motifdb/index.html', context_dict)
 
 def motif_set(request,motif_set_id):
+    # This view is disabled when using cached data
+    return HttpResponse("MotifDB web interface is disabled (using cached data)", status=503)
     ms = MDBMotifSet.objects.get(id = motif_set_id)
 
     context_dict = {}
@@ -71,6 +76,8 @@ def motif_set(request,motif_set_id):
     return render(request,'motifdb/motif_set.html',context_dict)
 
 def motif(request,motif_id):
+    # This view is disabled when using cached data
+    return HttpResponse("MotifDB web interface is disabled (using cached data)", status=503)
     motif = MDBMotif.objects.get(id = motif_id)
     context_dict = {}
     context_dict['motif'] = motif
