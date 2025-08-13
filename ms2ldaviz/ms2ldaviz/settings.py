@@ -39,15 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'debug_toolbar',
-    'basicviz',
-    'annotation',
-    'massbank',
-    'options',
-    'registration',
-    'uploads',
-    'decomposition',
-    'ms1analysis',
     'django_extensions',
+    'basicviz',  # Keep for now to avoid import errors
     'motifdb'
 ]
 
