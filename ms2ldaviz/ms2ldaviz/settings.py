@@ -40,8 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'debug_toolbar',
     'django_extensions',
-    'basicviz',  # Keep for now to avoid import errors
-    'motifdb'
+    'motifdb_cached'  # New cached version without basicviz dependencies
 ]
 
 MIDDLEWARE = [

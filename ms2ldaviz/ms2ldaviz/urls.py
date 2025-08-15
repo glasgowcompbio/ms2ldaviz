@@ -15,7 +15,7 @@ urlpatterns = [
     url(r'^confidence/', views.confidence, name='confidence'),
     url(r'^grappelli/', include('grappelli.urls')),  # grappelli URLS
     url(r'^admin/', admin.site.urls),
-    url(r'^motifdb/', include('motifdb.urls')),
+    url(r'^motifdb/', include('motifdb_cached.urls')),
 ]
 
 # for django debug toolbar

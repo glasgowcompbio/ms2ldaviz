@@ -52,21 +52,6 @@
             <li><a href="https://github.com/vdhooftcompmet/MS2LDA/tree/main/MS2LDA/MotifDB" target="_blank"><strong>MotifDB</strong></a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            {% if user.is_authenticated %}
-                <li>
-                    <a href="/registration/logout" class="pull-right"><strong>Log out {{ user }}</strong></a>
-                    {% ifnotequal request.user.username "guest" %}
-                        <a href="/registration/profile" class="pull-right"><strong>Update Profile</strong></a>
-                    {% endifnotequal %}
-                    {% if request.user.is_staff %}
-                        <a href="/basicviz/list_log" class="pull-right"><strong>View Job Logs</strong></a>
-                    {% endif %}
-                </li>
-            {% else %}
-                <li>
-                    <a href="/registration/login" class="pull-right"><strong>Log in</strong></a>
-                </li>
-            {% endif %}
           </ul>
         </div><!--/.nav-collapse -->
       </div>
